@@ -1,0 +1,2 @@
+# Ignore all subdirectories - each microservice has its own .git
+*/
