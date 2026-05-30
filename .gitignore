@@ -1,2 +1,3 @@
-# Ignore all subdirectories - each microservice has its own .git
-*/
+# Ignore node_modules in subdirectories
+**/node_modules/
+

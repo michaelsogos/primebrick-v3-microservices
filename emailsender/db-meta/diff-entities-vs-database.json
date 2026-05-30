@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "generatedAt": "2026-05-28T11:47:50.395Z",
+  "onlyInEntityTables": [
+    "emailsender.email_config",
+    "emailsender.email_templates"
+  ],
+  "onlyInDatabaseTables": [],
+  "tables": {}
+}
