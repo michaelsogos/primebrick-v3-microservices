@@ -1,7 +1,9 @@
 import Handlebars from "handlebars";
-import { getPool } from "../db/pool.js";
+import { getDal } from "../db/dal.js";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../nats/types.js";
+import { EmailConfigEntity, EmailTemplateEntity, EmailCommunicationLogEntity } from "../domain/entities/registry.js";
+import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 
 export class EmailService {
   private brevoClient: BrevoClient;
@@ -9,50 +11,59 @@ export class EmailService {
   constructor() {
     const apiKey = process.env.BREVO_API_KEY;
     const apiEndpoint = process.env.BREVO_API_ENDPOINT || "https://api.brevo.com/v1";
-    
+
     if (!apiKey) {
       throw new Error("BREVO_API_KEY is not set");
     }
-    
+
     this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
   }
 
   async sendEmail(request: SendEmailRequest): Promise<SendEmailResponse> {
-    const pool = getPool();
-    
+    const dal = getDal();
+
     try {
-      // Get email configuration
-      const configResult = await pool.query(
-        "SELECT * FROM emailsender.email_config WHERE provider = 'brevo' LIMIT 1"
-      );
-      
-      if (configResult.rows.length === 0) {
-        throw new Error("No email configuration found for Brevo");
+      // Get email configuration. dal.find defaults to throwIfNotFound: true,
+      // so a missing config throws NotFoundError — caught and re-thrown as the
+      // service's existing error shape.
+      let config: EmailConfigEntity;
+      try {
+        config = await dal.find(EmailConfigEntity, null, {
+          filters: [Filter.fieldValue(field(EmailConfigEntity, "provider"), "=", "brevo")],
+        }) as EmailConfigEntity;
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          throw new Error("No email configuration found for Brevo");
+        }
+        throw err;
       }
-      
-      const config = configResult.rows[0];
-      
-      // Get email template
-      const templateResult = await pool.query(
-        "SELECT * FROM emailsender.email_templates WHERE code = $1 AND language_iso = $2 LIMIT 1",
-        [request.templateCode, request.languageIso]
-      );
-      
-      if (templateResult.rows.length === 0) {
-        throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);
+
+      // Get email template — request fields are camelCase (NATS contract);
+      // entity/DB columns are snake_case.
+      let template: EmailTemplateEntity;
+      try {
+        template = await dal.find(EmailTemplateEntity, null, {
+          filters: [
+            Filter.fieldValue(field(EmailTemplateEntity, "code"), "=", request.templateCode),
+            Filter.fieldValue(field(EmailTemplateEntity, "language_iso"), "=", request.languageIso),
+          ],
+        }) as EmailTemplateEntity;
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);
+        }
+        throw err;
       }
-      
-      const template = templateResult.rows[0];
-      
+
       // Render template with variables
       const compiledSubject = Handlebars.compile(template.subject || "");
       const compiledHtml = Handlebars.compile(template.body_html || "");
       const compiledText = Handlebars.compile(template.body_text || "");
-      
+
       const subject = compiledSubject(request.variables || {});
       const htmlContent = compiledHtml(request.variables || {});
       const textContent = compiledText(request.variables || {});
-      
+
       // Prepare Brevo request
       const brevoRequest: BrevoEmailRequest = {
         to: request.to.map(email => ({ email })),
@@ -64,61 +75,61 @@ export class EmailService {
         sender: config.from_email ? { email: config.from_email, name: config.from_name || undefined } : undefined,
         replyTo: config.reply_to ? { email: config.reply_to } : undefined,
       };
-      
+
       // Send email via Brevo
       const brevoResponse = await this.brevoClient.sendEmail(brevoRequest);
-      
-      // Log the communication
-      const logResult = await pool.query(
-        `INSERT INTO emailsender.email_templates_communication_log 
-         (entity_id, entity_uuid, type, provider_message_id, provider, status, template_uuid, senders, recipients, interpolated_sent_message, sent_at, status_changed_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-         RETURNING id`,
-        [
-          request.entityId || null,
-          request.entityUuid || null,
-          "email",
-          brevoResponse.messageId,
-          "brevo",
-          "sent",
-          template.uuid,
-          JSON.stringify({ from: config.from_email }),
-          JSON.stringify({ to: request.to, cc: request.cc, bcc: request.bcc }),
-          htmlContent || textContent,
-        ]
+
+      // Log the communication (success)
+      const logRow = await dal.add<EmailCommunicationLogEntity>(
+        EmailCommunicationLogEntity,
+        {
+          entity_id: request.entityId ?? null,
+          entity_uuid: request.entityUuid ?? null,
+          type: "email",
+          provider_message_id: brevoResponse.messageId,
+          provider: "brevo",
+          status: "sent",
+          template_uuid: template.uuid,
+          senders: { from: config.from_email },
+          recipients: { to: request.to, cc: request.cc, bcc: request.bcc },
+          interpolated_sent_message: htmlContent || textContent,
+          sent_at: new Date(),
+          status_changed_at: new Date(),
+        },
+        { actor: "emailsender" },
       );
-      
+
       return {
         requestId: request.requestId,
         success: true,
         providerMessageId: brevoResponse.messageId,
-        logId: logResult.rows[0].id,
+        logId: logRow.id,
       };
     } catch (error) {
       console.error("Error sending email:", error);
-      
+
       // Log the failed communication
       try {
-        await pool.query(
-          `INSERT INTO emailsender.email_templates_communication_log 
-           (entity_id, entity_uuid, type, provider, status, template_uuid, senders, recipients, error_message, status_changed_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
-          [
-            request.entityId || null,
-            request.entityUuid || null,
-            "email",
-            "brevo",
-            "failed",
-            null,
-            JSON.stringify({}),
-            JSON.stringify({ to: request.to }),
-            error instanceof Error ? error.message : "Unknown error",
-          ]
+        await dal.add<EmailCommunicationLogEntity>(
+          EmailCommunicationLogEntity,
+          {
+            entity_id: request.entityId ?? null,
+            entity_uuid: request.entityUuid ?? null,
+            type: "email",
+            provider: "brevo",
+            status: "failed",
+            template_uuid: null,
+            senders: {},
+            recipients: { to: request.to },
+            error_message: error instanceof Error ? error.message : "Unknown error",
+            status_changed_at: new Date(),
+          },
+          { actor: "emailsender" },
         );
       } catch (logError) {
         console.error("Error logging failed email:", logError);
       }
-      
+
       return {
         requestId: request.requestId,
         success: false,

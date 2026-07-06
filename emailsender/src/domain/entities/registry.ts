@@ -4,11 +4,16 @@
  */
 import "reflect-metadata";
 
-import type { EntityClass } from "./entity-decorators.js";
+import type { EntityClass } from "@primebrick/dal-pg";
 import { EmailConfigEntity } from "./email_config_entity.js";
 import { EmailTemplateEntity } from "./email_template_entity.js";
+import { EmailCommunicationLogEntity } from "./email_communication_log_entity.js";
 
 export const ENTITY_REGISTRY = [
   EmailConfigEntity,
   EmailTemplateEntity,
+  EmailCommunicationLogEntity,
 ] as const;
+
+export { EmailConfigEntity, EmailTemplateEntity, EmailCommunicationLogEntity };
+export type { EntityClass };

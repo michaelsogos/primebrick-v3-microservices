@@ -1,5 +1,16 @@
-import { getPool } from "../db/pool.js";
+import { getDal } from "../db/dal.js";
 
+/**
+ * Registers the emailsender microservice in `public.service_registry` and
+ * maintains a heartbeat.
+ *
+ * `public.service_registry` is a shared table in the `public` schema, not
+ * owned by this microservice. All four statements are routed through
+ * `dal.rawSql` so there is a single DB-access surface (`getDal()`), while
+ * preserving the SQL strings verbatim. Forcing a `ServiceRegistryEntity`
+ * would be a cross-cutting decision (shared entity in a common package) and
+ * is out of scope.
+ */
 export class ServiceRegistration {
   private serviceCode: string;
   private baseUrl: string;
@@ -15,19 +26,19 @@ export class ServiceRegistration {
   }
 
   async register(): Promise<void> {
-    const pool = getPool();
-    
+    const dal = getDal();
+
     try {
       // Check if service already exists
-      const existingResult = await pool.query(
+      const existingRows = await dal.rawSql<{ code: string }>(
         "SELECT * FROM public.service_registry WHERE code = $1",
         [this.serviceCode]
       );
-      
-      if (existingResult.rows.length > 0) {
+
+      if (existingRows.length > 0) {
         // Update existing service
-        await pool.query(
-          `UPDATE public.service_registry 
+        await dal.rawSql(
+          `UPDATE public.service_registry
            SET base_url = $1, endpoints = $2, updated_at = NOW(), updated_by = 'system', version = version + 1
            WHERE code = $3`,
           [this.baseUrl, JSON.stringify(this.endpoints), this.serviceCode]
@@ -35,7 +46,7 @@ export class ServiceRegistration {
         console.log(`Updated service registration: ${this.serviceCode}`);
       } else {
         // Insert new service
-        await pool.query(
+        await dal.rawSql(
           `INSERT INTO public.service_registry (code, base_url, endpoints, created_at, created_by, updated_at, updated_by, version)
            VALUES ($1, $2, $3, NOW(), 'system', NOW(), 'system', 1)`,
           [this.serviceCode, this.baseUrl, JSON.stringify(this.endpoints)]
@@ -49,11 +60,11 @@ export class ServiceRegistration {
   }
 
   async updateHeartbeat(): Promise<void> {
-    const pool = getPool();
-    
+    const dal = getDal();
+
     try {
-      await pool.query(
-        `UPDATE public.service_registry 
+      await dal.rawSql(
+        `UPDATE public.service_registry
          SET updated_at = NOW(), updated_by = 'system'
          WHERE code = $1`,
         [this.serviceCode]

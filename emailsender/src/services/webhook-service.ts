@@ -1,4 +1,4 @@
-import { getPool } from "../db/pool.js";
+import { getDal } from "../db/dal.js";
 import { BrevoClient } from "../providers/brevo.js";
 
 export class WebhookService {
@@ -42,10 +42,11 @@ export class WebhookService {
     const status = this.brevoClient.mapStatus(event);
     const errorMessage = data.reason || undefined;
 
-    const pool = getPool();
+    const dal = getDal();
 
-    // Update the communication log
-    await pool.query(
+    // Update the communication log — by provider_message_id (not uuid), so
+    // dal.rawSql is the correct escape hatch (dal.update works by uuid).
+    await dal.rawSql(
       `UPDATE emailsender.email_templates_communication_log
        SET status = $1, status_changed_at = NOW(), error_message = $2
        WHERE provider_message_id = $3`,
