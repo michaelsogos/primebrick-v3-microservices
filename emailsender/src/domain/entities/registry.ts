@@ -5,17 +5,19 @@
 import "reflect-metadata";
 
 import type { EntityClass } from "@primebrick/dal-pg";
-import { EmailConfigEntity } from "./email_config_entity.js";
+import { ProviderEntity } from "./provider_entity.js";
 import { EmailTemplateEntity } from "./email_template_entity.js";
 import { EmailCommunicationLogEntity } from "./email_communication_log_entity.js";
 import { ServiceRegistryEntity } from "./service_registry_entity.js";
+import { ConfigEntryEntity } from "./config_entry_entity.js";
 
 export const ENTITY_REGISTRY = [
-  EmailConfigEntity,
+  ProviderEntity,
   EmailTemplateEntity,
   EmailCommunicationLogEntity,
   ServiceRegistryEntity,
+  ConfigEntryEntity,
 ] as const;
 
-export { EmailConfigEntity, EmailTemplateEntity, EmailCommunicationLogEntity, ServiceRegistryEntity };
+export { ProviderEntity, EmailTemplateEntity, EmailCommunicationLogEntity, ServiceRegistryEntity, ConfigEntryEntity };
 export type { EntityClass };

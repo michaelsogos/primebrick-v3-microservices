@@ -8,8 +8,8 @@ import {
   type IAuditableEntity,
 } from "@primebrick/dal-pg";
 
-@Entity("email_config")
-export class EmailConfigEntity implements IAuditableEntity {
+@Entity("providers", "emailsender")
+export class ProviderEntity implements IAuditableEntity {
   @Key()
   id: number;
 

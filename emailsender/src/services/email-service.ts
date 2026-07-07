@@ -2,7 +2,7 @@ import Handlebars from "handlebars";
 import { getDal } from "../db/dal.js";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../nats/types.js";
-import { EmailConfigEntity, EmailTemplateEntity, EmailCommunicationLogEntity } from "../domain/entities/registry.js";
+import { ProviderEntity, EmailTemplateEntity, EmailCommunicationLogEntity } from "../domain/entities/registry.js";
 import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 
 export class EmailService {
@@ -26,11 +26,11 @@ export class EmailService {
       // Get email configuration. dal.find defaults to throwIfNotFound: true,
       // so a missing config throws NotFoundError — caught and re-thrown as the
       // service's existing error shape.
-      let config: EmailConfigEntity;
+      let config: ProviderEntity;
       try {
-        config = await dal.find(EmailConfigEntity, null, {
-          filters: [Filter.fieldValue(field(EmailConfigEntity, "provider"), "=", "brevo")],
-        }) as EmailConfigEntity;
+        config = await dal.find(ProviderEntity, null, {
+          filters: [Filter.fieldValue(field(ProviderEntity, "provider"), "=", "brevo")],
+        }) as ProviderEntity;
       } catch (err) {
         if (err instanceof NotFoundError) {
           throw new Error("No email configuration found for Brevo");
