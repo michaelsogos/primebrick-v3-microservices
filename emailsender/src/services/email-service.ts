@@ -96,7 +96,7 @@ export class EmailService {
           sent_at: new Date(),
           status_changed_at: new Date(),
         },
-        { actor: "emailsender" },
+        {},
       );
 
       return {
@@ -124,7 +124,7 @@ export class EmailService {
             error_message: error instanceof Error ? error.message : "Unknown error",
             status_changed_at: new Date(),
           },
-          { actor: "emailsender" },
+          {},
         );
       } catch (logError) {
         console.error("Error logging failed email:", logError);
