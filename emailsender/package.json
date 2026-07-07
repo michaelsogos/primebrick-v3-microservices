@@ -8,7 +8,12 @@
     "build": "tsc",
     "prestart": "pnpm run build",
     "start": "node dist/index.js",
-    "db:migrate": "tsx scripts/database-patch-apply.ts"
+    "db:migrate": "tsx scripts/database-patch-apply.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "test:all": "vitest run && vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "nats": "^2.28.1",

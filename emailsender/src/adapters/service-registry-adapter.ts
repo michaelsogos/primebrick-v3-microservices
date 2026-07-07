@@ -40,7 +40,7 @@ export class ServiceRegistryAdapter implements ServiceRegistryPort<IServiceRegis
     const dal = getDal();
     await dal.update(
       ServiceRegistryEntity,
-      row as Record<string, unknown>,
+      { ...row, code } as Record<string, unknown>,
       { actor: "system", matchBy: "code" },
     );
   }

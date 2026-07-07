@@ -8,7 +8,12 @@ import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 export class EmailService {
   private brevoClient: BrevoClient;
 
-  constructor() {
+  constructor(brevoClient?: BrevoClient) {
+    if (brevoClient) {
+      this.brevoClient = brevoClient;
+      return;
+    }
+
     const apiKey = process.env.BREVO_API_KEY;
     const apiEndpoint = process.env.BREVO_API_ENDPOINT || "https://api.brevo.com/v1";
 
