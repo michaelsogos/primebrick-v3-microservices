@@ -1,100 +1,114 @@
-import os from "node:os";
 import "dotenv/config";
 import "reflect-metadata";
-import { closeNatsConnection, getNatsConnection } from "./nats/client.js";
+import {
+  ConfigLoader,
+  ServiceRegistrar,
+  GracefulShutdown,
+  NatsClient,
+  createHttpServer,
+  HealthCheck,
+  requireEnv,
+} from "@primebrick/sdk";
+import { initDal, getDal } from "./db/dal.js";
 import { subscribeToEmailSendRequests } from "./nats/handlers.js";
 import { EmailService } from "./services/email-service.js";
-import { createHttpServer } from "./server/http-server.js";
-import { ServiceRegistration } from "./services/service-registration.js";
-import { initDal, getDal } from "./db/dal.js";
-
-const emailService = new EmailService();
-const serviceRegistration = new ServiceRegistration();
+import { webhookRouteHandler } from "./server/webhook-route.js";
+import {
+  ConfigRepositoryAdapter,
+  ServiceRegistryAdapter,
+  HealthCheckAdapter,
+} from "./adapters/index.js";
 
 async function main(): Promise<void> {
   console.log("Starting EmailSender microservice...");
 
-  // Initialize the Dal gateway (owns the pg.Pool, registers type parsers,
-  // sets search_path/statement_timeout/application_name on every connection).
+  // ── Environment validation (centralized via SDK) ──────────────────────
+  const env = requireEnv({
+    DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
+    BREVO_API_KEY: { required: true, description: "Brevo API key for sending emails" },
+    WEBHOOK_API_KEY: { required: true, description: "API key for webhook authentication" },
+    DB_SCHEMA: { required: false, default: "emailsender" },
+    NATS_URL: { required: false, default: "nats://127.0.0.1:4222" },
+    BREVO_API_ENDPOINT: { required: false, default: "https://api.brevo.com/v1" },
+    SERVICE_CODE: { required: false, default: "EMAILSENDER" },
+    SERVICE_BASE_URL: { required: false, default: "http://localhost:3003" },
+    HTTP_PORT: { required: false, default: "3003" },
+  });
+
+  // ── Initialize the Dal gateway ────────────────────────────────────────
+  // The Dal owns the pg.Pool, registers type parsers, sets search_path.
   initDal();
 
-  // Register service in service registry
+  // ── Config loader (uses ConfigRepositoryPort adapter) ─────────────────
+  // Loads config rows from emailsender.config into in-memory cache.
+  // The config table is empty for now — load() succeeds with an empty cache.
+  const configLoader = new ConfigLoader(new ConfigRepositoryAdapter());
   try {
-    await serviceRegistration.register();
+    await configLoader.load();
+    console.log("Config loaded from DB");
+  } catch (error) {
+    console.error("Failed to load config (non-fatal — table may be empty):", error);
+  }
+
+  // ── Service registration (uses ServiceRegistryPort adapter) ───────────
+  const baseUrl = env.SERVICE_BASE_URL!;
+  const registrar = new ServiceRegistrar(new ServiceRegistryAdapter(), {
+    serviceCode: env.SERVICE_CODE!,
+    baseUrl,
+    endpoints: {
+      webhook: `${baseUrl}/webhook`,
+      health: `${baseUrl}/health`,
+    },
+  });
+
+  try {
+    await registrar.register();
     console.log("Service registered successfully");
   } catch (error) {
     console.error("Failed to register service:", error);
     // Continue anyway - service can still function
   }
 
-  // Start heartbeat
-  const heartbeatInterval = await serviceRegistration.startHeartbeat(60000);
+  registrar.startHeartbeat();
   console.log("Heartbeat started");
 
-  // Connect to NATS
+  // ── Connect to NATS (uses SDK NatsClient) ─────────────────────────────
   try {
-    await getNatsConnection();
+    await NatsClient.getConnection();
     console.log("NATS connection established");
   } catch (error) {
     console.error("Failed to connect to NATS:", error);
     process.exit(1);
   }
 
-  // Subscribe to email send requests
+  // ── Subscribe to email send requests ──────────────────────────────────
+  const emailService = new EmailService();
   subscribeToEmailSendRequests(async (request) => {
     return await emailService.sendEmail(request);
   });
 
-  // Start HTTP server for webhooks
-  const httpPort = parseInt(process.env.HTTP_PORT || "3003", 10);
-  await createHttpServer(httpPort);
+  // ── HTTP server + health check (uses SDK createHttpServer + HealthCheck)
+  const pool = getDal().getPool();
+  const healthCheck = new HealthCheck(new HealthCheckAdapter(pool));
+  const httpPort = parseInt(env.HTTP_PORT || "3003", 10);
+  const server = await createHttpServer({
+    port: httpPort,
+    healthCheck,
+    serviceName: "emailsender",
+    routeHandler: webhookRouteHandler,
+  });
 
   console.log("EmailSender microservice started successfully");
 
-  // ── graceful shutdown ──────────────────────────────────────────────
-  // The CONSUMER owns process lifecycle. The library exposes only
-  // close(timeoutMs?) — it does NOT install process.on() handlers.
-  // The lib's close() is itself re-entrant + timeout-bounded (protects the
-  // pool); this shuttingDown guard protects the WHOLE shutdown sequence
-  // (NATS, heartbeat, process.exit) from a second signal re-entering it.
-  let shuttingDown = false;
-
-  async function shutdown(reason: string, code: number): Promise<void> {
-    if (shuttingDown) return; // re-entrancy guard: second signal is a no-op
-    shuttingDown = true;
-    console.log(`[emailsender] shutting down (${reason})`);
-    clearInterval(heartbeatInterval);
-    try {
-      // Close ALL long-lived resources — allSettled so one failure
-      // doesn't block the others.
-      await Promise.allSettled([
-        getDal().close(),          // drains pg.Pool (10s internal timeout)
-        closeNatsConnection(),     // drains NATS
-      ]);
-    } finally {
-      process.exit(code);          // ALWAYS exit explicitly — never rely on event-loop drain
-    }
-  }
-
-  // Graceful signals — process.on (not once) so a second signal still
-  // reaches the re-entrancy guard.
-  const SHUTDOWN_SIGNALS: NodeJS.Signals[] = ["SIGTERM", "SIGINT", "SIGHUP"];
-  SHUTDOWN_SIGNALS.forEach(sig =>
-    process.on(sig, () =>
-      shutdown(sig, 128 + (os.constants.signals[sig as keyof typeof os.constants.signals] ?? 0)),
-    ),
-  );
-
-  // Crash paths — owned by the consumer (where Sentry/logging/restart policy live).
-  // The library does NOT install these (layering violation + test isolation).
-  process.on("uncaughtException", (err) => {
-    console.error("[emailsender] uncaughtException", err);
-    shutdown("uncaughtException", 1);
+  // ── Graceful shutdown (uses SDK GracefulShutdown) ─────────────────────
+  const shutdown = new GracefulShutdown("emailsender");
+  shutdown.addCleanup(async () => { registrar.stopHeartbeat(); });
+  shutdown.addCleanup(async () => { await NatsClient.close(); });
+  shutdown.addCleanup(async () => { await getDal().close(); });
+  shutdown.addCleanup(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   });
-  process.on("unhandledRejection", (reason) => {
-    console.error("[emailsender] unhandledRejection", reason);
-    shutdown("unhandledRejection", 1);
-  });
+  shutdown.install();
 }
 
 main().catch((error) => {

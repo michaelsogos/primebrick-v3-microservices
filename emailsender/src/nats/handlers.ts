@@ -1,12 +1,12 @@
 import type { Msg } from "nats";
-import { getNatsConnection } from "./client.js";
+import { NatsClient } from "@primebrick/sdk";
 import type { SendEmailRequest, SendEmailResponse } from "./types.js";
 
 const EMAIL_SEND_SUBJECT = "emailsender.send";
 const EMAIL_RESPONSE_SUBJECT = "emailsender.response";
 
 export async function subscribeToEmailSendRequests(handleSendEmail: (request: SendEmailRequest) => Promise<SendEmailResponse>): Promise<void> {
-  const nc = await getNatsConnection();
+  const nc = await NatsClient.getConnection();
   
   // Subscribe to email send requests
   const sub = nc.subscribe(EMAIL_SEND_SUBJECT);
@@ -53,7 +53,7 @@ export async function subscribeToEmailSendRequests(handleSendEmail: (request: Se
 }
 
 export async function publishEmailResponse(requestId: string, response: SendEmailResponse): Promise<void> {
-  const nc = await getNatsConnection();
+  const nc = await NatsClient.getConnection();
   await nc.publish(
     `${EMAIL_RESPONSE_SUBJECT}.${requestId}`,
     new TextEncoder().encode(JSON.stringify(response))

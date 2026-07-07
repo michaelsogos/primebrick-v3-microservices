@@ -3,18 +3,10 @@
 import "dotenv/config";
 import { Pool } from "pg";
 import { join } from "node:path";
-import { applyPatches, type DatabasePort } from "@primebrick/sdk";
+import { applyPatches } from "@primebrick/sdk";
+import { DatabaseAdapter } from "../src/adapters/database-adapter.js";
 
 const PATCHES_DIR = join(process.cwd(), "db-meta", "patches");
-
-// DatabaseAdapter — adapts pg.Pool to the SDK's DatabasePort interface.
-class DatabaseAdapter implements DatabasePort {
-  constructor(private readonly pool: Pool) {}
-
-  async query<T = unknown>(text: string, params?: unknown[]): Promise<{ rows: T[] }> {
-    return this.pool.query(text, params) as Promise<{ rows: T[] }>;
-  }
-}
 
 async function main() {
   const url = process.env.DATABASE_URL;
