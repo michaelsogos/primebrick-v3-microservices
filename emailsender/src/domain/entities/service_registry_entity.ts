@@ -23,7 +23,7 @@ import {
 @Entity("service_registry", "public")
 export class ServiceRegistryEntity implements IAuditableEntity {
   @Key()
-  id!: number;
+  id!: bigint;
 
   @Unique()
   uuid!: string;

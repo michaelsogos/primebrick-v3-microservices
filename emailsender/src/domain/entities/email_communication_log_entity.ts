@@ -16,9 +16,9 @@ import { Entity, Key, Column } from "@primebrick/dal-pg";
  */
 @Entity("email_templates_communication_log")
 export class EmailCommunicationLogEntity {
-  @Key() id!: number;
+  @Key() id!: bigint;
 
-  @Column({ nullable: true }) entity_id?: number;
+  @Column({ nullable: true }) entity_id?: bigint;
   @Column({ nullable: true }) entity_uuid?: string;
   @Column({ nullable: false }) type!: string;
   @Column({ nullable: true }) provider_message_id?: string;

@@ -62,7 +62,7 @@ export async function setupTestSchema(): Promise<void> {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS "emailsender"."email_templates_communication_log" (
       "id" bigint generated always as identity NOT NULL,
-      "entity_id" text,
+      "entity_id" bigint,
       "entity_uuid" text,
       "type" text NOT NULL,
       "provider_message_id" text,

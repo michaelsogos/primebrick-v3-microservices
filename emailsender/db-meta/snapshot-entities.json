@@ -347,8 +347,8 @@
         "entity_id": {
           "name": "entity_id",
           "ordinalPosition": 2,
-          "dataType": "text",
-          "typname": "text",
+          "dataType": "bigint",
+          "typname": "bigint",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,

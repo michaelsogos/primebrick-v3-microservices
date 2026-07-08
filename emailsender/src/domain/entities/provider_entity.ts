@@ -11,7 +11,7 @@ import {
 @Entity("providers", "emailsender")
 export class ProviderEntity implements IAuditableEntity {
   @Key()
-  id: number;
+  id: bigint;
 
   @Unique()
   uuid: string;

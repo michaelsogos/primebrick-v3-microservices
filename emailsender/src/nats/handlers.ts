@@ -1,61 +1,49 @@
-import type { Msg } from "nats";
 import { NatsClient } from "@primebrick/sdk";
 import type { SendEmailRequest, SendEmailResponse } from "./types.js";
 
 const EMAIL_SEND_SUBJECT = "emailsender.send";
 const EMAIL_RESPONSE_SUBJECT = "emailsender.response";
 
-export async function subscribeToEmailSendRequests(handleSendEmail: (request: SendEmailRequest) => Promise<SendEmailResponse>): Promise<void> {
-  const nc = await NatsClient.getConnection();
-  
-  // Subscribe to email send requests
-  const sub = nc.subscribe(EMAIL_SEND_SUBJECT);
-  
+export async function subscribeToEmailSendRequests(
+  handleSendEmail: (request: SendEmailRequest) => Promise<SendEmailResponse>,
+): Promise<void> {
   console.log(`Subscribed to ${EMAIL_SEND_SUBJECT}`);
-  
-  for await (const msg of sub) {
-    try {
-      const request: SendEmailRequest = JSON.parse(new TextDecoder().decode(msg.data));
+
+  await NatsClient.subscribe<SendEmailRequest>(
+    EMAIL_SEND_SUBJECT,
+    async (request, msg) => {
       console.log(`Received email send request: ${request.requestId}`);
-      
-      const response = await handleSendEmail(request);
-      
-      // Publish response to response subject
-      await nc.publish(
-        `${EMAIL_RESPONSE_SUBJECT}.${request.requestId}`,
-        new TextEncoder().encode(JSON.stringify(response))
-      );
-      
-      console.log(`Processed email send request: ${request.requestId} - ${response.success ? 'SUCCESS' : 'FAILED'}`);
-    } catch (error) {
-      console.error("Error processing email send request:", error);
-      
-      // Send error response
-      const errorResponse: SendEmailResponse = {
-        requestId: "unknown",
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-      
-      // Try to extract requestId from the failed message
+
       try {
-        const request: SendEmailRequest = JSON.parse(new TextDecoder().decode(msg.data));
-        errorResponse.requestId = request.requestId;
-        await nc.publish(
+        const response = await handleSendEmail(request);
+        await NatsClient.publish(
           `${EMAIL_RESPONSE_SUBJECT}.${request.requestId}`,
-          new TextEncoder().encode(JSON.stringify(errorResponse))
+          response,
         );
-      } catch {
-        // If we can't parse the request, we can't send a targeted response
+        console.log(
+          `Processed email send request: ${request.requestId} - ${response.success ? "SUCCESS" : "FAILED"}`,
+        );
+      } catch (error) {
+        console.error("Error processing email send request:", error);
+
+        const errorResponse: SendEmailResponse = {
+          requestId: request.requestId,
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+
+        await NatsClient.publish(
+          `${EMAIL_RESPONSE_SUBJECT}.${request.requestId}`,
+          errorResponse,
+        );
       }
-    }
-  }
+    },
+  );
 }
 
-export async function publishEmailResponse(requestId: string, response: SendEmailResponse): Promise<void> {
-  const nc = await NatsClient.getConnection();
-  await nc.publish(
-    `${EMAIL_RESPONSE_SUBJECT}.${requestId}`,
-    new TextEncoder().encode(JSON.stringify(response))
-  );
+export async function publishEmailResponse(
+  requestId: string,
+  response: SendEmailResponse,
+): Promise<void> {
+  await NatsClient.publish(`${EMAIL_RESPONSE_SUBJECT}.${requestId}`, response);
 }

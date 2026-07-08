@@ -11,7 +11,7 @@ import {
 @Entity("email_templates")
 export class EmailTemplateEntity implements IAuditableEntity {
   @Key()
-  id: number;
+  id: bigint;
 
   @Unique()
   uuid: string;

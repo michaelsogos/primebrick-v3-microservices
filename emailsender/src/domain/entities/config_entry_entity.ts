@@ -13,7 +13,7 @@ import {
 @Entity("config", "emailsender")
 export class ConfigEntryEntity implements IAuditableEntity {
   @Key()
-  id!: number;
+  id!: bigint;
 
   @Unique()
   uuid!: string;
