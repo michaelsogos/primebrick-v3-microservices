@@ -33,7 +33,7 @@ export function buildEntitySnapshot(generatedAt = new Date().toISOString()): Sch
       isAuditable: meta.isAuditable,
       // @NotificationLog() was a US-local decorator with no DAL equivalent.
       // No entity in this microservice uses it; the communication-log table
-      // is now modeled directly by EmailCommunicationLogEntity. Kept as
+      // is now modeled directly by SenderLogEntity. Kept as
       // `false` so the SchemaTableMeta shape stays compatible with the
       // patch-SQL generator (which has a dead branch for this flag).
       isNotificationLog: false,

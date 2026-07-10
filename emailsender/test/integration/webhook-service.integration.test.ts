@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { BrevoClient } from "../../src/providers/brevo.js";
 import { WebhookService } from "../../src/services/webhook-service.js";
-import { EmailCommunicationLogEntity } from "../../src/domain/entities/registry.js";
+import { SenderLogEntity } from "../../src/domain/entities/registry.js";
 import {
   initTestDal,
   setupTestSchema,
@@ -38,14 +38,14 @@ beforeEach(async () => {
  * Helper: insert a communication log row directly via the DAL, simulating a
  * log that was created by a prior sendEmail() call.
  */
-async function seedLog(providerMessageId: string, status: string): Promise<EmailCommunicationLogEntity> {
+async function seedLog(providerMessageId: string, status: string): Promise<SenderLogEntity> {
   const dal = getDal();
-  return dal.add<EmailCommunicationLogEntity>(
-    EmailCommunicationLogEntity,
+  return dal.add<SenderLogEntity>(
+    SenderLogEntity,
     {
       type: "email",
       provider_message_id: providerMessageId,
-      provider: "brevo",
+      provider_uuid: "00000000-0000-0000-0000-000000000001",
       status,
       senders: { from: "no-reply@example.com" },
       recipients: { to: ["alice@example.com"] },
@@ -68,9 +68,9 @@ describe("WebhookService.handleWebhook — integration (real PG)", () => {
 
     // Verify the row was updated
     const dal = getDal();
-    const updated = await dal.find<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {});
+    const updated = await dal.find<SenderLogEntity>(SenderLogEntity, null, {});
     // find() with no filters throws if 0 or >1 rows — use findAll instead
-    const rows = await dal.findAll<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {});
+    const rows = await dal.findAll<SenderLogEntity>(SenderLogEntity, null, {});
     expect(rows.length).toBe(1);
     expect(rows[0].status).toBe("delivered");
     expect(rows[0].provider_message_id).toBe("msg-123");
@@ -88,7 +88,7 @@ describe("WebhookService.handleWebhook — integration (real PG)", () => {
     });
 
     const dal = getDal();
-    const rows = await dal.findAll<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {});
+    const rows = await dal.findAll<SenderLogEntity>(SenderLogEntity, null, {});
     expect(rows.length).toBe(1);
     expect(rows[0].status).toBe("bounced");
     expect(rows[0].error_message).toBe("user does not exist");
@@ -104,7 +104,7 @@ describe("WebhookService.handleWebhook — integration (real PG)", () => {
     });
 
     const dal = getDal();
-    const rows = await dal.findAll<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {});
+    const rows = await dal.findAll<SenderLogEntity>(SenderLogEntity, null, {});
     expect(rows.length).toBe(1);
     expect(rows[0].status).toBe("bounced");
     // No reason provided → error_message stays undefined (not set in the update payload)

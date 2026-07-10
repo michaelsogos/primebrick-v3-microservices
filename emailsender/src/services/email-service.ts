@@ -2,7 +2,7 @@ import Handlebars from "handlebars";
 import { getDal } from "../db/dal.js";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../nats/types.js";
-import { ProviderEntity, EmailTemplateEntity, EmailCommunicationLogEntity } from "../domain/entities/registry.js";
+import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
 import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 
 export class EmailService {
@@ -24,8 +24,9 @@ export class EmailService {
     this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
   }
 
-  async sendEmail(request: SendEmailRequest): Promise<SendEmailResponse> {
+  async sendEmail(request: SendEmailRequest, actorId?: string): Promise<SendEmailResponse> {
     const dal = getDal();
+    let configUuid: string | null = null;
 
     try {
       // Get email configuration. dal.find defaults to throwIfNotFound: true,
@@ -36,6 +37,7 @@ export class EmailService {
         config = await dal.find(ProviderEntity, null, {
           filters: [Filter.fieldValue(field(ProviderEntity, "provider"), "=", "brevo")],
         }) as ProviderEntity;
+        configUuid = config.uuid;
       } catch (err) {
         if (err instanceof NotFoundError) {
           throw new Error("No email configuration found for Brevo");
@@ -85,14 +87,14 @@ export class EmailService {
       const brevoResponse = await this.brevoClient.sendEmail(brevoRequest);
 
       // Log the communication (success)
-      const logRow = await dal.add<EmailCommunicationLogEntity>(
-        EmailCommunicationLogEntity,
+      const logRow = await dal.add<SenderLogEntity>(
+        SenderLogEntity,
         {
           entity_id: request.entityId ?? null,
           entity_uuid: request.entityUuid ?? null,
           type: "email",
           provider_message_id: brevoResponse.messageId,
-          provider: "brevo",
+          provider_uuid: config.uuid,
           status: "sent",
           template_uuid: template.uuid,
           senders: { from: config.from_email },
@@ -115,13 +117,13 @@ export class EmailService {
 
       // Log the failed communication
       try {
-        await dal.add<EmailCommunicationLogEntity>(
-          EmailCommunicationLogEntity,
+        await dal.add<SenderLogEntity>(
+          SenderLogEntity,
           {
             entity_id: request.entityId ?? null,
             entity_uuid: request.entityUuid ?? null,
             type: "email",
-            provider: "brevo",
+            provider_uuid: configUuid,
             status: "failed",
             template_uuid: null,
             senders: {},

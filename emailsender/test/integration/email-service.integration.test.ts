@@ -13,7 +13,7 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { BrevoClient } from "../../src/providers/brevo.js";
 import { EmailService } from "../../src/services/email-service.js";
-import { EmailCommunicationLogEntity } from "../../src/domain/entities/registry.js";
+import { SenderLogEntity } from "../../src/domain/entities/registry.js";
 import {
   initTestDal,
   setupTestSchema,
@@ -66,7 +66,7 @@ describe("EmailService.sendEmail — integration (real PG + fake Brevo)", () => 
     const log = await findLogByMessageId("fake-msg-id-123");
     expect(log).not.toBeNull();
     expect(log!.status).toBe("sent");
-    expect(log!.provider).toBe("brevo");
+    expect(log!.provider_uuid).toBeDefined();
     expect(log!.type).toBe("email");
     expect(log!.template_uuid).toBeDefined();
     expect(log!.sent_at).toBeDefined();
@@ -89,8 +89,8 @@ describe("EmailService.sendEmail — integration (real PG + fake Brevo)", () => 
 
     // Verify a failure log was inserted
     const dal = getDal();
-    const logs = await dal.findAll<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {
-      filters: [Filter.fieldValue(field(EmailCommunicationLogEntity, "status"), "=", "failed")],
+    const logs = await dal.findAll<SenderLogEntity>(SenderLogEntity, null, {
+      filters: [Filter.fieldValue(field(SenderLogEntity, "status"), "=", "failed")],
     });
     expect(Array.isArray(logs)).toBe(true);
     expect(logs.length).toBe(1);
@@ -113,8 +113,8 @@ describe("EmailService.sendEmail — integration (real PG + fake Brevo)", () => 
     expect(res.error).toBe("Template not found: WELCOME (en)");
 
     const dal = getDal();
-    const logs = await dal.findAll<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {
-      filters: [Filter.fieldValue(field(EmailCommunicationLogEntity, "status"), "=", "failed")],
+    const logs = await dal.findAll<SenderLogEntity>(SenderLogEntity, null, {
+      filters: [Filter.fieldValue(field(SenderLogEntity, "status"), "=", "failed")],
     });
     expect(logs.length).toBe(1);
     expect(logs[0].error_message).toBe("Template not found: WELCOME (en)");
@@ -141,8 +141,8 @@ describe("EmailService.sendEmail — integration (real PG + fake Brevo)", () => 
     expect(res.error).toContain("brevo down");
 
     const dal = getDal();
-    const logs = await dal.findAll<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {
-      filters: [Filter.fieldValue(field(EmailCommunicationLogEntity, "status"), "=", "failed")],
+    const logs = await dal.findAll<SenderLogEntity>(SenderLogEntity, null, {
+      filters: [Filter.fieldValue(field(SenderLogEntity, "status"), "=", "failed")],
     });
     expect(logs.length).toBe(1);
     expect(logs[0].error_message).toContain("brevo down");

@@ -4,7 +4,7 @@
  * Provides:
  * - initDal() once via the getDal() gateway (the gateway owns the pg.Pool,
  *   registers type parsers, sets search_path/statement_timeout).
- * - Idempotent DDL for the email_templates_communication_log table (the only
+ * - Idempotent DDL for the sender_log table (the only
  *   emailsender table NOT created by the existing migration patches — it
  *   exists in the entity snapshot but has no patch yet).
  * - TRUNCATE between tests for isolation.
@@ -16,7 +16,7 @@
  */
 import "dotenv/config";
 import { getDal, resetDal, type DalConfig } from "@primebrick/dal-pg";
-import { ProviderEntity, EmailTemplateEntity, EmailCommunicationLogEntity } from "../../src/domain/entities/registry.js";
+import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../../src/domain/entities/registry.js";
 import { Filter, field } from "@primebrick/dal-pg";
 
 let dalInitialized = false;
@@ -47,12 +47,12 @@ export function initTestDal(): void {
 }
 
 /**
- * Idempotent DDL — creates the email_templates_communication_log table if it
+ * Idempotent DDL — creates the sender_log table if it
  * doesn't exist. The other emailsender tables (providers, email_templates,
  * config) are created by the migration patches in db-meta/patches/.
  *
  * Column definitions match the entity snapshot (snapshot-entities.json) and
- * the EmailCommunicationLogEntity decorator metadata.
+ * the SenderLogEntity decorator metadata.
  */
 export async function setupTestSchema(): Promise<void> {
   initTestDal();
@@ -60,13 +60,13 @@ export async function setupTestSchema(): Promise<void> {
   const pool = dal.getPool();
 
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS "emailsender"."email_templates_communication_log" (
+    CREATE TABLE IF NOT EXISTS "emailsender"."sender_log" (
       "id" bigint generated always as identity NOT NULL,
       "entity_id" bigint,
       "entity_uuid" text,
       "type" text NOT NULL,
       "provider_message_id" text,
-      "provider" text NOT NULL,
+      "provider_uuid" uuid NOT NULL,
       "status" varchar(50) NOT NULL,
       "template_uuid" text,
       "senders" jsonb NOT NULL,
@@ -93,7 +93,7 @@ export async function truncateTestTables(): Promise<void> {
     TRUNCATE TABLE
       "emailsender"."providers",
       "emailsender"."email_templates",
-      "emailsender"."email_templates_communication_log",
+      "emailsender"."sender_log",
       "emailsender"."config",
       "public"."service_registry"
     RESTART IDENTITY CASCADE;
@@ -158,13 +158,13 @@ export async function seedTemplate(overrides: Partial<EmailTemplateEntity> = {})
 /**
  * Find a communication log row by provider_message_id.
  */
-export async function findLogByMessageId(providerMessageId: string): Promise<EmailCommunicationLogEntity | null> {
+export async function findLogByMessageId(providerMessageId: string): Promise<SenderLogEntity | null> {
   initTestDal();
   const dal = getDal();
   try {
-    return await dal.find<EmailCommunicationLogEntity>(EmailCommunicationLogEntity, null, {
+    return await dal.find<SenderLogEntity>(SenderLogEntity, null, {
       filters: [
-        Filter.fieldValue(field(EmailCommunicationLogEntity, "provider_message_id"), "=", providerMessageId),
+        Filter.fieldValue(field(SenderLogEntity, "provider_message_id"), "=", providerMessageId),
       ],
     });
   } catch {

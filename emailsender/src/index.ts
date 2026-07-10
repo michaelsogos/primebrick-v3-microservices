@@ -12,7 +12,12 @@ import {
 import { initDal, getDal } from "./db/dal.js";
 import { subscribeToEmailSendRequests } from "./nats/handlers.js";
 import { EmailService } from "./services/email-service.js";
-import { webhookRouteHandler } from "./server/webhook-route.js";
+import { webhookRouteHandler, setWebhookAuthDependencies } from "./server/webhook-route.js";
+import { compositeRouteHandler } from "./server/composite-route.js";
+import { providersRouteHandler, setAuthDependencies } from "./server/providers-route.js";
+import { setNatsAuthConfig } from "./nats/handlers.js";
+import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/auth-ports-adapter.js";
+import { initAuthConfig, loadAuthConfig, getAuthConfig } from "@primebrick/sdk";
 import {
   ConfigRepositoryAdapter,
   ServiceRegistryAdapter,
@@ -50,6 +55,31 @@ async function main(): Promise<void> {
     console.error("Failed to load config (non-fatal — table may be empty):", error);
   }
 
+  // ── Auth config initialization (GATEWAY-RESOLVED mode) ────────────────
+  // The microservice stores AUTH_MODE=GATEWAY in its own config table.
+  // The BE proxy forwards the full resolved AuthUser in headers.
+  const authConfigPort = new EmailSenderAuthConfigPort(configLoader);
+  initAuthConfig(authConfigPort);
+  try {
+    await loadAuthConfig();
+    console.log("Auth config loaded");
+  } catch (error) {
+    console.error("Failed to load auth config (non-fatal — config table may be empty):", error);
+  }
+
+  // Initialize API key port for webhook auth
+  const apiKeyPort = new EmailSenderApiKeyPort();
+
+  // Wire auth dependencies into route handlers
+  try {
+    const cfg = getAuthConfig();
+    setAuthDependencies(cfg, apiKeyPort);
+    setWebhookAuthDependencies(cfg, apiKeyPort);
+    setNatsAuthConfig(cfg);
+  } catch (error) {
+    console.error("Failed to wire auth dependencies (non-fatal):", error);
+  }
+
   // ── Service registration (uses ServiceRegistryPort adapter) ───────────
   const baseUrl = env.SERVICE_BASE_URL!;
   const registrar = new ServiceRegistrar(new ServiceRegistryAdapter(), {
@@ -83,8 +113,8 @@ async function main(): Promise<void> {
 
   // ── Subscribe to email send requests ──────────────────────────────────
   const emailService = new EmailService();
-  subscribeToEmailSendRequests(async (request) => {
-    return await emailService.sendEmail(request);
+  subscribeToEmailSendRequests(async (request, actorId) => {
+    return await emailService.sendEmail(request, actorId);
   });
 
   // ── HTTP server + health check (uses SDK createHttpServer + HealthCheck)
@@ -95,7 +125,7 @@ async function main(): Promise<void> {
     port: httpPort,
     healthCheck,
     serviceName: "emailsender",
-    routeHandler: webhookRouteHandler,
+    routeHandler: compositeRouteHandler,
   });
 
   console.log("EmailSender microservice started successfully");

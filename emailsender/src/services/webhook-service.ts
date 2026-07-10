@@ -1,6 +1,6 @@
 import { getDal } from "../db/dal.js";
 import { BrevoClient } from "../providers/brevo.js";
-import { EmailCommunicationLogEntity } from "../domain/entities/email_communication_log_entity.js";
+import { SenderLogEntity } from "../domain/entities/sender_log_entity.js";
 
 export class WebhookService {
   private brevoClient: BrevoClient;
@@ -21,7 +21,7 @@ export class WebhookService {
     this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
   }
 
-  async handleWebhook(provider: string, payload: unknown): Promise<void> {
+  async handleWebhook(provider: string, payload: unknown, actorId?: string): Promise<void> {
     if (provider !== "brevo") {
       throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -51,10 +51,10 @@ export class WebhookService {
     const dal = getDal();
 
     // Update the communication log by provider_message_id using matchBy.
-    // EmailCommunicationLogEntity is non-auditable (no @AuditableField), so
+    // SenderLogEntity is non-auditable (no @AuditableField), so
     // no actor is required. status_changed_at is stamped explicitly.
     await dal.update(
-      EmailCommunicationLogEntity,
+      SenderLogEntity,
       {
         provider_message_id: providerMessageId,
         status,

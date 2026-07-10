@@ -326,11 +326,11 @@
         }
       }
     },
-    "emailsender.email_templates_communication_log": {
+    "emailsender.sender_log": {
       "kind": "table",
       "schema": "emailsender",
-      "name": "email_templates_communication_log",
-      "entityClassName": "EmailCommunicationLogEntity",
+      "name": "sender_log",
+      "entityClassName": "SenderLogEntity",
       "isNotificationLog": false,
       "columns": {
         "id": {
@@ -388,15 +388,15 @@
           "propertyKey": "provider_message_id",
           "isNullable": true
         },
-        "provider": {
-          "name": "provider",
+        "provider_uuid": {
+          "name": "provider_uuid",
           "ordinalPosition": 6,
-          "dataType": "text",
-          "typname": "text",
+          "dataType": "uuid",
+          "typname": "uuid",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
-          "propertyKey": "provider",
+          "propertyKey": "provider_uuid",
           "isNullable": false
         },
         "status": {

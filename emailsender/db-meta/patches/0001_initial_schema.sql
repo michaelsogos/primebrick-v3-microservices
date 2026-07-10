@@ -45,14 +45,14 @@ CREATE TABLE IF NOT EXISTS "emailsender"."email_templates" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS "email_templates_uuid_uq" ON "emailsender"."email_templates" ("uuid");
 
--- 3. email_templates_communication_log (email send audit trail)
-CREATE TABLE IF NOT EXISTS "emailsender"."email_templates_communication_log" (
+-- 3. sender_log (email send audit trail)
+CREATE TABLE IF NOT EXISTS "emailsender"."sender_log" (
   "id" bigint generated always as identity NOT NULL,
   "entity_id" bigint,
   "entity_uuid" text,
   "type" text NOT NULL,
   "provider_message_id" text,
-  "provider" text NOT NULL,
+  "provider_uuid" uuid NOT NULL,
   "status" varchar(50) NOT NULL,
   "template_uuid" text,
   "senders" jsonb NOT NULL,

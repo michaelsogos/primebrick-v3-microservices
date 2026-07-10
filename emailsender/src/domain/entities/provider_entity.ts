@@ -5,11 +5,14 @@ import {
   Unique,
   AuditableField,
   AuditableFieldType,
+  DeletableField,
+  DeletableFieldType,
   type IAuditableEntity,
+  type IDeletableEntity,
 } from "@primebrick/dal-pg";
 
 @Entity("providers", "emailsender")
-export class ProviderEntity implements IAuditableEntity {
+export class ProviderEntity implements IAuditableEntity, IDeletableEntity {
   @Key()
   id: bigint;
 
@@ -48,4 +51,10 @@ export class ProviderEntity implements IAuditableEntity {
 
   @AuditableField(AuditableFieldType.VERSION)
   version: number;
+
+  @DeletableField(DeletableFieldType.DELETED_AT)
+  deleted_at?: Date;
+
+  @DeletableField(DeletableFieldType.DELETED_BY)
+  deleted_by?: string;
 }
