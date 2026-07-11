@@ -20,9 +20,18 @@ import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/aut
 import { initAuthConfig, loadAuthConfig, getAuthConfig } from "@primebrick/sdk";
 import {
   ConfigRepositoryAdapter,
-  ServiceRegistryAdapter,
   HealthCheckAdapter,
 } from "./adapters/index.js";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve } from "node:path";
+
+function readServiceVersion(): string {
+  const here = dirname(fileURLToPath(import.meta.url)); // emailsender/src
+  const pkgPath = resolve(here, "..", "package.json");
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version?: string };
+  return pkg.version ?? "0.0.0";
+}
 
 async function main(): Promise<void> {
   console.log("Starting EmailSender microservice...");
@@ -41,12 +50,9 @@ async function main(): Promise<void> {
   });
 
   // ── Initialize the Dal gateway ────────────────────────────────────────
-  // The Dal owns the pg.Pool, registers type parsers, sets search_path.
   initDal();
 
   // ── Config loader (uses ConfigRepositoryPort adapter) ─────────────────
-  // Loads config rows from emailsender.config into in-memory cache.
-  // The config table is empty for now — load() succeeds with an empty cache.
   const configLoader = new ConfigLoader(new ConfigRepositoryAdapter());
   try {
     await configLoader.load();
@@ -56,8 +62,6 @@ async function main(): Promise<void> {
   }
 
   // ── Auth config initialization (GATEWAY-RESOLVED mode) ────────────────
-  // The microservice stores AUTH_MODE=GATEWAY in its own config table.
-  // The BE proxy forwards the full resolved AuthUser in headers.
   const authConfigPort = new EmailSenderAuthConfigPort(configLoader);
   initAuthConfig(authConfigPort);
   try {
@@ -80,28 +84,6 @@ async function main(): Promise<void> {
     console.error("Failed to wire auth dependencies (non-fatal):", error);
   }
 
-  // ── Service registration (uses ServiceRegistryPort adapter) ───────────
-  const baseUrl = env.SERVICE_BASE_URL!;
-  const registrar = new ServiceRegistrar(new ServiceRegistryAdapter(), {
-    serviceCode: env.SERVICE_CODE!,
-    baseUrl,
-    endpoints: {
-      webhook: `${baseUrl}/webhook`,
-      health: `${baseUrl}/health`,
-    },
-  });
-
-  try {
-    await registrar.register();
-    console.log("Service registered successfully");
-  } catch (error) {
-    console.error("Failed to register service:", error);
-    // Continue anyway - service can still function
-  }
-
-  registrar.startHeartbeat();
-  console.log("Heartbeat started");
-
   // ── Connect to NATS (uses SDK NatsClient) ─────────────────────────────
   try {
     await NatsClient.getConnection();
@@ -111,6 +93,51 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // ── Service registration via NATS ─────────────────────────────────────
+  // The registrar publishes lifecycle events (register, heartbeat, unregister)
+  // via NATS. The BE subscribes and persists to the service_registry table.
+  const baseUrl = env.SERVICE_BASE_URL!;
+  const serviceVersion = readServiceVersion();
+  const healthCheckAdapter = new HealthCheckAdapter(getDal().getPool());
+
+  const registrar = new ServiceRegistrar(
+    NatsClient,
+    {
+      serviceCode: env.SERVICE_CODE!,
+      baseUrl,
+      endpoints: {
+        webhook: `${baseUrl}/webhook`,
+        health: `${baseUrl}/health`,
+      },
+      service_version: serviceVersion,
+      name: "Email Sender",
+      description: "Email sending microservice",
+      is_behind_scaler: false,
+    },
+    async () => {
+      // Health check function — runs local checks and returns status
+      const dbOk = await healthCheckAdapter.ping();
+      const natsOk = NatsClient.isConnected();
+      return {
+        http_healthy: dbOk,
+        checks: {
+          db: { ok: dbOk },
+          nats: { ok: natsOk },
+        },
+      };
+    },
+  );
+
+  try {
+    await registrar.register();
+    console.log("Service registered via NATS");
+  } catch (error) {
+    console.error("Failed to register service:", error);
+  }
+
+  registrar.startHeartbeat();
+  console.log("Heartbeat started");
+
   // ── Subscribe to email send requests ──────────────────────────────────
   const emailService = new EmailService();
   subscribeToEmailSendRequests(async (request, actorId) => {
@@ -119,7 +146,10 @@ async function main(): Promise<void> {
 
   // ── HTTP server + health check (uses SDK createHttpServer + HealthCheck)
   const pool = getDal().getPool();
-  const healthCheck = new HealthCheck(new HealthCheckAdapter(pool));
+  const healthCheck = new HealthCheck(
+    healthCheckAdapter,
+    { nats: () => healthCheckAdapter.checkNats() },
+  );
   const httpPort = parseInt(env.HTTP_PORT || "3003", 10);
   const server = await createHttpServer({
     port: httpPort,
@@ -133,6 +163,7 @@ async function main(): Promise<void> {
   // ── Graceful shutdown (uses SDK GracefulShutdown) ─────────────────────
   const shutdown = new GracefulShutdown("emailsender");
   shutdown.addCleanup(async () => { registrar.stopHeartbeat(); });
+  shutdown.addCleanup(async () => { await registrar.unregister(); });
   shutdown.addCleanup(async () => { await NatsClient.close(); });
   shutdown.addCleanup(async () => { await getDal().close(); });
   shutdown.addCleanup(async () => {

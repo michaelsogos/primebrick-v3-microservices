@@ -1,83 +1,105 @@
 /**
- * Layer 2 integration test — ServiceRegistryAdapter (emailsender's adapter
- * for the SDK's ServiceRegistryPort).
+ * Layer 2 integration test — ServiceRegistrar via NATS.
  *
- * Tests the adapter against the real public.service_registry table via the
- * getDal() gateway. The SDK's ServiceRegistrar logic itself has its own unit
- * tests in the SDK repo — this test verifies the emailsender adapter's
- * dal.find/dal.add/dal.update calls work against real PG.
+ * The ServiceRegistrar now publishes lifecycle events via NATS instead of
+ * writing to the DB directly. This test verifies that the registrar
+ * publishes the correct subjects and payloads.
  *
  * Cases:
- *  1. findByCode returns null when no row exists
- *  2. insert adds a row, findByCode finds it
- *  3. updateByCode updates base_url + endpoints
+ *  1. register() publishes to service.register with correct payload
+ *  2. sendHeartbeat() publishes to service.heartbeat with correct payload
+ *  3. unregister() publishes to service.unregister with correct payload
+ *  4. healthCheckFn is called and its result is included in the payload
  */
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
-import { ServiceRegistryAdapter } from "../../src/adapters/service-registry-adapter.js";
-import {
-  initTestDal,
-  setupTestSchema,
-  truncateTestTables,
-  closeTestDal,
-} from "../helpers/setup.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ServiceRegistrar, SERVICE_SUBJECTS } from "@primebrick/sdk";
 
-beforeAll(async () => {
-  initTestDal();
-  await setupTestSchema();
-});
+function makeNatsMock() {
+  const calls: Array<{ subject: string; payload: unknown }> = [];
+  return {
+    publish: vi.fn(async (subject: string, data: unknown) => {
+      calls.push({ subject, payload: data });
+    }),
+    isConnected: vi.fn(() => true),
+    calls,
+  };
+}
 
-afterAll(async () => {
-  await closeTestDal();
-});
+const baseConfig = {
+  serviceCode: "EMAILSENDER",
+  baseUrl: "http://localhost:3003",
+  endpoints: { webhook: "http://localhost:3003/webhook", health: "http://localhost:3003/health" },
+  service_version: "1.0.0",
+  name: "Email Sender",
+  description: "Email sending microservice",
+  is_behind_scaler: false,
+};
 
-beforeEach(async () => {
-  await truncateTestTables();
-});
+describe("ServiceRegistrar — NATS registration", () => {
+  let nats: ReturnType<typeof makeNatsMock>;
 
-describe("ServiceRegistryAdapter — integration (real PG)", () => {
-  it("findByCode returns null when no row exists", async () => {
-    const adapter = new ServiceRegistryAdapter();
-    const result = await adapter.findByCode("EMAILSENDER");
-    expect(result).toBeNull();
+  beforeEach(() => {
+    nats = makeNatsMock();
   });
 
-  it("insert adds a row, findByCode finds it", async () => {
-    const adapter = new ServiceRegistryAdapter();
-    await adapter.insert({
-      code: "EMAILSENDER",
-      base_url: "http://localhost:3003",
-      endpoints: { webhook: "http://localhost:3003/webhook", health: "http://localhost:3003/health" },
-    });
-
-    const result = await adapter.findByCode("EMAILSENDER");
-    expect(result).not.toBeNull();
-    expect(result!.code).toBe("EMAILSENDER");
-    expect(result!.base_url).toBe("http://localhost:3003");
-    expect(result!.endpoints).toEqual({
-      webhook: "http://localhost:3003/webhook",
-      health: "http://localhost:3003/health",
-    });
+  it("register() publishes to service.register with correct payload", async () => {
+    const registrar = new ServiceRegistrar(nats as any, baseConfig);
+    await registrar.register();
+    expect(nats.publish).toHaveBeenCalledTimes(1);
+    const call = nats.calls[0];
+    expect(call.subject).toBe(SERVICE_SUBJECTS.REGISTER);
+    expect(call.payload.code).toBe("EMAILSENDER");
+    expect(call.payload.base_url).toBe("http://localhost:3003");
+    expect(call.payload.endpoints).toEqual(baseConfig.endpoints);
+    expect(call.payload.service_version).toBe("1.0.0");
+    expect(call.payload.name).toBe("Email Sender");
+    expect(call.payload.is_behind_scaler).toBe(false);
+    expect(call.payload.http_healthy).toBe(true);
+    expect(call.payload.nats_connected).toBe(true);
   });
 
-  it("updateByCode updates base_url + endpoints", async () => {
-    const adapter = new ServiceRegistryAdapter();
-    await adapter.insert({
-      code: "EMAILSENDER",
-      base_url: "http://localhost:3003",
-      endpoints: { webhook: "http://localhost:3003/webhook" },
-    });
+  it("sendHeartbeat() publishes to service.heartbeat with correct payload", async () => {
+    const registrar = new ServiceRegistrar(nats as any, baseConfig);
+    await registrar.sendHeartbeat();
+    expect(nats.publish).toHaveBeenCalledTimes(1);
+    const call = nats.calls[0];
+    expect(call.subject).toBe(SERVICE_SUBJECTS.HEARTBEAT);
+    expect(call.payload.code).toBe("EMAILSENDER");
+    expect(call.payload.service_version).toBe("1.0.0");
+    // heartbeat does NOT include endpoints
+    expect(call.payload.endpoints).toBeUndefined();
+  });
 
-    await adapter.updateByCode("EMAILSENDER", {
-      base_url: "http://new-host:4000",
-      endpoints: { webhook: "http://new-host:4000/webhook", health: "http://new-host:4000/health" },
-    });
+  it("unregister() publishes to service.unregister with correct payload", async () => {
+    const registrar = new ServiceRegistrar(nats as any, baseConfig);
+    await registrar.unregister();
+    expect(nats.publish).toHaveBeenCalledTimes(1);
+    const call = nats.calls[0];
+    expect(call.subject).toBe(SERVICE_SUBJECTS.UNREGISTER);
+    expect(call.payload.code).toBe("EMAILSENDER");
+    expect(call.payload.base_url).toBe("http://localhost:3003");
+    expect(call.payload.is_behind_scaler).toBe(false);
+  });
 
-    const result = await adapter.findByCode("EMAILSENDER");
-    expect(result).not.toBeNull();
-    expect(result!.base_url).toBe("http://new-host:4000");
-    expect(result!.endpoints).toEqual({
-      webhook: "http://new-host:4000/webhook",
-      health: "http://new-host:4000/health",
-    });
+  it("healthCheckFn is called and its result is included in the payload", async () => {
+    const healthCheckFn = vi.fn(async () => ({
+      http_healthy: false,
+      checks: { db: { ok: false, error: "connection refused" } },
+    }));
+    const registrar = new ServiceRegistrar(nats as any, baseConfig, healthCheckFn);
+    await registrar.sendHeartbeat();
+    const call = nats.calls[0];
+    expect(call.payload.http_healthy).toBe(false);
+    expect(call.payload.checks.db.ok).toBe(false);
+    expect(call.payload.checks.db.error).toBe("connection refused");
+    expect(healthCheckFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("nats_connected reflects NatsClient.isConnected() result", async () => {
+    nats.isConnected = vi.fn(() => false);
+    const registrar = new ServiceRegistrar(nats as any, baseConfig);
+    await registrar.sendHeartbeat();
+    const call = nats.calls[0];
+    expect(call.payload.nats_connected).toBe(false);
   });
 });
