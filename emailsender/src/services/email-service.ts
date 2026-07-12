@@ -6,22 +6,16 @@ import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/
 import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 
 export class EmailService {
-  private brevoClient: BrevoClient;
+  private brevoClient: BrevoClient | null = null;
 
   constructor(brevoClient?: BrevoClient) {
     if (brevoClient) {
       this.brevoClient = brevoClient;
-      return;
     }
-
-    const apiKey = process.env.BREVO_API_KEY;
-    const apiEndpoint = process.env.BREVO_API_ENDPOINT || "https://api.brevo.com/v1";
-
-    if (!apiKey) {
-      throw new Error("BREVO_API_KEY is not set");
-    }
-
-    this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
+    // No ENV dependency — BrevoClient is constructed per-request from the
+    // provider config loaded from the emailsender.providers table.
+    // Admin users set up the Brevo provider (api_key, api_endpoint, etc.)
+    // via the FE → POST/PUT /api/v1/providers.
   }
 
   async sendEmail(request: SendEmailRequest, actorId?: string): Promise<SendEmailResponse> {
@@ -29,9 +23,10 @@ export class EmailService {
     let configUuid: string | null = null;
 
     try {
-      // Get email configuration. dal.find defaults to throwIfNotFound: true,
-      // so a missing config throws NotFoundError — caught and re-thrown as the
-      // service's existing error shape.
+      // Get email configuration from the providers table.
+      // dal.find defaults to throwIfNotFound: true, so a missing config
+      // throws NotFoundError — caught and re-thrown as the service's
+      // existing error shape.
       let config: ProviderEntity;
       try {
         config = await dal.find(ProviderEntity, null, {
@@ -40,10 +35,17 @@ export class EmailService {
         configUuid = config.uuid;
       } catch (err) {
         if (err instanceof NotFoundError) {
-          throw new Error("No email configuration found for Brevo");
+          throw new Error("No email configuration found for Brevo — admin must configure the Brevo provider via FE");
         }
         throw err;
       }
+
+      // Construct BrevoClient from the DB-loaded provider config.
+      // If a pre-configured client was injected via constructor, use it (for tests).
+      const client = this.brevoClient ?? new BrevoClient(
+        config.api_key,
+        config.api_endpoint ?? "https://api.brevo.com/v1",
+      );
 
       // Get email template — request fields are camelCase (NATS contract);
       // entity/DB columns are snake_case.
@@ -84,7 +86,7 @@ export class EmailService {
       };
 
       // Send email via Brevo
-      const brevoResponse = await this.brevoClient.sendEmail(brevoRequest);
+      const brevoResponse = await client.sendEmail(brevoRequest);
 
       // Log the communication (success)
       const logRow = await dal.add<SenderLogEntity>(

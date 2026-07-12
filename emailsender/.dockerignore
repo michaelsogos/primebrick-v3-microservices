@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+.env.local
+*.log
+.git
+.gitignore
+test
+__tests__
+*.test.ts
+vitest.config.ts
+vitest.integration.config.ts
+README.md

@@ -61,6 +61,15 @@ export class ServiceRegistryEntity implements IAuditableEntity {
   @Column({ pgType: "timestamptz", nullable: true })
   last_health_check_at?: Date;
 
+  @Column({ nullable: false, defaultSql: "true" })
+  is_enabled!: boolean;
+
+  @Column({ nullable: true })
+  icon?: string;
+
+  @Column({ nullable: false, defaultSql: "'icon'" })
+  icon_type!: string;
+
   @AuditableField(AuditableFieldType.CREATED_AT)
   created_at!: Date;
 

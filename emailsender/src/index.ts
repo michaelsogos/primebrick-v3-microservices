@@ -15,6 +15,7 @@ import { EmailService } from "./services/email-service.js";
 import { webhookRouteHandler, setWebhookAuthDependencies } from "./server/webhook-route.js";
 import { compositeRouteHandler } from "./server/composite-route.js";
 import { providersRouteHandler, setAuthDependencies } from "./server/providers-route.js";
+import { configRouteHandler, setAuthDependencies as setConfigAuthDependencies } from "./server/config-route.js";
 import { setNatsAuthConfig } from "./nats/handlers.js";
 import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/auth-ports-adapter.js";
 import { initAuthConfig, loadAuthConfig, getAuthConfig } from "@primebrick/sdk";
@@ -37,16 +38,15 @@ async function main(): Promise<void> {
   console.log("Starting EmailSender microservice...");
 
   // ── Environment validation (centralized via SDK) ──────────────────────
+  // Only true primitives + SERVICE_BASE_URL stay as ENV vars.
+  // SERVICE_BASE_URL stays as ENV because the host port is dynamic (set by
+  // deploy script at deploy time) and can't be known when seeding the config table.
+  // BREVO_API_KEY is NOT here — it comes from the emailsender.providers table,
+  // set up by admin users via the FE (POST/PUT /api/v1/providers).
   const env = requireEnv({
     DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
-    BREVO_API_KEY: { required: true, description: "Brevo API key for sending emails" },
-    WEBHOOK_API_KEY: { required: true, description: "API key for webhook authentication" },
-    DB_SCHEMA: { required: false, default: "emailsender" },
-    NATS_URL: { required: false, default: "nats://127.0.0.1:4222" },
-    BREVO_API_ENDPOINT: { required: false, default: "https://api.brevo.com/v1" },
-    SERVICE_CODE: { required: false, default: "EMAILSENDER" },
-    SERVICE_BASE_URL: { required: false, default: "http://localhost:3003" },
-    HTTP_PORT: { required: false, default: "3003" },
+    DB_SCHEMA: { required: false, default: "emailsender", description: "Database schema name" },
+    SERVICE_BASE_URL: { required: false, default: "http://localhost:3003", description: "Exposed URL for BE proxy routing (dynamic host port in Docker)" },
   });
 
   // ── Initialize the Dal gateway ────────────────────────────────────────
@@ -78,15 +78,17 @@ async function main(): Promise<void> {
   try {
     const cfg = getAuthConfig();
     setAuthDependencies(cfg, apiKeyPort);
+    setConfigAuthDependencies(cfg, apiKeyPort);
     setWebhookAuthDependencies(cfg, apiKeyPort);
     setNatsAuthConfig(cfg);
   } catch (error) {
     console.error("Failed to wire auth dependencies (non-fatal):", error);
   }
 
-  // ── Connect to NATS (uses SDK NatsClient) ─────────────────────────────
+  // ── Connect to NATS (uses SDK NatsClient with URL from config table) ──
+  const natsUrl = configLoader.require("nats_url");
   try {
-    await NatsClient.getConnection();
+    await NatsClient.getConnection(natsUrl);
     console.log("NATS connection established");
   } catch (error) {
     console.error("Failed to connect to NATS:", error);
@@ -97,13 +99,14 @@ async function main(): Promise<void> {
   // The registrar publishes lifecycle events (register, heartbeat, unregister)
   // via NATS. The BE subscribes and persists to the service_registry table.
   const baseUrl = env.SERVICE_BASE_URL!;
+  const serviceCode = configLoader.require("service_code");
   const serviceVersion = readServiceVersion();
   const healthCheckAdapter = new HealthCheckAdapter(getDal().getPool());
 
   const registrar = new ServiceRegistrar(
     NatsClient,
     {
-      serviceCode: env.SERVICE_CODE!,
+      serviceCode,
       baseUrl,
       endpoints: {
         webhook: `${baseUrl}/webhook`,
@@ -113,6 +116,8 @@ async function main(): Promise<void> {
       name: "Email Sender",
       description: "Email sending microservice",
       is_behind_scaler: false,
+      icon: "mail",
+      icon_type: "icon",
     },
     async () => {
       // Health check function — runs local checks and returns status
@@ -150,7 +155,7 @@ async function main(): Promise<void> {
     healthCheckAdapter,
     { nats: () => healthCheckAdapter.checkNats() },
   );
-  const httpPort = parseInt(env.HTTP_PORT || "3003", 10);
+  const httpPort = parseInt(configLoader.require("http_port"), 10);
   const server = await createHttpServer({
     port: httpPort,
     healthCheck,

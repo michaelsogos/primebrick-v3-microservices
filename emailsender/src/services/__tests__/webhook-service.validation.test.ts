@@ -1,9 +1,9 @@
 /**
  * Layer 1 unit test — WebhookService.handleWebhook() validation
  *
- * Pure unit tests: no DB, no network, no vi.mock. The WebhookService is
- * constructed with an injected BrevoClient (DI refactor) so no env vars are
- * needed. The validation checks (unsupported provider, missing message-id,
+ * Pure unit tests: no DB, no network, no vi.mock. The WebhookService
+ * no longer needs a BrevoClient instance — mapStatus is a static method.
+ * The validation checks (unsupported provider, missing message-id,
  * missing event) throw BEFORE getDal() is reached — so no DB connection is
  * ever attempted.
  *
@@ -14,11 +14,8 @@
  */
 import { describe, it, expect } from "vitest";
 import { WebhookService } from "../webhook-service.js";
-import { BrevoClient } from "../../providers/brevo.js";
 
-// Inject a dummy BrevoClient — mapStatus is a pure function, no network.
-const dummyBrevo = new BrevoClient("dummy-key", "http://localhost:0");
-const svc = new WebhookService(dummyBrevo);
+const svc = new WebhookService();
 
 describe("WebhookService.handleWebhook — validation (throws before DB)", () => {
   it("throws on unsupported provider", async () => {

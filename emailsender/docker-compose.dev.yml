@@ -1,0 +1,37 @@
+# Development compose file — hot reload in Docker without rebuilds.
+# Usage: docker compose -f docker-compose.dev.yml up
+# Requires Docker Compose v2.17+ (for `watch` feature).
+#
+# This file is NOT used by Terraform (prod). It's dev-only.
+services:
+  emailsender-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Override the prod CMD with dev mode — run from source, not dist/
+    command: bun --hot src/index.ts
+    ports:
+      - "3003:3003"  # Direct mapping, no dynamic port needed in dev
+    environment:
+      DATABASE_URL: postgresql://primebrick:primebrick@primebrick-postgres-18:5432/primebrick
+      DB_SCHEMA: emailsender
+      SERVICE_BASE_URL: http://localhost:3003
+      NODE_ENV: development
+    networks:
+      - primebrick-infra-net
+    develop:
+      watch:
+        # Sync source code changes → bun --hot picks them up
+        - action: sync
+          path: ./src
+          target: /app/src
+        # Rebuild image when dependencies change
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: pnpm-lock.yaml
+
+networks:
+  primebrick-infra-net:
+    external: true
+    name: primebrick-infra-net

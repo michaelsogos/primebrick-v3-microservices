@@ -59,7 +59,7 @@ export class BrevoClient {
     };
   }
 
-  mapStatus(brevoStatus: string): string {
+  static mapStatus(brevoStatus: string): string {
     // Map Brevo status to our internal status
     const statusMap: Record<string, string> = {
       "sent": "sent",

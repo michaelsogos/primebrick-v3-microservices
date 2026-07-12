@@ -3,23 +3,9 @@ import { BrevoClient } from "../providers/brevo.js";
 import { SenderLogEntity } from "../domain/entities/sender_log_entity.js";
 
 export class WebhookService {
-  private brevoClient: BrevoClient;
-
-  constructor(brevoClient?: BrevoClient) {
-    if (brevoClient) {
-      this.brevoClient = brevoClient;
-      return;
-    }
-
-    const apiKey = process.env.BREVO_API_KEY;
-    const apiEndpoint = process.env.BREVO_API_ENDPOINT || "https://api.brevo.com/v1";
-
-    if (!apiKey) {
-      throw new Error("BREVO_API_KEY is not set");
-    }
-
-    this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
-  }
+  // No BrevoClient instance needed — webhook handling only uses
+  // BrevoClient.mapStatus() which is a static pure function.
+  // The Brevo API key is not needed for webhook payload processing.
 
   async handleWebhook(provider: string, payload: unknown, actorId?: string): Promise<void> {
     if (provider !== "brevo") {
@@ -44,8 +30,8 @@ export class WebhookService {
       throw new Error("Missing event in webhook payload");
     }
 
-    // Map Brevo event to our status
-    const status = this.brevoClient.mapStatus(event);
+    // Map Brevo event to our status (static method — no API key needed)
+    const status = BrevoClient.mapStatus(event);
     const errorMessage = data.reason || undefined;
 
     const dal = getDal();

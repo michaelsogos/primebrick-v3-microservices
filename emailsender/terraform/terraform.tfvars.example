@@ -1,0 +1,21 @@
+# ─── Infrastructure (defaults match primebrick-infra docker-compose) ───
+# Override only if you changed the infra compose defaults.
+# infra_network_name = "primebrick-infra-net"
+# postgres_host      = "primebrick-postgres-18"
+
+# ─── PostgreSQL credentials ────────────────────────────────────────────
+# Set these to match your infra docker-compose.
+postgres_password = "change_me"
+
+# ─── This microservice ─────────────────────────────────────────────────
+# image_name     = "primebrick/emailsender"
+# image_tag      = "latest"   # or a specific version: "0.2.0"
+# container_name = "primebrick-emailsender"
+# db_schema      = "emailsender"
+
+# ─── Dynamic port + base URL ───────────────────────────────────────────
+# These are set by the deploy script (deploy.ps1 / deploy.sh).
+# Do NOT set them manually here — the script finds the available port
+# and passes it via -var flags.
+# host_port         = 4001    # set by deploy script
+# service_base_url  = "http://localhost:4001"  # set by deploy script
