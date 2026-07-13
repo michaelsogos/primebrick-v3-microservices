@@ -1,21 +1,13 @@
-import { getPool } from "../db/pool.js";
+import { getDal } from "../db/dal.js";
 import { BrevoClient } from "../providers/brevo.js";
+import { SenderLogEntity } from "../domain/entities/sender_log_entity.js";
 
 export class WebhookService {
-  private brevoClient: BrevoClient;
+  // No BrevoClient instance needed — webhook handling only uses
+  // BrevoClient.mapStatus() which is a static pure function.
+  // The Brevo API key is not needed for webhook payload processing.
 
-  constructor() {
-    const apiKey = process.env.BREVO_API_KEY;
-    const apiEndpoint = process.env.BREVO_API_ENDPOINT || "https://api.brevo.com/v1";
-    
-    if (!apiKey) {
-      throw new Error("BREVO_API_KEY is not set");
-    }
-    
-    this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
-  }
-
-  async handleWebhook(provider: string, payload: unknown): Promise<void> {
+  async handleWebhook(provider: string, payload: unknown, actorId?: string): Promise<void> {
     if (provider !== "brevo") {
       throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -38,18 +30,24 @@ export class WebhookService {
       throw new Error("Missing event in webhook payload");
     }
 
-    // Map Brevo event to our status
-    const status = this.brevoClient.mapStatus(event);
+    // Map Brevo event to our status (static method — no API key needed)
+    const status = BrevoClient.mapStatus(event);
     const errorMessage = data.reason || undefined;
 
-    const pool = getPool();
+    const dal = getDal();
 
-    // Update the communication log
-    await pool.query(
-      `UPDATE emailsender.email_templates_communication_log
-       SET status = $1, status_changed_at = NOW(), error_message = $2
-       WHERE provider_message_id = $3`,
-      [status, errorMessage, providerMessageId]
+    // Update the communication log by provider_message_id using matchBy.
+    // SenderLogEntity is non-auditable (no @AuditableField), so
+    // no actor is required. status_changed_at is stamped explicitly.
+    await dal.update(
+      SenderLogEntity,
+      {
+        provider_message_id: providerMessageId,
+        status,
+        status_changed_at: new Date(),
+        error_message: errorMessage,
+      },
+      { matchBy: "provider_message_id" },
     );
 
     console.log(`Updated communication log for message ${providerMessageId}: ${status}`);

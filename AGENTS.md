@@ -24,6 +24,26 @@ Independent Git repository containing the distributed microservices part of the 
 |--------|---------|
 | Install | `pnpm install` |
 | Build | `pnpm run build` |
+| DB migrate (per microservice) | `cd <microservice> && pnpm run db:migrate` |
+
+## Database patches
+
+Each microservice has its own `db-meta/patches/` directory and uses `@primebrick/sdk`'s `applyPatches()` runner via `bun scripts/database-patch-apply.ts`.
+
+If `db:migrate` fails with "exists in registry with a different content_sha256", see
+[.devin/rules/patch-sha256-management.md](./.devin/rules/patch-sha256-management.md).
+**Never create a new initial patch** — update the existing one in place and create a
+fire-and-forget script to update the registry hash on existing databases.
+
+## Package Versioning — FIXED versions only (MANDATORY)
+
+All package versions in `package.json` MUST be pinned to exact versions (e.g.
+`"typescript": "5.9.3"`). NO ranges (`^`, `~`, `>=`, `*`, `latest`) are allowed
+for registry packages. This ensures every dev machine, CI build, and production
+rebuild gets the exact same dependency tree that was tested during UAT.
+
+See [.devin/rules/package-versioning.md](./.devin/rules/package-versioning.md)
+for the full rule and upgrade procedure.
 
 ## GitFlow rules
 This repository follows GitFlow. AI agents MUST follow these rules.

@@ -1,58 +1,78 @@
 import Handlebars from "handlebars";
-import { getPool } from "../db/pool.js";
+import { getDal } from "../db/dal.js";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../nats/types.js";
+import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
+import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 
 export class EmailService {
-  private brevoClient: BrevoClient;
+  private brevoClient: BrevoClient | null = null;
 
-  constructor() {
-    const apiKey = process.env.BREVO_API_KEY;
-    const apiEndpoint = process.env.BREVO_API_ENDPOINT || "https://api.brevo.com/v1";
-    
-    if (!apiKey) {
-      throw new Error("BREVO_API_KEY is not set");
+  constructor(brevoClient?: BrevoClient) {
+    if (brevoClient) {
+      this.brevoClient = brevoClient;
     }
-    
-    this.brevoClient = new BrevoClient(apiKey, apiEndpoint);
+    // No ENV dependency — BrevoClient is constructed per-request from the
+    // provider config loaded from the emailsender.providers table.
+    // Admin users set up the Brevo provider (api_key, api_endpoint, etc.)
+    // via the FE → POST/PUT /api/v1/providers.
   }
 
-  async sendEmail(request: SendEmailRequest): Promise<SendEmailResponse> {
-    const pool = getPool();
-    
+  async sendEmail(request: SendEmailRequest, actorId?: string): Promise<SendEmailResponse> {
+    const dal = getDal();
+    let configUuid: string | null = null;
+
     try {
-      // Get email configuration
-      const configResult = await pool.query(
-        "SELECT * FROM emailsender.email_config WHERE provider = 'brevo' LIMIT 1"
-      );
-      
-      if (configResult.rows.length === 0) {
-        throw new Error("No email configuration found for Brevo");
+      // Get email configuration from the providers table.
+      // dal.find defaults to throwIfNotFound: true, so a missing config
+      // throws NotFoundError — caught and re-thrown as the service's
+      // existing error shape.
+      let config: ProviderEntity;
+      try {
+        config = await dal.find(ProviderEntity, null, {
+          filters: [Filter.fieldValue(field(ProviderEntity, "provider"), "=", "brevo")],
+        }) as ProviderEntity;
+        configUuid = config.uuid;
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          throw new Error("No email configuration found for Brevo — admin must configure the Brevo provider via FE");
+        }
+        throw err;
       }
-      
-      const config = configResult.rows[0];
-      
-      // Get email template
-      const templateResult = await pool.query(
-        "SELECT * FROM emailsender.email_templates WHERE code = $1 AND language_iso = $2 LIMIT 1",
-        [request.templateCode, request.languageIso]
+
+      // Construct BrevoClient from the DB-loaded provider config.
+      // If a pre-configured client was injected via constructor, use it (for tests).
+      const client = this.brevoClient ?? new BrevoClient(
+        config.api_key,
+        config.api_endpoint ?? "https://api.brevo.com/v1",
       );
-      
-      if (templateResult.rows.length === 0) {
-        throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);
+
+      // Get email template — request fields are camelCase (NATS contract);
+      // entity/DB columns are snake_case.
+      let template: EmailTemplateEntity;
+      try {
+        template = await dal.find(EmailTemplateEntity, null, {
+          filters: [
+            Filter.fieldValue(field(EmailTemplateEntity, "code"), "=", request.templateCode),
+            Filter.fieldValue(field(EmailTemplateEntity, "language_iso"), "=", request.languageIso),
+          ],
+        }) as EmailTemplateEntity;
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);
+        }
+        throw err;
       }
-      
-      const template = templateResult.rows[0];
-      
+
       // Render template with variables
       const compiledSubject = Handlebars.compile(template.subject || "");
       const compiledHtml = Handlebars.compile(template.body_html || "");
       const compiledText = Handlebars.compile(template.body_text || "");
-      
+
       const subject = compiledSubject(request.variables || {});
       const htmlContent = compiledHtml(request.variables || {});
       const textContent = compiledText(request.variables || {});
-      
+
       // Prepare Brevo request
       const brevoRequest: BrevoEmailRequest = {
         to: request.to.map(email => ({ email })),
@@ -64,61 +84,61 @@ export class EmailService {
         sender: config.from_email ? { email: config.from_email, name: config.from_name || undefined } : undefined,
         replyTo: config.reply_to ? { email: config.reply_to } : undefined,
       };
-      
+
       // Send email via Brevo
-      const brevoResponse = await this.brevoClient.sendEmail(brevoRequest);
-      
-      // Log the communication
-      const logResult = await pool.query(
-        `INSERT INTO emailsender.email_templates_communication_log 
-         (entity_id, entity_uuid, type, provider_message_id, provider, status, template_uuid, senders, recipients, interpolated_sent_message, sent_at, status_changed_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
-         RETURNING id`,
-        [
-          request.entityId || null,
-          request.entityUuid || null,
-          "email",
-          brevoResponse.messageId,
-          "brevo",
-          "sent",
-          template.uuid,
-          JSON.stringify({ from: config.from_email }),
-          JSON.stringify({ to: request.to, cc: request.cc, bcc: request.bcc }),
-          htmlContent || textContent,
-        ]
+      const brevoResponse = await client.sendEmail(brevoRequest);
+
+      // Log the communication (success)
+      const logRow = await dal.add<SenderLogEntity>(
+        SenderLogEntity,
+        {
+          entity_id: request.entityId ?? null,
+          entity_uuid: request.entityUuid ?? null,
+          type: "email",
+          provider_message_id: brevoResponse.messageId,
+          provider_uuid: config.uuid,
+          status: "sent",
+          template_uuid: template.uuid,
+          senders: { from: config.from_email },
+          recipients: { to: request.to, cc: request.cc, bcc: request.bcc },
+          interpolated_sent_message: htmlContent || textContent,
+          sent_at: new Date(),
+          status_changed_at: new Date(),
+        },
+        {},
       );
-      
+
       return {
         requestId: request.requestId,
         success: true,
         providerMessageId: brevoResponse.messageId,
-        logId: logResult.rows[0].id,
+        logId: logRow.id,
       };
     } catch (error) {
       console.error("Error sending email:", error);
-      
+
       // Log the failed communication
       try {
-        await pool.query(
-          `INSERT INTO emailsender.email_templates_communication_log 
-           (entity_id, entity_uuid, type, provider, status, template_uuid, senders, recipients, error_message, status_changed_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
-          [
-            request.entityId || null,
-            request.entityUuid || null,
-            "email",
-            "brevo",
-            "failed",
-            null,
-            JSON.stringify({}),
-            JSON.stringify({ to: request.to }),
-            error instanceof Error ? error.message : "Unknown error",
-          ]
+        await dal.add<SenderLogEntity>(
+          SenderLogEntity,
+          {
+            entity_id: request.entityId ?? null,
+            entity_uuid: request.entityUuid ?? null,
+            type: "email",
+            provider_uuid: configUuid,
+            status: "failed",
+            template_uuid: null,
+            senders: {},
+            recipients: { to: request.to },
+            error_message: error instanceof Error ? error.message : "Unknown error",
+            status_changed_at: new Date(),
+          },
+          {},
         );
       } catch (logError) {
         console.error("Error logging failed email:", logError);
       }
-      
+
       return {
         requestId: request.requestId,
         success: false,

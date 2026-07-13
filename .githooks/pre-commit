@@ -2,8 +2,9 @@
 set -e
 
 # Sync package.json version on release/hotfix branches.
+# Updates ALL microservice package.json files to match the branch version.
 node scripts/version-sync.mjs
 
-# If the script changed package.json, include it in the commit.
-git add package.json 2>/dev/null || true
+# If the script changed any package.json, include them in the commit.
+git add '*/package.json' 2>/dev/null || true
 

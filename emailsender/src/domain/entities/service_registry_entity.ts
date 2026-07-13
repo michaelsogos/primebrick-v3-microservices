@@ -1,0 +1,87 @@
+import {
+  Entity,
+  Key,
+  Unique,
+  Column,
+  AuditableField,
+  AuditableFieldType,
+  type IAuditableEntity,
+} from "@primebrick/dal-pg";
+
+/**
+ * Entity for `public.service_registry`.
+ *
+ * This is a shared table in the `public` schema, not owned by the emailsender
+ * microservice. The second argument to `@Entity` overrides the schema so the
+ * DAL generates `public.service_registry` in SQL, regardless of the Dal
+ * gateway's `search_path` setting.
+ *
+ * NOTE: A copy of this entity exists in `primebrick-be-v3`. When a second
+ * microservice needs it, extract to a shared `@primebrick/shared-entities`
+ * package. For now, emailsender is the only US microservice consuming it.
+ */
+@Entity("service_registry", "public")
+export class ServiceRegistryEntity implements IAuditableEntity {
+  @Key()
+  id!: bigint;
+
+  @Unique()
+  uuid!: string;
+
+  @Column({ length: 100, nullable: false })
+  code!: string;
+
+  @Column({ nullable: false })
+  base_url!: string;
+
+  @Column({ pgType: "jsonb", nullable: false })
+  endpoints!: Record<string, unknown>;
+
+  @Column({ nullable: true })
+  name?: string;
+
+  @Column({ nullable: true })
+  description?: string;
+
+  @Column({ nullable: true })
+  author?: string;
+
+  @Column({ nullable: true })
+  github_repo_url?: string;
+
+  @Column({ nullable: true })
+  service_version?: string;
+
+  @Column({ nullable: false, defaultSql: "false" })
+  is_behind_scaler!: boolean;
+
+  @Column({ nullable: false, defaultSql: "'unknown'" })
+  status!: string;
+
+  @Column({ pgType: "timestamptz", nullable: true })
+  last_health_check_at?: Date;
+
+  @Column({ nullable: false, defaultSql: "true" })
+  is_enabled!: boolean;
+
+  @Column({ nullable: true })
+  icon?: string;
+
+  @Column({ nullable: false, defaultSql: "'icon'" })
+  icon_type!: string;
+
+  @AuditableField(AuditableFieldType.CREATED_AT)
+  created_at!: Date;
+
+  @AuditableField(AuditableFieldType.CREATED_BY)
+  created_by!: string;
+
+  @AuditableField(AuditableFieldType.UPDATED_AT)
+  updated_at!: Date;
+
+  @AuditableField(AuditableFieldType.UPDATED_BY)
+  updated_by!: string;
+
+  @AuditableField(AuditableFieldType.VERSION)
+  version!: number;
+}

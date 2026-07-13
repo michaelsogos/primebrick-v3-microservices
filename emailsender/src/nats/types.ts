@@ -7,7 +7,7 @@ export interface SendEmailRequest {
   bcc?: string[];
   variables?: Record<string, unknown>;
   entityTable?: string;
-  entityId?: number;
+  entityId?: bigint;
   entityUuid?: string;
 }
 
@@ -16,7 +16,7 @@ export interface SendEmailResponse {
   success: boolean;
   providerMessageId?: string;
   error?: string;
-  logId?: number;
+  logId?: bigint;
 }
 
 export interface WebhookUpdateRequest {

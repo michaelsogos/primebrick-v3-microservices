@@ -1,17 +1,20 @@
-import type { IAuditableEntity } from "./iauditable_entity.js";
-import { 
-  Column, 
-  Entity, 
-  Key, 
-  Unique, 
-  AuditableField, 
+import {
+  Column,
+  Entity,
+  Key,
+  Unique,
+  AuditableField,
   AuditableFieldType,
-} from "./entity-decorators.js";
+  DeletableField,
+  DeletableFieldType,
+  type IAuditableEntity,
+  type IDeletableEntity,
+} from "@primebrick/dal-pg";
 
-@Entity("email_config")
-export class EmailConfigEntity implements IAuditableEntity {
+@Entity("providers", "emailsender")
+export class ProviderEntity implements IAuditableEntity, IDeletableEntity {
   @Key()
-  id: number;
+  id: bigint;
 
   @Unique()
   uuid: string;
@@ -48,4 +51,10 @@ export class EmailConfigEntity implements IAuditableEntity {
 
   @AuditableField(AuditableFieldType.VERSION)
   version: number;
+
+  @DeletableField(DeletableFieldType.DELETED_AT)
+  deleted_at?: Date;
+
+  @DeletableField(DeletableFieldType.DELETED_BY)
+  deleted_by?: string;
 }

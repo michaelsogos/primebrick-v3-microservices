@@ -1,17 +1,17 @@
-import type { IAuditableEntity } from "./iauditable_entity.js";
-import { 
-  Column, 
-  Entity, 
-  Key, 
-  Unique, 
-  AuditableField, 
+import {
+  Column,
+  Entity,
+  Key,
+  Unique,
+  AuditableField,
   AuditableFieldType,
-} from "./entity-decorators.js";
+  type IAuditableEntity,
+} from "@primebrick/dal-pg";
 
 @Entity("email_templates")
 export class EmailTemplateEntity implements IAuditableEntity {
   @Key()
-  id: number;
+  id: bigint;
 
   @Unique()
   uuid: string;
