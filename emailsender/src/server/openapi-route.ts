@@ -1,11 +1,11 @@
 /**
- * OpenAPI route handler — serves the microservice OpenAPI spec at GET /api/openapi.json.
+ * OpenAPI route handler — serves the microservice OpenAPI spec at GET /api/v1/openapi.json.
  * Public endpoint (no auth) — the BE OpenAPI merger fetches this.
  */
 
 import type { IncomingMessage, ServerResponse } from "http";
 
-const OPENAPI_SPEC = {
+export const OPENAPI_SPEC = {
   openapi: "3.1.0",
   info: {
     title: "EmailSender Microservice API",
@@ -45,7 +45,7 @@ export async function openapiRouteHandler(
   res: ServerResponse,
   url: URL,
 ): Promise<boolean> {
-  if (url.pathname === "/api/openapi.json" && req.method === "GET") {
+  if (url.pathname === "/api/v1/openapi.json" && req.method === "GET") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify(OPENAPI_SPEC));
     return true;
