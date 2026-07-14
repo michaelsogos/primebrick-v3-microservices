@@ -9,6 +9,26 @@
 Independent Git repository containing the distributed microservices part of the Primebrick v3 Backend.
 **Documentation language:** All `*.md` files must use **English** for team-facing prose.
 
+## CI / Deployment
+
+**This repo has NO auto-deploy CI. Deployment follows GitFlow.**
+
+Pushing to `develop` or feature branches is fine for development, but deployment
+only happens when a release branch is created, closed, and merged to `main` with
+a version tag. There is no CI pipeline that auto-deploys on push.
+
+### Primebrick CI/Deployment overview (all repos)
+
+| Repo | CI/Deployment | Process to deploy |
+|------|--------------|-------------------|
+| **primebrick-v3-microservices** (this repo) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
+| **primebrick-v3-backend** (BE) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
+| **primebrick-v3-frontend** (FE) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
+| **primebrick-v3-sdk** (SDK) | GitHub Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
+| **primebrick-v3-dal** (DAL) | GitHub Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
+| **primebrick-v3-docs** | Cloudflare Worker CI | Push to `main` — auto-deploys |
+| **primebrick-v3-website** | Cloudflare Worker CI | Push to `main` — auto-deploys |
+
 ## Microservices Stack & Architecture Rules
 1. **Tech Stack**: Node.js, Fastify (or Express), TypeScript, and pnpm.
 2. **Strict Typing**: Use strict TypeScript. Avoid `any` at all costs. Define precise interfaces for DTOs, Requests, and Responses.
