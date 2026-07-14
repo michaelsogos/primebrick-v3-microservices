@@ -17,6 +17,7 @@ Independent Git repository containing the distributed microservices part of the 
 5. **API Contracts**: Maintain clear and strict API contracts (or schemas) for inter-service communication.
 6. **Async Code**: Use `async/await` syntax exclusively. Always handle errors with clean `try/catch` blocks. Never silence caught errors.
 7. **Environment**: Never commit `.env` files. Provide a `.env.example` file specifying all required configuration variables.
+8. **API Path Conventions (MANDATORY)**: All HTTP routes MUST follow the standardized path conventions. Entity CRUD routes use `/api/v1/entities/:entity/...`, service actions use `/api/v1/actions/:action`, webhooks use `/webhook`. See [.devin/rules/api-path-conventions.md](./.devin/rules/api-path-conventions.md) for the full specification. This is required for the BE MCP Server generic tool dispatch to work.
 
 ## Commands
 

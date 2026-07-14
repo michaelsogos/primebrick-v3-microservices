@@ -1,9 +1,15 @@
 /**
- * Config route handler for /api/v1/config — module-specific configuration.
+ * CRUD route handler for /api/v1/entities/config_entries — module configuration.
+ *
+ * Uses the standardized entity CRUD path pattern (per api-path-conventions.md):
+ *   GET    /api/v1/entities/config_entries/meta    → entity metadata
+ *   GET    /api/v1/entities/config_entries/list    → list all config entries
+ *   GET    /api/v1/entities/config_entries/:uuid   → single record by UUID
+ *   PUT    /api/v1/entities/config_entries/:uuid   → update record by UUID
  *
  * Exposes the emailsender config table (key-value dictionary) via HTTP.
- * Used by the FE module config page (Tab 2) via the BE proxy:
- *   FE → BE /ws/:serviceCode/api/v1/config → emailsender /api/v1/config
+ * Used by the FE module config page via the BE proxy:
+ *   FE → BE /ws/emailsender/api/v1/entities/config_entries/list → emailsender
  *
  * Uses SDK auth (GATEWAY-RESOLVED mode) + RBAC enforcement.
  * All responses use snake_case field names (matching DB columns).
@@ -19,6 +25,8 @@ import {
   type AuthConfig,
   type AuthUser,
   type ApiKeyPort,
+  AuthError,
+  RbacDeniedError,
 } from "@primebrick/sdk";
 import { ConfigEntryEntity } from "../domain/entities/config_entry_entity.js";
 
@@ -41,14 +49,16 @@ function sendError(
   status: number,
   message: string,
   internalCode?: string,
+  options?: { instance?: string; severity?: string },
 ): void {
   sendJson(res, status, {
     type: `https://primebrick.io/errors/${internalCode || "error"}`,
     title: message,
     status,
     detail: message,
+    instance: options?.instance,
     internal_code: internalCode,
-    severity: status >= 500 ? "HIGH" : "MEDIUM",
+    severity: options?.severity ?? (status >= 500 ? "HIGH" : "MEDIUM"),
   });
 }
 
@@ -67,6 +77,23 @@ async function authenticate(req: IncomingMessage): Promise<AuthUser> {
   return verifyHttpRequest(req, authConfig);
 }
 
+/** Entity metadata for the config_entries entity (consumed by MCP get_entity_meta tool). */
+const CONFIG_ENTRIES_META = {
+  entity: "config_entries",
+  module: "emailsender",
+  fields: [
+    { name: "uuid", type: "uuid", nullable: false, primary_key: true },
+    { name: "key", type: "string", nullable: false, description: "Configuration key name" },
+    { name: "value", type: "string", nullable: false, description: "Configuration value" },
+    { name: "label_key", type: "string", nullable: true, description: "i18n key for display label" },
+    { name: "description_key", type: "string", nullable: true, description: "i18n key for description" },
+    { name: "version", type: "integer", nullable: false, description: "Optimistic lock version" },
+    { name: "created_at", type: "timestamp", nullable: false, description: "Record creation timestamp" },
+    { name: "updated_at", type: "timestamp", nullable: true, description: "Last update timestamp" },
+  ],
+  supported_operations: ["list", "get", "update"],
+};
+
 const configProjection = [
   Project.field(field(ConfigEntryEntity, "uuid")),
   Project.field(field(ConfigEntryEntity, "key")),
@@ -76,8 +103,8 @@ const configProjection = [
 ];
 
 /**
- * Config route handler for the SDK's createHttpServer routeHandler.
- * Handles GET /api/v1/config and PUT /api/v1/config/:key.
+ * Config entries entity CRUD route handler for the SDK's createHttpServer routeHandler.
+ * Handles the standardized /api/v1/entities/config_entries/... paths.
  * Returns true if the request was handled, false otherwise.
  */
 export async function configRouteHandler(
@@ -87,23 +114,49 @@ export async function configRouteHandler(
 ): Promise<boolean> {
   const path = url.pathname;
 
-  if (!path.startsWith("/api/v1/config")) return false;
+  if (!path.startsWith("/api/v1/entities/config_entries")) return false;
 
   try {
     const user = await authenticate(req);
     const dal = getDal();
 
-    // GET /api/v1/config — list all config entries (non-deleted)
-    if (req.method === "GET" && path === "/api/v1/config") {
+    // GET /api/v1/entities/config_entries/meta — entity metadata
+    if (req.method === "GET" && path === "/api/v1/entities/config_entries/meta") {
       enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
-      const rows = await dal.findAll(ConfigEntryEntity, configProjection);
-      sendJson(res, 200, { config: rows });
+      sendJson(res, 200, CONFIG_ENTRIES_META);
       return true;
     }
 
-    // PUT /api/v1/config/:key — update single config value
-    const keyMatch = path.match(/^\/api\/v1\/config\/([^/]+)$/);
-    if (req.method === "PUT" && keyMatch) {
+    // GET /api/v1/entities/config_entries/list — list all config entries (non-deleted)
+    if (req.method === "GET" && path === "/api/v1/entities/config_entries/list") {
+      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
+      const rows = await dal.findAll(ConfigEntryEntity, configProjection);
+      sendJson(res, 200, { config_entries: rows });
+      return true;
+    }
+
+    // GET /api/v1/entities/config_entries/:uuid — get single config entry by UUID
+    const uuidMatch = path.match(/^\/api\/v1\/entities\/config_entries\/([^/]+)$/);
+    if (req.method === "GET" && uuidMatch) {
+      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
+      let row: ConfigEntryEntity | null = null;
+      try {
+        row = await dal.find(ConfigEntryEntity, configProjection, {
+          filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuidMatch[1])],
+        }) as ConfigEntryEntity;
+      } catch (err) {
+        if (err instanceof NotFoundError) {
+          sendError(res, 404, "Config entry not found", "config-entry-not-found");
+          return true;
+        }
+        throw err;
+      }
+      sendJson(res, 200, row);
+      return true;
+    }
+
+    // PUT /api/v1/entities/config_entries/:uuid — update config value by UUID
+    if (req.method === "PUT" && uuidMatch) {
       enforceHttpRbac(user, [Permission.MODULES_CONFIG_UPDATE]);
       const body = await readBody(req);
       const newValue = body.value as string | undefined;
@@ -112,47 +165,43 @@ export async function configRouteHandler(
         return true;
       }
 
-      // Find existing entry by key
-      let existing: ConfigEntryEntity | null = null;
-      try {
-        existing = await dal.find(ConfigEntryEntity, configProjection, {
-          filters: [Filter.fieldValue(field(ConfigEntryEntity, "key"), "=", keyMatch[1])],
-        }) as ConfigEntryEntity;
-      } catch (err) {
-        if (err instanceof NotFoundError) {
-          sendError(res, 404, `Config key '${keyMatch[1]}' not found`, "config-key-not-found");
-          return true;
-        }
-        throw err;
-      }
-
-      // Update the value
-      await dal.update(
+      // Update the value by UUID
+      const updated = await dal.update(
         ConfigEntryEntity,
-        { uuid: existing.uuid, value: newValue },
+        { uuid: uuidMatch[1], value: newValue },
         { actor: user.id, matchBy: "uuid" },
       );
 
-      // Re-read the updated entry
-      const updated = await dal.find(ConfigEntryEntity, configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", existing.uuid)],
+      // Re-read with the projection
+      const result = await dal.find(ConfigEntryEntity, configProjection, {
+        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuidMatch[1])],
       });
-      sendJson(res, 200, { config: updated });
+      sendJson(res, 200, { config_entries: result });
       return true;
     }
 
     return false;
-  } catch (err: any) {
-    if (err?.name === "RbacDeniedError" || err?.constructor?.name === "RbacDeniedError") {
-      sendError(res, 403, "Permission denied", "rbac-denied");
+  } catch (err) {
+    if (err instanceof AuthError) {
+      sendError(res, 401, err.message, err.internal_code, { instance: url.pathname });
       return true;
     }
-    if (err?.name === "AuthError" || err?.constructor?.name === "AuthError") {
-      sendError(res, 401, "Authentication required", "auth-required");
+    if (err instanceof RbacDeniedError) {
+      sendError(res, 403, "Insufficient permissions", "RBAC_PERMISSION_DENIED", { instance: url.pathname });
       return true;
     }
-    console.error("[config-route] Error:", err);
-    sendError(res, 500, "Internal server error", "config-internal-error");
+    if (err instanceof NotFoundError) {
+      sendError(res, 404, "Config entry not found", "config-entry-not-found", { instance: url.pathname, severity: "LOW" });
+      return true;
+    }
+    console.error("[emailsender] Config route error:", {
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      name: err instanceof Error ? err.name : undefined,
+      path: url.pathname,
+      method: req.method,
+    });
+    sendError(res, 500, "Internal server error", "internal-error", { instance: url.pathname });
     return true;
   }
 }
