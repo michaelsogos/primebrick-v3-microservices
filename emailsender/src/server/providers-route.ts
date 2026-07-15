@@ -1,5 +1,13 @@
 /**
- * CRUD route handler for /api/v1/providers — email provider configuration.
+ * CRUD route handler for /api/v1/entities/providers — email provider configuration.
+ *
+ * Uses the standardized entity CRUD path pattern (per api-path-conventions.md):
+ *   GET    /api/v1/entities/providers/meta    → entity metadata
+ *   GET    /api/v1/entities/providers/list    → paginated list
+ *   GET    /api/v1/entities/providers/:uuid   → single record by UUID
+ *   POST   /api/v1/entities/providers         → create new record
+ *   PUT    /api/v1/entities/providers/:uuid   → update record by UUID
+ *   DELETE /api/v1/entities/providers/:uuid   → soft-delete record by UUID
  *
  * Uses SDK auth (GATEWAY-RESOLVED mode) + RBAC enforcement.
  * All responses use snake_case field names (matching DB columns).
@@ -67,9 +75,50 @@ async function authenticate(req: IncomingMessage): Promise<AuthUser> {
   return verifyHttpRequest(req, authConfig);
 }
 
+/** Entity metadata for the providers entity (consumed by MCP get_entity_meta tool). */
+const PROVIDERS_META = {
+  entity: "providers",
+  module: "emailsender",
+  fields: [
+    { name: "uuid", type: "uuid", nullable: false, primary_key: true },
+    { name: "provider", type: "string", nullable: false, description: "Provider name (e.g. brevo, sendgrid)" },
+    { name: "api_key", type: "string", nullable: false, description: "API key for the email provider" },
+    { name: "api_endpoint", type: "string", nullable: true, description: "Custom API endpoint URL" },
+    { name: "from_email", type: "string", nullable: true, description: "Default sender email address" },
+    { name: "from_name", type: "string", nullable: true, description: "Default sender display name" },
+    { name: "reply_to", type: "string", nullable: true, description: "Default reply-to email address" },
+    { name: "version", type: "integer", nullable: false, description: "Optimistic lock version" },
+    { name: "created_at", type: "timestamp", nullable: false, description: "Record creation timestamp" },
+    { name: "updated_at", type: "timestamp", nullable: true, description: "Last update timestamp" },
+    { name: "deleted_at", type: "timestamp", nullable: true, description: "Soft-delete timestamp" },
+  ],
+  supported_operations: ["list", "get", "create", "update", "delete"],
+};
+
+const providersProjection = [
+  Project.field(field(ProviderEntity, "uuid")),
+  Project.field(field(ProviderEntity, "provider")),
+  Project.field(field(ProviderEntity, "api_endpoint")),
+  Project.field(field(ProviderEntity, "from_email")),
+  Project.field(field(ProviderEntity, "from_name")),
+  Project.field(field(ProviderEntity, "reply_to")),
+  Project.field(field(ProviderEntity, "version")),
+];
+
+const providersDetailProjection = [
+  Project.field(field(ProviderEntity, "uuid")),
+  Project.field(field(ProviderEntity, "provider")),
+  Project.field(field(ProviderEntity, "api_key")),
+  Project.field(field(ProviderEntity, "api_endpoint")),
+  Project.field(field(ProviderEntity, "from_email")),
+  Project.field(field(ProviderEntity, "from_name")),
+  Project.field(field(ProviderEntity, "reply_to")),
+  Project.field(field(ProviderEntity, "version")),
+];
+
 /**
- * Providers CRUD route handler for the SDK's createHttpServer routeHandler.
- * Handles GET/POST/PUT/DELETE on /api/v1/providers and /api/v1/providers/:uuid.
+ * Providers entity CRUD route handler for the SDK's createHttpServer routeHandler.
+ * Handles the standardized /api/v1/entities/providers/... paths.
  * Returns true if the request was handled, false otherwise.
  */
 export async function providersRouteHandler(
@@ -79,8 +128,8 @@ export async function providersRouteHandler(
 ): Promise<boolean> {
   const path = url.pathname;
 
-  // Match /api/v1/providers and /api/v1/providers/:uuid
-  if (!path.startsWith("/api/v1/providers")) return false;
+  // Match /api/v1/entities/providers and sub-paths
+  if (!path.startsWith("/api/v1/entities/providers")) return false;
 
   try {
     // Authenticate (GATEWAY-RESOLVED mode — no ports needed)
@@ -88,38 +137,28 @@ export async function providersRouteHandler(
 
     const dal = getDal();
 
-    // GET /api/v1/providers — list all (non-deleted)
-    if (req.method === "GET" && path === "/api/v1/providers") {
+    // GET /api/v1/entities/providers/meta — entity metadata
+    if (req.method === "GET" && path === "/api/v1/entities/providers/meta") {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_READ_ALL]);
-      const rows = await dal.findAll(ProviderEntity, [
-        Project.field(field(ProviderEntity, "uuid")),
-        Project.field(field(ProviderEntity, "provider")),
-        Project.field(field(ProviderEntity, "api_endpoint")),
-        Project.field(field(ProviderEntity, "from_email")),
-        Project.field(field(ProviderEntity, "from_name")),
-        Project.field(field(ProviderEntity, "reply_to")),
-        Project.field(field(ProviderEntity, "version")),
-      ]);
+      sendJson(res, 200, PROVIDERS_META);
+      return true;
+    }
+
+    // GET /api/v1/entities/providers/list — list all (non-deleted)
+    if (req.method === "GET" && path === "/api/v1/entities/providers/list") {
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_READ_ALL]);
+      const rows = await dal.findAll(ProviderEntity, providersProjection);
       sendJson(res, 200, { providers: rows });
       return true;
     }
 
-    // GET /api/v1/providers/:uuid — get single
-    const uuidMatch = path.match(/^\/api\/v1\/providers\/([^/]+)$/);
+    // GET /api/v1/entities/providers/:uuid — get single
+    const uuidMatch = path.match(/^\/api\/v1\/entities\/providers\/([^/]+)$/);
     if (req.method === "GET" && uuidMatch) {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_READ_SINGLE, Permission.EMAILSENDER_PROVIDERS_READ_ALL]);
       let row: ProviderEntity | null = null;
       try {
-        row = await dal.find(ProviderEntity, [
-          Project.field(field(ProviderEntity, "uuid")),
-          Project.field(field(ProviderEntity, "provider")),
-          Project.field(field(ProviderEntity, "api_key")),
-          Project.field(field(ProviderEntity, "api_endpoint")),
-          Project.field(field(ProviderEntity, "from_email")),
-          Project.field(field(ProviderEntity, "from_name")),
-          Project.field(field(ProviderEntity, "reply_to")),
-          Project.field(field(ProviderEntity, "version")),
-        ], {
+        row = await dal.find(ProviderEntity, providersDetailProjection, {
           filters: [Filter.fieldValue(field(ProviderEntity, "uuid"), "=", uuidMatch[1])],
         }) as ProviderEntity;
       } catch (err) {
@@ -133,8 +172,8 @@ export async function providersRouteHandler(
       return true;
     }
 
-    // POST /api/v1/providers — create
-    if (req.method === "POST" && path === "/api/v1/providers") {
+    // POST /api/v1/entities/providers — create
+    if (req.method === "POST" && path === "/api/v1/entities/providers") {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_CREATE]);
       const body = await readBody(req);
       const created = await dal.add(ProviderEntity, {
@@ -149,7 +188,7 @@ export async function providersRouteHandler(
       return true;
     }
 
-    // PUT /api/v1/providers/:uuid — update
+    // PUT /api/v1/entities/providers/:uuid — update
     if (req.method === "PUT" && uuidMatch) {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_UPDATE]);
       const body = await readBody(req);
@@ -170,7 +209,7 @@ export async function providersRouteHandler(
       return true;
     }
 
-    // DELETE /api/v1/providers/:uuid — soft-delete
+    // DELETE /api/v1/entities/providers/:uuid — soft-delete
     if (req.method === "DELETE" && uuidMatch) {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_DELETE]);
       await dal.delete(
