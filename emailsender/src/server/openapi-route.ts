@@ -16,6 +16,13 @@ export const OPENAPI_SPEC = {
     version: "1.0.0",
     description: "Email provider configuration and email sending microservice",
   },
+  servers: [
+    {
+      url: "http://localhost:3002",
+      description: "Local development server",
+    },
+  ],
+  security: [{ bearerAuth: [] }, { apiKey: [] }],
   tags: [
     { name: "providers", description: "Email provider configuration entities" },
     { name: "config_entries", description: "Module configuration key-value entries" },
@@ -337,6 +344,7 @@ export const OPENAPI_SPEC = {
         tags: ["webhook"],
         summary: "Receive an inbound webhook from an email provider",
         description: "Receives delivery events (bounces, opens, clicks, etc.) from email providers. Uses API key authentication, not JWT. The provider is specified via the 'provider' query parameter.",
+        security: [{ apiKey: [] }],
         parameters: [
           {
             name: "provider",
@@ -350,6 +358,22 @@ export const OPENAPI_SPEC = {
           "200": { description: "Webhook processed" },
           "401": { description: "Invalid API key" },
         },
+      },
+    },
+  },
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "OAuth 2.1 Bearer token from the Primebrick backend.",
+      },
+      apiKey: {
+        type: "apiKey",
+        in: "header",
+        name: "X-API-Key",
+        description: "API key for service-to-service authentication.",
       },
     },
   },
