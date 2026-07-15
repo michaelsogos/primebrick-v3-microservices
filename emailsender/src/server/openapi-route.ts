@@ -12,7 +12,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 export const OPENAPI_SPEC = {
   openapi: "3.1.0",
   info: {
-    title: "EmailSender Microservice API",
+    title: "EmailSender Catalog",
     version: "1.0.0",
     description: "Email provider configuration and email sending microservice",
   },
