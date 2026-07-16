@@ -1,0 +1,108 @@
+---
+title: Architecture
+description: NATS message bus, Backend proxy, SDK lifecycle, and per-service database isolation
+---
+
+# Architecture
+
+Primebrick v3 microservices follow a gateway-proxied architecture with
+NATS for async messaging and per-service database isolation.
+
+## Backend proxy
+
+The Backend (BE) acts as the API gateway for all microservices. The
+Frontend (FE) never calls microservices directly.
+
+<Mermaid chart={`flowchart LR
+  FE[Frontend] -->|HTTP /api/v1/...| BE[Backend]
+  BE -->|HTTP /ws/emailsender/api/v1/...| ES[EmailSender]
+  BE -->|OpenAPI aggregation| ES
+`} />
+
+- **HTTP proxy:** The BE proxies requests via `/ws/:serviceCode/*`. A
+  request to `GET /ws/emailsender/api/v1/entities/providers/list` is
+  forwarded to the EmailSender microservice at
+  `GET /api/v1/entities/providers/list`.
+- **OpenAPI aggregation:** The BE fetches each microservice's
+  `GET /api/v1/openapi.json` and merges the specs into a unified API
+  catalog. This powers the Zudoku API explorer on the docs site.
+- **MCP Server:** The BE's MCP Server uses the aggregated OpenAPI specs
+  to generate generic CRUD tools. The standardized entity CRUD path
+  pattern (`/api/v1/entities/:entity/...`) allows the MCP Server to
+  dispatch tools without per-entity path configuration.
+
+## NATS message bus
+
+Microservices connect to NATS via the SDK's `NatsClient`. NATS is used
+for:
+
+1. **Service registration** — microservices publish register/heartbeat/
+   unregister events; the BE subscribes and persists to
+   `public.service_registry`
+2. **Async request/reply** — the BE publishes requests (e.g.
+   `emailsender.send`) and microservices reply on a per-request response
+   subject (e.g. `emailsender.response.{requestId}`)
+
+<Mermaid chart={`sequenceDiagram
+  participant BE as Backend
+  participant NATS as NATS
+  participant ES as EmailSender
+  ES->>NATS: subscribe emailsender.send
+  BE->>NATS: publish emailsender.send (SendEmailRequest)
+  NATS->>ES: deliver request
+  ES->>ES: render template + send via Brevo
+  ES->>NATS: publish emailsender.response.{requestId}
+  NATS->>BE: deliver response (SendEmailResponse)
+`} />
+
+NATS authentication uses the SDK's GATEWAY-RESOLVED mode — the BE forwards
+JWT/auth headers via NATS message headers, and the microservice verifies
+them with `verifyNatsMessage()`.
+
+## SDK lifecycle
+
+Every microservice uses `@primebrick/sdk` for its lifecycle:
+
+1. **Environment validation** — `requireEnv()` validates required env vars
+   at startup
+2. **Config loading** — `ConfigLoader` reads the `config` table for
+   service-specific settings (NATS URL, HTTP port, service code)
+3. **Auth config** — `initAuthConfig()` + `loadAuthConfig()` set up
+   GATEWAY-RESOLVED auth mode
+4. **NATS connection** — `NatsClient.getConnection(url)`
+5. **Service registration** — `ServiceRegistrar.register()` publishes the
+   register event, then `startHeartbeat()` begins periodic health checks
+6. **HTTP server** — `createHttpServer()` starts the HTTP listener with
+   health check and route handler
+7. **Graceful shutdown** — `GracefulShutdown` coordinator runs cleanup on
+   SIGTERM/SIGINT: stop heartbeat → unregister → close NATS → close DB →
+   close HTTP
+
+<Mermaid chart={`flowchart TD
+  A[requireEnv] --> B[ConfigLoader.load]
+  B --> C[initAuthConfig + loadAuthConfig]
+  C --> D[NatsClient.getConnection]
+  D --> E[ServiceRegistrar.register]
+  E --> F[startHeartbeat]
+  F --> G[createHttpServer]
+  G --> H[GracefulShutdown.install]
+`} />
+
+## Database isolation
+
+Each microservice has its own PostgreSQL schema (e.g. `emailsender`).
+Microservices never read or write to another microservice's schema. The
+only shared table is `public.service_registry`, which lives in the
+`public` schema and is used for service registration.
+
+- **DAL:** `@primebrick/dal-pg` with entity decorators (`@Entity`,
+  `@Column`, `@Key`, `@Unique`, `@AuditableField`, `@DeletableField`)
+- **Migrations:** each microservice has its own `db-meta/patches/`
+  directory, applied via `@primebrick/sdk`'s `applyPatches()` runner
+- **Schema override:** the `@Entity` decorator accepts an optional second
+  argument for the schema name (e.g. `@Entity("service_registry", "public")`)
+
+## Next steps
+
+- [Conventions](/user-guide/microservices/conventions) — API path conventions, data model rules
+- [EmailSender](/user-guide/microservices/services/emailsender) — Email sending microservice
