@@ -41,9 +41,18 @@ docs/user-guide/
   architecture.mdx          # NATS bus, BE proxy, SDK lifecycle (shared)
   conventions.mdx           # API path conventions, data model rules (shared)
   services/
-    <service>.mdx           # one page per microservice (e.g. emailsender.mdx)
+    <service>.mdx           # one prose guide page per microservice
 ```
 
+- **Guide pages** (`services/<service>.mdx`) are AI-written prose —
+  architecture, NATS subjects, entities, providers, deployment, lifecycle.
+  They link to Zudoku's interactive API Catalog for the full operation list
+  instead of duplicating it: `See the [API Catalog](/catalog/<service>) for
+  the full operation list.`
+- **API reference** is NOT an MDX page. The OpenAPI specs are extracted by
+  the docs repo's `fetch-openapi.mjs` script at build time, which scans the
+  shallow-cloned repos for `openapi-route.ts` files and writes them to
+  `apis/<service>.json` for Zudoku's interactive API Catalog.
 - **Shared pages** (`overview`, `architecture`, `conventions`) cover
   cross-cutting topics: the NATS message bus, the BE `/ws/:serviceCode/*`
   proxy, the SDK lifecycle, API path conventions, data-model rules.
