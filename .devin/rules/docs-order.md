@@ -16,14 +16,24 @@
 ## _order.json format
 ```json
 {
-  "pages": ["overview", "architecture", "conventions", "services/emailsender"]
+  "pages": [
+    "overview",
+    "architecture",
+    "conventions",
+    "services/emailsender"
+  ]
 }
 ```
 
 ## Per-service pages
 This repo is a multi-service monorepo. Per-service pages live under the
 `services/` group, after the shared pages (`overview`, `architecture`,
-`conventions`). The service slug is the microservice's sub-folder name
+`conventions`). Each service has ONE prose guide page:
+`services/<service>` — the AI-written guide page.
+
+The API reference is NOT an MDX page — it is handled by Zudoku's interactive
+API Catalog, fed by the docs repo's `fetch-openapi.mjs` script at build time.
+
+The service slug is the microservice's sub-folder name
 (e.g. `emailsender`), NOT its package name. Add new service pages in
-logical reading order (typically after existing services, before any
-`...` placeholder).
+logical reading order (typically after existing services).

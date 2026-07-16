@@ -51,6 +51,12 @@ Also check whether the shared pages exist:
 
 If any shared page is missing, it will be created in Step 5a.
 
+**API reference is NOT handled here.** The OpenAPI specs for each microservice
+are extracted by the docs repo's `fetch-openapi.mjs` script at build time,
+which scans the shallow-cloned repos for `openapi-route.ts` files and writes
+them to `apis/<service>.json` for Zudoku's interactive API Catalog. This rule
+only handles the prose guide pages.
+
 ### 2. Check the diff (correct base per branch type)
 Run the appropriate diff command from the table above with `--stat` first:
 ```
@@ -142,7 +148,9 @@ code and CREATE `docs/user-guide/services/<service>.mdx` with:
 
 1. **Frontmatter**: `title`, `description`
 2. **Overview**: what the service does (from `src/index.ts` and `package.json`)
-3. **HTTP routes**: from `src/server/*-route.ts` and `openapi-route.ts`
+3. **HTTP routes**: from `src/server/*-route.ts` — high-level summary of
+   route groups. Link to Zudoku's API Catalog for the full operation list:
+   `See the [API Catalog](/catalog/<service>) for the full operation list.`
 4. **NATS subjects**: from `src/nats/handlers.ts` and `types.ts`
 5. **Entities**: from `src/domain/entities/*.ts` and `registry.ts`
 6. **Providers**: from `src/providers/*.ts`

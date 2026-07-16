@@ -1,0 +1,131 @@
+---
+title: Conventions
+description: API path conventions, data model rules, and package versioning for microservices
+---
+
+# Conventions
+
+## API path conventions
+
+All HTTP routes in microservices follow standardized path conventions so
+the BE's MCP Server can dispatch generic CRUD tools without per-entity
+configuration.
+
+### Entity CRUD (`/api/v1/entities/:entity/...`)
+
+Database-backed entities with standard CRUD lifecycle use this pattern:
+
+```
+GET    /api/v1/entities/:entity/meta              → entity metadata (fields, types, validation)
+GET    /api/v1/entities/:entity/list              → paginated list with search/filter/sort
+GET    /api/v1/entities/:entity/:uuid             → single record by UUID
+POST   /api/v1/entities/:entity                   → create new record
+PUT    /api/v1/entities/:entity/:uuid             → update record by UUID
+DELETE /api/v1/entities/:entity/:uuid             → soft-delete record by UUID
+POST   /api/v1/entities/:entity/:uuid/restore     → restore soft-deleted record
+GET    /api/v1/entities/:entity/:uuid/audit       → audit history for record
+POST   /api/v1/entities/:entity/bulk-delete       → bulk soft-delete (array of UUIDs)
+POST   /api/v1/entities/:entity/bulk-restore      → bulk restore (array of UUIDs)
+```
+
+Rules:
+- `:entity` is the snake_case **plural** noun (e.g. `providers`,
+  `config_entries`). Never singular, never camelCase.
+- `:uuid` is always the UUID path parameter.
+- Not all entities support all operations — unsupported operations simply
+  don't register that route.
+- The `meta` endpoint returns the entity's field schema, consumed by the
+  MCP `get_entity_meta` tool and the FE for dynamic form generation.
+
+### Service actions (`/api/v1/actions/:action`)
+
+Non-CRUD business actions:
+
+```
+POST   /api/v1/actions/send-email                 → send an email using a template
+POST   /api/v1/actions/test-provider-connection   → test a provider's API key
+```
+
+- `:action` is a snake_case verb-noun.
+- These are NOT exposed as MCP generic CRUD tools.
+
+### Webhooks (`/webhook` or `/webhook/:identifier`)
+
+External callbacks (e.g. Brevo delivery events):
+
+```
+POST   /webhook                                    → webhook receiver (API key auth)
+POST   /webhook/brevo                              → Brevo-specific webhook
+```
+
+- Webhooks use API key authentication, NOT JWT.
+- Webhook paths do NOT use the `/api/v1/` prefix.
+
+### System / Health
+
+```
+GET    /health                                     → health check (public, no auth)
+GET    /api/v1/openapi.json                        → OpenAPI spec (public, no auth)
+GET    /api/v1/system/info                         → service info (authenticated)
+```
+
+### OpenAPI spec requirements
+
+Every microservice MUST export a complete OpenAPI 3.x spec at
+`GET /api/v1/openapi.json`:
+
+1. List ALL implemented routes
+2. Use `operationId` in snake_case for every operation
+3. Include `tags` grouping operations by entity or category
+4. Include `summary` and `description` for every operation
+5. Use `snake_case` field names in request/response schemas
+
+## Data model rules
+
+### Snake_case everywhere
+
+DB columns, TS interfaces, JSON request bodies, and JSON response bodies
+ALL use `snake_case`. A field named `from_email` in the DB is
+`from_email` in the TS interface and `from_email` in the JSON response.
+Never rename fields between layers.
+
+**Exception:** External API adapters (e.g. Brevo expecting camelCase).
+The translation happens ONLY at the adapter boundary.
+
+### No DTO transformation
+
+The DB row IS the TS model. Do not create intermediate DTO classes that
+rename fields. Prefer spreading raw results (`return { ...settings }`)
+over field-by-field rebuilding.
+
+### No fake defaults on the read path
+
+- Forbidden: lowercasing, uppercasing, trimming on the read path
+- Forbidden: fallback string-literal defaults (`|| "..."`, `?? ""`) for
+  configuration data
+- A value either exists in the DB or it doesn't — `undefined` if missing,
+  `null` if the row exists but value is NULL, `string` if present
+- Mandatory-field checks throw before the return, they don't fake a default
+
+### Type conversions are allowed
+
+- `string` (DB) → `boolean` (TS) via `=== "true"` — allowed
+- `string` (DB) → `enum` (TS) via validation + normalization — allowed
+
+These are type conversions, not data-quality enforcement. Data quality is
+enforced at the write path (API upsert validation).
+
+## Package versioning
+
+All package versions in `package.json` MUST be pinned to exact versions
+(e.g. `"typescript": "5.9.3"`). NO ranges (`^`, `~`, `>=`, `*`, `latest`)
+are allowed for registry packages. This ensures every dev machine, CI
+build, and production rebuild gets the exact same dependency tree.
+
+Workspace dependencies use `workspace:*` (e.g.
+`"@primebrick/sdk": "workspace:*"`).
+
+## Next steps
+
+- [Architecture](/user-guide/microservices/architecture) — NATS bus, BE proxy, SDK lifecycle
+- [EmailSender](/user-guide/microservices/services/emailsender) — Email sending microservice

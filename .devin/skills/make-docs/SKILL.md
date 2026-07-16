@@ -23,6 +23,12 @@ The skill does TWO things:
 2. **Diff-based update** — for services that changed since the diff base,
    surgically updates their doc page (anti-rewrite check).
 
+**API reference is NOT handled by this skill.** The OpenAPI specs for each
+microservice are extracted by the docs repo's `fetch-openapi.mjs` script at
+build time, which scans the shallow-cloned repos for `openapi-route.ts` files
+and writes them to `apis/<service>.json` for Zudoku's interactive API Catalog.
+This skill only handles the **prose guide pages**.
+
 ## Steps
 
 ### 1. Detect branch and diff base
@@ -128,7 +134,8 @@ diff-based updates (but it may still need initial docs from Step 2).
 
 ### 6. Generate / update doc pages
 
-This step handles TWO kinds of work:
+This step handles the prose guide pages only (NOT the API reference — that is
+handled by the docs repo's `fetch-openapi.mjs` at build time).
 
 #### 6a. Generate initial docs for undocumented services
 
@@ -138,11 +145,14 @@ and CREATE `docs/user-guide/services/<service>.mdx` with:
 1. **Frontmatter**: `title`, `description`
 2. **Overview**: what the service does (1-2 paragraphs, from `src/index.ts`
    and `package.json` description)
-3. **HTTP routes**: read `src/server/*-route.ts` and `src/server/openapi-route.ts`
-   — list every route (method, path, description). Use the API path conventions
-   from `.devin/rules/api-path-conventions.md` to categorize them.
+3. **HTTP routes**: read `src/server/*-route.ts` — high-level summary of
+   route groups (entity CRUD, actions, webhooks, system). Do NOT list every
+   operation — the full API reference is in Zudoku's interactive API Catalog,
+   generated from the OpenAPI spec by `fetch-openapi.mjs`. Link to it:
+   `See the [API Catalog](/catalog/<service>) for the full operation list.`
 4. **NATS subjects**: read `src/nats/handlers.ts` and `src/nats/types.ts` —
-   list every subject the service subscribes to or publishes.
+   list every subject the service subscribes to or publishes, with
+   request/response schemas.
 5. **Entities**: read `src/domain/entities/*.ts` and `registry.ts` — list
    every entity with its fields and types.
 6. **Providers**: read `src/providers/*.ts` — list each provider integration.
@@ -201,12 +211,17 @@ Apply the same anti-rewrite check.
 ### 7. Update _order.json
 
 Ensure every service page and shared page is listed in
-`docs/user-guide/_order.json` (see `.devin/rules/docs-order.md`). Service
-pages go under the `services/` group, after the shared pages:
+`docs/user-guide/_order.json` (see `.devin/rules/docs-order.md`).
+Service pages go under the `services/` group, after the shared pages:
 
 ```json
 {
-  "pages": ["overview", "architecture", "conventions", "services/emailsender"]
+  "pages": [
+    "overview",
+    "architecture",
+    "conventions",
+    "services/emailsender"
+  ]
 }
 ```
 
@@ -220,7 +235,7 @@ Summarize in chat:
 - **Missing shared pages created**: which shared pages were created
 - **Diff-based updates**: which services had user-facing changes in the diff
   and which topics changed
-- **Which doc pages were updated and why** (generated/added/fixed/created)
-- **Which doc pages were skipped** (already accurate)
+- **Which guide pages were updated and why** (generated/added/fixed/created)
+- **Which guide pages were skipped** (already accurate)
 - **Whether `_order.json` was updated**
 - That changes are NOT committed — wait for user instruction to commit
