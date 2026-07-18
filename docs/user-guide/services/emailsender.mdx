@@ -19,13 +19,13 @@ management via HTTP entity CRUD routes proxied through the Backend.
 ## Architecture
 
 <Mermaid chart={`flowchart LR
-  FE[Frontend] -->|HTTP via BE proxy| BE[Backend /ws/emailsender/*]
-  BE -->|HTTP| ES[EmailSender]
-  ES -->|HTTP| Brevo[Brevo API]
-  BE -->|NATS emailsender.send| ES
-  ES -->|NATS emailsender.response.*| BE
-  Brevo -->|Webhook POST /webhook| ES
-  ES -->|DB| PG[(emailsender schema)]
+  FE[Frontend] --&gt;|HTTP via BE proxy| BE[Backend /ws/emailsender/*]
+  BE --&gt;|HTTP| ES[EmailSender]
+  ES --&gt;|HTTP| Brevo[Brevo API]
+  BE --&gt;|NATS emailsender.send| ES
+  ES --&gt;|NATS emailsender.response.*| BE
+  Brevo --&gt;|Webhook POST /webhook| ES
+  ES --&gt;|DB| PG[(emailsender schema)]
 `} />
 
 ## HTTP Routes
@@ -69,7 +69,7 @@ requests and the microservice processes them asynchronously.
 | `to` | string[] | yes | Recipient email addresses |
 | `cc` | string[] | no | CC recipients |
 | `bcc` | string[] | no | BCC recipients |
-| `variables` | Record<string, unknown> | no | Handlebars variables for template rendering |
+| `variables` | Record&lt;string, unknown&gt; | no | Handlebars variables for template rendering |
 | `entityTable` | string | no | Source entity table (for logging) |
 | `entityId` | bigint | no | Source entity ID (for logging) |
 | `entityUuid` | string | no | Source entity UUID (for logging) |
