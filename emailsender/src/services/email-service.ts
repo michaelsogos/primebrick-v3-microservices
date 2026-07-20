@@ -21,6 +21,14 @@ export class EmailService {
   async sendEmail(request: SendEmailRequest, actorId?: string): Promise<SendEmailResponse> {
     const dal = getDal();
     let configUuid: string | null = null;
+    // Hoist rendered content + template uuid outside the try block so they are
+    // available in the catch block for the failure-path sender_log row. Without
+    // this, a failed Brevo send logs a row with no `interpolated_sent_message`,
+    // making it impossible to debug what was actually rendered (and impossible
+    // for E2E tests to retrieve the OTP from the log when Brevo is faked/down).
+    let renderedHtml: string | null = null;
+    let renderedText: string | null = null;
+    let templateUuid: string | null = null;
 
     try {
       // Get email configuration from the providers table.
@@ -73,6 +81,11 @@ export class EmailService {
       const htmlContent = compiledHtml(request.variables || {});
       const textContent = compiledText(request.variables || {});
 
+      // Capture rendered content + template uuid for the failure-path log.
+      renderedHtml = htmlContent;
+      renderedText = textContent;
+      templateUuid = template.uuid;
+
       // Prepare Brevo request
       const brevoRequest: BrevoEmailRequest = {
         to: request.to.map(email => ({ email })),
@@ -118,6 +131,11 @@ export class EmailService {
       console.error("Error sending email:", error);
 
       // Log the failed communication
+      // NOTE: `interpolated_sent_message` and `template_uuid` are populated
+      // even on failure (when available) so the log is useful for debugging
+      // and so E2E tests can retrieve the rendered OTP from the log when
+      // Brevo is faked/down. They stay null only if the failure happened
+      // before rendering (e.g. provider/template not found).
       try {
         await dal.add<SenderLogEntity>(
           SenderLogEntity,
@@ -127,9 +145,10 @@ export class EmailService {
             type: "email",
             provider_uuid: configUuid,
             status: "failed",
-            template_uuid: null,
+            template_uuid: templateUuid,
             senders: {},
             recipients: { to: request.to },
+            interpolated_sent_message: renderedHtml || renderedText,
             error_message: error instanceof Error ? error.message : "Unknown error",
             status_changed_at: new Date(),
           },
