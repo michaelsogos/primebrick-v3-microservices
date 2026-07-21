@@ -57,6 +57,13 @@ export class EmailSenderAuthConfigPort implements AuthConfigPort {
         },
       },
       enable_email_verification_check: false,
+      // The microservice uses GATEWAY-RESOLVED mode — these BE-only auth-method
+      // flags are irrelevant here. They exist on AuthConfig only because the SDK
+      // type is shared with the BE. Set to false; the BE enforces the real values.
+      enable_webauthn: false,
+      enable_formauth: false,
+      passkey_required: false,
+      enable_mfa: false,
     };
   }
 }

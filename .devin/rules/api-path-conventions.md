@@ -145,7 +145,7 @@ refactored:
 | `GET /api/v1/config` | `GET /api/v1/entities/config_entries/list` |
 | `POST /webhook` | `POST /webhook` (no change — Category 3) |
 
-The `sendEmail` function is called via NATS (not HTTP) — no path change needed.
+The `sendEmail` function is called via NATS™ (not HTTP) — no path change needed.
 
 ## Enforcement
 

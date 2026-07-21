@@ -38,14 +38,14 @@ page per microservice plus a small set of shared pages.
 docs/user-guide/
   _order.json
   overview.mdx              # repo overview, microservices list, architecture
-  architecture.mdx          # NATS bus, BE proxy, SDK lifecycle (shared)
+  architecture.mdx          # NATS™ bus, BE proxy, SDK lifecycle (shared)
   conventions.mdx           # API path conventions, data model rules (shared)
   services/
     <service>.mdx           # one prose guide page per microservice
 ```
 
 - **Guide pages** (`services/<service>.mdx`) are AI-written prose —
-  architecture, NATS subjects, entities, providers, deployment, lifecycle.
+  architecture, NATS™ subjects, entities, providers, deployment, lifecycle.
   They link to Zudoku's interactive API Catalog for the full operation list
   instead of duplicating it: `See the [API Catalog](/catalog/<service>) for
   the full operation list.`
@@ -54,10 +54,10 @@ docs/user-guide/
   shallow-cloned repos for `openapi-route.ts` files and writes them to
   `apis/<service>.json` for Zudoku's interactive API Catalog.
 - **Shared pages** (`overview`, `architecture`, `conventions`) cover
-  cross-cutting topics: the NATS message bus, the BE `/ws/:serviceCode/*`
+  cross-cutting topics: the NATS™ message bus, the BE `/ws/:serviceCode/*`
   proxy, the SDK lifecycle, API path conventions, data-model rules.
 - **Per-service pages** (`services/<service>.mdx`) cover everything
-  specific to one microservice: its HTTP routes, NATS subjects, entities,
+  specific to one microservice: its HTTP routes, NATS™ subjects, entities,
   providers, service actions, deployment config, and health behavior.
 - When a microservice changes, update ONLY its `services/<service>.mdx`
   page (plus a shared page only if a cross-cutting topic changed).
@@ -73,7 +73,7 @@ docs/user-guide/
 - ❌ Rewriting unchanged pages (creates git diff churn)
 - ❌ Inventing APIs, props, or endpoints not in the extraction JSON or code
 - ❌ Marketing language or superlatives
-- ❌ Putting per-service route/NATS/entity details on a shared page —
+- ❌ Putting per-service route/NATS™/entity details on a shared page —
   those belong on `services/<service>.mdx`
-- ❌ Putting cross-cutting topics (NATS bus, BE proxy, API conventions) on
+- ❌ Putting cross-cutting topics (NATS™ bus, BE proxy, API conventions) on
   a per-service page — those belong on the shared pages

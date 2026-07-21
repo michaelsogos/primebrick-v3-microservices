@@ -24,14 +24,14 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 | **primebrick-v3-microservices** (this repo) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
 | **primebrick-v3-backend** (BE) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
 | **primebrick-v3-frontend** (FE) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
-| **primebrick-v3-sdk** (SDK) | GitHub Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
-| **primebrick-v3-dal** (DAL) | GitHub Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
-| **primebrick-v3-docs** | Cloudflare Worker CI | Push to `main` — auto-deploys |
-| **primebrick-v3-website** | Cloudflare Worker CI | Push to `main` — auto-deploys |
+| **primebrick-v3-sdk** (SDK) | GitHub™ Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
+| **primebrick-v3-dal** (DAL) | GitHub™ Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
+| **primebrick-v3-docs** | Cloudflare® Worker CI | Push to `main` — auto-deploys |
+| **primebrick-v3-website** | Cloudflare® Worker CI | Push to `main` — auto-deploys |
 
 ## Microservices Stack & Architecture Rules
-1. **Tech Stack**: Node.js, Fastify (or Express), TypeScript, and pnpm.
-2. **Strict Typing**: Use strict TypeScript. Avoid `any` at all costs. Define precise interfaces for DTOs, Requests, and Responses.
+1. **Tech Stack**: Node.js®, Fastify (or Express), TypeScript®, and pnpm.
+2. **Strict Typing**: Use strict TypeScript®. Avoid `any` at all costs. Define precise interfaces for DTOs, Requests, and Responses.
 3. **Isolation & Autonomy**: Every microservice inside this repository must be 100% self-contained. Do not write hardcoded cross-service relative imports.
 4. **Shared Code**: If multiple microservices need to share common utilities, types, or SDKs, they must be isolated in a dedicated shared package within this repository (e.g., using pnpm workspaces if needed).
 5. **API Contracts**: Maintain clear and strict API contracts (or schemas) for inter-service communication.

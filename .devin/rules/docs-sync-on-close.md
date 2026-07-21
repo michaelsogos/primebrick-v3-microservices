@@ -91,7 +91,7 @@ user-facing (paths relative to `<service>/`):
 | Path pattern | Doc topic |
 |--------------|-----------|
 | `src/server/*-route.ts`, `src/server/openapi-route.ts` | HTTP routes & OpenAPI |
-| `src/nats/handlers.ts`, `src/nats/types.ts` | NATS subjects & request/reply |
+| `src/nats/handlers.ts`, `src/nats/types.ts` | NATS™ subjects & request/reply |
 | `src/domain/entities/*.ts`, `src/domain/entities/registry.ts` | Entities & data model |
 | `src/providers/*.ts` | Provider integrations |
 | `src/services/*.ts` | Service actions |
@@ -151,7 +151,7 @@ code and CREATE `docs/user-guide/services/<service>.mdx` with:
 3. **HTTP routes**: from `src/server/*-route.ts` — high-level summary of
    route groups. Link to Zudoku's API Catalog for the full operation list:
    `See the [API Catalog](/catalog/<service>) for the full operation list.`
-4. **NATS subjects**: from `src/nats/handlers.ts` and `types.ts`
+4. **NATS™ subjects**: from `src/nats/handlers.ts` and `types.ts`
 5. **Entities**: from `src/domain/entities/*.ts` and `registry.ts`
 6. **Providers**: from `src/providers/*.ts`
 7. **Service actions**: from `src/services/*.ts`

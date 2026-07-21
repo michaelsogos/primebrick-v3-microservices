@@ -51,7 +51,7 @@ POST   /api/v1/actions/test-provider-connection   → test a provider's API key
 
 ### Webhooks (`/webhook` or `/webhook/:identifier`)
 
-External callbacks (e.g. Brevo delivery events):
+External callbacks (e.g. Brevo™ delivery events):
 
 ```
 POST   /webhook                                    → webhook receiver (API key auth)
@@ -89,7 +89,7 @@ ALL use `snake_case`. A field named `from_email` in the DB is
 `from_email` in the TS interface and `from_email` in the JSON response.
 Never rename fields between layers.
 
-**Exception:** External API adapters (e.g. Brevo expecting camelCase).
+**Exception:** External API adapters (e.g. Brevo™ expecting camelCase).
 The translation happens ONLY at the adapter boundary.
 
 ### No DTO transformation
@@ -127,5 +127,5 @@ Workspace dependencies use `workspace:*` (e.g.
 
 ## Next steps
 
-- [Architecture](/user-guide/microservices/architecture) — NATS bus, BE proxy, SDK lifecycle
+- [Architecture](/user-guide/microservices/architecture) — NATS™ bus, BE proxy, SDK lifecycle
 - [EmailSender](/user-guide/microservices/services/emailsender) — Email sending microservice
