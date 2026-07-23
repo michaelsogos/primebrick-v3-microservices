@@ -13,10 +13,10 @@ sub-folder with its own `src/`, `package.json`, `Dockerfile`, `db-meta/`, and
 ## Tech stack
 
 - **Runtime:** Bun (dev with `--hot` reload, prod with `bun dist/index.js`)
-- **Language:** TypeScript (strict mode)
-- **HTTP:** Node.js HTTP server via `@primebrick/sdk`'s `createHttpServer`
-- **Messaging:** NATS (via `@primebrick/sdk`'s `NatsClient`)
-- **Database:** PostgreSQL (via `@primebrick/dal-pg`)
+- **Language:** TypeScript® (strict mode)
+- **HTTP:** Node.js® HTTP server via `@primebrick/sdk`'s `createHttpServer`
+- **Messaging:** NATS™ (via `@primebrick/sdk`'s `NatsClient`)
+- **Database:** PostgreSQL® (via `@primebrick/dal-pg`)
 - **Package manager:** pnpm
 - **Templates:** Handlebars (where applicable)
 
@@ -24,7 +24,7 @@ sub-folder with its own `src/`, `package.json`, `Dockerfile`, `db-meta/`, and
 
 | Service | Code | Port | Description |
 |---------|------|------|-------------|
-| [EmailSender](/user-guide/microservices/services/emailsender) | `EMAILSENDER` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo |
+| [EmailSender](/user-guide/microservices/services/emailsender) | `EMAILSENDER` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo™ |
 
 New microservices are added as new top-level sub-folders. Each must contain
 a `package.json` with a `name` starting with `primebrick-` and a `src/index.ts`
@@ -57,11 +57,11 @@ entry point.
 
 The Backend (BE) acts as the API gateway. The Frontend (FE) never calls
 microservices directly — all HTTP traffic goes through the BE's
-`/ws/:serviceCode/*` proxy. Inter-service async communication uses NATS
+`/ws/:serviceCode/*` proxy. Inter-service async communication uses NATS™
 subjects.
 
 ## Next steps
 
-- [Architecture](/user-guide/microservices/architecture) — NATS bus, BE proxy, SDK lifecycle
+- [Architecture](/user-guide/microservices/architecture) — NATS™ bus, BE proxy, SDK lifecycle
 - [Conventions](/user-guide/microservices/conventions) — API path conventions, data model rules
 - [EmailSender](/user-guide/microservices/services/emailsender) — Email sending microservice

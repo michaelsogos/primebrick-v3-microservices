@@ -6,7 +6,7 @@ description: Email provider configuration, template rendering, and email sending
 # EmailSender Microservice
 
 The EmailSender microservice handles email provider configuration, template
-rendering with Handlebars, and email dispatch via the Brevo provider. It
+rendering with Handlebars, and email dispatch via the Brevo™ provider. It
 receives send requests over NATS (not HTTP) and exposes provider/config
 management via HTTP entity CRUD routes proxied through the Backend.
 
@@ -36,7 +36,7 @@ requests via `/ws/emailsender/*`.
 
 The EmailSender service exposes three route groups:
 
-- **Providers** (entity CRUD) — manage email provider configurations (Brevo
+- **Providers** (entity CRUD) — manage email provider configurations (Brevo™
   API keys, sender settings). JWT auth + RBAC.
 - **Config entries** (entity CRUD) — module configuration key-value store.
   JWT auth + RBAC.
@@ -49,14 +49,14 @@ See the [EmailSender API Catalog](/catalog/emailsender) for the full
 interactive API reference — every path, method, operationId, parameter,
 request body, and response schema with live try-it functionality.
 
-## NATS Subjects
+## NATS™ Subjects
 
-Email sending is triggered via NATS, not HTTP. The Backend publishes send
+Email sending is triggered via NATS™, not HTTP. The Backend publishes send
 requests and the microservice processes them asynchronously.
 
 | Subject | Direction | RBAC Permission | Description |
 |---------|-----------|-----------------|-------------|
-| `emailsender.send` | Subscribe | `EMAILSENDER_SEND` | Receive `SendEmailRequest`, render template, send via Brevo, log to `sender_log` |
+| `emailsender.send` | Subscribe | `EMAILSENDER_SEND` | Receive `SendEmailRequest`, render template, send via Brevo™, log to `sender_log` |
 | `emailsender.response.{requestId}` | Publish | — | Reply with `SendEmailResponse` (success/failure + `providerMessageId`) |
 
 ### SendEmailRequest
@@ -80,7 +80,7 @@ requests and the microservice processes them asynchronously.
 |-------|------|-------------|
 | `requestId` | string | Matches the request |
 | `success` | boolean | Whether the email was sent successfully |
-| `providerMessageId` | string | Brevo message ID (on success) |
+| `providerMessageId` | string | Brevo™ message ID (on success) |
 | `error` | string | Error message (on failure) |
 | `logId` | bigint | `sender_log` row ID (on success) |
 
@@ -133,7 +133,7 @@ Communication log for every email sent. NOT auditable (no `created_at`/
 | `entity_id` | bigint | yes | Source entity ID |
 | `entity_uuid` | string | yes | Source entity UUID |
 | `type` | string(50) | no | Communication type (always `email`) |
-| `provider_message_id` | string | yes | Brevo message ID (used for webhook matching) |
+| `provider_message_id` | string | yes | Brevo™ message ID (used for webhook matching) |
 | `provider_uuid` | uuid | yes | Provider config UUID |
 | `status` | string(50) | no | Delivery status (`sent`, `delivered`, `opened`, `clicked`, `bounced`, `spam`, `blocked`, `deferred`, `failed`) |
 | `template_uuid` | string | yes | Template UUID used |
@@ -166,15 +166,15 @@ microservice reads/writes its own registration row here via the SDK
 
 ## Provider Integrations
 
-### Brevo
+### Brevo™
 
 The `BrevoClient` class (`src/providers/brevo.ts`) sends emails via the
-Brevo REST API (`POST /smtp/emails`). The client is constructed per-request
+Brevo™ REST API (`POST /smtp/emails`). The client is constructed per-request
 from the `providers` table config (API key + endpoint loaded from DB, not
 from env vars).
 
-Brevo delivery events are received via `POST /webhook?provider=brevo` and
-processed by `WebhookService`, which maps Brevo event names to internal
+Brevo™ delivery events are received via `POST /webhook?provider=brevo` and
+processed by `WebhookService`, which maps Brevo™ event names to internal
 statuses:
 
 | Brevo event | Internal status |
@@ -194,7 +194,7 @@ statuses:
 ### `EmailService.sendEmail(request, actorId)`
 
 Called by the NATS `emailsender.send` handler. Flow:
-1. Load Brevo provider config from `providers` table (filter by `provider = 'brevo'`)
+1. Load Brevo™ provider config from `providers` table (filter by `provider = 'brevo'`)
 2. Load email template from `email_templates` by `code` + `language_iso`
 3. Render subject/HTML/text with Handlebars using `request.variables`
 4. Send via `BrevoClient.sendEmail()`
@@ -206,7 +206,7 @@ Called by the NATS `emailsender.send` handler. Flow:
 Called by the `POST /webhook` route. Flow:
 1. Validate provider is `brevo`
 2. Extract `message-id` and `event` from payload
-3. Map Brevo event to internal status via `BrevoClient.mapStatus()`
+3. Map Brevo™ event to internal status via `BrevoClient.mapStatus()`
 4. Update `sender_log` row by `provider_message_id` with new status
 
 ## Deployment
@@ -215,20 +215,20 @@ Called by the `POST /webhook` route. Flow:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_URL` | yes | — | PostgreSQL connection string |
+| `DATABASE_URL` | yes | — | PostgreSQL® connection string |
 | `DB_SCHEMA` | no | `emailsender` | Database schema name |
-| `SERVICE_BASE_URL` | no | `http://localhost:3003` | Exposed URL for BE proxy routing (dynamic in Docker) |
+| `SERVICE_BASE_URL` | no | `http://localhost:3003` | Exposed URL for BE proxy routing (dynamic in Docker™) |
 
-Additional config (NATS URL, HTTP port, service code) is loaded from the
+Additional config (NATS™ URL, HTTP port, service code) is loaded from the
 `config` table at startup via `ConfigLoader` — not from env vars.
 
 The `BREVO_API_KEY` is NOT an env var. It is stored in the `providers`
 table and set up by admin users via the FE (`POST /api/v1/entities/providers`).
 
-### Docker
+### Docker®
 
 The Dockerfile uses a two-stage build with `oven/bun:1.1.0-alpine`:
-- **Builder:** installs deps, compiles TypeScript
+- **Builder:** installs deps, compiles TypeScript®
 - **Production:** installs prod deps only, copies `dist/`, runs `bun dist/index.js`
 - **Port:** 3003
 - **Health check:** `GET /health` every 30s
@@ -247,12 +247,12 @@ Uses `@primebrick/sdk`'s `applyPatches()` runner via
 
 ## Health & Lifecycle
 
-The service uses the SDK's `ServiceRegistrar` to register itself via NATS:
+The service uses the SDK's `ServiceRegistrar` to register itself via NATS™:
 
 - **Registration:** publishes a register event with service code, base URL,
   endpoints (`webhook`, `health`), version, and metadata (name, description,
   icon)
-- **Heartbeat:** periodic health checks published via NATS; checks DB
+- **Heartbeat:** periodic health checks published via NATS™; checks DB
   connectivity and NATS connection status
 - **Graceful shutdown:** on SIGTERM/SIGINT, the SDK `GracefulShutdown`
   coordinator runs cleanup in order: stop heartbeat → unregister service →
