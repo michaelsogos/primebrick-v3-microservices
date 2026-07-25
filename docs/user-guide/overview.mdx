@@ -60,6 +60,46 @@ microservices directly — all HTTP traffic goes through the BE's
 `/ws/:serviceCode/*` proxy. Inter-service async communication uses NATS™
 subjects.
 
+## Quick start
+
+Each microservice is a self-contained sub-folder with its own `package.json`,
+`src/`, `Dockerfile`, `db-meta/`, and `terraform/`. To run EmailSender
+locally:
+
+```bash
+cd emailsender
+pnpm install
+pnpm run build
+bun dist/index.js          # starts on port 3003 (from config table)
+```
+
+The microservice reads its NATS™ URL, HTTP port, and service code from the
+`config` table at startup via the SDK's `ConfigLoader` — not from env vars.
+The only required env vars are `DATABASE_URL` and (optionally) `DB_SCHEMA`.
+
+To verify the service is running:
+
+```bash
+curl http://localhost:3003/health
+# → { "ok": true, "service": "emailsender", "version": "...", "url": "..." }
+
+curl http://localhost:3003/api/v1/openapi.json | head -20
+# → { "openapi": "3.x.x", "info": { "title": "EmailSender", ... } }
+```
+
+From the Frontend, the same service is reached through the BE proxy:
+
+```bash
+curl http://localhost:3001/ws/emailsender/api/v1/entities/providers/list
+# → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
+```
+
+To apply database migrations for a microservice:
+
+```bash
+cd emailsender && pnpm run db:migrate
+```
+
 ## Next steps
 
 - [Architecture](/user-guide/microservices/architecture) — NATS™ bus, BE proxy, SDK lifecycle

@@ -23,6 +23,17 @@ Frontend (FE) never calls microservices directly.
   request to `GET /ws/emailsender/api/v1/entities/providers/list` is
   forwarded to the EmailSender microservice at
   `GET /api/v1/entities/providers/list`.
+
+  ```bash
+  # From the FE (or any JWT-authenticated client) through the BE proxy:
+  curl -H "Authorization: Bearer <jwt>" \
+    http://localhost:3001/ws/emailsender/api/v1/entities/providers/list
+  # → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
+
+  # Direct to the microservice (bypassing the BE, for debugging):
+  curl http://localhost:3003/api/v1/entities/providers/list
+  ```
+
 - **OpenAPI aggregation:** The BE fetches each microservice's
   `GET /api/v1/openapi.json` and merges the specs into a unified API
   catalog. This powers the Zudoku API explorer on the docs site.

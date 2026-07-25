@@ -37,6 +37,31 @@ Rules:
 - The `meta` endpoint returns the entity's field schema, consumed by the
   MCP `get_entity_meta` tool and the FE for dynamic form generation.
 
+Example — list providers through the BE proxy:
+
+```bash
+# List with search + pagination
+curl -H "Authorization: Bearer <jwt>" \
+  "http://localhost:3001/ws/emailsender/api/v1/entities/providers/list?search=brevo&page=1&page_size=20"
+
+# Get entity metadata (field schema for dynamic forms)
+curl -H "Authorization: Bearer <jwt>" \
+  http://localhost:3001/ws/emailsender/api/v1/entities/providers/meta
+
+# Create a provider
+curl -X POST -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" \
+  http://localhost:3001/ws/emailsender/api/v1/entities/providers \
+  -d '{"provider":"brevo","api_key":"xkeysib-...","from_email":"noreply@example.com"}'
+
+# Soft-delete by UUID
+curl -X DELETE -H "Authorization: Bearer <jwt>" \
+  http://localhost:3001/ws/emailsender/api/v1/entities/providers/550e8400-e29b-41d4-a716-446655440000
+
+# Restore a soft-deleted record
+curl -X POST -H "Authorization: Bearer <jwt>" \
+  http://localhost:3001/ws/emailsender/api/v1/entities/providers/550e8400-e29b-41d4-a716-446655440000/restore
+```
+
 ### Service actions (`/api/v1/actions/:action`)
 
 Non-CRUD business actions:
