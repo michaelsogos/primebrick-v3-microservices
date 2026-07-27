@@ -1,0 +1,40 @@
+{
+  "name": "primebrick-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24"
+  },
+  "scripts": {
+    "version:auto": "node ../scripts/version-sync.mjs",
+    "prebuild": "node ../scripts/version-sync.mjs",
+    "dev": "bun --hot src/index.ts",
+    "build": "tsc",
+    "prestart": "pnpm run build",
+    "start": "bun dist/index.js",
+    "db:migrate": "bun scripts/database-patch-apply.ts",
+    "index-docs": "bun scripts/index-docs.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "test:all": "vitest run && vitest run --config vitest.integration.config.ts"
+  },
+  "dependencies": {
+    "nats": "2.29.3",
+    "pg": "8.22.0",
+    "dotenv": "17.4.2",
+    "reflect-metadata": "0.2.2",
+    "@huggingface/transformers": "4.2.0",
+    "@primebrick/dal-pg": "workspace:*",
+    "@primebrick/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@types/pg": "8.20.0",
+    "typescript": "6.0.3",
+    "vite": "8.1.5",
+    "vitest": "4.1.10"
+  }
+}
