@@ -3,6 +3,7 @@
     "overview",
     "architecture",
     "conventions",
-    "services/emailsender"
+    "services/emailsender",
+    "services/ai"
   ]
 }
