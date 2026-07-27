@@ -30,8 +30,15 @@ CREATE TABLE IF NOT EXISTS "ai"."docs_kb" (
   UNIQUE ("repo", "path", "chunk_idx")
 );
 
+-- HNSW index for vector similarity search (cosine distance).
+-- HNSW is preferred over ivfflat for small-to-medium datasets (<100k rows)
+-- because it provides better recall without tuning probes/lists parameters.
+-- ivfflat with lists=100 on ~1300 rows caused poor recall (only ~12 rows per
+-- list, default probes=1 missed relevant chunks in other lists).
+-- HNSW parameters: m=16 (connections per node), ef_construction=64 (build-time
+-- search width). For query-time recall, set hnsw.ef_search (default 40).
 CREATE INDEX IF NOT EXISTS "docs_kb_embedding_idx" ON "ai"."docs_kb"
-  USING ivfflat ("embedding" vector_cosine_ops) WITH (lists = 100);
+  USING hnsw ("embedding" vector_cosine_ops) WITH (m = 16, ef_construction = 64);
 CREATE INDEX IF NOT EXISTS "docs_kb_repo_idx" ON "ai"."docs_kb" ("repo");
 CREATE INDEX IF NOT EXISTS "docs_kb_content_hash_idx" ON "ai"."docs_kb" ("content_hash");
 

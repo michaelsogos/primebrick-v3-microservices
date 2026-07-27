@@ -1,0 +1,279 @@
+---
+title: AI Microservice
+description: "AI chat assistant with RAG (Retrieval-Augmented Generation), pgvector knowledge base, and MCP tool integration."
+---
+
+# AI Microservice
+
+The AI microservice provides an in-app chat assistant that answers questions
+about Primebrick using RAG (Retrieval-Augmented Generation). It embeds
+documentation into a pgvector knowledge base, retrieves relevant chunks at
+query time, and streams responses from a local or cloud LLM.
+
+- **Package:** `primebrick-ai`
+- **Service code:** `AI`
+- **Default port:** `3004`
+- **Runtime:** Bun (dev: `bun --hot`, prod: `bun dist/index.js`)
+- **Database schema:** `ai` (isolated per-service schema)
+- **Vector extension:** pgvector (cosine similarity, HNSW index)
+
+## Architecture
+
+<Mermaid chart={`flowchart LR
+  FE[Frontend] -->|SSE POST /api/v1/ai/chat| AI[AI Microservice]
+  AI -->|embed query| EMB[Transformers.js\\nall-MiniLM-L6-v2]
+  EMB -->|384-dim vector| PG[(ai.docs_kb\\npgvector HNSW)]
+  AI -->|search_docs| PG
+  AI -->|MCP tools| BE[Backend /mcp]
+  AI -->|streamText| LLM[LLM\\nmistral.rs / cloud]
+  LLM -->|SSE deltas| FE
+  AI -->|persist| MSGS[(ai.ai_messages)]
+  AI -->|telemetry| TEL[(ai.ai_telemetry)]
+`} />
+
+## Components
+
+### RAG pipeline
+
+The RAG (Retrieval-Augmented Generation) pipeline powers documentation-aware
+answers:
+
+1. **Embedding**: The user's query is embedded using
+   `Xenova/all-MiniLM-L6-v2` (384-dim, CPU/WASM via Transformers.js).
+2. **Vector search**: The embedding is compared against `ai.docs_kb` using
+   pgvector cosine distance (`<=>` operator) with an HNSW index.
+3. **Context injection**: The top-k chunks are injected into the LLM prompt
+   as context.
+4. **LLM response**: The LLM generates an answer grounded in the retrieved
+   documentation.
+
+### MCP client integration
+
+The orchestrator connects to the Backend's MCP server
+(`{BE_BASE_URL}/mcp`) using Streamable HTTP transport with the user's JWT.
+This gives the LLM access to generic CRUD tools:
+
+- `list_available_entities` — list all entities the user can query
+- `list_entities` — list/search/aggregate records
+- `get_entity` — get a single record by UUID
+- `get_entity_meta` — get entity field metadata
+- `get_entity_audit` — get audit history for a record
+
+### Local search_docs tool
+
+In addition to MCP tools, the orchestrator registers a local `search_docs`
+tool that searches the RAG knowledge base directly. The LLM calls this tool
+when the user asks about framework architecture, APIs, configuration, or any
+topic covered by the documentation.
+
+### PII redaction
+
+When `REDACT_PII=true` (recommended for cloud LLMs), the orchestrator
+redacts personally identifiable information from messages before sending
+them to the LLM:
+
+- Emails → `[EMAIL_1]`, `[EMAIL_2]`, ...
+- Phone numbers → `[PHONE_1]`, ...
+- Credit card numbers → `[CARD_1]`, ... (with Luhn validation)
+
+Original messages with real PII are persisted to the database unchanged.
+Only the LLM sees the redacted version.
+
+## HTTP routes
+
+All routes are proxied by the Backend via `/ws/ai/*`. Authentication is
+handled by the gateway (headers: `x-user-id`, `Authorization: Bearer <jwt>`).
+
+| Method | Path | Purpose | Auth |
+|--------|------|---------|------|
+| GET | `/api/v1/ai/health` | AI health check (LLM connectivity + model info) | Gateway |
+| POST | `/api/v1/ai/chat` | Chat endpoint with SSE streaming | Gateway + rate limit |
+| GET | `/api/v1/ai/conversations` | List user's conversations | Gateway |
+| POST | `/api/v1/ai/conversations` | Create new conversation | Gateway |
+| GET | `/api/v1/ai/conversations/:uuid` | Get conversation with messages | Gateway |
+| PATCH | `/api/v1/ai/conversations/:uuid` | Update conversation title | Gateway |
+| DELETE | `/api/v1/ai/conversations/:uuid` | Delete conversation | Gateway |
+| POST | `/api/v1/ai/feedback` | Submit thumbs up/down on a message | Gateway |
+| GET | `/api/v1/ai/feedback` | List user's feedback | Gateway |
+| GET | `/api/v1/ai/telemetry` | Aggregate stats + recent requests | Admin only |
+| POST | `/api/v1/ai/reindex` | Trigger embedding pipeline | Admin only |
+
+### Chat endpoint
+
+`POST /api/v1/ai/chat` streams the response via Server-Sent Events (SSE).
+
+**Request body:**
+
+```json
+{
+  "message": "How does RBAC work?",
+  "conversation_uuid": "optional-uuid-for-existing-conversation"
+}
+```
+
+**SSE events:**
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `text-delta` | `{ text: string }` | Partial text chunk |
+| `tool-call` | `{ toolName, input }` | LLM invoked a tool |
+| `tool-result` | `{ toolName, result }` | Tool returned a result |
+| `client-tool-call` | `{ toolName, input }` | Frontend must handle (e.g. navigate) |
+| `finish` | `{ text, tokensIn, tokensOut, steps }` | Stream complete |
+| `error` | `{ message }` | Error occurred |
+
+### Rate limiting
+
+The chat endpoint uses a token bucket algorithm per user (identified by
+`x-user-id` header). Configuration:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AI_RATE_LIMIT_CAPACITY` | `10` | Max tokens in bucket per user |
+| `AI_RATE_LIMIT_REFILL_RATE` | `1` | Tokens refilled per second |
+| `AI_RATE_LIMIT_TOKEN_COST` | `1` | Tokens consumed per chat request |
+
+If `REDIS_URL` is set, rate limiting is distributed across instances.
+Otherwise, an in-memory token bucket is used (single-instance only).
+
+## Database schema
+
+All tables are in the `ai` schema (microservice isolation).
+
+### docs_kb — RAG knowledge base
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `bigint` | Auto-increment PK |
+| `repo` | `text` | Source repo (backend, frontend, sdk, dal, microservices, api) |
+| `path` | `text` | Doc path within the repo |
+| `title` | `text` | Doc title (from frontmatter) |
+| `chunk_idx` | `int` | Chunk index within the doc |
+| `content` | `text` | Chunk text content |
+| `embedding` | `vector(384)` | Embedding vector (pgvector) |
+| `metadata` | `jsonb` | Additional metadata (source, content_type, heading_path) |
+| `content_hash` | `text` | SHA-256 of content (for incremental re-indexing) |
+
+**Index:** HNSW on `embedding` with `vector_cosine_ops` (m=16, ef_construction=64).
+
+### ai_conversations — Chat conversations
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `uuid` | `uuid` | PK |
+| `user_uuid` | `uuid` | Owner |
+| `title` | `text` | Conversation title |
+| `created_at` | `timestamptz` | Creation timestamp |
+| `updated_at` | `timestamptz` | Last update timestamp |
+
+### ai_messages — Chat messages
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `uuid` | `uuid` | PK |
+| `conversation_uuid` | `uuid` | FK → ai_conversations (CASCADE) |
+| `role` | `text` | `user`, `assistant` |
+| `content` | `jsonb` | `{ text, tool_calls, tool_results }` |
+| `tokens_in` | `int` | Input tokens |
+| `tokens_out` | `int` | Output tokens |
+| `created_at` | `timestamptz` | Creation timestamp |
+
+### ai_telemetry — Per-request telemetry
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `bigint` | Auto-increment PK |
+| `uuid` | `uuid` | Unique request ID |
+| `conversation_uuid` | `uuid` | Associated conversation |
+| `user_uuid` | `uuid` | Requesting user |
+| `model` | `text` | LLM model name |
+| `tokens_in` | `int` | Total input tokens |
+| `tokens_out` | `int` | Total output tokens |
+| `steps` | `int` | Reasoning steps (tool call rounds) |
+| `tool_calls` | `int` | Total tool calls |
+| `rag_hits` | `int` | search_docs calls |
+| `latency_ms` | `int` | End-to-end latency |
+| `success` | `boolean` | Whether the request succeeded |
+| `error` | `text` | Error message (if failed) |
+
+### ai_feedback — User feedback
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `bigint` | Auto-increment PK |
+| `uuid` | `uuid` | Unique feedback ID |
+| `message_uuid` | `uuid` | Message being rated |
+| `user_uuid` | `uuid` | User who rated |
+| `rating` | `text` | `up` or `down` |
+| `comment` | `text` | Optional comment |
+
+## Embedding pipeline (indexing)
+
+The embedding pipeline populates `docs_kb` from the documentation source
+files. Run it with:
+
+```bash
+cd ai && pnpm run index-docs
+```
+
+**Flow:**
+
+1. **Load docs** from `DOCS_PATH` (MDX files) and `OPENAPI_PATH` (JSON specs)
+2. **Chunk** each doc (sentence-aware, ~1800 chars, 200 char overlap)
+3. **Compute SHA-256** for each chunk (incremental re-indexing)
+4. **Skip unchanged chunks** (content_hash matches DB)
+5. **Batch embed** changed chunks (batch size 16) via the embedding provider
+6. **Upsert** into `docs_kb` (ON CONFLICT update)
+7. **Delete stale chunks** (docs removed from source)
+
+The pipeline is idempotent — re-running it only re-embeds changed chunks.
+
+## Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `DB_SCHEMA` | No | `ai` | Database schema |
+| `SERVICE_BASE_URL` | No | `http://localhost:3004` | Service URL for BE proxy |
+| `LLM_BASE_URL` | No | `http://localhost:8080/v1` | LLM endpoint (OpenAI-compatible) |
+| `LLM_MODEL` | No | `Qwen3-4B-Instruct-2507` | LLM model name |
+| `LLM_API_KEY` | No | `not-required` | LLM API key (not needed for local) |
+| `EMBEDDING_PROVIDER` | No | `transformers` | `transformers` or `openai` |
+| `EMBEDDING_MODEL` | No | `Xenova/all-MiniLM-L6-v2` | Embedding model |
+| `EMBEDDING_BASE_URL` | No | — | OpenAI-compatible embeddings URL |
+| `EMBEDDING_API_KEY` | No | — | Embeddings API key |
+| `EMBEDDING_DIM` | No | `384` | Vector dimension (OpenAI provider) |
+| `BE_BASE_URL` | No | `http://localhost:3001` | Backend URL for MCP client |
+| `REDACT_PII` | No | — | Set to `true` for cloud LLM PII redaction |
+| `REDIS_URL` | No | — | Redis URL for distributed rate limiting |
+| `AI_RATE_LIMIT_CAPACITY` | No | `10` | Rate limit bucket capacity |
+| `AI_RATE_LIMIT_REFILL_RATE` | No | `1` | Rate limit refill per second |
+| `AI_RATE_LIMIT_TOKEN_COST` | No | `1` | Tokens per chat request |
+| `DOCS_PATH` | No | `../../primebrick-v3-docs/pages` | MDX docs path |
+| `OPENAPI_PATH` | No | `../../primebrick-v3-docs/apis` | OpenAPI specs path |
+
+## LLM runtime
+
+The default LLM is a local mistral.rs container running
+Qwen3-4B-Instruct-2507 (Q4_K_M quantization). See the Backend's
+`infra/docker-compose.ai-llm.yml` for the container configuration.
+
+The LLM provider is pluggable — any OpenAI-compatible endpoint works
+(OpenAI, Anthropic via proxy, DeepSeek, Groq, etc.) by changing
+`LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL`.
+
+## Local development
+
+### Prerequisites
+
+1. PostgreSQL with pgvector (from `infra/docker-compose.postgres.yml`)
+2. LLM container (from `infra/docker-compose.ai-llm.yml`) or a cloud LLM
+3. Backend running on port 3001 (for MCP client)
+
+### Steps
+
+1. Copy `.env.example` to `.env` and adjust values
+2. Apply migrations: `pnpm run db:migrate`
+3. Index docs: `pnpm run index-docs`
+4. Start dev server: `pnpm run dev`
+5. Verify health: `curl http://localhost:3004/health`
