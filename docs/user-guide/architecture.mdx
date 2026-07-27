@@ -1,12 +1,12 @@
 ---
 title: Architecture
-description: NATS message bus, Backend proxy, SDK lifecycle, and per-service database isolation
+description: NATS™ message bus, Backend proxy, SDK lifecycle, and per-service database isolation
 ---
 
 # Architecture
 
 Primebrick v3 microservices follow a gateway-proxied architecture with
-NATS for async messaging and per-service database isolation.
+NATS™ for async messaging and per-service database isolation.
 
 ## Backend proxy
 
@@ -23,6 +23,17 @@ Frontend (FE) never calls microservices directly.
   request to `GET /ws/emailsender/api/v1/entities/providers/list` is
   forwarded to the EmailSender microservice at
   `GET /api/v1/entities/providers/list`.
+
+  ```bash
+  # From the FE (or any JWT-authenticated client) through the BE proxy:
+  curl -H "Authorization: Bearer <jwt>" \
+    http://localhost:3001/ws/emailsender/api/v1/entities/providers/list
+  # → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
+
+  # Direct to the microservice (bypassing the BE, for debugging):
+  curl http://localhost:3003/api/v1/entities/providers/list
+  ```
+
 - **OpenAPI aggregation:** The BE fetches each microservice's
   `GET /api/v1/openapi.json` and merges the specs into a unified API
   catalog. This powers the Zudoku API explorer on the docs site.
@@ -31,9 +42,9 @@ Frontend (FE) never calls microservices directly.
   pattern (`/api/v1/entities/:entity/...`) allows the MCP Server to
   dispatch tools without per-entity path configuration.
 
-## NATS message bus
+## NATS™ message bus
 
-Microservices connect to NATS via the SDK's `NatsClient`. NATS is used
+Microservices connect to NATS™ via the SDK's `NatsClient`. NATS™ is used
 for:
 
 1. **Service registration** — microservices publish register/heartbeat/
@@ -55,8 +66,8 @@ for:
   NATS->>BE: deliver response (SendEmailResponse)
 `} />
 
-NATS authentication uses the SDK's GATEWAY-RESOLVED mode — the BE forwards
-JWT/auth headers via NATS message headers, and the microservice verifies
+NATS™ authentication uses the SDK's GATEWAY-RESOLVED mode — the BE forwards
+JWT/auth headers via NATS™ message headers, and the microservice verifies
 them with `verifyNatsMessage()`.
 
 ## SDK lifecycle
@@ -66,16 +77,16 @@ Every microservice uses `@primebrick/sdk` for its lifecycle:
 1. **Environment validation** — `requireEnv()` validates required env vars
    at startup
 2. **Config loading** — `ConfigLoader` reads the `config` table for
-   service-specific settings (NATS URL, HTTP port, service code)
+   service-specific settings (NATS™ URL, HTTP port, service code)
 3. **Auth config** — `initAuthConfig()` + `loadAuthConfig()` set up
    GATEWAY-RESOLVED auth mode
-4. **NATS connection** — `NatsClient.getConnection(url)`
+4. **NATS™ connection** — `NatsClient.getConnection(url)`
 5. **Service registration** — `ServiceRegistrar.register()` publishes the
    register event, then `startHeartbeat()` begins periodic health checks
 6. **HTTP server** — `createHttpServer()` starts the HTTP listener with
    health check and route handler
 7. **Graceful shutdown** — `GracefulShutdown` coordinator runs cleanup on
-   SIGTERM/SIGINT: stop heartbeat → unregister → close NATS → close DB →
+   SIGTERM/SIGINT: stop heartbeat → unregister → close NATS™ → close DB →
    close HTTP
 
 <Mermaid chart={`flowchart TD
@@ -90,7 +101,7 @@ Every microservice uses `@primebrick/sdk` for its lifecycle:
 
 ## Database isolation
 
-Each microservice has its own PostgreSQL schema (e.g. `emailsender`).
+Each microservice has its own PostgreSQL® schema (e.g. `emailsender`).
 Microservices never read or write to another microservice's schema. The
 only shared table is `public.service_registry`, which lives in the
 `public` schema and is used for service registration.

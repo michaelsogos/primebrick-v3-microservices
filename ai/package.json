@@ -1,5 +1,5 @@
 {
-  "name": "primebrick-emailsender",
+  "name": "primebrick-ai",
   "version": "0.6.0",
   "private": true,
   "type": "module",
@@ -14,6 +14,7 @@
     "prestart": "pnpm run build",
     "start": "bun dist/index.js",
     "db:migrate": "bun scripts/database-patch-apply.ts",
+    "index-docs": "bun scripts/index-docs.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
@@ -25,7 +26,7 @@
     "pg": "8.22.0",
     "dotenv": "17.4.2",
     "reflect-metadata": "0.2.2",
-    "handlebars": "4.7.9",
+    "@huggingface/transformers": "4.2.0",
     "@primebrick/dal-pg": "workspace:*",
     "@primebrick/sdk": "workspace:*"
   },

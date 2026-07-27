@@ -111,7 +111,7 @@ For EACH changed service, user-facing files are (paths relative to
 | Path pattern | Doc topic |
 |--------------|-----------|
 | `src/server/*-route.ts`, `src/server/openapi-route.ts` | HTTP routes & OpenAPI |
-| `src/nats/handlers.ts`, `src/nats/types.ts` | NATS subjects & request/reply |
+| `src/nats/handlers.ts`, `src/nats/types.ts` | NATS™ subjects & request/reply |
 | `src/domain/entities/*.ts`, `src/domain/entities/registry.ts` | Entities & data model |
 | `src/providers/*.ts` | Provider integrations |
 | `src/services/*.ts` | Service actions |
@@ -150,7 +150,7 @@ and CREATE `docs/user-guide/services/<service>.mdx` with:
    operation — the full API reference is in Zudoku's interactive API Catalog,
    generated from the OpenAPI spec by `fetch-openapi.mjs`. Link to it:
    `See the [API Catalog](/catalog/<service>) for the full operation list.`
-4. **NATS subjects**: read `src/nats/handlers.ts` and `src/nats/types.ts` —
+4. **NATS™ subjects**: read `src/nats/handlers.ts` and `src/nats/types.ts` —
    list every subject the service subscribes to or publishes, with
    request/response schemas.
 5. **Entities**: read `src/domain/entities/*.ts` and `registry.ts` — list
@@ -177,7 +177,7 @@ For each missing shared page (from Step 2), create it:
 
 - **`overview.mdx`**: repo overview — what the microservices repo is, list of
   microservices (with links to their service pages), high-level architecture.
-- **`architecture.mdx`**: NATS message bus, BE `/ws/:serviceCode/*` proxy,
+- **`architecture.mdx`**: NATS™ message bus, BE `/ws/:serviceCode/*` proxy,
   SDK lifecycle (service registration, heartbeat, graceful shutdown), database
   per-service isolation.
 - **`conventions.mdx`**: API path conventions (from
