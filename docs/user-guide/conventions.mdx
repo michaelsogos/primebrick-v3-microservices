@@ -29,8 +29,8 @@ POST   /api/v1/entities/:entity/bulk-restore      → bulk restore (array of UUI
 ```
 
 Rules:
-- `:entity` is the snake_case **plural** noun (e.g. `providers`,
-  `config_entries`). Never singular, never camelCase.
+- `:entity` is the snake_case **singular** noun (e.g. `provider`,
+  `config_entry`). Never plural, never camelCase.
 - `:uuid` is always the UUID path parameter.
 - Not all entities support all operations — unsupported operations simply
   don't register that route.
@@ -42,24 +42,24 @@ Example — list providers through the BE proxy:
 ```bash
 # List with search + pagination
 curl -H "Authorization: Bearer <jwt>" \
-  "http://localhost:3001/ws/emailsender/api/v1/entities/providers/list?search=brevo&page=1&page_size=20"
+  "http://localhost:3001/ws/emailsender/api/v1/entities/provider/list?search=brevo&page=1&page_size=20"
 
 # Get entity metadata (field schema for dynamic forms)
 curl -H "Authorization: Bearer <jwt>" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/providers/meta
+  http://localhost:3001/ws/emailsender/api/v1/entities/provider/meta
 
 # Create a provider
 curl -X POST -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/providers \
+  http://localhost:3001/ws/emailsender/api/v1/entities/provider \
   -d '{"provider":"brevo","api_key":"xkeysib-...","from_email":"noreply@example.com"}'
 
 # Soft-delete by UUID
 curl -X DELETE -H "Authorization: Bearer <jwt>" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/providers/550e8400-e29b-41d4-a716-446655440000
+  http://localhost:3001/ws/emailsender/api/v1/entities/provider/550e8400-e29b-41d4-a716-446655440000
 
 # Restore a soft-deleted record
 curl -X POST -H "Authorization: Bearer <jwt>" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/providers/550e8400-e29b-41d4-a716-446655440000/restore
+  http://localhost:3001/ws/emailsender/api/v1/entities/provider/550e8400-e29b-41d4-a716-446655440000/restore
 ```
 
 ### Service actions (`/api/v1/actions/:action`)
@@ -106,6 +106,18 @@ Every microservice MUST export a complete OpenAPI 3.x spec at
 5. Use `snake_case` field names in request/response schemas
 
 ## Data model rules
+
+### Naming convention
+
+| Layer | Name form | Example |
+|---|---|---|
+| PG table | snake_case **plural** | `providers`, `config_entries`, `sender_logs` |
+| TS entity class | PascalCase **singular** | `ProviderEntity`, `ConfigEntryEntity` |
+| API URL entity segment | snake_case **singular** | `/api/v1/entities/provider/...` |
+
+- Entity class = singular (one row schema)
+- PG table = plural (collection of rows)
+- URL entity segment = singular (resource type)
 
 ### Snake_case everywhere
 
