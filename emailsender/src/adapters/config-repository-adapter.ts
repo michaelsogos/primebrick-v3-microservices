@@ -4,7 +4,7 @@ import { ConfigEntryEntity } from "../domain/entities/config_entry_entity.js";
 
 /**
  * Adapts @primebrick/dal-pg's Dal gateway to the SDK's ConfigRepositoryPort.
- * Used by ConfigLoader to read config rows from the emailsender.config table.
+ * Used by ConfigLoader to read config rows from the emailsender.config_entries table.
  */
 export class ConfigRepositoryAdapter implements ConfigRepositoryPort {
   async findAll(): Promise<Array<{ key: string; value: string | null }>> {

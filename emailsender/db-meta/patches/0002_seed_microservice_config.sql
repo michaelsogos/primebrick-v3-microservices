@@ -1,4 +1,4 @@
--- Seed microservice config keys into emailsender.config table.
+-- Seed microservice config keys into emailsender.config_entries table.
 -- These replace ENV vars that were previously passed to the container.
 -- Only DATABASE_URL, DB_SCHEMA, and SERVICE_BASE_URL remain as ENV vars.
 -- SERVICE_BASE_URL stays as ENV because the host port is dynamic (set by
@@ -6,7 +6,7 @@
 -- BREVO_API_KEY and BREVO_API_ENDPOINT are NOT in the config table — they
 -- come from the emailsender.providers table, set up by admin users via the FE.
 
-INSERT INTO "emailsender"."config" ("key", "value", "label_key", "description_key", "created_by", "updated_by")
+INSERT INTO "emailsender"."config_entries" ("key", "value", "label_key", "description_key", "created_by", "updated_by")
 VALUES
   ('nats_url', 'nats://127.0.0.1:4222', 'config.nats_url.label', 'config.nats_url.description', 'system', 'system'),
   ('service_code', 'EMAILSENDER', 'config.service_code.label', 'config.service_code.description', 'system', 'system'),

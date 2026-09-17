@@ -1,8 +1,8 @@
--- Seed microservice config keys into ai.config table.
+-- Seed microservice config keys into ai.config_entries table.
 -- These replace ENV vars that were previously passed to the container.
 -- Only DATABASE_URL, DB_SCHEMA, and SERVICE_BASE_URL remain as ENV vars.
 
-INSERT INTO "ai"."config" ("key", "value", "label_key", "description_key", "created_by", "updated_by")
+INSERT INTO "ai"."config_entries" ("key", "value", "label_key", "description_key", "created_by", "updated_by")
 VALUES
   ('nats_url', 'nats://127.0.0.1:4222', 'config.nats_url.label', 'config.nats_url.description', 'system', 'system'),
   ('service_code', 'AI', 'config.service_code.label', 'config.service_code.description', 'system', 'system'),

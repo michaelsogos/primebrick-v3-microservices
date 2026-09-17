@@ -30,7 +30,7 @@ export const OPENAPI_SPEC = {
   ],
   paths: {
     // ─── Providers (entity CRUD) ───────────────────────────────────────────
-    "/api/v1/entities/providers/meta": {
+    "/api/v1/entities/provider/meta": {
       get: {
         operationId: "get_providers_meta",
         tags: ["providers"],
@@ -44,7 +44,7 @@ export const OPENAPI_SPEC = {
                 schema: {
                   type: "object",
                   properties: {
-                    entity: { type: "string", example: "providers" },
+                    entity: { type: "string", example: "provider" },
                     module: { type: "string", example: "emailsender" },
                     fields: {
                       type: "array",
@@ -71,7 +71,7 @@ export const OPENAPI_SPEC = {
         },
       },
     },
-    "/api/v1/entities/providers/list": {
+    "/api/v1/entities/provider/list": {
       get: {
         operationId: "list_providers",
         tags: ["providers"],
@@ -108,7 +108,7 @@ export const OPENAPI_SPEC = {
         },
       },
     },
-    "/api/v1/entities/providers/{uuid}": {
+    "/api/v1/entities/provider/{uuid}": {
       get: {
         operationId: "get_provider",
         tags: ["providers"],
@@ -204,7 +204,7 @@ export const OPENAPI_SPEC = {
         },
       },
     },
-    "/api/v1/entities/providers": {
+    "/api/v1/entities/provider": {
       post: {
         operationId: "create_provider",
         tags: ["providers"],
@@ -236,7 +236,7 @@ export const OPENAPI_SPEC = {
     },
 
     // ─── Config entries (entity CRUD) ──────────────────────────────────────
-    "/api/v1/entities/config_entries/meta": {
+    "/api/v1/entities/config_entry/meta": {
       get: {
         operationId: "get_config_entries_meta",
         tags: ["config_entries"],
@@ -247,7 +247,7 @@ export const OPENAPI_SPEC = {
         },
       },
     },
-    "/api/v1/entities/config_entries/list": {
+    "/api/v1/entities/config_entry/list": {
       get: {
         operationId: "list_config_entries",
         tags: ["config_entries"],
@@ -282,7 +282,7 @@ export const OPENAPI_SPEC = {
         },
       },
     },
-    "/api/v1/entities/config_entries/{uuid}": {
+    "/api/v1/entities/config_entry/{uuid}": {
       get: {
         operationId: "get_config_entry",
         tags: ["config_entries"],

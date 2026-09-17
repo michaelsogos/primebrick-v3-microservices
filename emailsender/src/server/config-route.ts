@@ -1,15 +1,15 @@
 /**
- * CRUD route handler for /api/v1/entities/config_entries — module configuration.
+ * CRUD route handler for /api/v1/entities/config_entry — module configuration.
  *
  * Uses the standardized entity CRUD path pattern (per api-path-conventions.md):
- *   GET    /api/v1/entities/config_entries/meta    → entity metadata
- *   GET    /api/v1/entities/config_entries/list    → list all config entries
- *   GET    /api/v1/entities/config_entries/:uuid   → single record by UUID
- *   PUT    /api/v1/entities/config_entries/:uuid   → update record by UUID
+ *   GET    /api/v1/entities/config_entry/meta    → entity metadata
+ *   GET    /api/v1/entities/config_entry/list    → list all config entries
+ *   GET    /api/v1/entities/config_entry/:uuid   → single record by UUID
+ *   PUT    /api/v1/entities/config_entry/:uuid   → update record by UUID
  *
  * Exposes the emailsender config table (key-value dictionary) via HTTP.
  * Used by the FE module config page via the BE proxy:
- *   FE → BE /ws/emailsender/api/v1/entities/config_entries/list → emailsender
+ *   FE → BE /ws/emailsender/api/v1/entities/config_entry/list → emailsender
  *
  * Uses SDK auth (GATEWAY-RESOLVED mode) + RBAC enforcement.
  * All responses use snake_case field names (matching DB columns).
@@ -77,9 +77,9 @@ async function authenticate(req: IncomingMessage): Promise<AuthUser> {
   return verifyHttpRequest(req, authConfig);
 }
 
-/** Entity metadata for the config_entries entity (consumed by MCP get_entity_meta tool). */
+/** Entity metadata for the config_entry entity (consumed by MCP get_entity_meta tool). */
 const CONFIG_ENTRIES_META = {
-  entity: "config_entries",
+  entity: "config_entry",
   module: "emailsender",
   fields: [
     { name: "uuid", type: "uuid", nullable: false, primary_key: true },
@@ -104,7 +104,7 @@ const configProjection = [
 
 /**
  * Config entries entity CRUD route handler for the SDK's createHttpServer routeHandler.
- * Handles the standardized /api/v1/entities/config_entries/... paths.
+ * Handles the standardized /api/v1/entities/config_entry/... paths.
  * Returns true if the request was handled, false otherwise.
  */
 export async function configRouteHandler(
@@ -114,29 +114,29 @@ export async function configRouteHandler(
 ): Promise<boolean> {
   const path = url.pathname;
 
-  if (!path.startsWith("/api/v1/entities/config_entries")) return false;
+  if (!path.startsWith("/api/v1/entities/config_entry")) return false;
 
   try {
     const user = await authenticate(req);
     const dal = getDal();
 
-    // GET /api/v1/entities/config_entries/meta — entity metadata
-    if (req.method === "GET" && path === "/api/v1/entities/config_entries/meta") {
+    // GET /api/v1/entities/config_entry/meta — entity metadata
+    if (req.method === "GET" && path === "/api/v1/entities/config_entry/meta") {
       enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
       sendJson(res, 200, CONFIG_ENTRIES_META);
       return true;
     }
 
-    // GET /api/v1/entities/config_entries/list — list all config entries (non-deleted)
-    if (req.method === "GET" && path === "/api/v1/entities/config_entries/list") {
+    // GET /api/v1/entities/config_entry/list — list all config entries (non-deleted)
+    if (req.method === "GET" && path === "/api/v1/entities/config_entry/list") {
       enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
       const rows = await dal.findAll(ConfigEntryEntity, configProjection);
       sendJson(res, 200, { config_entries: rows });
       return true;
     }
 
-    // GET /api/v1/entities/config_entries/:uuid — get single config entry by UUID
-    const uuidMatch = path.match(/^\/api\/v1\/entities\/config_entries\/([^/]+)$/);
+    // GET /api/v1/entities/config_entry/:uuid — get single config entry by UUID
+    const uuidMatch = path.match(/^\/api\/v1\/entities\/config_entry\/([^/]+)$/);
     if (req.method === "GET" && uuidMatch) {
       enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
       let row: ConfigEntryEntity | null = null;
@@ -155,7 +155,7 @@ export async function configRouteHandler(
       return true;
     }
 
-    // PUT /api/v1/entities/config_entries/:uuid — update config value by UUID
+    // PUT /api/v1/entities/config_entry/:uuid — update config value by UUID
     if (req.method === "PUT" && uuidMatch) {
       enforceHttpRbac(user, [Permission.MODULES_CONFIG_UPDATE]);
       const body = await readBody(req);

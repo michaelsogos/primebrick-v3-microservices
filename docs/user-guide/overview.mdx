@@ -74,7 +74,7 @@ bun dist/index.js          # starts on port 3003 (from config table)
 ```
 
 The microservice reads its NATS™ URL, HTTP port, and service code from the
-`config` table at startup via the SDK's `ConfigLoader` — not from env vars.
+`config_entries` table at startup via the SDK's `ConfigLoader` — not from env vars.
 The only required env vars are `DATABASE_URL` and (optionally) `DB_SCHEMA`.
 
 To verify the service is running:
@@ -90,7 +90,7 @@ curl http://localhost:3003/api/v1/openapi.json | head -20
 From the Frontend, the same service is reached through the BE proxy:
 
 ```bash
-curl http://localhost:3001/ws/emailsender/api/v1/entities/providers/list
+curl http://localhost:3001/ws/emailsender/api/v1/entities/provider/list
 # → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
 ```
 

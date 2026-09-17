@@ -22,7 +22,7 @@ let cachedConfigKey: string | null = null;
 /**
  * Get the configured LLM chat model.
  *
- * Config (env vars or ai.config table):
+ * Config (env vars or ai.config_entries table):
  * - LLM_BASE_URL: OpenAI-compatible base URL (default: http://localhost:8080)
  * - LLM_API_KEY: API key (default: "not-required" for local mistral.rs)
  * - LLM_MODEL: model name (default: Qwen3-4B-Instruct-2507)

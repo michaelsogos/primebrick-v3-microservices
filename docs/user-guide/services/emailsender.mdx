@@ -144,18 +144,23 @@ Communication log for every email sent. NOT auditable (no `created_at`/
 | `sent_at` | timestamp | yes | When the email was sent |
 | `status_changed_at` | timestamp | yes | Last status change (updated by webhook) |
 
-### `config` (schema: `emailsender`)
+### `config_entries` (schema: `emailsender`)
 
 Module configuration key-value store. Auditable + soft-deletable.
+Follows the Config Table standard.
 
 | Field | Type | Nullable | Description |
 |-------|------|----------|-------------|
 | `id` | bigint | no | Primary key |
 | `uuid` | uuid | no | Unique identifier |
-| `key` | string(50) | no | Config key (unique) |
+| `key` | string(100) | no | Config key (unique) |
 | `value` | string | yes | Config value |
+| `type` | string(50) | no | Value type (drives the FE input widget) |
+| `type_config` | string | yes | JSON options for the input widget |
 | `label_key` | string(100) | yes | i18n key for display label |
 | `description_key` | string(100) | yes | i18n key for description |
+| `reserved` | boolean | no | System-critical row: editable but not deletable |
+| `group_key` | string(100) | yes | Optional grouping key for the FE list |
 | `version` | integer | no | Optimistic lock version |
 
 ### `service_registry` (schema: `public`)
@@ -220,10 +225,10 @@ Called by the `POST /webhook` route. Flow:
 | `SERVICE_BASE_URL` | no | `http://localhost:3003` | Exposed URL for BE proxy routing (dynamic in Docker™) |
 
 Additional config (NATS™ URL, HTTP port, service code) is loaded from the
-`config` table at startup via `ConfigLoader` — not from env vars.
+`config_entries` table at startup via `ConfigLoader` — not from env vars.
 
 The `BREVO_API_KEY` is NOT an env var. It is stored in the `providers`
-table and set up by admin users via the FE (`POST /api/v1/entities/providers`).
+table and set up by admin users via the FE (`POST /api/v1/entities/provider`).
 
 ### Docker®
 

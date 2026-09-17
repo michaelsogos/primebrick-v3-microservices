@@ -64,14 +64,18 @@ CREATE TABLE IF NOT EXISTS "emailsender"."sender_log" (
   PRIMARY KEY ("id")
 );
 
--- 4. config (generic key/value dictionary for emailsender)
-CREATE TABLE IF NOT EXISTS "emailsender"."config" (
+-- 4. config_entries (generic key/value dictionary for emailsender — Config Table standard)
+CREATE TABLE IF NOT EXISTS "emailsender"."config_entries" (
   "id" bigint generated always as identity NOT NULL,
   "uuid" uuid DEFAULT gen_random_uuid() NOT NULL,
-  "key" varchar(50) NOT NULL,
+  "key" varchar(100) NOT NULL,
   "value" text,
+  "type" varchar(50) NOT NULL DEFAULT 'string',
+  "type_config" text,
   "label_key" varchar(100),
   "description_key" varchar(100),
+  "reserved" boolean NOT NULL DEFAULT false,
+  "group_key" varchar(100),
   "created_at" timestamptz DEFAULT now(),
   "created_by" text,
   "updated_at" timestamptz DEFAULT now(),
@@ -82,6 +86,6 @@ CREATE TABLE IF NOT EXISTS "emailsender"."config" (
   PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS "config_uuid_uq" ON "emailsender"."config" ("uuid");
-CREATE UNIQUE INDEX IF NOT EXISTS "config_key_uq" ON "emailsender"."config" ("key");
-CREATE INDEX IF NOT EXISTS "config_deleted_at_idx" ON "emailsender"."config" ("deleted_at");
+CREATE UNIQUE INDEX IF NOT EXISTS "config_entries_uuid_uq" ON "emailsender"."config_entries" ("uuid");
+CREATE UNIQUE INDEX IF NOT EXISTS "config_entries_key_uq" ON "emailsender"."config_entries" ("key");
+CREATE INDEX IF NOT EXISTS "config_entries_deleted_at_idx" ON "emailsender"."config_entries" ("deleted_at");

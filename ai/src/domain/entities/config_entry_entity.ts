@@ -10,7 +10,7 @@ import {
   type IAuditableEntity,
 } from "@primebrick/dal-pg";
 
-@Entity("config", "ai")
+@Entity("config_entries", "ai")
 export class ConfigEntryEntity implements IAuditableEntity {
   @Key()
   id!: bigint;
@@ -19,17 +19,29 @@ export class ConfigEntryEntity implements IAuditableEntity {
   uuid!: string;
 
   @Unique()
-  @Column({ length: 50, nullable: false })
+  @Column({ length: 100, nullable: false })
   key!: string;
 
   @Column({ nullable: true })
   value: string | null;
+
+  @Column({ length: 50, nullable: false })
+  type!: string;
+
+  @Column({ nullable: true })
+  type_config?: string;
 
   @Column({ length: 100, nullable: true })
   label_key?: string;
 
   @Column({ length: 100, nullable: true })
   description_key?: string;
+
+  @Column({ nullable: false })
+  reserved!: boolean;
+
+  @Column({ length: 100, nullable: true })
+  group_key?: string;
 
   @AuditableField(AuditableFieldType.CREATED_AT)
   created_at!: Date;

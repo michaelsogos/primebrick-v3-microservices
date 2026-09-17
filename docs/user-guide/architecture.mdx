@@ -20,18 +20,18 @@ Frontend (FE) never calls microservices directly.
 `} />
 
 - **HTTP proxy:** The BE proxies requests via `/ws/:serviceCode/*`. A
-  request to `GET /ws/emailsender/api/v1/entities/providers/list` is
+  request to `GET /ws/emailsender/api/v1/entities/provider/list` is
   forwarded to the EmailSender microservice at
-  `GET /api/v1/entities/providers/list`.
+  `GET /api/v1/entities/provider/list`.
 
   ```bash
   # From the FE (or any JWT-authenticated client) through the BE proxy:
   curl -H "Authorization: Bearer <jwt>" \
-    http://localhost:3001/ws/emailsender/api/v1/entities/providers/list
+    http://localhost:3001/ws/emailsender/api/v1/entities/provider/list
   # → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
 
   # Direct to the microservice (bypassing the BE, for debugging):
-  curl http://localhost:3003/api/v1/entities/providers/list
+  curl http://localhost:3003/api/v1/entities/provider/list
   ```
 
 - **OpenAPI aggregation:** The BE fetches each microservice's
@@ -76,7 +76,7 @@ Every microservice uses `@primebrick/sdk` for its lifecycle:
 
 1. **Environment validation** — `requireEnv()` validates required env vars
    at startup
-2. **Config loading** — `ConfigLoader` reads the `config` table for
+2. **Config loading** — `ConfigLoader` reads the `config_entries` table for
    service-specific settings (NATS™ URL, HTTP port, service code)
 3. **Auth config** — `initAuthConfig()` + `loadAuthConfig()` set up
    GATEWAY-RESOLVED auth mode
