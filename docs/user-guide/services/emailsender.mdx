@@ -43,6 +43,10 @@ The EmailSender service exposes three route groups:
 - **Webhook** — inbound delivery status callbacks from email providers.
   API key auth + RBAC.
 
+Single-entity `POST`/`PUT` bodies use the `{entity}` envelope (flat bodies
+rejected with `400`; `translations` sibling not accepted — see
+[Conventions](../conventions#entity-crud-apiv1entitiesentity)).
+
 System endpoints: `GET /health` (public), `GET /api/v1/openapi.json` (public).
 
 See the [EmailSender API Catalog](/catalog/emailsender) for the full

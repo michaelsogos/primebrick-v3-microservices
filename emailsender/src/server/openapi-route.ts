@@ -58,10 +58,19 @@ export const OPENAPI_SPEC = {
                         },
                       },
                     },
-                    supported_operations: {
+                    actions: {
                       type: "array",
-                      items: { type: "string" },
-                      example: ["list", "get", "create", "update", "delete"],
+                      items: {
+                        type: "object",
+                        properties: {
+                          op: { type: "string" },
+                          permissions: { type: "array", items: { type: "string" } },
+                          enabled: { type: "boolean" },
+                        },
+                      },
+                      example: [
+                        { op: "list", permissions: ["emailsender.provider.read.all"], enabled: true },
+                      ],
                     },
                   },
                 },
@@ -167,13 +176,19 @@ export const OPENAPI_SPEC = {
             "application/json": {
               schema: {
                 type: "object",
+                required: ["entity"],
                 properties: {
-                  provider: { type: "string" },
-                  api_key: { type: "string" },
-                  api_endpoint: { type: "string", nullable: true },
-                  from_email: { type: "string", nullable: true },
-                  from_name: { type: "string", nullable: true },
-                  reply_to: { type: "string", nullable: true },
+                  entity: {
+                    type: "object",
+                    properties: {
+                      provider: { type: "string" },
+                      api_key: { type: "string" },
+                      api_endpoint: { type: "string", nullable: true },
+                      from_email: { type: "string", nullable: true },
+                      from_name: { type: "string", nullable: true },
+                      reply_to: { type: "string", nullable: true },
+                    },
+                  },
                 },
               },
             },
@@ -216,15 +231,21 @@ export const OPENAPI_SPEC = {
             "application/json": {
               schema: {
                 type: "object",
+                required: ["entity"],
                 properties: {
-                  provider: { type: "string", example: "brevo" },
-                  api_key: { type: "string" },
-                  api_endpoint: { type: "string", nullable: true },
-                  from_email: { type: "string", nullable: true },
-                  from_name: { type: "string", nullable: true },
-                  reply_to: { type: "string", nullable: true },
+                  entity: {
+                    type: "object",
+                    properties: {
+                      provider: { type: "string", example: "brevo" },
+                      api_key: { type: "string" },
+                      api_endpoint: { type: "string", nullable: true },
+                      from_email: { type: "string", nullable: true },
+                      from_name: { type: "string", nullable: true },
+                      reply_to: { type: "string", nullable: true },
+                    },
+                    required: ["provider", "api_key"],
+                  },
                 },
-                required: ["provider", "api_key"],
               },
             },
           },
@@ -322,10 +343,16 @@ export const OPENAPI_SPEC = {
             "application/json": {
               schema: {
                 type: "object",
+                required: ["entity"],
                 properties: {
-                  value: { type: "string" },
+                  entity: {
+                    type: "object",
+                    properties: {
+                      value: { type: "string" },
+                    },
+                    required: ["value"],
+                  },
                 },
-                required: ["value"],
               },
             },
           },

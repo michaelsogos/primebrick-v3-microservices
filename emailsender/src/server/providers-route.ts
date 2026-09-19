@@ -60,6 +60,23 @@ function sendError(
   });
 }
 
+/**
+ * `{entity, translations?}` write-payload standard (same envelope as the BE).
+ * Extracts `body.entity`; returns null when the envelope is invalid or when
+ * `translations` is present — the emailsender schema has no translations
+ * table, so the sibling is always rejected.
+ */
+function unwrapEntityBody(
+  body: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (body.translations !== undefined) return null;
+  const entity = body.entity;
+  if (entity && typeof entity === "object" && !Array.isArray(entity)) {
+    return entity as Record<string, unknown>;
+  }
+  return null;
+}
+
 async function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
@@ -92,7 +109,13 @@ const PROVIDERS_META = {
     { name: "updated_at", type: "timestamp", nullable: true, description: "Last update timestamp" },
     { name: "deleted_at", type: "timestamp", nullable: true, description: "Soft-delete timestamp" },
   ],
-  supported_operations: ["list", "get", "create", "update", "delete"],
+  actions: [
+    { op: "list", permissions: ["emailsender.provider.read.all"], enabled: true },
+    { op: "get", permissions: ["emailsender.provider.read.single", "emailsender.provider.read.all"], enabled: true },
+    { op: "create.single", permissions: ["emailsender.provider.create.single"], enabled: true },
+    { op: "update.single", permissions: ["emailsender.provider.update.single"], enabled: true },
+    { op: "delete.single", permissions: ["emailsender.provider.delete.single"], enabled: true },
+  ],
 };
 
 const providersProjection = [
@@ -139,14 +162,14 @@ export async function providersRouteHandler(
 
     // GET /api/v1/entities/provider/meta — entity metadata
     if (req.method === "GET" && path === "/api/v1/entities/provider/meta") {
-      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_READ_ALL]);
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_READ_ALL]);
       sendJson(res, 200, PROVIDERS_META);
       return true;
     }
 
     // GET /api/v1/entities/provider/list — list all (non-deleted)
     if (req.method === "GET" && path === "/api/v1/entities/provider/list") {
-      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_READ_ALL]);
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_READ_ALL]);
       const rows = await dal.findAll(ProviderEntity, providersProjection);
       sendJson(res, 200, { providers: rows });
       return true;
@@ -155,7 +178,7 @@ export async function providersRouteHandler(
     // GET /api/v1/entities/provider/:uuid — get single
     const uuidMatch = path.match(/^\/api\/v1\/entities\/providers\/([^/]+)$/);
     if (req.method === "GET" && uuidMatch) {
-      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_READ_SINGLE, Permission.EMAILSENDER_PROVIDERS_READ_ALL]);
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_READ_SINGLE, Permission.EMAILSENDER_PROVIDER_READ_ALL]);
       let row: ProviderEntity | null = null;
       try {
         row = await dal.find(ProviderEntity, providersDetailProjection, {
@@ -174,8 +197,12 @@ export async function providersRouteHandler(
 
     // POST /api/v1/entities/provider — create
     if (req.method === "POST" && path === "/api/v1/entities/provider") {
-      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_CREATE]);
-      const body = await readBody(req);
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_CREATE_SINGLE]);
+      const body = unwrapEntityBody(await readBody(req));
+      if (!body) {
+        sendError(res, 400, "Request body must be { entity: {...} }", "VALIDATION_ERROR", { instance: path });
+        return true;
+      }
       const created = await dal.add(ProviderEntity, {
         provider: body.provider,
         api_key: body.api_key,
@@ -190,8 +217,12 @@ export async function providersRouteHandler(
 
     // PUT /api/v1/entities/provider/:uuid — update
     if (req.method === "PUT" && uuidMatch) {
-      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_UPDATE]);
-      const body = await readBody(req);
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_UPDATE_SINGLE]);
+      const body = unwrapEntityBody(await readBody(req));
+      if (!body) {
+        sendError(res, 400, "Request body must be { entity: {...} }", "VALIDATION_ERROR", { instance: path });
+        return true;
+      }
       const updated = await dal.update(
         ProviderEntity,
         {
@@ -211,7 +242,7 @@ export async function providersRouteHandler(
 
     // DELETE /api/v1/entities/provider/:uuid — soft-delete
     if (req.method === "DELETE" && uuidMatch) {
-      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDERS_DELETE]);
+      enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_DELETE_SINGLE]);
       await dal.delete(
         ProviderEntity,
         { uuid: uuidMatch[1] },

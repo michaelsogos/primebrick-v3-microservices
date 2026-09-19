@@ -91,7 +91,11 @@ const CONFIG_ENTRIES_META = {
     { name: "created_at", type: "timestamp", nullable: false, description: "Record creation timestamp" },
     { name: "updated_at", type: "timestamp", nullable: true, description: "Last update timestamp" },
   ],
-  supported_operations: ["list", "get", "update"],
+  actions: [
+    { op: "list", permissions: ["modules.config.read.single"], enabled: true },
+    { op: "get", permissions: ["modules.config.read.single"], enabled: true },
+    { op: "update.single", permissions: ["modules.config.update.single"], enabled: true },
+  ],
 };
 
 const configProjection = [
@@ -122,14 +126,14 @@ export async function configRouteHandler(
 
     // GET /api/v1/entities/config_entry/meta — entity metadata
     if (req.method === "GET" && path === "/api/v1/entities/config_entry/meta") {
-      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
+      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ_SINGLE]);
       sendJson(res, 200, CONFIG_ENTRIES_META);
       return true;
     }
 
     // GET /api/v1/entities/config_entry/list — list all config entries (non-deleted)
     if (req.method === "GET" && path === "/api/v1/entities/config_entry/list") {
-      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
+      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ_SINGLE]);
       const rows = await dal.findAll(ConfigEntryEntity, configProjection);
       sendJson(res, 200, { config_entries: rows });
       return true;
@@ -138,7 +142,7 @@ export async function configRouteHandler(
     // GET /api/v1/entities/config_entry/:uuid — get single config entry by UUID
     const uuidMatch = path.match(/^\/api\/v1\/entities\/config_entry\/([^/]+)$/);
     if (req.method === "GET" && uuidMatch) {
-      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ]);
+      enforceHttpRbac(user, [Permission.MODULES_CONFIG_READ_SINGLE]);
       let row: ConfigEntryEntity | null = null;
       try {
         row = await dal.find(ConfigEntryEntity, configProjection, {
@@ -157,8 +161,18 @@ export async function configRouteHandler(
 
     // PUT /api/v1/entities/config_entry/:uuid — update config value by UUID
     if (req.method === "PUT" && uuidMatch) {
-      enforceHttpRbac(user, [Permission.MODULES_CONFIG_UPDATE]);
-      const body = await readBody(req);
+      enforceHttpRbac(user, [Permission.MODULES_CONFIG_UPDATE_SINGLE]);
+      const raw = await readBody(req);
+      // `{entity}` write-payload standard (same envelope as the BE);
+      // `translations` is rejected — no translations table in this schema.
+      const body = (
+        raw.translations === undefined &&
+        raw.entity && typeof raw.entity === "object" && !Array.isArray(raw.entity)
+      ) ? raw.entity as Record<string, unknown> : null;
+      if (!body) {
+        sendError(res, 400, "Request body must be { entity: {...} }", "VALIDATION_ERROR");
+        return true;
+      }
       const newValue = body.value as string | undefined;
       if (newValue === undefined) {
         sendError(res, 400, "Missing 'value' in request body", "config-missing-value");

@@ -53,10 +53,24 @@ Rules:
 - The `meta` endpoint returns the entity's field schema (same structure as
   the BE's `*.meta.ts` exports). This is consumed by the MCP `get_entity_meta`
   tool and by the FE for dynamic form generation.
+- The `meta` response MUST include an `actions` array
+  (`[{op, permissions[], sentinel?, enabled}]`) describing which endpoint ops
+  exist and what they require — the FE gates every CTA fail-closed against it.
+  In microservices this array is hand-written in the meta module but MUST
+  match the actually-registered routes (the BE derives it automatically;
+  `enabled` may be toggled via `actions_overrides`).
 - The `list` endpoint MUST accept the standard query parameters:
   `search`, `search_in`, `sort_key`, `sort_dir`, `page`, `page_size`,
   `filters`, `deleted_records`. See the BE's customer/organization list
   endpoints for the reference implementation.
+- **Write-payload standard (`{entity}` envelope):** single-entity
+  `POST`/`PUT` bodies MUST be `{ entity: {...} }` — flat entity fields at the
+  body root are rejected (hard break, same contract as the BE). A
+  `translations` sibling is NOT accepted (no translations table in this
+  schema) — return `400 VALIDATION_ERROR`. Microservices have no Zod
+  dependency, so the envelope is validated manually in the route. The MCP
+  proxy dispatch already wraps tool args into `{ entity }` — no per-tool
+  change needed.
 
 ### Category 2: Service Actions (`/api/v1/actions/:action`)
 

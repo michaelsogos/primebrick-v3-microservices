@@ -36,6 +36,14 @@ Rules:
   don't register that route.
 - The `meta` endpoint returns the entity's field schema, consumed by the
   MCP `get_entity_meta` tool and the FE for dynamic form generation.
+- **Write-payload standard (`{entity}` envelope):** single-entity
+  `POST`/`PUT` bodies MUST be `{ entity: {...} }` — flat entity fields at
+  the body root are rejected with `400` (hard break, same contract as the
+  BE). A `translations` sibling is NOT accepted on microservice entities
+  (no translations table in the service schema). Bulk endpoints
+  (`bulk-*`), actions, `DELETE` and RPC routes keep their own bodies.
+  The MCP proxy dispatch already wraps tool args into `{ entity }` — no
+  per-tool change needed.
 
 Example — list providers through the BE proxy:
 
@@ -48,10 +56,10 @@ curl -H "Authorization: Bearer <jwt>" \
 curl -H "Authorization: Bearer <jwt>" \
   http://localhost:3001/ws/emailsender/api/v1/entities/provider/meta
 
-# Create a provider
+# Create a provider ({entity} envelope)
 curl -X POST -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" \
   http://localhost:3001/ws/emailsender/api/v1/entities/provider \
-  -d '{"provider":"brevo","api_key":"xkeysib-...","from_email":"noreply@example.com"}'
+  -d '{"entity":{"provider":"brevo","api_key":"xkeysib-...","from_email":"noreply@example.com"}}'
 
 # Soft-delete by UUID
 curl -X DELETE -H "Authorization: Bearer <jwt>" \

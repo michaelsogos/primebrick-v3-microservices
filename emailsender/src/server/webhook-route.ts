@@ -64,10 +64,10 @@ export async function webhookRouteHandler(
       return true;
     }
 
-    // Verify API key + enforce RBAC (EMAILSENDER_LOG_CREATE)
+    // Verify API key + enforce RBAC (EMAILSENDER_LOG_CREATE_SINGLE)
     const headers = new HttpHeaderProvider(req);
     const user = await verifyApiKey(headers, apiKeyPort);
-    enforceHttpRbac(user, [Permission.EMAILSENDER_LOG_CREATE]);
+    enforceHttpRbac(user, [Permission.EMAILSENDER_LOG_CREATE_SINGLE]);
 
     const provider = url.searchParams.get("provider") || "brevo";
 
