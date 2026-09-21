@@ -223,6 +223,10 @@ export async function providersRouteHandler(
         sendError(res, 400, "Request body must be { entity: {...} }", "VALIDATION_ERROR", { instance: path });
         return true;
       }
+      if (body.version === undefined || body.version === null) {
+        sendError(res, 400, "Missing 'version' in entity (optimistic concurrency)", "VALIDATION_ERROR", { instance: path });
+        return true;
+      }
       const updated = await dal.update(
         ProviderEntity,
         {
@@ -233,6 +237,7 @@ export async function providersRouteHandler(
           from_email: body.from_email || null,
           from_name: body.from_name || null,
           reply_to: body.reply_to || null,
+          version: Number(body.version),
         },
         { actor: user.id, matchBy: "uuid" },
       );
@@ -243,9 +248,16 @@ export async function providersRouteHandler(
     // DELETE /api/v1/entities/provider/:uuid — soft-delete
     if (req.method === "DELETE" && uuidMatch) {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_DELETE_SINGLE]);
+      const existing = await dal.find<ProviderEntity, { version: number }>(ProviderEntity, [Project.field(field(ProviderEntity, "version"))], {
+        filters: [Filter.fieldValue(field(ProviderEntity, "uuid"), "=", uuidMatch[1])],
+      });
+      if (!existing) {
+        sendError(res, 404, "Provider not found", "NOT_FOUND", { instance: path });
+        return true;
+      }
       await dal.delete(
         ProviderEntity,
-        { uuid: uuidMatch[1] },
+        { uuid: uuidMatch[1], version: existing.version },
         { actor: user.id, matchBy: "uuid" },
       );
       sendJson(res, 204, {});

@@ -104,6 +104,9 @@ const configProjection = [
   Project.field(field(ConfigEntryEntity, "value")),
   Project.field(field(ConfigEntryEntity, "label_key")),
   Project.field(field(ConfigEntryEntity, "description_key")),
+  // `version` is required on write (optimistic concurrency) — the FE must
+  // receive it to send it back.
+  Project.field(field(ConfigEntryEntity, "version")),
 ];
 
 /**
@@ -178,11 +181,15 @@ export async function configRouteHandler(
         sendError(res, 400, "Missing 'value' in request body", "config-missing-value");
         return true;
       }
+      if (body.version === undefined || body.version === null) {
+        sendError(res, 400, "Missing 'version' in entity (optimistic concurrency)", "VALIDATION_ERROR", { instance: path });
+        return true;
+      }
 
       // Update the value by UUID
       const updated = await dal.update(
         ConfigEntryEntity,
-        { uuid: uuidMatch[1], value: newValue },
+        { uuid: uuidMatch[1], value: newValue, version: Number(body.version) },
         { actor: user.id, matchBy: "uuid" },
       );
 
