@@ -82,3 +82,10 @@ These are synced to `docs.primebrick.dev` by the docs repo's CI pipeline.
 - **Do NOT hand-edit** files in `docs/ai/` or `docs/skills/` — those are internal
 - **Internal docs** (`docs/ai/`, `docs/skills/`, `docs/gitflow.md`) are NOT synced
   to the docs site — they stay in this repo for AI agents only
+
+## Logging & Telemetry
+
+- Use `logger` from `@primebrick/sdk` — never `console.*` in new code.
+- Microservices get async logging + OTel automatically via `createMicroservice`: console bridge first, then `SharedConfig.telemetry` fetch + `config.changed` hot-reload (no process restarts).
+- Do NOT duplicate telemetry config in service-local config tables — it is BE-owned (single point).
+- See [.devin/rules/logging-telemetry.md](./.devin/rules/logging-telemetry.md).
