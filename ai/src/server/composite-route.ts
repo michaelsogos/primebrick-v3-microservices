@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { createSseWriter } from "@primebrick/sdk";
+import { createSseWriter, mapDalError } from "@primebrick/sdk";
 import { HealthCheckAdapter } from "../adapters/health-check-adapter.js";
 import { getDal } from "../db/dal.js";
 import { orchestrate } from "../services/orchestrator.js";
@@ -476,6 +476,12 @@ async function handleReindex(req: IncomingMessage, res: ServerResponse): Promise
     res.end(JSON.stringify(stats));
     return true;
   } catch (err) {
+    const mapped = mapDalError(err, "/api/v1/actions/reindex");
+    if (mapped) {
+      res.writeHead(mapped.status, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(mapped.body));
+      return true;
+    }
     const message = err instanceof Error ? err.message : String(err);
     sendError(res, 500, "Reindex Failed", message);
     return true;

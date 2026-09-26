@@ -27,6 +27,7 @@ import {
   type ApiKeyPort,
   AuthError,
   RbacDeniedError,
+  mapDalError,
 } from "@primebrick/sdk";
 import { ConfigEntryEntity } from "../domain/entities/config_entry_entity.js";
 
@@ -213,6 +214,12 @@ export async function configRouteHandler(
     }
     if (err instanceof NotFoundError) {
       sendError(res, 404, "Config entry not found", "config-entry-not-found", { instance: url.pathname, severity: "LOW" });
+      return true;
+    }
+    // Shared DAL error mapping (ERR01–ERR07, 57014, generic codes).
+    const mapped = mapDalError(err, url.pathname);
+    if (mapped) {
+      sendJson(res, mapped.status, mapped.body);
       return true;
     }
     console.error("[emailsender] Config route error:", {

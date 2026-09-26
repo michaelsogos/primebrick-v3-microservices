@@ -25,6 +25,7 @@ import {
   type ApiKeyPort,
   AuthError,
   RbacDeniedError,
+  mapDalError,
 } from "@primebrick/sdk";
 import { ProviderEntity } from "../domain/entities/provider_entity.js";
 
@@ -278,6 +279,13 @@ export async function providersRouteHandler(
     }
     if (err instanceof NotFoundError) {
       sendError(res, 404, "Provider not found", "provider-not-found", { instance: path, severity: "LOW" });
+      return true;
+    }
+    // Shared DAL error mapping (ERR01–ERR07, 57014, generic codes) — same
+    // contract as the BE error-handler; bulk details surface as extra.issues.
+    const mapped = mapDalError(err, path);
+    if (mapped) {
+      sendJson(res, mapped.status, mapped.body);
       return true;
     }
     console.error("[emailsender] Providers route error:", {
