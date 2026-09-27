@@ -154,6 +154,7 @@ export function buildSqlPatchFromMetaDiff(entitySnap: SchemaSnapshot, diff: Sche
       
       // Indexes
       lines.push(`CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdent(`${logTableName}_uuid_uq`)} ON ${fqLog} ("uuid");`);
+      lines.push(`CREATE UNIQUE INDEX IF NOT EXISTS ${quoteIdent(`${logTableName}_provider_message_id_uq`)} ON ${fqLog} ("provider_message_id");`);
       lines.push(`CREATE INDEX IF NOT EXISTS ${quoteIdent(`${logTableName}_entity_id_idx`)} ON ${fqLog} ("entity_id");`);
       lines.push(`CREATE INDEX IF NOT EXISTS ${quoteIdent(`${logTableName}_entity_uuid_idx`)} ON ${fqLog} ("entity_uuid");`);
       lines.push(`CREATE INDEX IF NOT EXISTS ${quoteIdent(`${logTableName}_status_idx`)} ON ${fqLog} ("status");`);

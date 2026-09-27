@@ -1,4 +1,4 @@
-import { Entity, Key, Column } from "@primebrick/dal-pg";
+import { Entity, Key, Column, Unique } from "@primebrick/dal-pg";
 
 /**
  * Entity for `emailsender.sender_log`.
@@ -14,6 +14,8 @@ export class SenderLogEntity {
   @Column({ nullable: true }) entity_id?: bigint;
   @Column({ nullable: true }) entity_uuid?: string;
   @Column({ nullable: false }) type!: string;
+  /** Provider-assigned message id (Brevo `message-id`) — unique correlation key for webhook events. */
+  @Unique()
   @Column({ nullable: true }) provider_message_id?: string;
   @Column({ nullable: true, pgType: "uuid" }) provider_uuid?: string;
   @Column({ length: 50, nullable: false }) status!: string;

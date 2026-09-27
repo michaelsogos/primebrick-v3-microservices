@@ -191,7 +191,7 @@ export async function configRouteHandler(
       const updated = await dal.update(
         ConfigEntryEntity,
         { uuid: uuidMatch[1], value: newValue, version: Number(body.version) },
-        { actor: user.id, matchBy: "uuid" },
+        { actor: user.id },
       );
 
       // Re-read with the projection

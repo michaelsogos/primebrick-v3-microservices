@@ -240,7 +240,7 @@ export async function providersRouteHandler(
           reply_to: body.reply_to || null,
           version: Number(body.version),
         },
-        { actor: user.id, matchBy: "uuid" },
+        { actor: user.id },
       );
       sendJson(res, 200, updated);
       return true;
@@ -259,7 +259,7 @@ export async function providersRouteHandler(
       await dal.delete(
         ProviderEntity,
         { uuid: uuidMatch[1], version: existing.version },
-        { actor: user.id, matchBy: "uuid" },
+        { actor: user.id },
       );
       sendJson(res, 204, {});
       return true;
