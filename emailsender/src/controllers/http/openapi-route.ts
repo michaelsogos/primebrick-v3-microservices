@@ -26,7 +26,7 @@ export const OPENAPI_SPEC = {
   tags: [
     { name: "providers", description: "Email provider configuration entities" },
     { name: "config_entries", description: "Module configuration key-value entries" },
-    { name: "webhook", description: "Inbound webhook receivers (API key auth)" },
+
   ],
   paths: {
     // ─── Providers (entity CRUD) ───────────────────────────────────────────
@@ -364,29 +364,6 @@ export const OPENAPI_SPEC = {
       },
     },
 
-    // ─── Webhook (Category 3 — API key auth) ───────────────────────────────
-    "/webhook": {
-      post: {
-        operationId: "receive_webhook",
-        tags: ["webhook"],
-        summary: "Receive an inbound webhook from an email provider",
-        description: "Receives delivery events (bounces, opens, clicks, etc.) from email providers. Uses API key authentication, not JWT. The provider is specified via the 'provider' query parameter.",
-        security: [{ apiKey: [] }],
-        parameters: [
-          {
-            name: "provider",
-            in: "query",
-            required: false,
-            schema: { type: "string", default: "brevo" },
-            description: "Email provider name (defaults to 'brevo')",
-          },
-        ],
-        responses: {
-          "200": { description: "Webhook processed" },
-          "401": { description: "Invalid API key" },
-        },
-      },
-    },
   },
   components: {
     securitySchemes: {

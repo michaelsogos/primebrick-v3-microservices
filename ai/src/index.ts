@@ -2,7 +2,7 @@ import "dotenv/config";
 import "reflect-metadata";
 import { createMicroservice } from "@primebrick/sdk";
 import { initDal, getDal } from "./db/dal.js";
-import { compositeRouteHandler } from "./server/composite-route.js";
+import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 import {
   ConfigRepositoryAdapter,
   HealthCheckAdapter,

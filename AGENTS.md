@@ -38,6 +38,8 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 6. **Async Code**: Use `async/await` syntax exclusively. Always handle errors with clean `try/catch` blocks. Never silence caught errors.
 7. **Environment**: Never commit `.env` files. Provide a `.env.example` file specifying all required configuration variables.
 8. **API Path Conventions (MANDATORY)**: All HTTP routes MUST follow the standardized path conventions. Entity CRUD routes use `/api/v1/entities/:entity/...`, service actions use `/api/v1/actions/:action`, webhooks use `/webhook`. See [.devin/rules/api-path-conventions.md](./.devin/rules/api-path-conventions.md) for the full specification. This is required for the BE MCP Server generic tool dispatch to work.
+9. **MVC transport layout (MANDATORY)**: Transport adapters live under `src/controllers/` (`http/`, `nats-req/`, `nats-sub/`) and contain NO business logic — auth, payload validation, ONE service call, transport response only. Business logic lives in `src/services/` and must be callable identically from any transport. See [.devin/rules/controller-boundary.md](./.devin/rules/controller-boundary.md).
+10. **Webhook ingress**: External S2S webhooks NEVER hit a business microservice directly — they go through the `webhook` service (`primebrick-webhook`), a DB-less registration-driven router: `POST /webhook/{service_code}/{intent...}` → API-key precheck (401 wall) → JetStream `webhook.<code>.received` → the target US consumes via a durable `nats-sub` controller and runs its own auth + RBAC. A new US becomes routable by registering normally — no `webhook` release needed.
 
 ## Commands
 

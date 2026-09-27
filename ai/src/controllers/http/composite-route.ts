@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createSseWriter, mapDalError } from "@primebrick/sdk";
-import { HealthCheckAdapter } from "../adapters/health-check-adapter.js";
-import { getDal } from "../db/dal.js";
-import { orchestrate } from "../services/orchestrator.js";
+import { HealthCheckAdapter } from "../../adapters/health-check-adapter.js";
+import { getDal } from "../../db/dal.js";
+import { orchestrate } from "../../services/orchestrator.js";
 import type { ModelMessage } from "ai";
 import {
   createConversation,
@@ -12,18 +12,18 @@ import {
   deleteConversation,
   updateConversationTitle,
   insertMessage,
-} from "../services/conversation-repository.js";
+} from "../../services/conversation-repository.js";
 import {
   insertFeedback,
   listFeedbackByUser,
   getFeedbackStats,
-} from "../services/feedback-repository.js";
+} from "../../services/feedback-repository.js";
 import {
   getTelemetryStats,
   listRecentTelemetry,
-} from "../services/telemetry-repository.js";
-import { runEmbeddingPipeline } from "../services/embedding-pipeline.js";
-import { checkRateLimit } from "../services/rate-limiter.js";
+} from "../../services/telemetry-repository.js";
+import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
+import { checkRateLimit } from "../../services/rate-limiter.js";
 
 /**
  * Composite route handler for the AI microservice.

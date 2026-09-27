@@ -7,7 +7,6 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { openapiRouteHandler } from "./openapi-route.js";
 import { providersRouteHandler } from "./providers-route.js";
 import { configRouteHandler } from "./config-route.js";
-import { webhookRouteHandler } from "./webhook-route.js";
 
 export async function compositeRouteHandler(
   req: IncomingMessage,
@@ -20,7 +19,5 @@ export async function compositeRouteHandler(
   if (await providersRouteHandler(req, res, url)) return true;
   // Then config (auth + RBAC)
   if (await configRouteHandler(req, res, url)) return true;
-  // Then webhook (API key auth)
-  if (await webhookRouteHandler(req, res, url)) return true;
   return false;
 }

@@ -2,13 +2,13 @@ import "dotenv/config";
 import "reflect-metadata";
 import { createMicroservice } from "@primebrick/sdk";
 import { initDal, getDal } from "./db/dal.js";
-import { subscribeToEmailSendRequests } from "./nats/handlers.js";
+import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.js";
 import { EmailService } from "./services/email-service.js";
-import { webhookRouteHandler, setWebhookAuthDependencies } from "./server/webhook-route.js";
-import { compositeRouteHandler } from "./server/composite-route.js";
-import { providersRouteHandler, setAuthDependencies } from "./server/providers-route.js";
-import { configRouteHandler, setAuthDependencies as setConfigAuthDependencies } from "./server/config-route.js";
-import { setNatsAuthConfig } from "./nats/handlers.js";
+import { subscribeToWebhooks, setWebhookApiKeyPort } from "./controllers/nats-sub/webhook-subscriber.js";
+import { compositeRouteHandler } from "./controllers/http/composite-route.js";
+import { providersRouteHandler, setAuthDependencies } from "./controllers/http/providers-route.js";
+import { configRouteHandler, setAuthDependencies as setConfigAuthDependencies } from "./controllers/http/config-route.js";
+import { setNatsAuthConfig } from "./controllers/nats-sub/email-send.js";
 import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/auth-ports-adapter.js";
 import {
   ConfigRepositoryAdapter,
@@ -38,14 +38,20 @@ async function main(): Promise<void> {
     healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
 
     routeHandler: compositeRouteHandler,
-    endpoints: { webhook: "/webhook" },
+    endpoints: {
+      // fire-and-forget: publisher never waits for a processing result
+      nats_send: "nats://emailsender.send (fire-and-forget)",
+      // inbound webhooks arrive via the `webhook` ingress service →
+      // JetStream durable consumer (see controllers/nats-sub/)
+      nats_webhook: "nats://webhook.emailsender.received (durable)",
+    },
 
     authDependencySetters: [
       (cfg, apiKeyPort) => {
         if (!apiKeyPort) return;
         setAuthDependencies(cfg, apiKeyPort);
         setConfigAuthDependencies(cfg, apiKeyPort);
-        setWebhookAuthDependencies(cfg, apiKeyPort);
+        setWebhookApiKeyPort(apiKeyPort);
         setNatsAuthConfig(cfg);
       },
     ],
@@ -55,6 +61,7 @@ async function main(): Promise<void> {
       subscribeToEmailSendRequests(async (request, actorId) => {
         return await emailService.sendEmail(request, actorId);
       });
+      await subscribeToWebhooks();
     },
   });
 }

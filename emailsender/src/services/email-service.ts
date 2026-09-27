@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 import { getDal } from "../db/dal.js";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
-import type { SendEmailRequest, SendEmailResponse } from "../nats/types.js";
+import type { SendEmailRequest, SendEmailResponse } from "../controllers/nats-sub/types.js";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
 import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 

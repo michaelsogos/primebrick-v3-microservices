@@ -16,6 +16,9 @@ import {
   type ApiKeyPort,
   type ApiKeyRecord,
   AuthMode,
+  getSdkCachePort,
+  apiKeyCacheKey,
+  API_KEY_CACHE_TTL_MS,
 } from "@primebrick/sdk";
 import { ConfigLoader } from "@primebrick/sdk";
 import type { ConfigRepositoryPort } from "@primebrick/sdk";
@@ -71,6 +74,16 @@ export class EmailSenderAuthConfigPort implements AuthConfigPort {
 
 export class EmailSenderApiKeyPort implements ApiKeyPort {
   async findByHash(hash: string): Promise<ApiKeyRecord | null> {
+    const cacheKey = apiKeyCacheKey(hash);
+    const port = getSdkCachePort();
+    if (port) {
+      try {
+        const cached = await port.get<ApiKeyRecord>(cacheKey);
+        if (cached) return cached;
+      } catch (e) {
+        console.warn(`api_keys cache get failed: ${e}`);
+      }
+    }
     const pool = getDal().getPool();
     const result = await pool.query(
       `SELECT uuid, name, permissions, is_system, is_active, expires_at
@@ -80,7 +93,7 @@ export class EmailSenderApiKeyPort implements ApiKeyPort {
     );
     if (result.rows.length === 0) return null;
     const row = result.rows[0];
-    return {
+    const record: ApiKeyRecord = {
       uuid: row.uuid,
       name: row.name,
       permissions: row.permissions || [],
@@ -88,5 +101,13 @@ export class EmailSenderApiKeyPort implements ApiKeyPort {
       is_active: row.is_active !== false,
       expires_at: row.expires_at ? new Date(row.expires_at) : null,
     };
+    if (port) {
+      try {
+        await port.set(cacheKey, record, API_KEY_CACHE_TTL_MS);
+      } catch (e) {
+        console.warn(`api_keys cache set failed: ${e}`);
+      }
+    }
+    return record;
   }
 }

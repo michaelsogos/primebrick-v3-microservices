@@ -17,7 +17,7 @@
 
 import type { IncomingMessage, ServerResponse } from "http";
 import { field, Filter, Project, NotFoundError } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
+import { getDal } from "../../db/dal.js";
 import {
   verifyHttpRequest,
   enforceHttpRbac,
@@ -29,7 +29,7 @@ import {
   RbacDeniedError,
   mapDalError,
 } from "@primebrick/sdk";
-import { ConfigEntryEntity } from "../domain/entities/config_entry_entity.js";
+import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
 
 let authConfig: AuthConfig | null = null;
 let apiKeyPort: ApiKeyPort | null = null;
