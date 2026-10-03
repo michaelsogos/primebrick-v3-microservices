@@ -35,41 +35,37 @@ export interface LoadedDoc {
 /**
  * Load all MDX docs from the docs path.
  *
- * Expected structure: DOCS_PATH / repo / guide / (recursive .mdx files)
+ * Structure: DOCS_PATH / repo / (recursive .mdx files — every page is indexed,
+ * not only `guide/`: api/ and getting-started/ pages are part of the KB).
+ * Top-level loose files (e.g. pages/index.mdx) are assigned to the `pages` repo.
  * Repos: backend, frontend, dal, sdk, microservices, getting-started, api
  */
 export function loadMdxDocs(docsPath: string): LoadedDoc[] {
   const docs: LoadedDoc[] = [];
-  const repos = listDirs(docsPath);
 
-  for (const repo of repos) {
-    const repoGuidePath = join(docsPath, repo, "guide");
-    if (!exists(repoGuidePath)) continue;
+  for (const filePath of listFilesRecursive(docsPath, ".mdx")) {
+    try {
+      const raw = readFileSync(filePath, "utf-8");
+      const { frontmatter, body } = parseMdxFrontmatter(raw);
+      const relPath = relative(docsPath, filePath).replace(/\\/g, "/");
+      const repo = relPath.includes("/") ? relPath.split("/")[0] : "pages";
+      const title = frontmatter.title || relPath;
 
-    const mdxFiles = listFilesRecursive(repoGuidePath, ".mdx");
-    for (const filePath of mdxFiles) {
-      try {
-        const raw = readFileSync(filePath, "utf-8");
-        const { frontmatter, body } = parseMdxFrontmatter(raw);
-        const relPath = relative(docsPath, filePath).replace(/\\/g, "/");
-        const title = frontmatter.title || relPath;
-
-        docs.push({
+      docs.push({
+        repo,
+        path: relPath,
+        title,
+        content: body,
+        metadata: {
+          source: "mdx",
           repo,
           path: relPath,
           title,
-          content: body,
-          metadata: {
-            source: "mdx",
-            repo,
-            path: relPath,
-            title,
-            content_type: detectContentType(relPath, frontmatter),
-          },
-        });
-      } catch (err) {
-        console.warn(`Failed to load MDX ${filePath}:`, err instanceof Error ? err.message : err);
-      }
+          content_type: detectContentType(relPath, frontmatter),
+        },
+      });
+    } catch (err) {
+      console.warn(`Failed to load MDX ${filePath}:`, err instanceof Error ? err.message : err);
     }
   }
 

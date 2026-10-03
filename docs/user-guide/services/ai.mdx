@@ -152,7 +152,7 @@ All tables are in the `ai` schema (microservice isolation).
 | `content` | `text` | Chunk text content |
 | `embedding` | `vector(384)` | Embedding vector (pgvector) |
 | `metadata` | `jsonb` | Additional metadata (source, content_type, heading_path) |
-| `content_hash` | `text` | SHA-256 of content (for incremental re-indexing) |
+| `content_hash` | `text` | SHA-256 of the exact embedding input: title, heading path, and chunk body |
 
 **Index:** HNSW on `embedding` with `vector_cosine_ops` (m=16, ef_construction=64).
 
@@ -218,15 +218,15 @@ cd ai && pnpm run index-docs
 
 **Flow:**
 
-1. **Load docs** from `DOCS_PATH` (MDX files) and `OPENAPI_PATH` (JSON specs)
-2. **Chunk** each doc (sentence-aware, ~1800 chars, 200 char overlap)
-3. **Compute SHA-256** for each chunk (incremental re-indexing)
-4. **Skip unchanged chunks** (content_hash matches DB)
-5. **Batch embed** changed chunks (batch size 16) via the embedding provider
-6. **Upsert** into `docs_kb` (ON CONFLICT update)
-7. **Delete stale chunks** (docs removed from source)
+1. **Load docs** from `DOCS_PATH` (MDX files) and `OPENAPI_PATH` (JSON specs).
+2. **Parse frontmatter** with LF or CRLF line endings, extracting the document title, then chunk the body by headings and paragraphs.
+3. **Build embedding input** for each chunk from the document title, heading path, and chunk body. The stored `content` remains the original chunk body.
+4. **Compute SHA-256** over that exact embedding input; skip chunks whose `content_hash` matches the database.
+5. **Batch embed** changed inputs (batch size 16) via the embedding provider.
+6. **Upsert** content, embedding, metadata, and the input hash into `docs_kb` (ON CONFLICT update).
+7. **Delete stale chunks** (docs removed from source or chunks no longer present).
 
-The pipeline is idempotent — re-running it only re-embeds changed chunks.
+The pipeline is idempotent — re-running it only re-embeds chunks whose source content, title, or heading path changed.
 
 ## Environment variables
 

@@ -1,5 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { chunkMarkdown, parseMdxFrontmatter } from "../src/services/chunking.js";
+import { buildEmbeddingInput, chunkMarkdown, parseMdxFrontmatter } from "../src/services/chunking.js";
+
+describe("buildEmbeddingInput", () => {
+  it("includes document title, section heading, and chunk content in order", () => {
+    expect(buildEmbeddingInput("RBAC", "Default roles", "administrators bypass permissions")).toBe(
+      "RBAC\n\nDefault roles\n\nadministrators bypass permissions",
+    );
+  });
+
+  it("omits an absent heading without changing the remaining order", () => {
+    expect(buildEmbeddingInput("Navigation Map", undefined, "/system/settings/users")).toBe(
+      "Navigation Map\n\n/system/settings/users",
+    );
+  });
+});
 
 describe("chunkMarkdown", () => {
   it("should return single chunk for short content", () => {
@@ -44,6 +58,15 @@ describe("parseMdxFrontmatter", () => {
     expect(frontmatter.description).toBe("A test page");
     expect(body).toContain("# Hello");
     expect(body).not.toContain("---");
+  });
+
+  it("should parse CRLF frontmatter and strip it from the body", () => {
+    const content = "---\r\ntitle: RBAC\r\ndescription: Access control\r\n---\r\n\r\n# Roles\r\n";
+    const { frontmatter, body } = parseMdxFrontmatter(content);
+    expect(frontmatter.title).toBe("RBAC");
+    expect(frontmatter.description).toBe("Access control");
+    expect(body).not.toContain("---");
+    expect(body).toContain("# Roles");
   });
 
   it("should handle content without frontmatter", () => {

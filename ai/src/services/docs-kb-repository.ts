@@ -6,7 +6,6 @@
  * DAL. The pool comes from the DAL gateway.
  */
 import { getDal } from "../db/dal.js";
-import { createHash } from "node:crypto";
 
 export interface DocsKbRow {
   id: bigint;
@@ -33,11 +32,11 @@ export async function upsertDocChunk(opts: {
   title: string;
   chunk_idx: number;
   content: string;
+  content_hash: string;
   embedding: number[];
   metadata: Record<string, unknown>;
 }): Promise<void> {
   const pool = getDal().getPool();
-  const contentHash = createHash("sha256").update(opts.content).digest("hex");
   const embeddingStr = `[${opts.embedding.join(",")}]`;
 
   await pool.query(
@@ -59,7 +58,7 @@ export async function upsertDocChunk(opts: {
       opts.content,
       embeddingStr,
       JSON.stringify(opts.metadata),
-      contentHash,
+      opts.content_hash,
     ],
   );
 }

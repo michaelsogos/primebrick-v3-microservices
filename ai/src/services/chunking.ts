@@ -130,6 +130,14 @@ function splitByHeadings(content: string): string[] {
   return sections;
 }
 
+export function buildEmbeddingInput(
+  title: string,
+  heading_path: string | undefined,
+  content: string,
+): string {
+  return [title, heading_path, content].filter(Boolean).join("\n\n");
+}
+
 /**
  * Parse MDX frontmatter and return { frontmatter, body }.
  * Frontmatter is the YAML block between --- markers at the start of the file.
@@ -139,9 +147,10 @@ export function parseMdxFrontmatter(content: string): {
   body: string;
 } {
   const frontmatter: Record<string, string> = {};
-  let body = content;
+  const normalized = content.replace(/\r\n?/g, "\n");
+  let body = normalized;
 
-  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  const match = normalized.match(/^---\n([\s\S]*?)\n---(?:\n|$)([\s\S]*)$/);
   if (match) {
     const yamlBlock = match[1];
     body = match[2];

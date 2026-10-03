@@ -8,7 +8,7 @@
  * Deletes stale chunks (docs removed from source or chunks no longer present).
  */
 import { loadMdxDocs, loadOpenApiSpecs, type LoadedDoc } from "./docs-loader.js";
-import { chunkMarkdown } from "./chunking.js";
+import { buildEmbeddingInput, chunkMarkdown } from "./chunking.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
 import {
   upsertDocChunk,
@@ -73,6 +73,7 @@ export async function runEmbeddingPipeline(
     doc: LoadedDoc;
     chunk_idx: number;
     content: string;
+    embedding_input: string;
     content_hash: string;
     metadata: Record<string, unknown>;
   }> = [];
@@ -88,7 +89,13 @@ export async function runEmbeddingPipeline(
 
       for (const chunk of chunks) {
         validIndices.push(chunk.chunk_idx);
-        const contentHash = createHash("sha256").update(chunk.content).digest("hex");
+        const heading_path = extractHeadingPath(chunk.content) ?? doc.metadata.heading_path;
+        const embedding_input = buildEmbeddingInput(doc.title, heading_path, chunk.content);
+        // Hash covers the embedder identity: switching models must re-embed
+        // every chunk (vectors from different models are incompatible spaces).
+        const contentHash = createHash("sha256")
+          .update(`${provider.name}\n${embedding_input}`)
+          .digest("hex");
         const existingHash = existingHashes.get(chunk.chunk_idx);
 
         if (existingHash === contentHash) {
@@ -101,10 +108,11 @@ export async function runEmbeddingPipeline(
           doc,
           chunk_idx: chunk.chunk_idx,
           content: chunk.content,
+          embedding_input,
           content_hash: contentHash,
           metadata: {
             ...doc.metadata,
-            heading_path: extractHeadingPath(chunk.content),
+            heading_path,
           },
         });
       }
@@ -125,7 +133,7 @@ export async function runEmbeddingPipeline(
   for (let i = 0; i < pendingEmbeddings.length; i += BATCH_SIZE) {
     const batch = pendingEmbeddings.slice(i, i + BATCH_SIZE);
     try {
-      const embeddings = await provider.embedBatch(batch.map((b) => b.content));
+      const embeddings = await provider.embedBatch(batch.map((b) => b.embedding_input));
 
       for (let j = 0; j < batch.length; j++) {
         const item = batch[j];
@@ -135,6 +143,7 @@ export async function runEmbeddingPipeline(
           title: item.doc.title,
           chunk_idx: item.chunk_idx,
           content: item.content,
+          content_hash: item.content_hash,
           embedding: embeddings[j],
           metadata: item.metadata,
         });

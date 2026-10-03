@@ -1,7 +1,9 @@
 /**
  * Embedding provider abstraction.
  *
- * Default: @huggingface/transformers (Xenova/all-MiniLM-L6-v2, 384-dim, CPU/WASM).
+ * Default: @huggingface/transformers (Xenova/paraphrase-multilingual-MiniLM-L12-v2,
+ * 384-dim, CPU/WASM) — multilingual: Italian queries retrieve English docs
+ * directly, without depending on the rewrite step.
  * Pluggable: any OpenAI-compatible embeddings endpoint (set EMBEDDING_PROVIDER=openai).
  *
  * The provider is initialized once at startup and reused for all embedding calls.
@@ -23,11 +25,15 @@ export interface EmbeddingProvider {
 
 class TransformersEmbeddingProvider implements EmbeddingProvider {
   readonly dimension = 384;
-  readonly name = "transformers.js";
+  // The model id is part of the name: embeddings from different models are
+  // incompatible vector spaces, so the identity must invalidate hashes.
+  get name() {
+    return `transformers.js:${this.model}`;
+  }
   private pipeline: ((text: string | string[], options?: object) => Promise<{ data: Float32Array }>) | null = null;
   private readonly model: string;
 
-  constructor(model: string = "Xenova/all-MiniLM-L6-v2") {
+  constructor(model: string = "Xenova/paraphrase-multilingual-MiniLM-L12-v2") {
     this.model = model;
   }
 
@@ -64,7 +70,9 @@ class TransformersEmbeddingProvider implements EmbeddingProvider {
 // ─── OpenAI-compatible provider (pluggable, for cloud embeddings) ────────────
 
 class OpenAICompatibleEmbeddingProvider implements EmbeddingProvider {
-  readonly name = "openai-compatible";
+  get name() {
+    return `openai-compatible:${this.model}`;
+  }
   private readonly baseUrl: string;
   private readonly apiKey: string;
   private readonly model: string;
@@ -133,7 +141,7 @@ export async function getEmbeddingProvider(): Promise<EmbeddingProvider> {
     }
     cachedProvider = new OpenAICompatibleEmbeddingProvider({ baseUrl, apiKey, model, dimension });
   } else {
-    const model = process.env.EMBEDDING_MODEL || "Xenova/all-MiniLM-L6-v2";
+    const model = process.env.EMBEDDING_MODEL || "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
     cachedProvider = new TransformersEmbeddingProvider(model);
   }
 

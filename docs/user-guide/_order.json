@@ -4,6 +4,7 @@
     "architecture",
     "conventions",
     "services/emailsender",
-    "services/ai"
+    "services/ai",
+    "services/webhook"
   ]
 }
