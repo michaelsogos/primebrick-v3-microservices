@@ -36,98 +36,148 @@ export function chunkMarkdown(
   const chunks: Chunk[] = [];
   let chunkIdx = 0;
 
-  // Split by markdown headings (## or ### or #)
-  const sections = splitByHeadings(content);
-
-  for (const section of sections) {
-    if (section.length <= maxChars) {
-      chunks.push({ content: section.trim(), chunk_idx: chunkIdx++, metadata: {} });
-      continue;
+  const emit = (text: string, heading_path?: string) => {
+    const trimmed = text.trim();
+    if (trimmed) {
+      chunks.push({
+        content: trimmed,
+        chunk_idx: chunkIdx++,
+        metadata: heading_path ? { heading_path } : {},
+      });
     }
+  };
 
-    // Section too long — split by paragraphs
-    const paragraphs = section.split(/\n\n+/);
-    let current = "";
-
-    for (const para of paragraphs) {
-      if (current && (current + "\n\n" + para).length <= maxChars) {
-        current = current + "\n\n" + para;
-      } else if (!current && para.length <= maxChars) {
-        current = para;
+  // Sentence-split a unit that exceeds maxChars (used for both oversized
+  // paragraphs and oversized atomic bullets).
+  const emitOversized = (text: string, heading_path?: string) => {
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    let sentBuf = "";
+    for (const sent of sentences) {
+      if (sentBuf && (sentBuf + " " + sent).length <= maxChars) {
+        sentBuf = sentBuf + " " + sent;
+      } else if (!sentBuf && sent.length <= maxChars) {
+        sentBuf = sent;
       } else {
-        // Flush current if set
-        if (current) {
-          chunks.push({ content: current.trim(), chunk_idx: chunkIdx++, metadata: {} });
-        }
-        // If paragraph itself fits (with overlap), start new chunk with it
-        if (para.length <= maxChars) {
-          const overlap = current ? current.slice(-overlapChars) : "";
-          current = overlap ? overlap + "\n\n" + para : para;
-        } else {
-          // Paragraph exceeds maxChars — split by sentences
-          const sentences = para.split(/(?<=[.!?])\s+/);
-          let sentBuf = "";
-          for (const sent of sentences) {
-            if (sentBuf && (sentBuf + " " + sent).length <= maxChars) {
-              sentBuf = sentBuf + " " + sent;
-            } else if (!sentBuf && sent.length <= maxChars) {
-              sentBuf = sent;
-            } else {
-              if (sentBuf) {
-                chunks.push({ content: sentBuf.trim(), chunk_idx: chunkIdx++, metadata: {} });
-              }
-              // If single sentence exceeds maxChars, hard-split it
-              if (sent.length > maxChars) {
-                for (let i = 0; i < sent.length; i += maxChars - overlapChars) {
-                  const slice = sent.slice(i, i + maxChars);
-                  if (slice.trim()) {
-                    chunks.push({ content: slice.trim(), chunk_idx: chunkIdx++, metadata: {} });
-                  }
-                }
-                sentBuf = "";
-              } else {
-                sentBuf = sent;
-              }
-            }
+        if (sentBuf) emit(sentBuf, heading_path);
+        if (sent.length > maxChars) {
+          for (let i = 0; i < sent.length; i += maxChars - overlapChars) {
+            emit(sent.slice(i, i + maxChars), heading_path);
           }
-          current = sentBuf;
+          sentBuf = "";
+        } else {
+          sentBuf = sent;
         }
       }
     }
+    if (sentBuf) emit(sentBuf, heading_path);
+  };
 
-    if (current) {
-      chunks.push({ content: current.trim(), chunk_idx: chunkIdx++, metadata: {} });
+  for (const section of splitByHeadings(content)) {
+    let current = "";
+    const flush = () => {
+      emit(current, section.heading_path);
+      current = "";
+    };
+
+    for (const unit of splitUnits(section.text)) {
+      // Bullet lines are atomic facts — merging them dilutes the vector.
+      if (unit.atomic) {
+        flush();
+        emitOversized(unit.text, section.heading_path);
+        continue;
+      }
+      if (current && (current + "\n\n" + unit.text).length <= maxChars) {
+        current = current + "\n\n" + unit.text;
+      } else if (!current && unit.text.length <= maxChars) {
+        current = unit.text;
+      } else {
+        const overlap = current ? current.slice(-overlapChars) : "";
+        flush();
+        if (unit.text.length <= maxChars) {
+          current = overlap ? overlap + "\n\n" + unit.text : unit.text;
+        } else {
+          emitOversized(unit.text, section.heading_path);
+        }
+      }
     }
+    flush();
   }
 
   return chunks.filter((c) => c.content.length > 0);
 }
 
+interface Section {
+  heading_path?: string;
+  text: string;
+}
+
 /**
- * Split markdown by headings, preserving the heading line in each section.
+ * Split markdown by headings, tracking the heading hierarchy so every
+ * section knows its full path ("Users List > Actions > Row actions").
+ * The heading line is kept inside the section text as context.
  */
-function splitByHeadings(content: string): string[] {
-  const lines = content.split("\n");
-  const sections: string[] = [];
+function splitByHeadings(content: string): Section[] {
+  const sections: Section[] = [];
+  const stack: Array<{ level: number; text: string }> = [];
   let current: string[] = [];
 
-  for (const line of lines) {
-    if (/^#{1,6}\s/.test(line)) {
-      // New heading — flush current section
-      if (current.length > 0) {
-        sections.push(current.join("\n"));
-      }
+  const flush = () => {
+    if (current.some((l) => l.trim())) {
+      sections.push({
+        heading_path: stack.length ? stack.map((s) => s.text).join(" > ") : undefined,
+        text: current.join("\n"),
+      });
+    }
+    current = [];
+  };
+
+  for (const line of content.split("\n")) {
+    const m = line.match(/^(#{1,6})\s+(.+)$/);
+    if (m) {
+      flush();
+      const level = m[1].length;
+      while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
+      stack.push({ level, text: m[2].trim() });
       current = [line];
     } else {
       current.push(line);
     }
   }
-
-  if (current.length > 0) {
-    sections.push(current.join("\n"));
-  }
-
+  flush();
   return sections;
+}
+
+interface Unit {
+  text: string;
+  /** Atomic units become standalone chunks (never merged with neighbours). */
+  atomic: boolean;
+}
+
+/**
+ * Split section text into units: blank-line paragraphs plus one atomic unit
+ * per list bullet line. Bullet lines are standalone facts (semantic digest
+ * rows, feature lists) — embedding them separately keeps each vector sharp.
+ */
+function splitUnits(text: string): Unit[] {
+  const units: Unit[] = [];
+  for (const para of text.split(/\n\n+/)) {
+    let textBuf: string[] = [];
+    const flushText = () => {
+      const t = textBuf.join("\n").trim();
+      if (t) units.push({ text: t, atomic: false });
+      textBuf = [];
+    };
+    for (const line of para.split("\n")) {
+      if (/^\s*[-*]\s+/.test(line)) {
+        flushText();
+        units.push({ text: line.trim(), atomic: true });
+      } else {
+        textBuf.push(line);
+      }
+    }
+    flushText();
+  }
+  return units;
 }
 
 export function buildEmbeddingInput(

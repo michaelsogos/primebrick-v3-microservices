@@ -40,9 +40,11 @@ class TransformersEmbeddingProvider implements EmbeddingProvider {
   private async getPipeline() {
     if (this.pipeline) return this.pipeline;
     const { pipeline, env } = await import("@huggingface/transformers");
-    // Allow remote model download on first use, cache locally afterwards.
-    env.allowLocalModels = false;
-    env.allowRemoteModels = true;
+    // Prefer the local model cache (offline/dev), remote download as fallback
+    // on first use when the model isn't cached yet. EMBEDDING_LOCAL_ONLY=1
+    // disables remote access entirely.
+    env.allowLocalModels = true;
+    env.allowRemoteModels = process.env.EMBEDDING_LOCAL_ONLY !== "1";
     const extractor = await pipeline("feature-extraction", this.model);
     this.pipeline = extractor as unknown as typeof this.pipeline;
     return this.pipeline;

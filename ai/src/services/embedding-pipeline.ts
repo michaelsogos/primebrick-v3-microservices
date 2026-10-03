@@ -89,12 +89,16 @@ export async function runEmbeddingPipeline(
 
       for (const chunk of chunks) {
         validIndices.push(chunk.chunk_idx);
-        const heading_path = extractHeadingPath(chunk.content) ?? doc.metadata.heading_path;
+        const heading_path =
+          (chunk.metadata.heading_path as string | undefined) ??
+          doc.metadata.heading_path;
         const embedding_input = buildEmbeddingInput(doc.title, heading_path, chunk.content);
         // Hash covers the embedder identity: switching models must re-embed
         // every chunk (vectors from different models are incompatible spaces).
+        // Links are part of the hash: a links-only doc edit must re-upsert
+        // the chunks so their metadata.links stays in sync.
         const contentHash = createHash("sha256")
-          .update(`${provider.name}\n${embedding_input}`)
+          .update(`${provider.name}\n${embedding_input}\n${JSON.stringify(doc.metadata.links ?? [])}`)
           .digest("hex");
         const existingHash = existingHashes.get(chunk.chunk_idx);
 
@@ -177,12 +181,4 @@ export async function runEmbeddingPipeline(
   console.log(`[embedding-pipeline] Complete: ${stats.chunks_embedded} embedded, ${stats.chunks_skipped} skipped, ${stats.chunks_deleted} deleted, ${stats.total_in_db} total in DB, ${stats.duration_ms}ms`);
 
   return stats;
-}
-
-/**
- * Extract the first heading from a chunk as heading_path.
- */
-function extractHeadingPath(content: string): string | undefined {
-  const match = content.match(/^#{1,6}\s+(.+)$/m);
-  return match ? match[1].trim() : undefined;
 }

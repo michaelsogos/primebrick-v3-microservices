@@ -29,6 +29,8 @@ export interface LoadedDoc {
     heading_path?: string;
     entity?: string;
     endpoint?: string;
+    /** KB paths this doc links to (doc-graph expansion — MDX only). */
+    links?: string[];
   };
 }
 
@@ -50,6 +52,7 @@ export function loadMdxDocs(docsPath: string): LoadedDoc[] {
       const relPath = relative(docsPath, filePath).replace(/\\/g, "/");
       const repo = relPath.includes("/") ? relPath.split("/")[0] : "pages";
       const title = frontmatter.title || relPath;
+      const links = extractDocLinks(body, relPath);
 
       docs.push({
         repo,
@@ -62,6 +65,7 @@ export function loadMdxDocs(docsPath: string): LoadedDoc[] {
           path: relPath,
           title,
           content_type: detectContentType(relPath, frontmatter),
+          ...(links.length ? { links } : {}),
         },
       });
     } catch (err) {
@@ -140,6 +144,43 @@ function formatOpenApiEndpoint(
   if (op.description) lines.push(`\n${op.description}`);
   if (op.operationId) lines.push(`\n**Operation ID:** ${op.operationId}`);
   return lines.join("\n");
+}
+
+/**
+ * Extract outbound markdown links from an MDX body and normalize them to
+ * KB paths (as stored in docs_kb.path). Handles the docs-site slug scheme:
+ * `/docs/user-guide/<slug>` → `frontend/guide/<slug>.mdx`.
+ * External URLs, anchors and mailto are skipped; self-links removed.
+ */
+function extractDocLinks(body: string, selfPath: string): string[] {
+  const links = new Set<string>();
+  for (const m of body.matchAll(/\[[^\]]*\]\(\s*<?([^)>\s]+)>?[^)]*\)/g)) {
+    let href = m[1];
+    if (/^(https?:|mailto:|tel:|#)/i.test(href)) continue;
+    href = href.split("#")[0].split("?")[0].replace(/\/+$/, "");
+    if (!href) continue;
+    if (href.startsWith("/docs/user-guide/")) {
+      href = `frontend/guide/${href.slice("/docs/user-guide/".length)}`;
+    } else if (href.startsWith("/docs/")) {
+      href = href.slice("/docs/".length);
+    } else if (!href.startsWith("/")) {
+      const dir = selfPath.split("/").slice(0, -1).join("/");
+      href = dir ? `${dir}/${href}` : href;
+    } else {
+      continue; // absolute non-docs path — not a KB link
+    }
+    // Normalize ./ and ../ segments (e.g. "api/./rbac.mdx" → "api/rbac.mdx",
+    // "api/../x.mdx" → "x.mdx").
+    const parts: string[] = [];
+    for (const seg of href.split("/")) {
+      if (seg === "..") parts.pop();
+      else if (seg && seg !== ".") parts.push(seg);
+    }
+    href = parts.join("/");
+    if (!href.endsWith(".mdx")) href += ".mdx";
+    if (href !== selfPath) links.add(href);
+  }
+  return [...links];
 }
 
 function detectContentType(
