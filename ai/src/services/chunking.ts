@@ -180,12 +180,28 @@ function splitUnits(text: string): Unit[] {
   return units;
 }
 
+/**
+ * Contextual retrieval (Anthropic-style, deterministic variant): each chunk
+ * is embedded together with a short preamble stating which document,
+ * section and entity it belongs to — so a bullet like "Granting admin
+ * rights requires…" is embedded as "a procedure on the Edit User page for
+ * entity user_profile", not as free-floating text. The preamble is
+ * embedding-only: the stored chunk content stays clean.
+ */
 export function buildEmbeddingInput(
   title: string,
   heading_path: string | undefined,
   content: string,
+  context?: { description?: string; entity?: string; content_type?: string },
 ): string {
-  return [title, heading_path, content].filter(Boolean).join("\n\n");
+  const header = context
+    ? `Document: "${title}"${context.content_type ? ` (${context.content_type})` : ""}` +
+      `${context.entity ? ` — entity ${context.entity}` : ""}` +
+      `${context.description ? ` — ${context.description}` : ""}`
+    : title;
+  return [header, heading_path ? `Section: ${heading_path}` : undefined, content]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 /**

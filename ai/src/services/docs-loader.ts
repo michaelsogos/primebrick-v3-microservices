@@ -29,6 +29,8 @@ export interface LoadedDoc {
     heading_path?: string;
     entity?: string;
     endpoint?: string;
+    /** Frontmatter description — fed into the contextual embedding preamble. */
+    description?: string;
     /** KB paths this doc links to (doc-graph expansion — MDX only). */
     links?: string[];
   };
@@ -66,6 +68,8 @@ export function loadMdxDocs(docsPath: string): LoadedDoc[] {
           title,
           content_type: detectContentType(relPath, frontmatter),
           ...(links.length ? { links } : {}),
+          ...(frontmatter.entity ? { entity: frontmatter.entity } : {}),
+          ...(frontmatter.description ? { description: frontmatter.description } : {}),
         },
       });
     } catch (err) {

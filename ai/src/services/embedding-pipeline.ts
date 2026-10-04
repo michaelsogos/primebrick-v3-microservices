@@ -92,13 +92,17 @@ export async function runEmbeddingPipeline(
         const heading_path =
           (chunk.metadata.heading_path as string | undefined) ??
           doc.metadata.heading_path;
-        const embedding_input = buildEmbeddingInput(doc.title, heading_path, chunk.content);
+        const embedding_input = buildEmbeddingInput(doc.title, heading_path, chunk.content, {
+          description: doc.metadata.description,
+          entity: doc.metadata.entity,
+          content_type: doc.metadata.content_type,
+        });
         // Hash covers the embedder identity: switching models must re-embed
         // every chunk (vectors from different models are incompatible spaces).
-        // Links are part of the hash: a links-only doc edit must re-upsert
-        // the chunks so their metadata.links stays in sync.
+        // Links/entity are part of the hash: metadata-only doc edits must
+        // re-upsert the chunks so their metadata stays in sync.
         const contentHash = createHash("sha256")
-          .update(`${provider.name}\n${embedding_input}\n${JSON.stringify(doc.metadata.links ?? [])}`)
+          .update(`${provider.name}\n${embedding_input}\n${JSON.stringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
           .digest("hex");
         const existingHash = existingHashes.get(chunk.chunk_idx);
 
