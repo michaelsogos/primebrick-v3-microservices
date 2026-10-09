@@ -19,6 +19,7 @@ import {
   getSdkCachePort,
   apiKeyCacheKey,
   API_KEY_CACHE_TTL_MS,
+  logger,
 } from "@primebrick/sdk";
 import { ConfigLoader } from "@primebrick/sdk";
 import type { ConfigRepositoryPort } from "@primebrick/sdk";
@@ -81,7 +82,7 @@ export class EmailSenderApiKeyPort implements ApiKeyPort {
         const cached = await port.get<ApiKeyRecord>(cacheKey);
         if (cached) return cached;
       } catch (e) {
-        console.warn(`api_keys cache get failed: ${e}`);
+        logger.warn(`api_keys cache get failed: ${e}`, { tags: ["auth-ports"] });
       }
     }
     const pool = getDal().getPool();
@@ -105,7 +106,7 @@ export class EmailSenderApiKeyPort implements ApiKeyPort {
       try {
         await port.set(cacheKey, record, API_KEY_CACHE_TTL_MS);
       } catch (e) {
-        console.warn(`api_keys cache set failed: ${e}`);
+        logger.warn(`api_keys cache set failed: ${e}`, { tags: ["auth-ports"] });
       }
     }
     return record;

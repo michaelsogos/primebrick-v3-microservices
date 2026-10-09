@@ -1,4 +1,5 @@
 import { getDal } from "../db/dal.js";
+import { logger } from "@primebrick/sdk";
 import { BrevoClient } from "../providers/brevo.js";
 import { SenderLogEntity } from "../domain/entities/sender_log_entity.js";
 import { Project, field, Filter } from "@primebrick/dal-pg";
@@ -71,8 +72,9 @@ export class WebhookService {
       const incomingRank = STATUS_RANK[status] ?? 0;
       const currentRank = STATUS_RANK[current.status] ?? 0;
       if (incomingRank < currentRank) {
-        console.log(
+        logger.debug(
           `Ignored out-of-order event for message ${providerMessageId}: ${status} < ${current.status}`,
+          { tags: ["webhook-service"] },
         );
         return;
       }
@@ -92,6 +94,6 @@ export class WebhookService {
       { matchBy: "provider_message_id" },
     );
 
-    console.log(`Updated communication log for message ${providerMessageId}: ${status}`);
+    logger.debug(`Updated communication log for message ${providerMessageId}: ${status}`, { tags: ["webhook-service"] });
   }
 }

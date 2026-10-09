@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { logger } from "@primebrick/sdk";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -48,7 +49,7 @@ const entitySnap = buildEntitySnapshot();
 const url = process.env.DATABASE_URL;
 if (!url) {
   writeFileSync(join(outDir, "snapshot-entities.json"), JSON.stringify(entitySnap, null, 2));
-  console.warn("DATABASE_URL not set: wrote snapshot-entities.json only (no database snapshot / diff).");
+  logger.warn("DATABASE_URL not set: wrote snapshot-entities.json only (no database snapshot / diff).", { tags: ["generate-patch"] });
   process.exit(0);
 }
 
@@ -84,10 +85,11 @@ const patchPath = join(patchesDir, patchFilename);
 writeFileSync(patchPath, sqlPatch + footer);
 
 if (diff.renameHeuristicUserReviewRequired) {
-  console.warn(
-    "renameHeuristicUserReviewRequired: ambiguous rename heuristic — do not apply likelyRenames SQL without asking the user. See diff.renameHeuristicAgentInstruction."
+  logger.warn(
+    "renameHeuristicUserReviewRequired: ambiguous rename heuristic — do not apply likelyRenames SQL without asking the user. See diff.renameHeuristicAgentInstruction.",
+    { tags: ["generate-patch"] },
   );
 }
 
-console.log(`Database patch snapshots written to ${outDir}`);
-console.log(`SQL patch: ${patchPath}`);
+logger.info(`Database patch snapshots written to ${outDir}`, { tags: ["generate-patch"] });
+logger.info(`SQL patch: ${patchPath}`, { tags: ["generate-patch"] });

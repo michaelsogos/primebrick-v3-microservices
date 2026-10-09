@@ -1,4 +1,4 @@
-import { NatsClient, verifyNatsMessage, enforceNatsRbac, Permission, type AuthConfig, AuthError, RbacDeniedError } from "@primebrick/sdk";
+import { NatsClient, verifyNatsMessage, enforceNatsRbac, Permission, type AuthConfig, AuthError, RbacDeniedError, logger } from "@primebrick/sdk";
 import type { SendEmailRequest, SendEmailResponse } from "./types.js";
 
 const EMAIL_SEND_SUBJECT = "emailsender.send";
@@ -13,12 +13,12 @@ export function setNatsAuthConfig(config: AuthConfig): void {
 export async function subscribeToEmailSendRequests(
   handleSendEmail: (request: SendEmailRequest, actorId: string) => Promise<SendEmailResponse>,
 ): Promise<void> {
-  console.log(`Subscribed to ${EMAIL_SEND_SUBJECT}`);
+  logger.info(`Subscribed to ${EMAIL_SEND_SUBJECT}`, { tags: ["nats-sub"] });
 
   await NatsClient.subscribe<SendEmailRequest>(
     EMAIL_SEND_SUBJECT,
     async (request, msg) => {
-      console.log(`Received email send request: ${request.requestId}`);
+      logger.debug(`Received email send request: ${request.requestId}`, { tags: ["nats-sub"] });
 
       try {
         // Verify auth via NATS headers (GATEWAY-RESOLVED mode)
@@ -35,16 +35,17 @@ export async function subscribeToEmailSendRequests(
           `${EMAIL_RESPONSE_SUBJECT}.${request.requestId}`,
           response,
         );
-        console.log(
+        logger.debug(
           `Processed email send request: ${request.requestId} - ${response.success ? "SUCCESS" : "FAILED"}`,
+          { tags: ["nats-sub"] },
         );
       } catch (error) {
         if (error instanceof AuthError) {
-          console.error(`[NATS] Auth failed for ${request.requestId}: ${error.message}`);
+          logger.error(`Auth failed for ${request.requestId}: ${error.message}`, { tags: ["NATS"] });
         } else if (error instanceof RbacDeniedError) {
-          console.error(`[NATS] RBAC denied for ${request.requestId}: ${error.message}`);
+          logger.error(`RBAC denied for ${request.requestId}: ${error.message}`, { tags: ["NATS"] });
         } else {
-          console.error("Error processing email send request:", error);
+          logger.error("Error processing email send request", { tags: ["nats-sub"], error });
         }
 
         const errorResponse: SendEmailResponse = {

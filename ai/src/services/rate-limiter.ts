@@ -12,6 +12,8 @@
  * - AI_RATE_LIMIT_TOKEN_COST: tokens consumed per chat request (default: 1)
  */
 
+import { logger } from "@primebrick/sdk";
+
 interface Bucket {
   tokens: number;
   lastRefill: number;
@@ -48,9 +50,9 @@ async function initRedis(): Promise<void> {
         incr: (key: string) => client.incr(key),
         expire: (key: string, seconds: number) => client.expire(key, seconds),
       };
-      console.log("[rate-limiter] Redis connected for distributed rate limiting");
+      logger.info("Redis connected for distributed rate limiting", { tags: ["rate-limiter"] });
     } catch (e) {
-      console.warn("[rate-limiter] Redis init failed, falling back to in-memory:", e instanceof Error ? e.message : e);
+      logger.warn("Redis init failed, falling back to in-memory", { tags: ["rate-limiter"], error: e instanceof Error ? e.message : e });
     }
   })();
   return redisInitPromise;

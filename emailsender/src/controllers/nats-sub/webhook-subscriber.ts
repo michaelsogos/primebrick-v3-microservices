@@ -24,6 +24,7 @@ import {
   RbacDeniedError,
   type ApiKeyPort,
   type HeaderProvider,
+  logger,
 } from "@primebrick/sdk";
 import type { MsgHdrs } from "nats";
 import { WebhookService } from "../../services/webhook-service.js";
@@ -73,13 +74,12 @@ export async function subscribeToWebhooks(): Promise<void> {
       } catch (error) {
         if (error instanceof AuthError || error instanceof RbacDeniedError) {
           // Terminal — do not redeliver auth failures.
-          console.error(`[nats-sub] webhook auth/rbac failed (${envelope?.intent}):`,
-            error instanceof Error ? error.message : error);
+          logger.error(`webhook auth/rbac failed (${envelope?.intent})`, { tags: ["nats-sub"], error: error instanceof Error ? error.message : error });
           return;
         }
         throw error; // nak → redelivery
       }
     },
   });
-  console.log(`Subscribed to ${FILTER_SUBJECT} (durable: ${DURABLE}, stream: ${WEBHOOK_STREAM})`);
+  logger.info(`Subscribed to ${FILTER_SUBJECT} (durable: ${DURABLE}, stream: ${WEBHOOK_STREAM})`, { tags: ["nats-sub"] });
 }

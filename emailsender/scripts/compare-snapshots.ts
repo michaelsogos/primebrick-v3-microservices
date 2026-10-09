@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { logger } from "@primebrick/sdk";
 import { compareSnapshots } from "../src/db/schema-snapshot.js";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
@@ -12,4 +13,4 @@ const dbSnap = JSON.parse(readFileSync(dbSnapPath, "utf-8"));
 
 const diff = compareSnapshots(entitySnap, dbSnap);
 writeFileSync(diffPath, JSON.stringify(diff, null, 2));
-console.log(`Diff written to ${diffPath}`);
+logger.info(`Diff written to ${diffPath}`, { tags: ["db-snapshot"] });

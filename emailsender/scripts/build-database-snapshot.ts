@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { logger } from "@primebrick/sdk";
 import { buildDatabaseSnapshot } from "../src/db/build-database-snapshot.js";
 import { writeFileSync } from "fs";
 import { join } from "path";
@@ -16,4 +17,4 @@ const tables = [
 const snapshot = await buildDatabaseSnapshot(databaseUrl, tables);
 const snapshotPath = join(process.cwd(), "db-meta", "snapshot-database.json");
 writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2));
-console.log(`Database snapshot written to ${snapshotPath}`);
+logger.info(`Database snapshot written to ${snapshotPath}`, { tags: ["db-snapshot"] });

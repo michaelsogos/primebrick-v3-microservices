@@ -16,6 +16,7 @@ import {
   type ServiceHeartbeatPayload,
   type ServiceUnregisterPayload,
   type ServiceStalePayload,
+  logger,
 } from "@primebrick/sdk";
 
 export interface RegistryLookup {
@@ -63,7 +64,7 @@ export async function startRegistryCache(): Promise<void> {
     const e = cache.get(p.code);
     if (e) e.status = "stale";
   });
-  console.log("[webhook] Subscribed to service lifecycle events (registry cache)");
+  logger.info("Subscribed to service lifecycle events (registry cache)", { tags: ["webhook"] });
 }
 
 async function fetchRegistryRow(code: string): Promise<RegistryRow | null> {

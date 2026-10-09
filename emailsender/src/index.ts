@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { createMicroservice } from "@primebrick/sdk";
+import { createMicroservice, logger } from "@primebrick/sdk";
 import { initDal, getDal } from "./db/dal.js";
 import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.js";
 import { EmailService } from "./services/email-service.js";
@@ -67,6 +67,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error("Fatal error:", error);
+  logger.error("Fatal error", { tags: ["core"], error });
   process.exit(1);
 });

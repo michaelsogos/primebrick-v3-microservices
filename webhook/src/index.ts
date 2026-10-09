@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { createMicroservice } from "@primebrick/sdk";
+import { createMicroservice, logger } from "@primebrick/sdk";
 import {
   EnvConfigPort,
   EnvAuthConfigPort,
@@ -55,6 +55,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("[webhook] fatal:", err);
+  logger.error("fatal", { tags: ["webhook"], error: err });
   process.exit(1);
 });

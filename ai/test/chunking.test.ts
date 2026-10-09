@@ -4,7 +4,7 @@ import { buildEmbeddingInput, chunkMarkdown, parseMdxFrontmatter } from "../src/
 describe("buildEmbeddingInput", () => {
   it("includes document title, section heading, and chunk content in order", () => {
     expect(buildEmbeddingInput("RBAC", "Default roles", "administrators bypass permissions")).toBe(
-      "RBAC\n\nDefault roles\n\nadministrators bypass permissions",
+      "RBAC\n\nSection: Default roles\n\nadministrators bypass permissions",
     );
   });
 

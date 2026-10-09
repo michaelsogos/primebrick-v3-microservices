@@ -21,6 +21,7 @@ import {
 } from "./conversation-repository.js";
 import { insertTelemetry } from "./telemetry-repository.js";
 import { isRedactionEnabled, redactPii } from "./redaction.js";
+import { logger } from "@primebrick/sdk";
 
 export interface OrchestratorConfig {
   /** BE base URL for MCP client (e.g. http://localhost:3001) */
@@ -70,7 +71,7 @@ function createSearchDocsTool() {
     }),
     execute: async ({ query, repo }) => {
       const provider = await getEmbeddingProvider();
-      const embedding = await provider.embed(query);
+      const embedding = await provider.embedQuery(query);
       const results = await vectorSearch(embedding, 4, repo);
       return {
         results: results.map((r) => ({
@@ -123,7 +124,7 @@ async function getMcpTools(beBaseUrl: string, userJwt: string): Promise<{
       },
     },
     onUncaughtError: (error) => {
-      console.error("[MCP client] Uncaught error:", error);
+      logger.error("Uncaught error", { tags: ["MCP client"], error });
     },
   });
 
@@ -263,7 +264,7 @@ export async function orchestrate(
       rag_hits: ragHitCount,
       latency_ms: Date.now() - startTime,
       success: true,
-    }).catch((err) => console.error("[orchestrator] Telemetry insert failed:", err));
+    }).catch((err) => logger.error("Telemetry insert failed", { tags: ["orchestrator"], error: err }));
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     callbacks.onError?.(err);
@@ -281,7 +282,7 @@ export async function orchestrate(
       latency_ms: Date.now() - startTime,
       success: false,
       error: err.message,
-    }).catch((telemetryErr) => console.error("[orchestrator] Telemetry insert failed:", telemetryErr));
+    }).catch((telemetryErr) => logger.error("Telemetry insert failed", { tags: ["orchestrator"], error: telemetryErr }));
   } finally {
     // Always close the MCP client
     if (mcpClient) {

@@ -17,8 +17,10 @@ import {
   getAllDocPaths,
   deleteDoc,
   countDocs,
+  truncateDocsKb,
 } from "./docs-kb-repository.js";
 import { createHash } from "node:crypto";
+import { logger } from "@primebrick/sdk";
 
 export interface PipelineStats {
   docs_loaded: number;
@@ -40,6 +42,7 @@ export interface PipelineStats {
 export async function runEmbeddingPipeline(
   docsPath: string,
   openApiPath: string,
+  opts?: { full?: boolean },
 ): Promise<PipelineStats> {
   const startTime = Date.now();
   const stats: PipelineStats = {
@@ -53,18 +56,27 @@ export async function runEmbeddingPipeline(
     duration_ms: 0,
   };
 
-  console.log(`[embedding-pipeline] Loading docs from: ${docsPath}`);
-  console.log(`[embedding-pipeline] Loading OpenAPI from: ${openApiPath}`);
+  logger.info(`Loading docs from: ${docsPath}`, { tags: ["embedding-pipeline"] });
+  logger.info(`Loading OpenAPI from: ${openApiPath}`, { tags: ["embedding-pipeline"] });
 
   const mdxDocs = loadMdxDocs(docsPath);
   const openApiDocs = loadOpenApiSpecs(openApiPath);
   const allDocs = [...mdxDocs, ...openApiDocs];
   stats.docs_loaded = allDocs.length;
 
-  console.log(`[embedding-pipeline] Loaded ${mdxDocs.length} MDX docs + ${openApiDocs.length} OpenAPI endpoints`);
+  logger.info(`Loaded ${mdxDocs.length} MDX docs + ${openApiDocs.length} OpenAPI endpoints`, { tags: ["embedding-pipeline"] });
 
   const provider = await getEmbeddingProvider();
-  console.log(`[embedding-pipeline] Embedding provider: ${provider.name} (${provider.dimension}-dim)`);
+  logger.info(`Embedding provider: ${provider.name} (${provider.dimension}-dim)`, { tags: ["embedding-pipeline"] });
+
+  // Explicit full reinit: wipe the index before the incremental loop.
+  // Needed when the vector dimension/index shape changes (a hash mismatch
+  // alone would upsert vectors of a different size into a fixed-width
+  // column) and as a known-state recovery for a corrupted KB.
+  if (opts?.full) {
+    logger.info(`FULL mode — truncating docs_kb before re-embed`, { tags: ["embedding-pipeline"] });
+    await truncateDocsKb();
+  }
 
   // Track all (repo, path) pairs we process, to detect deleted docs later.
   const processedPaths = new Set<string>();
@@ -130,13 +142,13 @@ export async function runEmbeddingPipeline(
       await deleteStaleChunks(doc.repo, doc.path, validIndices);
     } catch (err) {
       stats.errors++;
-      console.error(`[embedding-pipeline] Error processing ${pathKey}:`, err instanceof Error ? err.message : err);
+      logger.error(`Error processing ${pathKey}`, { tags: ["embedding-pipeline"], error: err instanceof Error ? err.message : err });
     }
   }
 
   // Batch embed all pending chunks (in groups of 16 for memory efficiency).
   const BATCH_SIZE = 16;
-  console.log(`[embedding-pipeline] Embedding ${pendingEmbeddings.length} chunks (batch size ${BATCH_SIZE})...`);
+  logger.info(`Embedding ${pendingEmbeddings.length} chunks (batch size ${BATCH_SIZE})...`, { tags: ["embedding-pipeline"] });
 
   for (let i = 0; i < pendingEmbeddings.length; i += BATCH_SIZE) {
     const batch = pendingEmbeddings.slice(i, i + BATCH_SIZE);
@@ -160,11 +172,11 @@ export async function runEmbeddingPipeline(
 
       // Progress log every 5 batches
       if ((i / BATCH_SIZE) % 5 === 0 && i > 0) {
-        console.log(`[embedding-pipeline] Progress: ${i}/${pendingEmbeddings.length} chunks embedded`);
+        logger.info(`Progress: ${i}/${pendingEmbeddings.length} chunks embedded`, { tags: ["embedding-pipeline"] });
       }
     } catch (err) {
       stats.errors++;
-      console.error(`[embedding-pipeline] Batch embedding error at offset ${i}:`, err instanceof Error ? err.message : err);
+      logger.error(`Batch embedding error at offset ${i}`, { tags: ["embedding-pipeline"], error: err instanceof Error ? err.message : err });
     }
   }
 
@@ -175,14 +187,14 @@ export async function runEmbeddingPipeline(
     if (!processedPaths.has(pathKey)) {
       await deleteDoc(repo, path);
       stats.chunks_deleted++;
-      console.log(`[embedding-pipeline] Deleted stale doc: ${pathKey}`);
+      logger.info(`Deleted stale doc: ${pathKey}`, { tags: ["embedding-pipeline"] });
     }
   }
 
   stats.total_in_db = await countDocs();
   stats.duration_ms = Date.now() - startTime;
 
-  console.log(`[embedding-pipeline] Complete: ${stats.chunks_embedded} embedded, ${stats.chunks_skipped} skipped, ${stats.chunks_deleted} deleted, ${stats.total_in_db} total in DB, ${stats.duration_ms}ms`);
+  logger.info(`Complete: ${stats.chunks_embedded} embedded, ${stats.chunks_skipped} skipped, ${stats.chunks_deleted} deleted, ${stats.total_in_db} total in DB, ${stats.duration_ms}ms`, { tags: ["embedding-pipeline"] });
 
   return stats;
 }

@@ -1,6 +1,7 @@
 // AI microservice migration runner — uses @primebrick/sdk's applyPatches.
 // The SDK is DB-agnostic; this script provides the DatabaseAdapter that wraps pg.Pool.
 import "dotenv/config";
+import { logger } from "@primebrick/sdk";
 import { Pool } from "pg";
 import { join } from "node:path";
 import { applyPatches } from "@primebrick/sdk";
@@ -17,9 +18,9 @@ async function main() {
 
   try {
     const result = await applyPatches(PATCHES_DIR, db);
-    console.log(`Migration complete: ${result.appliedOrRegistered} applied/registered, ${result.skipped} skipped.`);
+    logger.info(`Migration complete: ${result.appliedOrRegistered} applied/registered, ${result.skipped} skipped.`, { tags: ["db-patches"] });
   } catch (error) {
-    console.error("Migration failed:", error);
+    logger.error("Migration failed", { tags: ["db-patches"], error });
     process.exit(1);
   } finally {
     await pool.end();

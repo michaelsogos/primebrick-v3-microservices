@@ -69,9 +69,11 @@ describe('embedding input and incremental reindex', () => {
   it('embeds title + heading + content but stores only the original chunk as content', async () => {
     await runEmbeddingPipeline('/docs', '/openapi');
 
-    const expected_input = `RBAC\n\nDefault roles\n\n${doc.content}`;
+    // Contextual preamble: title is wrapped as Document: "..." (content_type)
+    // and the heading becomes a `Section:` line (see buildEmbeddingInput).
+    const expected_input = `Document: "RBAC" (tutorial)\n\nSection: Default roles\n\n${doc.content}`;
     const expected_hash = createHash('sha256')
-      .update(`test-provider\n${expected_input}`)
+      .update(`test-provider\n${expected_input}\n[]\n`)
       .digest('hex');
     expect(mocks.embed_batch).toHaveBeenCalledWith([expected_input]);
     expect(mocks.upsert_doc_chunk).toHaveBeenCalledWith(
@@ -85,10 +87,10 @@ describe('embedding input and incremental reindex', () => {
   });
 
   it('re-embeds a same-content chunk when its title changed', async () => {
-    const first_input = `RBAC\n\nDefault roles\n\n${doc.content}`;
+    const first_input = `Document: "RBAC" (tutorial)\n\nSection: Default roles\n\n${doc.content}`;
     mocks.get_doc_hashes.mockResolvedValueOnce(
       new Map([
-        [0, createHash('sha256').update(`test-provider\n${first_input}`).digest('hex')],
+        [0, createHash('sha256').update(`test-provider\n${first_input}\n[]\n`).digest('hex')],
       ]),
     );
     mocks.load_mdx_docs.mockReturnValueOnce([{ ...doc, title: 'Access Control' }]);
@@ -98,7 +100,7 @@ describe('embedding input and incremental reindex', () => {
     expect(stats.chunks_embedded).toBe(1);
     expect(stats.chunks_skipped).toBe(0);
     expect(mocks.embed_batch).toHaveBeenCalledWith([
-      `Access Control\n\nDefault roles\n\n${doc.content}`,
+      `Document: "Access Control" (tutorial)\n\nSection: Default roles\n\n${doc.content}`,
     ]);
   });
 });

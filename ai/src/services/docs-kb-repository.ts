@@ -117,10 +117,21 @@ export async function deleteDoc(repo: string, path: string): Promise<void> {
 }
 
 /**
+ * Wipe the whole index — used by the explicit full-reinit path
+ * (provider/schema change, corrupted KB, manual rebuild).
+ * Destructive: callers must request it explicitly.
+ */
+export async function truncateDocsKb(): Promise<void> {
+  const pool = getDal().getPool();
+  await pool.query(`TRUNCATE TABLE docs_kb`);
+}
+
+/**
  * Vector search: find the top-k most similar chunks to a query embedding.
  * Uses pgvector cosine distance operator (<=>) with ivfflat index.
  *
- * @param queryEmbedding 384-dim vector from the embedding provider.
+ * @param queryEmbedding query vector from the embedding provider (1024-dim
+ *  with multilingual-e5-large-instruct; the size follows EMBEDDING_MODEL).
  * @param topK Number of results (default 4).
  * @param repoFilter Optional repo filter (e.g. "backend", "frontend").
  */

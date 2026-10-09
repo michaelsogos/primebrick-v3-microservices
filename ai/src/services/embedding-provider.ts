@@ -10,12 +10,20 @@
  * The 384-dim vector is stored in docs_kb.embedding (vector(384) pgvector column).
  */
 
+export type EmbedKind = "query" | "passage";
+
 export interface EmbeddingProvider {
-  /** Embed a single text and return a 384-dim float array. */
+  /** Embed a single passage/document text. */
   embed(text: string): Promise<number[]>;
-  /** Embed multiple texts in a batch. Returns array of 384-dim vectors. */
+  /** Embed multiple passage/document texts in a batch. */
   embedBatch(texts: string[]): Promise<number[][]>;
-  /** Dimension of the embedding vector (384 for all-MiniLM-L6-v2). */
+  /** Embed a single query text — instruct embedding models (e5-instruct,
+   *  bge, Qwen3-Embedding) require a different prefix on the query side
+   *  than on the passage side; asymmetric retrieval depends on it. */
+  embedQuery(text: string): Promise<number[]>;
+  /** Dimension of the embedding vector — resolved from the model output
+   *  at first call (was hardcoded 384, which broke batch slicing and the
+   *  pgvector column shape on non-384 models). */
   readonly dimension: number;
   /** Provider name for logging/metadata. */
   readonly name: string;
@@ -24,7 +32,13 @@ export interface EmbeddingProvider {
 // ─── Transformers.js provider (default, CPU, zero API key) ───────────────────
 
 class TransformersEmbeddingProvider implements EmbeddingProvider {
-  readonly dimension = 384;
+  // Dimension is measured from the first real output — hardcoding it was
+  // the bug that made batch slicing and the pgvector column size wrong on
+  // non-384 models (e5/bge/Qwen3-Embedding are 768–1024).
+  private _dimension = 0;
+  get dimension() {
+    return this._dimension;
+  }
   // The model id is part of the name: embeddings from different models are
   // incompatible vector spaces, so the identity must invalidate hashes.
   get name() {
@@ -32,9 +46,24 @@ class TransformersEmbeddingProvider implements EmbeddingProvider {
   }
   private pipeline: ((text: string | string[], options?: object) => Promise<{ data: Float32Array }>) | null = null;
   private readonly model: string;
+  /** Instruct-style embedding models expect asymmetric prefixes
+   *  ("query: …" / "passage: …" for e5-instruct, different for bge-m3).
+   *  Auto-detected from the model id; overridable via env. */
+  private readonly queryPrefix: string;
+  private readonly passagePrefix: string;
 
   constructor(model: string = "Xenova/paraphrase-multilingual-MiniLM-L12-v2") {
     this.model = model;
+    // e5-instruct wants "Instruct: <task>\nQuery: <q>" on the query side and
+    // the raw passage on the doc side (HF model card, lmo3 ONNX export).
+    const isE5Instruct = /e5.*instruct/i.test(model);
+    const instruct = isE5Instruct || /bge-m3|qwen3-embedding/i.test(model);
+    this.queryPrefix =
+      process.env.EMBEDDING_QUERY_PREFIX ??
+      (isE5Instruct ? "Instruct: Retrieve relevant documentation passages.\nQuery: " : instruct ? "query: " : "");
+    this.passagePrefix =
+      process.env.EMBEDDING_PASSAGE_PREFIX ??
+      (isE5Instruct ? "" : instruct ? "passage: " : "");
   }
 
   private async getPipeline() {
@@ -45,27 +74,40 @@ class TransformersEmbeddingProvider implements EmbeddingProvider {
     // disables remote access entirely.
     env.allowLocalModels = true;
     env.allowRemoteModels = process.env.EMBEDDING_LOCAL_ONLY !== "1";
-    const extractor = await pipeline("feature-extraction", this.model);
+    const extractor = await pipeline("feature-extraction", this.model, {
+      // q8 keeps the CPU footprint sane on >500M models (e5-large int8 ≈535MB);
+      // overridable via env for quality experiments.
+      dtype: (process.env.EMBEDDING_DTYPE ?? "q8") as "q8",
+    });
     this.pipeline = extractor as unknown as typeof this.pipeline;
     return this.pipeline;
   }
 
-  async embed(text: string): Promise<number[]> {
-    const pipe = await this.getPipeline();
-    const output = await pipe!(text, { pooling: "mean", normalize: true });
-    return Array.from(output.data);
-  }
-
-  async embedBatch(texts: string[]): Promise<number[][]> {
+  private async run(texts: string[]): Promise<number[][]> {
     const pipe = await this.getPipeline();
     const output = await pipe!(texts, { pooling: "mean", normalize: true });
-    // transformers.js returns a single Float32Array for batch input — chunk it.
-    const dim = this.dimension;
+    const dim = output.data.length / texts.length;
+    if (!Number.isInteger(dim)) throw new Error(`Embedding output size ${output.data.length} not divisible by batch ${texts.length}`);
+    if (this._dimension === 0) this._dimension = dim;
     const result: number[][] = [];
     for (let i = 0; i < texts.length; i++) {
       result.push(Array.from(output.data.slice(i * dim, (i + 1) * dim)));
     }
     return result;
+  }
+
+  async embed(text: string): Promise<number[]> {
+    const [vec] = await this.run([this.passagePrefix + text]);
+    return vec;
+  }
+
+  async embedBatch(texts: string[]): Promise<number[][]> {
+    return this.run(texts.map((t) => this.passagePrefix + t));
+  }
+
+  async embedQuery(text: string): Promise<number[]> {
+    const [vec] = await this.run([this.queryPrefix + text]);
+    return vec;
   }
 }
 
@@ -112,6 +154,12 @@ class OpenAICompatibleEmbeddingProvider implements EmbeddingProvider {
   async embedBatch(texts: string[]): Promise<number[][]> {
     return this.callApi(texts);
   }
+
+  async embedQuery(text: string): Promise<number[]> {
+    // Server-side embedding endpoints own the prompt format — pass through.
+    const [vec] = await this.callApi([text]);
+    return vec;
+  }
 }
 
 // ─── Factory ─────────────────────────────────────────────────────────────────
@@ -123,10 +171,13 @@ let cachedProvider: EmbeddingProvider | null = null;
  *
  * Config (env vars):
  * - EMBEDDING_PROVIDER: "transformers" (default) | "openai"
- * - EMBEDDING_MODEL: model name (default: Xenova/all-MiniLM-L6-v2)
+ * - EMBEDDING_MODEL: model name (default: intfloat/multilingual-e5-large-instruct)
  * - EMBEDDING_BASE_URL: OpenAI-compatible base URL (for provider=openai)
  * - EMBEDDING_API_KEY: API key (for provider=openai)
- * - EMBEDDING_DIM: vector dimension (for provider=openai; transformers.js is always 384)
+ * - EMBEDDING_DIM: vector dimension (provider=openai only; transformers.js
+ *   measures it from the first real output)
+ * - EMBEDDING_QUERY_PREFIX / EMBEDDING_PASSAGE_PREFIX: instruct-model
+ *   prefixes (auto-detected for e5/bge/qwen3-embedding ids)
  */
 export async function getEmbeddingProvider(): Promise<EmbeddingProvider> {
   if (cachedProvider) return cachedProvider;
@@ -143,7 +194,7 @@ export async function getEmbeddingProvider(): Promise<EmbeddingProvider> {
     }
     cachedProvider = new OpenAICompatibleEmbeddingProvider({ baseUrl, apiKey, model, dimension });
   } else {
-    const model = process.env.EMBEDDING_MODEL || "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
+    const model = process.env.EMBEDDING_MODEL || "lmo3/multilingual-e5-large-instruct";
     cachedProvider = new TransformersEmbeddingProvider(model);
   }
 

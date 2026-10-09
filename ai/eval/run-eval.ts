@@ -28,6 +28,7 @@ import { evalCases, type EvalCase } from "./dataset.js";
 import { orchestrate } from "../src/services/orchestrator.js";
 import { initDal, getDal } from "../src/db/dal.js";
 import type { ModelMessage } from "ai";
+import { logger } from "@primebrick/sdk";
 
 interface CaseResult {
   case: EvalCase;
@@ -80,7 +81,7 @@ async function runCase(c: EvalCase, opts: {
         tokensIn = ti;
         tokensOut = to;
       },
-      onError: (err) => { error = err.message; console.error(`[eval] ${c.id} orchestrator error:`, err.message); },
+      onError: (err) => { error = err.message; logger.error(`${c.id} orchestrator error`, { tags: ["eval"], error: err.message }); },
     },
   );
 
@@ -115,24 +116,24 @@ function printResult(r: CaseResult): void {
   const status = r.passed ? "PASS" : "FAIL";
   const statusColor = r.passed ? "\x1b[32m" : "\x1b[31m";
   const reset = "\x1b[0m";
-  console.log(`${statusColor}[${status}]${reset} ${r.case.id} (${r.case.category}) — ${r.case.question}`);
-  console.log(`  Latency: ${r.latencyMs}ms | Tokens: ${r.tokensIn} in / ${r.tokensOut} out | Tools: ${r.toolsCalled.join(", ") || "(none)"}`);
+  logger.info(`${statusColor}[${status}]${reset} ${r.case.id} (${r.case.category}) — ${r.case.question}`, { tags: ["eval"] });
+  logger.info(`  Latency: ${r.latencyMs}ms | Tokens: ${r.tokensIn} in / ${r.tokensOut} out | Tools: ${r.toolsCalled.join(", ") || "(none)"}`, { tags: ["eval"] });
   if (r.error) {
-    console.log(`  Error: ${r.error}`);
+    logger.info(`  Error: ${r.error}`, { tags: ["eval"] });
   }
   if (r.missingKeywords.length > 0) {
-    console.log(`  Missing keywords: ${r.missingKeywords.join(", ")}`);
+    logger.info(`  Missing keywords: ${r.missingKeywords.join(", ")}`, { tags: ["eval"] });
   }
   if (r.missingTools.length > 0) {
-    console.log(`  Missing tools: ${r.missingTools.join(", ")}`);
+    logger.info(`  Missing tools: ${r.missingTools.join(", ")}`, { tags: ["eval"] });
   }
   if (r.wrongRoute) {
-    console.log(`  Wrong route: expected ${r.case.expected_route}, got something else`);
+    logger.info(`  Wrong route: expected ${r.case.expected_route}, got something else`, { tags: ["eval"] });
   }
   // Show a snippet of the response (first 200 chars).
   const snippet = r.responseText.slice(0, 200).replace(/\n/g, " ");
-  console.log(`  Response: ${snippet}${r.responseText.length > 200 ? "..." : ""}`);
-  console.log();
+  logger.info(`  Response: ${snippet}${r.responseText.length > 200 ? "..." : ""}`, { tags: ["eval"] });
+  logger.info("", { tags: ["eval"] });
 }
 
 async function main(): Promise<void> {
@@ -142,21 +143,21 @@ async function main(): Promise<void> {
   const userUuid = process.env.EVAL_USER_UUID;
 
   if (!url) {
-    console.error("DATABASE_URL is not set");
+    logger.error("DATABASE_URL is not set", { tags: ["eval"] });
     process.exit(1);
   }
   if (!userJwt) {
-    console.error("EVAL_USER_JWT is not set — provide a valid JWT for the eval user");
+    logger.error("EVAL_USER_JWT is not set — provide a valid JWT for the eval user", { tags: ["eval"] });
     process.exit(1);
   }
   if (!userUuid) {
-    console.error("EVAL_USER_UUID is not set");
+    logger.error("EVAL_USER_UUID is not set", { tags: ["eval"] });
     process.exit(1);
   }
 
-  console.log(`[eval] Running ${evalCases.length} cases against ${beBaseUrl}`);
-  console.log(`[eval] User UUID: ${userUuid}`);
-  console.log();
+  logger.info(`Running ${evalCases.length} cases against ${beBaseUrl}`, { tags: ["eval"] });
+  logger.info(`User UUID: ${userUuid}`, { tags: ["eval"] });
+  logger.info("", { tags: ["eval"] });
 
   initDal();
 
@@ -169,29 +170,18 @@ async function main(): Promise<void> {
       process.stdout.write(` done (${result.latencyMs}ms)\n`);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
-      console.error(`\n[eval] Case ${c.id} threw: ${errorMsg}`);
+      logger.error(`Case ${c.id} threw: ${errorMsg}`, { tags: ["eval"] });
       results.push({
-        case: c,
-        passed: false,
-        responseText: "",
-        toolsCalled: [],
-        missingKeywords: c.expected_keywords,
-        missingTools: c.expected_tools,
-        wrongRoute: false,
-        error: errorMsg,
-        latencyMs: 0,
-        tokensIn: 0,
-        tokensOut: 0,
-      });
+        case: c, passed: false, responseText: "", toolsCalled: [], missingKeywords: c.expected_keywords, missingTools: c.expected_tools, wrongRoute: false, error: errorMsg, latencyMs: 0, tokensIn: 0, tokensOut: 0, });
     }
     // Delay between cases — the local LLM (CPU inference) is single-threaded
     // and needs time to release the connection before the next request.
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
-  console.log("\n" + "=".repeat(80));
-  console.log("Eval Results");
-  console.log("=".repeat(80) + "\n");
+  logger.info("\n" + "=".repeat(80), { tags: ["eval"] });
+  logger.info("Eval Results", { tags: ["eval"] });
+  logger.info("=".repeat(80) + "\n", { tags: ["eval"] });
 
   for (const r of results) {
     printResult(r);
@@ -203,10 +193,10 @@ async function main(): Promise<void> {
   const totalTokensIn = results.reduce((sum, r) => sum + r.tokensIn, 0);
   const totalTokensOut = results.reduce((sum, r) => sum + r.tokensOut, 0);
 
-  console.log("=".repeat(80));
-  console.log(`Summary: ${passed}/${results.length} passed (${failed} failed)`);
-  console.log(`Avg latency: ${avgLatency}ms | Total tokens: ${totalTokensIn} in / ${totalTokensOut} out`);
-  console.log("=".repeat(80));
+  logger.info("=".repeat(80), { tags: ["eval"] });
+  logger.info(`Summary: ${passed}/${results.length} passed (${failed} failed)`, { tags: ["eval"] });
+  logger.info(`Avg latency: ${avgLatency}ms | Total tokens: ${totalTokensIn} in / ${totalTokensOut} out`, { tags: ["eval"] });
+  logger.info("=".repeat(80), { tags: ["eval"] });
 
   await getDal().close();
 
@@ -214,6 +204,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("[eval] Fatal error:", err);
+  logger.error("Fatal error", { tags: ["eval"], error: err });
   process.exit(1);
 });

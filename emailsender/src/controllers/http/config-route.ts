@@ -28,6 +28,7 @@ import {
   AuthError,
   RbacDeniedError,
   mapDalError,
+  logger,
 } from "@primebrick/sdk";
 import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
 
@@ -222,7 +223,8 @@ export async function configRouteHandler(
       sendJson(res, mapped.status, mapped.body);
       return true;
     }
-    console.error("[emailsender] Config route error:", {
+    logger.error("Config route error", {
+      tags: ["emailsender"],
       message: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
       name: err instanceof Error ? err.name : undefined,

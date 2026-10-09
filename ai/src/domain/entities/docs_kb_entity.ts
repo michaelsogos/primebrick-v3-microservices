@@ -2,7 +2,7 @@
  * docs_kb entity — knowledge base chunks with pgvector embedding.
  *
  * Each row is a chunk of documentation (MDX, OpenAPI spec, or auto-generated
- * reference doc) that has been embedded into a 384-dim vector for RAG retrieval.
+ * reference doc) that has been embedded into a vector for RAG retrieval.
  *
  * The table is created in the public schema (not the ai schema) because it is
  * shared with the BE for MCP entity registry access and vector search.
@@ -33,7 +33,7 @@ export class DocsKbEntity {
   @Column({ nullable: false, pgType: "text" })
   content!: string;
 
-  // vector(384) — stored as string for DAL compatibility, queried via raw SQL.
+  // vector(1024) — stored as string for DAL compatibility, queried via raw SQL.
   // The DAL does not natively support pgvector types; vector search is done
   // via raw SQL in the DocsKbRepository.
   @Column({ nullable: false, pgType: "text" })

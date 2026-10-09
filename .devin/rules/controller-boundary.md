@@ -5,9 +5,9 @@ trigger: always_on
 # Devin Rule: Controller Boundary (MVC transport layer)
 
 ## Trigger
-- Applies to ALL code in `src/controllers/` (per microservice: `<us>/src/controllers/`) (http/, nats-req/, nats-sub/),
-  and to any file handling an HTTP request, NATS request-reply, or NATS
-  subscription.
+- Applies to ALL code in `src/controllers/` (per microservice: `<us>/src/controllers/`) (http/, nats-sub/;
+  nats-req/ is DEPRECATED — NATS req/res is banned), and to any file
+  handling an HTTP request or NATS subscription.
 
 ## Architecture
 
@@ -15,7 +15,7 @@ trigger: always_on
 src/
   controllers/            # transport adapters ONLY — no business logic
     http/                 # HTTP route handlers
-    nats-req/             # NATS request-reply endpoints (subscribeRequest)
+    nats-req/             # DEPRECATED — NATS req/res banned; do NOT add files here
     nats-sub/             # NATS pub/sub + JetStream subscribers
   services/               # transport-agnostic business logic
 ```
@@ -46,11 +46,13 @@ Services are pure `(validatedInput, ctx) → result | throw`:
 - zero `req`/`res`/Msg imports — no transport types
 - `ctx` carries actor, permissions, correlation id — assembled by the
   controller
-- the same service must be callable identically from http/, nats-req/,
-  and nats-sub/ controllers
+- the same service must be callable identically from http/ and nats-sub/
+  controllers
 
 ## Why
 
-One operation must be invocable over HTTP and NATS without duplicating
-auth/validation/dispatch. HTTP endpoints progressively migrate to
-`nats-req`; only the controller file moves — the service is untouched.
+One operation must be invocable over HTTP and NATS pub/sub without
+duplicating auth/validation/dispatch — only the controller file changes,
+the service is untouched. (NATS req/res was benchmarked and rejected:
+~1.5× slower than the HTTP proxy, no durability/ordering, identical auth
+code-flow when done correctly.)

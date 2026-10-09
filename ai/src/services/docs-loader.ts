@@ -14,6 +14,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
 import { parseMdxFrontmatter } from "./chunking.js";
+import { logger } from "@primebrick/sdk";
 
 export interface LoadedDoc {
   repo: string;
@@ -73,7 +74,7 @@ export function loadMdxDocs(docsPath: string): LoadedDoc[] {
         },
       });
     } catch (err) {
-      console.warn(`Failed to load MDX ${filePath}:`, err instanceof Error ? err.message : err);
+      logger.warn(`Failed to load MDX ${filePath}`, { tags: ["docs-loader"], error: err instanceof Error ? err.message : err });
     }
   }
 
@@ -127,7 +128,7 @@ export function loadOpenApiSpecs(openApiPath: string): LoadedDoc[] {
         }
       }
     } catch (err) {
-      console.warn(`Failed to load OpenAPI ${filePath}:`, err instanceof Error ? err.message : err);
+      logger.warn(`Failed to load OpenAPI ${filePath}`, { tags: ["docs-loader"], error: err instanceof Error ? err.message : err });
     }
   }
 

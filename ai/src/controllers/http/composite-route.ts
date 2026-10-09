@@ -23,6 +23,7 @@ import {
   listRecentTelemetry,
 } from "../../services/telemetry-repository.js";
 import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
+import { getEmbeddingProvider } from "../../services/embedding-provider.js";
 import { checkRateLimit } from "../../services/rate-limiter.js";
 
 /**
@@ -98,6 +99,15 @@ export async function compositeRouteHandler(
   // ─── Telemetry endpoint (admin only — aggregate stats + recent requests) ────
   if (url.pathname === "/api/v1/ai/telemetry" && req.method === "GET") {
     return handleGetTelemetry(req, res);
+  }
+
+  // ─── Query-embedding endpoint — called by the BE docs/search when the
+  //     caller passes raw `query` text instead of a precomputed embedding.
+  //     Server-side by design: the FE never embeds. Works regardless of the
+  //     heavy LLM container (mistral.rs) — the provider is a separate
+  //     transformers.js CPU pipeline. ───
+  if (url.pathname === "/api/v1/ai/embed" && req.method === "POST") {
+    return handleEmbed(req, res);
   }
 
   // ─── Re-index endpoint (admin only — triggers the embedding pipeline) ───────
@@ -449,6 +459,34 @@ async function handleGetTelemetry(req: IncomingMessage, res: ServerResponse): Pr
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ stats, recent }));
   return true;
+}
+
+// ─── Embed handler ──────────────────────────────────────────────────────────
+
+async function handleEmbed(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
+  const { userUuid } = getUserInfo(req);
+  if (!userUuid) {
+    sendError(res, 401, "Unauthorized", "Missing x-user-id header.");
+    return true;
+  }
+  const body = await readJsonBody(req) as { text?: string; kind?: string };
+  if (!body.text || typeof body.text !== "string") {
+    sendError(res, 400, "Bad Request", "Missing 'text' field in request body.");
+    return true;
+  }
+  try {
+    const provider = await getEmbeddingProvider();
+    // kind="query" uses the instruct-style query prefix (asymmetric retrieval);
+    // anything else is embedded as a passage.
+    const embedding =
+      body.kind === "query" ? await provider.embedQuery(body.text) : await provider.embed(body.text);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ embedding, model: provider.name, dim: provider.dimension }));
+    return true;
+  } catch (err) {
+    sendError(res, 500, "Embedding Failed", err instanceof Error ? err.message : String(err));
+    return true;
+  }
 }
 
 // ─── Re-index handler (admin only) ──────────────────────────────────────────

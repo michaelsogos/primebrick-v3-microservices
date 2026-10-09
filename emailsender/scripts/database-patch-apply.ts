@@ -3,7 +3,7 @@
 import "dotenv/config";
 import { Pool } from "pg";
 import { join } from "node:path";
-import { applyPatches } from "@primebrick/sdk";
+import { applyPatches, logger } from "@primebrick/sdk";
 import { DatabaseAdapter } from "../src/adapters/database-adapter.js";
 
 const PATCHES_DIR = join(process.cwd(), "db-meta", "patches");
@@ -17,13 +17,13 @@ async function main() {
 
   try {
     const result = await applyPatches(PATCHES_DIR, db);
-    console.log(`Migration complete: ${result.appliedOrRegistered} applied/registered, ${result.skipped} skipped.`);
+    logger.info(`Migration complete: ${result.appliedOrRegistered} applied/registered, ${result.skipped} skipped.`, { tags: ["db-patches"] });
   } finally {
     await pool.end();
   }
 }
 
 main().catch((err) => {
-  console.error(err);
+  logger.error("Migration failed", { tags: ["db-patches"], error: err });
   process.exit(1);
 });

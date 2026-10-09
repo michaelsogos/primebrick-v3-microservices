@@ -22,6 +22,7 @@ import {
   NatsClient,
   AuthError,
   type ApiKeyPort,
+  logger,
 } from "@primebrick/sdk";
 import { lookupService } from "../../registry/registry-cache.js";
 import { CachedApiKeyPort } from "../../auth/precheck-port.js";
@@ -130,19 +131,17 @@ export async function webhookRouteHandler(
       sendRfcError(res, 400, "Invalid JSON", "Request body is not valid JSON", "WEBHOOK_INVALID_BODY", "LOW");
       return true;
     }
-    console.error("[webhook] publish error:", {
-      message: error instanceof Error ? error.message : String(error),
-      service: serviceCode,
-      intent,
+    logger.error("publish error", {
+      tags: ["webhook"],
+      error: {
+        message: error instanceof Error ? error.message : String(error),
+        service: serviceCode,
+        intent,
+      },
     });
     // JetStream publish failed or NATS down — provider must retry.
     sendRfcError(
-      res,
-      502,
-      "Delivery Failed",
-      error instanceof Error ? error.message : "failed to queue webhook",
-      "WEBHOOK_DELIVERY_FAILED",
-    );
+      res, 502, "Delivery Failed", error instanceof Error ? error.message : "failed to queue webhook", "WEBHOOK_DELIVERY_FAILED", );
   }
   return true;
 }
@@ -150,5 +149,5 @@ export async function webhookRouteHandler(
 /** Idempotent stream setup — called once at boot. */
 export async function ensureWebhookStream(): Promise<void> {
   await NatsClient.ensureStream(WEBHOOK_STREAM, [`${SUBJECT_PREFIX}.>`]);
-  console.log(`[webhook] JetStream stream ${WEBHOOK_STREAM} ensured`);
+  logger.info(`JetStream stream ${WEBHOOK_STREAM} ensured`, { tags: ["webhook"] });
 }

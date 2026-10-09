@@ -26,6 +26,7 @@ import {
   AuthError,
   RbacDeniedError,
   mapDalError,
+  logger,
 } from "@primebrick/sdk";
 import { ProviderEntity } from "../../domain/entities/provider_entity.js";
 
@@ -288,13 +289,13 @@ export async function providersRouteHandler(
       sendJson(res, mapped.status, mapped.body);
       return true;
     }
-    console.error("[emailsender] Providers route error:", {
+    logger.error("Providers route error", { tags: ["emailsender"], error: {
       message: err instanceof Error ? err.message : String(err),
       stack: err instanceof Error ? err.stack : undefined,
       name: err instanceof Error ? err.name : undefined,
       path,
       method: req.method,
-    });
+    } });
     sendError(res, 500, "Internal server error", "internal-error", { instance: path });
     return true;
   }

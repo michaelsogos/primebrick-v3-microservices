@@ -113,6 +113,20 @@ only shared table is `public.service_registry`, which lives in the
 - **Schema override:** the `@Entity` decorator accepts an optional second
   argument for the schema name (e.g. `@Entity("service_registry", "public")`)
 
+**Single DAL API**: services use `getDal()` only — the `pg` pool is internal
+to the `Dal` object and must never be touched by consumers.
+
+**Audit vs events**: every entity write produces (a) the persistent
+`{table}_audit` row via dal-pg `AuditPort` and (b) an entity-changed event
+signal for whoever subscribes — two separate mechanisms; the BE's
+collaboration/SSE layer is just one consumer of the event.
+
+**Translations are per-module**: each microservice owns
+`<schema>.translations` (e.g. `emailsender.translations`) for its module
+keys; `app.*` keys are global and live in `public.translations` (BE-owned),
+`system.*` in `system.translations`. The BE's translations gateway manages
+CRUD across module tables.
+
 ## Next steps
 
 - [Conventions](/user-guide/microservices/conventions) — API path conventions, data model rules
