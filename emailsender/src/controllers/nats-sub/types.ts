@@ -9,6 +9,9 @@ export interface SendEmailRequest {
   entityTable?: string;
   entityId?: bigint;
   entityUuid?: string;
+  /** Audit metadata — the real session actor that triggered the send
+   *  (the authorizing identity is the synthetic is_system user). */
+  initiatedBy?: string;
 }
 
 export interface SendEmailResponse {

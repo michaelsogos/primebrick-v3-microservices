@@ -6,7 +6,6 @@ import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.
 import { EmailService } from "./services/email-service.js";
 import { subscribeToWebhooks, setWebhookApiKeyPort } from "./controllers/nats-sub/webhook-subscriber.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
-import { setNatsAuthConfig } from "./controllers/nats-sub/email-send.js";
 import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/auth-ports-adapter.js";
 import {
   ConfigRepositoryAdapter,
@@ -48,7 +47,6 @@ async function main(): Promise<void> {
       (cfg, apiKeyPort) => {
         if (!apiKeyPort) return;
         setWebhookApiKeyPort(apiKeyPort);
-        setNatsAuthConfig(cfg);
       },
     ],
 

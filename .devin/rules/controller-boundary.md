@@ -6,7 +6,7 @@ trigger: always_on
 
 ## Trigger
 - Applies to ALL code in `src/controllers/` (per microservice: `<us>/src/controllers/`) (http/, nats-sub/;
-  nats-req/ is DEPRECATED — NATS req/res is banned), and to any file
+  NATS req/res is banned — sync replies use `callNats`/`makeNatsRequestRoute`), and to any file
   handling an HTTP request or NATS subscription.
 
 ## Architecture
@@ -15,8 +15,16 @@ trigger: always_on
 src/
   controllers/            # transport adapters ONLY — no business logic
     http/                 # HTTP route handlers
-    nats-req/             # DEPRECATED — NATS req/res banned; do NOT add files here
+    nats-sub/             # includes governed correlation-reply request routes
     nats-sub/             # NATS pub/sub + JetStream subscribers
+    #                    # EVERY inbound NATS route/subscriber runs TWO layers:
+    #                    # 1) client shield (UA+key vs client_registry) — governs
+    #                    #    WHO may publish; 2) user shield (gateway secret +
+    #                    #    AuthUser + RBAC) — governs WHICH actor accesses the
+    #                    #    resource. Use makeNatsRoutes/makeNatsRequestRoute
+    #                    # (shield-first built in) or subscribeShielded for
+    #                    #    broadcasts. Raw NatsClient.subscribe on shared
+    #                    #    subjects is a security gap.
   services/               # transport-agnostic business logic
 ```
 
