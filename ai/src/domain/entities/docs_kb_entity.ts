@@ -13,7 +13,7 @@ import {
   Column,
 } from "@primebrick/dal-pg";
 
-@Entity("docs_kb", "public")
+@Entity("docs_kb", "ai")
 export class DocsKbEntity {
   @Key()
   id!: bigint;

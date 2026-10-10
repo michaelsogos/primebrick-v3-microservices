@@ -5,6 +5,8 @@ import { createMicroservice, logger, composeRouteHandlers, pgServerBanner } from
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
 import { compositeRouteHandler, setBeBaseUrl } from "./controllers/http/composite-route.js";
+import { aiEntityRouteHandler } from "./controllers/http/entities-route.js";
+import { docsSearchRouteHandler } from "./controllers/http/docs-search-route.js";
 import { openapiRouteHandler } from "./openapi.js";
 import {
   ConfigRepositoryAdapter,
@@ -35,7 +37,7 @@ async function main(): Promise<void> {
     // Lazy: getDal() only works after initDal ran inside createMicroservice.
     healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
 
-    routeHandler: composeRouteHandlers(openapiRouteHandler, compositeRouteHandler),
+    routeHandler: composeRouteHandlers(openapiRouteHandler, compositeRouteHandler, aiEntityRouteHandler, docsSearchRouteHandler),
 
     customHealthChecks: {
       llm: async () => new HealthCheckAdapter(getDal().getPool()).checkLlm(aiConfig("llm_base_url") ?? "http://localhost:8080/v1"),
