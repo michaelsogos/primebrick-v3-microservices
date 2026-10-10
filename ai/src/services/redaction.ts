@@ -2,7 +2,7 @@
  * PII redaction — masks sensitive fields in user messages before sending
  * them to a cloud LLM.
  *
- * Activated only when `REDACT_PII=true` is set in the environment (typically
+ * Activated only when `redact_pii=true` is set in ai.config_entries (typically
  * only when using a cloud LLM provider like OpenAI/Anthropic). When using a
  * self-hosted LLM (the default), redaction is OFF because the data never
  * leaves the infrastructure.
@@ -17,6 +17,8 @@
  * echo back the real PII in its response.
  */
 
+import { aiConfig } from "../config/ai-config.js";
+
 const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
 // E.164 (+1234567890) or common formats (+1 234-567-8900, +44 20 7946 0958)
 const PHONE_RE = /(?:\+?\d{1,3}[\s.-]?)?\(?\d{1,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}\b/g;
@@ -24,10 +26,10 @@ const PHONE_RE = /(?:\+?\d{1,3}[\s.-]?)?\(?\d{1,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4
 const CARD_RE = /\b(?:\d[ -]*?){13,16}\b/g;
 
 /**
- * Check if PII redaction is enabled (REDACT_PII=true env var).
+ * Check if PII redaction is enabled (redact_pii=true in ai.config_entries).
  */
 export function isRedactionEnabled(): boolean {
-  return process.env.REDACT_PII === "true";
+  return aiConfig("redact_pii") === "true";
 }
 
 /**

@@ -10,6 +10,8 @@
  * The 384-dim vector is stored in docs_kb.embedding (vector(384) pgvector column).
  */
 
+import { aiConfig } from "../config/ai-config.js";
+
 export type EmbedKind = "query" | "passage";
 
 export interface EmbeddingProvider {
@@ -59,10 +61,10 @@ class TransformersEmbeddingProvider implements EmbeddingProvider {
     const isE5Instruct = /e5.*instruct/i.test(model);
     const instruct = isE5Instruct || /bge-m3|qwen3-embedding/i.test(model);
     this.queryPrefix =
-      process.env.EMBEDDING_QUERY_PREFIX ??
+      aiConfig("embedding_query_prefix") ??
       (isE5Instruct ? "Instruct: Retrieve relevant documentation passages.\nQuery: " : instruct ? "query: " : "");
     this.passagePrefix =
-      process.env.EMBEDDING_PASSAGE_PREFIX ??
+      aiConfig("embedding_passage_prefix") ??
       (isE5Instruct ? "" : instruct ? "passage: " : "");
   }
 
@@ -70,14 +72,14 @@ class TransformersEmbeddingProvider implements EmbeddingProvider {
     if (this.pipeline) return this.pipeline;
     const { pipeline, env } = await import("@huggingface/transformers");
     // Prefer the local model cache (offline/dev), remote download as fallback
-    // on first use when the model isn't cached yet. EMBEDDING_LOCAL_ONLY=1
+    // on first use when the model isn't cached yet. embedding_local_only=true
     // disables remote access entirely.
     env.allowLocalModels = true;
-    env.allowRemoteModels = process.env.EMBEDDING_LOCAL_ONLY !== "1";
+    env.allowRemoteModels = aiConfig("embedding_local_only") !== "true";
     const extractor = await pipeline("feature-extraction", this.model, {
       // q8 keeps the CPU footprint sane on >500M models (e5-large int8 ≈535MB);
-      // overridable via env for quality experiments.
-      dtype: (process.env.EMBEDDING_DTYPE ?? "q8") as "q8",
+      // overridable via config for quality experiments.
+      dtype: (aiConfig("embedding_dtype") ?? "q8") as "q8",
     });
     this.pipeline = extractor as unknown as typeof this.pipeline;
     return this.pipeline;
@@ -169,32 +171,32 @@ let cachedProvider: EmbeddingProvider | null = null;
 /**
  * Get the configured embedding provider.
  *
- * Config (env vars):
- * - EMBEDDING_PROVIDER: "transformers" (default) | "openai"
- * - EMBEDDING_MODEL: model name (default: intfloat/multilingual-e5-large-instruct)
- * - EMBEDDING_BASE_URL: OpenAI-compatible base URL (for provider=openai)
- * - EMBEDDING_API_KEY: API key (for provider=openai)
- * - EMBEDDING_DIM: vector dimension (provider=openai only; transformers.js
+ * Config (ai.config_entries — env-policy: no env vars besides DATABASE_URL):
+ * - embedding_provider: "transformers" (default) | "openai"
+ * - embedding_model: model name (default: lmo3/multilingual-e5-large-instruct)
+ * - embedding_base_url: OpenAI-compatible base URL (for provider=openai)
+ * - embedding_api_key: API key (for provider=openai)
+ * - embedding_dim: vector dimension (provider=openai only; transformers.js
  *   measures it from the first real output)
- * - EMBEDDING_QUERY_PREFIX / EMBEDDING_PASSAGE_PREFIX: instruct-model
+ * - embedding_query_prefix / embedding_passage_prefix: instruct-model
  *   prefixes (auto-detected for e5/bge/qwen3-embedding ids)
  */
 export async function getEmbeddingProvider(): Promise<EmbeddingProvider> {
   if (cachedProvider) return cachedProvider;
 
-  const providerType = (process.env.EMBEDDING_PROVIDER || "transformers").toLowerCase();
+  const providerType = (aiConfig("embedding_provider") ?? "transformers").toLowerCase();
 
   if (providerType === "openai") {
-    const baseUrl = process.env.EMBEDDING_BASE_URL;
-    const apiKey = process.env.EMBEDDING_API_KEY;
-    const model = process.env.EMBEDDING_MODEL || "text-embedding-3-small";
-    const dimension = parseInt(process.env.EMBEDDING_DIM || "384", 10);
+    const baseUrl = aiConfig("embedding_base_url");
+    const apiKey = aiConfig("embedding_api_key");
+    const model = aiConfig("embedding_model") ?? "text-embedding-3-small";
+    const dimension = parseInt(aiConfig("embedding_dim") ?? "384", 10);
     if (!baseUrl || !apiKey) {
-      throw new Error("EMBEDDING_PROVIDER=openai requires EMBEDDING_BASE_URL and EMBEDDING_API_KEY");
+      throw new Error("embedding_provider=openai requires embedding_base_url and embedding_api_key in ai.config_entries");
     }
     cachedProvider = new OpenAICompatibleEmbeddingProvider({ baseUrl, apiKey, model, dimension });
   } else {
-    const model = process.env.EMBEDDING_MODEL || "lmo3/multilingual-e5-large-instruct";
+    const model = aiConfig("embedding_model") ?? "lmo3/multilingual-e5-large-instruct";
     cachedProvider = new TransformersEmbeddingProvider(model);
   }
 

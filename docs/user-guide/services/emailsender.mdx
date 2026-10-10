@@ -11,7 +11,7 @@ receives send requests over NATS (not HTTP) and exposes provider/config
 management via HTTP entity CRUD routes proxied through the Backend.
 
 - **Package:** `primebrick-emailsender`
-- **Service code:** `EMAILSENDER`
+- **Service code:** `emailsender`
 - **Default port:** `3003`
 - **Runtime:** Bun (dev: `bun --hot`, prod: `bun dist/index.js`)
 - **Database schema:** `emailsender` (isolated per-service schema)
@@ -226,10 +226,12 @@ Called by the `POST /webhook` route. Flow:
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | yes | — | PostgreSQL® connection string |
 | `DB_SCHEMA` | no | `emailsender` | Database schema name |
-| `SERVICE_BASE_URL` | no | `http://localhost:3003` | Exposed URL for BE proxy routing (dynamic in Docker™) |
 
-Additional config (NATS™ URL, HTTP port, service code) is loaded from the
-`config_entries` table at startup via `ConfigLoader` — not from env vars.
+These are the **only** env-sourced settings. Everything else — `nats_url`,
+`service_code`, `http_port`, `service_base_url` (exposed URL for BE proxy
+routing, dynamic in Docker™), `service_client_shield_key`, `be_base_url` —
+is loaded from the `emailsender.config_entries` table at startup via
+`ConfigLoader`.
 
 The `BREVO_API_KEY` is NOT an env var. It is stored in the `providers`
 table and set up by admin users via the FE (`POST /api/v1/entities/provider`).

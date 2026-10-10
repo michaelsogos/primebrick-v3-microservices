@@ -25,11 +25,6 @@ async function main(): Promise<void> {
     envSchema: {
       DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
       DB_SCHEMA: { required: false, default: "webhook", description: "Database schema name" },
-      SERVICE_BASE_URL: {
-        required: false,
-        default: "http://localhost:3005",
-        description: "Exposed URL (public webhook ingress, dynamic host port in Docker)",
-      },
     },
 
     initDal,

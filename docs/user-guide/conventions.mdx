@@ -11,6 +11,14 @@ All HTTP routes in microservices follow standardized path conventions so
 the BE's MCP Server can dispatch generic CRUD tools without per-entity
 configuration.
 
+**Route handlers are factory-produced (MANDATORY):** every route is declared
+as an `RpcRoute` and mounted via the SDK's `makeRpcRouter` (entity OpenAPI
+via `entityCrudSpec`, the spec endpoint via `makeOpenApiHandler`, composites
+via `composeRouteHandlers`). `createMicroservice` refuses to boot with a
+hand-rolled `(req, res, url) => boolean` handler — auth, RBAC, body
+validation and RFC 7807 errors are enforced by the factory, not by
+convention.
+
 ### Entity CRUD (`/api/v1/entities/:entity/...`)
 
 Database-backed entities with standard CRUD lifecycle use this pattern:

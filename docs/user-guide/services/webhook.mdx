@@ -1,6 +1,6 @@
 ---
 title: Webhook Ingress
-description: "Database-less webhook router that authenticates API keys, checks service registration, and queues events through JetStream."
+description: "Webhook ingress router that authenticates API keys, checks service registration, and queues events through JetStream."
 ---
 
 # Webhook Ingress
@@ -10,7 +10,7 @@ The `webhook` microservice exposes a provider-agnostic HTTP ingress. It verifies
 - **Package:** `primebrick-webhook`
 - **Service code:** `webhook`
 - **Runtime:** Bun (`bun --hot src/index.ts` in development; `bun dist/index.js` in production)
-- **Database:** none; API-key and service-registry lookups are delegated to the Backend over NATS
+- **Database:** `webhook` schema — owns only its `config_entries` table; API-key and service-registry lookups are delegated to the Backend over NATS
 
 ## HTTP route
 
@@ -85,15 +85,18 @@ Errors use the RFC 7807-style JSON shape with `type`, `title`, `status`, `detail
 
 ## Configuration and deployment
 
-The service uses `createMicroservice` and has no database migration or provider-specific configuration. Configure:
+The service uses `createMicroservice`. Following the env policy, only the
+database bootstrap comes from env:
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `NATS_URL` | `nats://127.0.0.1:4222` | NATS connection used for registry, API-key lookup, and JetStream |
-| `SERVICE_BASE_URL` | `http://localhost:3004` | Public URL advertised in the service registry |
-| `GATEWAY_SECRET` | — | Shared gateway secret used by the SDK auth configuration |
+| Variable | Required | Default | Purpose |
+|----------|----------|---------|---------|
+| `DATABASE_URL` | yes | — | PostgreSQL connection string (owns the `webhook.config_entries` table) |
+| `DB_SCHEMA` | no | `webhook` | Database schema name |
 
-The HTTP listener port is supplied to the SDK through the `http_port` configuration entry; it is distinct from the advertised `SERVICE_BASE_URL`. Set `GATEWAY_SECRET` to the deployment's configured secret; the `.env.example` value is only a placeholder.
+Everything else lives in `webhook.config_entries` and is loaded by
+`ConfigLoader` at startup: `nats_url`, `service_code`, `http_port`,
+`service_base_url` (public URL advertised in the registry), and
+`service_client_shield_key`.
 
 For local development and build commands:
 

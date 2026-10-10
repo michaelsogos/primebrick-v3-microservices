@@ -13,6 +13,7 @@ import { streamText, tool, stepCountIs, type ModelMessage } from "ai";
 import { z } from "zod";
 import { createMCPClient, type MCPClient } from "@ai-sdk/mcp";
 import { getLlmModel } from "./llm-provider.js";
+import { aiConfig } from "../config/ai-config.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
 import { vectorSearch } from "./docs-kb-repository.js";
 import { buildSystemPrompt } from "./system-prompt.js";
@@ -154,7 +155,7 @@ export async function orchestrate(
   try {
     // 1. Get the LLM model
     const model = getLlmModel();
-    const modelName = process.env.LLM_MODEL || "unknown";
+    const modelName = aiConfig("llm_model") || "unknown";
 
     // 2. Connect to MCP server and get tools
     const { tools: mcpTools, client } = await getMcpTools(config.beBaseUrl, config.userJwt);
@@ -273,7 +274,7 @@ export async function orchestrate(
     void insertTelemetry({
       conversation_uuid: config.conversationUuid,
       user_uuid: config.userUuid,
-      model: process.env.LLM_MODEL || "unknown",
+      model: aiConfig("llm_model") || "unknown",
       tokens_in: 0,
       tokens_out: 0,
       steps: 0,

@@ -4,10 +4,11 @@
  * metadata (`entityCrudSpec`) — it always reflects the declared operation
  * set instead of drifting from a hand-maintained object.
  *
+ * The route itself is factory-produced via `makeOpenApiHandler` so it
+ * passes createMicroservice's route-handler enforcement.
  */
 
-import type { IncomingMessage, ServerResponse } from "http";
-import { buildOpenApiSpec, entityCrudSpec } from "@primebrick/sdk";
+import { buildOpenApiSpec, entityCrudSpec, makeOpenApiHandler } from "@primebrick/sdk";
 
 export const OPENAPI_SPEC = buildOpenApiSpec({
   info: {
@@ -15,7 +16,7 @@ export const OPENAPI_SPEC = buildOpenApiSpec({
     version: "1.0.0",
     description: "Email provider configuration and email sending microservice",
   },
-  serverUrl: "http://localhost:3002",
+  serverUrl: "http://localhost:3003",
   tags: [
     { name: "providers", description: "Email provider configuration entities" },
     { name: "config_entries", description: "Module configuration key-value entries" },
@@ -72,15 +73,5 @@ export const OPENAPI_SPEC = buildOpenApiSpec({
   },
 });
 
-export async function openapiRouteHandler(
-  req: IncomingMessage,
-  res: ServerResponse,
-  url: URL,
-): Promise<boolean> {
-  if (url.pathname === "/api/v1/openapi.json" && req.method === "GET") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(OPENAPI_SPEC));
-    return true;
-  }
-  return false;
-}
+/** OpenAPI handler — factory-produced, mounted by composite-route. */
+export const openapiRouteHandler = makeOpenApiHandler(OPENAPI_SPEC);

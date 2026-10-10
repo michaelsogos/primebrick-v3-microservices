@@ -60,6 +60,8 @@ export async function subscribeToEmailSendRequests(
         );
       }
     },
+    // Work item: exactly one emailsender replica processes each request.
+    { queue: "emailsender" },
   );
 }
 

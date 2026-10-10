@@ -1,23 +1,17 @@
 /**
- * Composite route handler — chains all HTTP route handlers.
- * Tries each handler in order; the first one that returns true handles the request.
+ * Composite route handler — composes factory-produced handlers only:
+ * the OpenAPI handler (makeOpenApiHandler) plus the RPC router
+ * (makeRpcRouter) covering every entity route.
  */
 
-import type { IncomingMessage, ServerResponse } from "http";
+import { composeRouteHandlers, makeRpcRouter } from "@primebrick/sdk";
 import { openapiRouteHandler } from "./openapi-route.js";
-import { providersRouteHandler } from "./providers-route.js";
-import { configRouteHandler } from "./config-route.js";
+import { providerRoutes } from "./providers-route.js";
+import { configEntryRoutes } from "./config-route.js";
 
-export async function compositeRouteHandler(
-  req: IncomingMessage,
-  res: ServerResponse,
-  url: URL,
-): Promise<boolean> {
-  // Try openapi first (public, no auth)
-  if (await openapiRouteHandler(req, res, url)) return true;
-  // Then providers (auth + RBAC)
-  if (await providersRouteHandler(req, res, url)) return true;
-  // Then config (auth + RBAC)
-  if (await configRouteHandler(req, res, url)) return true;
-  return false;
-}
+export const compositeRouteHandler = composeRouteHandlers(
+  // openapi first (public, no auth)
+  openapiRouteHandler,
+  // then entity routes (auth + RBAC + validation via makeRpcRouter)
+  makeRpcRouter([...providerRoutes, ...configEntryRoutes]),
+);

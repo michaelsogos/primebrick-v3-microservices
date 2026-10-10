@@ -6,8 +6,6 @@ import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.
 import { EmailService } from "./services/email-service.js";
 import { subscribeToWebhooks, setWebhookApiKeyPort } from "./controllers/nats-sub/webhook-subscriber.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
-import { providersRouteHandler, setAuthDependencies } from "./controllers/http/providers-route.js";
-import { configRouteHandler, setAuthDependencies as setConfigAuthDependencies } from "./controllers/http/config-route.js";
 import { setNatsAuthConfig } from "./controllers/nats-sub/email-send.js";
 import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/auth-ports-adapter.js";
 import {
@@ -26,7 +24,6 @@ async function main(): Promise<void> {
     envSchema: {
       DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
       DB_SCHEMA: { required: false, default: "emailsender", description: "Database schema name" },
-      SERVICE_BASE_URL: { required: false, default: "http://localhost:3003", description: "Exposed URL for BE proxy routing (dynamic host port in Docker)" },
     },
 
     initDal,
@@ -50,8 +47,6 @@ async function main(): Promise<void> {
     authDependencySetters: [
       (cfg, apiKeyPort) => {
         if (!apiKeyPort) return;
-        setAuthDependencies(cfg, apiKeyPort);
-        setConfigAuthDependencies(cfg, apiKeyPort);
         setWebhookApiKeyPort(apiKeyPort);
         setNatsAuthConfig(cfg);
       },

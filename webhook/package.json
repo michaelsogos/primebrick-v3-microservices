@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "primebrick-webhook",
   "version": "0.6.0",
   "capabilities": [
@@ -13,6 +14,7 @@
     "version:auto": "node ../scripts/version-sync.mjs",
     "prebuild": "node ../scripts/version-sync.mjs",
     "dev": "bun --hot src/index.ts",
+    "db:migrate": "bun scripts/database-patch-apply.ts",
     "build": "tsc",
     "prestart": "pnpm run build",
     "start": "bun dist/index.js",

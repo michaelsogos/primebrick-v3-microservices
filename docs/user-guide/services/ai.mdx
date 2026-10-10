@@ -127,14 +127,15 @@ handled by the gateway (headers: `x-user-id`, `Authorization: Bearer <jwt>`).
 The chat endpoint uses a token bucket algorithm per user (identified by
 `x-user-id` header). Configuration:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AI_RATE_LIMIT_CAPACITY` | `10` | Max tokens in bucket per user |
-| `AI_RATE_LIMIT_REFILL_RATE` | `1` | Tokens refilled per second |
-| `AI_RATE_LIMIT_TOKEN_COST` | `1` | Tokens consumed per chat request |
+| Config key | Default | Description |
+|------------|---------|-------------|
+| `rate_limit_capacity` | `10` | Max tokens in bucket per user |
+| `rate_limit_refill_rate` | `1` | Tokens refilled per second |
+| `rate_limit_token_cost` | `1` | Tokens consumed per chat request |
 
-If `REDIS_URL` is set, rate limiting is distributed across instances.
-Otherwise, an in-memory token bucket is used (single-instance only).
+If the shared `redis_url` config is set, rate limiting is distributed
+across instances. Otherwise, an in-memory token bucket is used
+(single-instance only).
 
 ## Database schema
 
@@ -234,23 +235,32 @@ The pipeline is idempotent — re-running it only re-embeds chunks whose source 
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
 | `DB_SCHEMA` | No | `ai` | Database schema |
-| `SERVICE_BASE_URL` | No | `http://localhost:3004` | Service URL for BE proxy |
-| `LLM_BASE_URL` | No | `http://localhost:8080/v1` | LLM endpoint (OpenAI-compatible) |
-| `LLM_MODEL` | No | `Qwen3-4B-Instruct-2507` | LLM model name |
-| `LLM_API_KEY` | No | `not-required` | LLM API key (not needed for local) |
-| `EMBEDDING_PROVIDER` | No | `transformers` | `transformers` or `openai` |
-| `EMBEDDING_MODEL` | No | `Xenova/all-MiniLM-L6-v2` | Embedding model |
-| `EMBEDDING_BASE_URL` | No | — | OpenAI-compatible embeddings URL |
-| `EMBEDDING_API_KEY` | No | — | Embeddings API key |
-| `EMBEDDING_DIM` | No | `384` | Vector dimension (OpenAI provider) |
-| `BE_BASE_URL` | No | `http://localhost:3001` | Backend URL for MCP client |
-| `REDACT_PII` | No | — | Set to `true` for cloud LLM PII redaction |
-| `REDIS_URL` | No | — | Redis URL for distributed rate limiting |
-| `AI_RATE_LIMIT_CAPACITY` | No | `10` | Rate limit bucket capacity |
-| `AI_RATE_LIMIT_REFILL_RATE` | No | `1` | Rate limit refill per second |
-| `AI_RATE_LIMIT_TOKEN_COST` | No | `1` | Tokens per chat request |
-| `DOCS_PATH` | No | `../../primebrick-v3-docs/pages` | MDX docs path |
-| `OPENAPI_PATH` | No | `../../primebrick-v3-docs/apis` | OpenAPI specs path |
+
+These are the **only** env-sourced settings (env policy). All runtime
+configuration lives in `ai.config_entries` and is read through
+`src/config/ai-config.ts`:
+
+| Config key | Default | Description |
+|------------|---------|-------------|
+| `service_base_url` | `http://localhost:3004` | Service URL for BE proxy |
+| `llm_base_url` | `http://localhost:8080/v1` | LLM endpoint (OpenAI-compatible) |
+| `llm_model` | `Qwen3-4B-Instruct-2507` | LLM model name |
+| `llm_api_key` | `not-required` | LLM API key (not needed for local) |
+| `embedding_provider` | `transformers` | `transformers` or `openai` |
+| `embedding_model` | `Xenova/all-MiniLM-L6-v2` | Embedding model |
+| `embedding_base_url` | — | OpenAI-compatible embeddings URL |
+| `embedding_api_key` | — | Embeddings API key |
+| `embedding_dim` | `384` | Vector dimension (OpenAI provider) |
+| `embedding_local_only` / `embedding_dtype` | `false` / `q8` | transformers.js runtime options |
+| `be_base_url` | `http://localhost:3001` | Backend URL for MCP client |
+| `redact_pii` | `false` | `true` for cloud LLM PII redaction |
+| `rate_limit_capacity` / `rate_limit_refill_rate` / `rate_limit_token_cost` | `10` / `1` / `1` | Chat token-bucket settings |
+| `docs_path` | `../../primebrick-v3-docs/pages` | MDX docs path |
+| `openapi_path` | `../../primebrick-v3-docs/apis` | OpenAPI specs path |
+| `nats_url`, `service_code`, `http_port`, `service_client_shield_key` | — | SDK bootstrap settings |
+
+Distributed rate limiting uses the shared `redis_url` key (BE-owned global
+config), not a service env var.
 
 ## LLM runtime
 

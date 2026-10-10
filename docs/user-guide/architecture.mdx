@@ -74,8 +74,10 @@ them with `verifyNatsMessage()`.
 
 Every microservice uses `@primebrick/sdk` for its lifecycle:
 
-1. **Environment validation** — `requireEnv()` validates required env vars
-   at startup
+1. **Environment validation** — `requireEnv()` validates the bootstrap env
+   vars at startup (`DATABASE_URL`, `DB_SCHEMA` — the only env-sourced
+   settings; all runtime config lives in the service's `config_entries`
+   table)
 2. **Config loading** — `ConfigLoader` reads the `config_entries` table for
    service-specific settings (NATS™ URL, HTTP port, service code)
 3. **Auth config** — `initAuthConfig()` + `loadAuthConfig()` set up
@@ -84,7 +86,11 @@ Every microservice uses `@primebrick/sdk` for its lifecycle:
 5. **Service registration** — `ServiceRegistrar.register()` publishes the
    register event, then `startHeartbeat()` begins periodic health checks
 6. **HTTP server** — `createHttpServer()` starts the HTTP listener with
-   health check and route handler
+   health check and route handler. The `routeHandler` MUST be
+   factory-produced (`makeRpcRouter` / `makeOpenApiHandler` /
+   `composeRouteHandlers`) — `createMicroservice` rejects arbitrary
+   handlers at startup, so the auth → RBAC → validation → RFC 7807 chain
+   cannot be bypassed
 7. **Graceful shutdown** — `GracefulShutdown` coordinator runs cleanup on
    SIGTERM/SIGINT: stop heartbeat → unregister → close NATS™ → close DB →
    close HTTP

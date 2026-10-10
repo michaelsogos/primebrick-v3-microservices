@@ -5,16 +5,15 @@
 -- Seed config keys with local dev defaults.
 -- In Docker, UPDATE nats_url after running this script:
 --   UPDATE emailsender.config_entries SET value = 'nats://primebrick-nats:4222' WHERE key = 'nats_url';
--- Note: service_base_url is NOT in config table — it stays as ENV var
--- (dynamic host port set by deploy script).
 -- Note: brevo_api_key and brevo_api_endpoint are NOT in config table — they
 -- come from the emailsender.providers table, set up by admin users via the FE.
 
 INSERT INTO "emailsender"."config_entries" ("key", "value", "label_key", "description_key", "created_by", "updated_by")
 VALUES
   ('nats_url', 'nats://127.0.0.1:4222', 'config.nats_url.label', 'config.nats_url.description', 'system', 'system'),
-  ('service_code', 'EMAILSENDER', 'config.service_code.label', 'config.service_code.description', 'system', 'system'),
-  ('http_port', '3003', 'config.http_port.label', 'config.http_port.description', 'system', 'system')
+  ('service_code', 'emailsender', 'config.service_code.label', 'config.service_code.description', 'system', 'system'),
+  ('http_port', '3003', 'config.http_port.label', 'config.http_port.description', 'system', 'system'),
+  ('service_base_url', 'http://localhost:3003', 'config.service_base_url.label', 'config.service_base_url.description', 'system', 'system')
 ON CONFLICT ("key") DO NOTHING;
 
 -- Seed a default Brevo provider record with a placeholder API key.
