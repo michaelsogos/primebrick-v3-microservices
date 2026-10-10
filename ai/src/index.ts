@@ -1,10 +1,11 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { join } from "node:path";
-import { createMicroservice, logger } from "@primebrick/sdk";
+import { createMicroservice, logger, composeRouteHandlers, pgServerBanner } from "@primebrick/sdk";
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
-import { compositeRouteHandler } from "./controllers/http/composite-route.js";
+import { compositeRouteHandler, setBeBaseUrl } from "./controllers/http/composite-route.js";
+import { openapiRouteHandler } from "./openapi.js";
 import {
   ConfigRepositoryAdapter,
   HealthCheckAdapter,
@@ -31,7 +32,6 @@ async function main(): Promise<void> {
       EMBEDDING_MODEL: { required: false, default: "lmo3/multilingual-e5-large-instruct", description: "Embedding model (HF id with ONNX weights; instruct models auto-get query/passage prefixes)" },
       EMBEDDING_QUERY_PREFIX: { required: false, description: "Query-side prefix override (auto: 'Instruct: …\\nQuery: ' for e5-instruct, 'query: ' for bge/qwen3-embedding)" },
       EMBEDDING_PASSAGE_PREFIX: { required: false, description: "Passage-side prefix override (auto: '' for e5-instruct, 'passage: ' for bge/qwen3-embedding)" },
-      BE_BASE_URL: { required: false, default: "http://localhost:3001", description: "Backend base URL for MCP client" },
       REDIS_URL: { required: false, description: "Redis URL for distributed rate limiting (optional, falls back to in-memory)" },
       AI_RATE_LIMIT_CAPACITY: { required: false, default: "10", description: "Rate limit: max tokens in bucket per user" },
       AI_RATE_LIMIT_REFILL_RATE: { required: false, default: "1", description: "Rate limit: tokens refilled per second" },
@@ -40,21 +40,22 @@ async function main(): Promise<void> {
 
     initDal,
     dalClose: async () => { await getDal().close(); },
+    dbBanner: () => pgServerBanner(getDal().getPool(), process.env.DATABASE_URL!),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new AiAuthConfigPort(configLoader),
     // Lazy: getDal() only works after initDal ran inside createMicroservice.
     healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
 
-    routeHandler: compositeRouteHandler,
+    routeHandler: composeRouteHandlers(openapiRouteHandler, compositeRouteHandler),
 
     customHealthChecks: {
       llm: async () => new HealthCheckAdapter(getDal().getPool()).checkLlm(llmBaseUrl),
     },
 
-    onReady: async () => {
-      // Phase 2.3 scaffold — NATS subscriptions will be added in later phases
-      logger.info("AI microservice scaffold ready", { tags: ["core"] });
+    onReady: async (ctx) => {
+      // MCP client target — module config, never env.
+      setBeBaseUrl(ctx.configLoader.require("be_base_url"));
 
       // Startup reconcile: incremental docs_kb reindex in background.
       // Hash-diff makes unchanged chunks free; the service stays usable

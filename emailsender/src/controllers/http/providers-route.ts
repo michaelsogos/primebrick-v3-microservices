@@ -178,7 +178,7 @@ export async function providersRouteHandler(
     }
 
     // GET /api/v1/entities/provider/:uuid — get single
-    const uuidMatch = path.match(/^\/api\/v1\/entities\/providers\/([^/]+)$/);
+    const uuidMatch = path.match(/^\/api\/v1\/entities\/provider\/([^/]+)$/);
     if (req.method === "GET" && uuidMatch) {
       enforceHttpRbac(user, [Permission.EMAILSENDER_PROVIDER_READ_SINGLE, Permission.EMAILSENDER_PROVIDER_READ_ALL]);
       let row: ProviderEntity | null = null;

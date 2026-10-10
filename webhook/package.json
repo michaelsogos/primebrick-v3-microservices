@@ -1,6 +1,9 @@
 {
   "name": "primebrick-webhook",
   "version": "0.6.0",
+  "capabilities": [
+    "webhook_ingress"
+  ],
   "private": true,
   "type": "module",
   "engines": {
@@ -17,12 +20,16 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "nats": "2.29.3",
+    "@primebrick/dal-pg": "workspace:*",
+    "@primebrick/sdk": "workspace:*",
     "dotenv": "17.4.2",
-    "@primebrick/sdk": "workspace:*"
+    "nats": "2.29.3",
+    "pg": "8.22.0",
+    "reflect-metadata": "0.2.2"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
+    "@types/pg": "8.20.0",
     "typescript": "6.0.3",
     "vite": "8.1.5",
     "vitest": "4.1.10"

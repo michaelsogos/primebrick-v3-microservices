@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { createMicroservice, logger } from "@primebrick/sdk";
+import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
 import { initDal, getDal } from "./db/dal.js";
 import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.js";
 import { EmailService } from "./services/email-service.js";
@@ -31,6 +31,7 @@ async function main(): Promise<void> {
 
     initDal,
     dalClose: async () => { await getDal().close(); },
+    dbBanner: () => pgServerBanner(getDal().getPool(), process.env.DATABASE_URL!),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new EmailSenderAuthConfigPort(configLoader),

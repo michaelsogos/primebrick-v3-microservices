@@ -1,6 +1,11 @@
 {
   "name": "primebrick-ai",
   "version": "0.6.0",
+  "capabilities": [
+    "llm_orchestrator",
+    "chat_orchestrator",
+    "vectorizing_engine"
+  ],
   "private": true,
   "type": "module",
   "engines": {

@@ -26,6 +26,14 @@ import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
 import { getEmbeddingProvider } from "../../services/embedding-provider.js";
 import { checkRateLimit } from "../../services/rate-limiter.js";
 
+// API gateway base URL — from module config `be_base_url` (never env).
+// Set once at startup by index.ts via setBeBaseUrl(); the MCP client call
+// below is the only consumer (slated for removal in B3).
+let beBaseUrl: string | undefined;
+export function setBeBaseUrl(url: string): void {
+  beBaseUrl = url;
+}
+
 /**
  * Composite route handler for the AI microservice.
  *
@@ -221,7 +229,10 @@ async function handleChat(req: IncomingMessage, res: ServerResponse): Promise<bo
   }
 
   // Determine BE base URL for MCP client
-  const beBaseUrl = process.env.BE_BASE_URL || "http://localhost:3001";
+  if (!beBaseUrl) {
+    sendError(res, 503, "Service Unavailable", "Module config 'be_base_url' is not set.");
+    return true;
+  }
 
   // Get or create conversation
   let conversationUuid = body.conversation_uuid;

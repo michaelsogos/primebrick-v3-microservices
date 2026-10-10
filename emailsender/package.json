@@ -1,6 +1,9 @@
 {
   "name": "primebrick-emailsender",
   "version": "0.6.0",
+  "capabilities": [
+    "email_sender"
+  ],
   "private": true,
   "type": "module",
   "engines": {
@@ -21,13 +24,13 @@
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
+    "@primebrick/dal-pg": "workspace:*",
+    "@primebrick/sdk": "workspace:*",
+    "dotenv": "17.4.2",
+    "handlebars": "4.7.9",
     "nats": "2.29.3",
     "pg": "8.22.0",
-    "dotenv": "17.4.2",
-    "reflect-metadata": "0.2.2",
-    "handlebars": "4.7.9",
-    "@primebrick/dal-pg": "workspace:*",
-    "@primebrick/sdk": "workspace:*"
+    "reflect-metadata": "0.2.2"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

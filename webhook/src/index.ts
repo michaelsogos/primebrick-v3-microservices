@@ -1,10 +1,10 @@
 import "dotenv/config";
-import { createMicroservice, logger } from "@primebrick/sdk";
-import {
-  EnvConfigPort,
-  EnvAuthConfigPort,
-  NoopHealthCheckPort,
-} from "./adapters/env-ports.js";
+import "reflect-metadata";
+import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
+import { initDal, getDal } from "./db/dal.js";
+import { ConfigRepositoryAdapter } from "./adapters/config-repository-adapter.js";
+import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
+import { WebhookAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { CachedApiKeyPort } from "./auth/precheck-port.js";
 import {
   webhookRouteHandler,
@@ -23,22 +23,30 @@ async function main(): Promise<void> {
     iconType: "icon",
 
     envSchema: {
+      DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
+      DB_SCHEMA: { required: false, default: "webhook", description: "Database schema name" },
       SERVICE_BASE_URL: {
         required: false,
-        default: "http://localhost:3004",
-        description: "Exposed URL (public webhook ingress)",
+        default: "http://localhost:3005",
+        description: "Exposed URL (public webhook ingress, dynamic host port in Docker)",
       },
     },
 
-    initDal: () => {},
-    dalClose: async () => {},
-    configRepositoryAdapter: () => new EnvConfigPort(),
-    authConfigPort: () => new EnvAuthConfigPort(),
+    initDal,
+    dalClose: async () => { await getDal().close(); },
+    dbBanner: () => pgServerBanner(getDal().getPool(), process.env.DATABASE_URL!),
+
+    configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
+    authConfigPort: (configLoader) => new WebhookAuthConfigPort(configLoader),
     apiKeyPort: () => new CachedApiKeyPort(),
-    healthCheckPort: () => new NoopHealthCheckPort(),
+    healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
 
     routeHandler: webhookRouteHandler,
     endpoints: { webhook: "/webhook" },
+    // /webhook is a PUBLIC DMZ ingress — callers are external providers
+    // (Brevo, …) with API-key auth, not internal services; they cannot and
+    // must not carry our client-identity headers.
+    identityExemptPaths: [/^\/webhook(\/|$)/],
 
     authDependencySetters: [
       (_cfg, apiKeyPort) => {
