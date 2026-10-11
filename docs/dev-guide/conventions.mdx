@@ -178,6 +178,14 @@ build, and production rebuild gets the exact same dependency tree.
 Workspace dependencies use `workspace:*` (e.g.
 `"@primebrick/sdk": "workspace:*"`).
 
+## Repo tooling
+
+| Tool | Where | Purpose |
+|---|---|---|
+| `scripts/version-sync.mjs` | repo root | `version:auto`/`prebuild` hook — keeps `version` aligned across service package.jsons |
+| `<svc>/scripts/database-patch-apply.ts` | per service | `db:migrate` — runs `applyPatches` against the service's own schema |
+| `<svc>/scripts/build-docs-pack.ts` | per service | `generate:docs` — builds `dist/docs-pack` (SDK `buildDocsPack`) |
+
 ## Next steps
 
 - [Architecture](/dev/microservices/architecture) — NATS™ bus, BE proxy, SDK lifecycle

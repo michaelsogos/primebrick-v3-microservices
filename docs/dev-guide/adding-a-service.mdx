@@ -1,0 +1,101 @@
+---
+title: Adding a Service
+description: "The end-to-end checklist for scaffolding a new microservice in this monorepo — package, boot, schema, routes, spec, docs pack, and registration."
+---
+
+# Adding a service
+
+Each microservice in this repo is self-contained: own `package.json`, own
+DB schema, own `createMicroservice` boot. This is the checklist every new
+service follows — nothing more, nothing less.
+
+## 1. Package
+
+```json
+{
+  "name": "primebrick-<code>",
+  "private": true,
+  "capabilities": ["<domain_capability>"],
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "build": "tsc",
+    "db:migrate": "bun scripts/database-patch-apply.ts",
+    "generate:docs": "bun scripts/build-docs-pack.ts"
+  },
+  "dependencies": {
+    "@primebrick/dal-pg": "workspace:*",
+    "@primebrick/sdk": "workspace:*"
+  }
+}
+```
+
+- `capabilities[]` is what `ServiceRegistrar` publishes — the BE registry
+  and the AI docs-pack pull both read it.
+- `version:auto`/`prebuild` call `../scripts/version-sync.mjs` (root
+  script) to keep versions aligned across services.
+
+## 2. Boot — `src/index.ts`
+
+One `createMicroservice(options)` call. Required options:
+
+`serviceName`, `envSchema` (typically just `DATABASE_URL` +
+`DB_SCHEMA`), `initDal`/`dalClose`, `configRepositoryAdapter`,
+`authConfigPort`, `healthCheckPort`, `routeHandler` (factory-produced
+only).
+
+Domain wiring goes in `onReady(ctx)` — NATS subscribers, config holder
+init, cron jobs. See SDK's *microservice-anatomy* for the full 12-stage
+boot sequence.
+
+## 3. Database — `db-meta/`
+
+```
+db-meta/
+  patches/           # ordered, sha256-registered migrations (applyPatches)
+  fire-and-forget/   # one-off operational SQL (idempotent, manual)
+```
+
+Seed at minimum: `http_port`, `service_base_url`,
+`service_client_shield_secret` (type `secret` + `_header` companion),
+`nats_url`, plus the service's own config keys — all via a numbered patch.
+
+## 4. Routes — `src/controllers/http/`
+
+Declare `RpcRoute[]` and serve them exclusively through `makeRpcRouter`
+(or `makeEntityRouter` / `docsPackRouteHandler` / `makeOpenApiHandler`,
+composed via `composeRouteHandlers`). Arbitrary handlers are rejected at
+boot — see the controller-boundary rule and SDK `rpc-router`/`entity-router`.
+
+## 5. Spec — `src/openapi.ts`
+
+```ts
+export const MY_OPENAPI_SPEC = buildOpenApiSpec({
+  info: { title: "... Catalog", version: "1.0.0" },
+  serverUrl: "http://localhost:30XX",
+  paths: { ...rpcSpec(MY_ROUTES), ...entityCrudSpec("my_entity", {...}) },
+});
+```
+
+Same const feeds `makeOpenApiHandler` (live `/api/v1/openapi.json`) and
+the docs pack.
+
+## 6. Docs pack — `scripts/build-docs-pack.ts`
+
+Copy the standard script verbatim, changing `repo`, `docsDir` (omit for
+dev-only services) and `openapi`. Build it in the deploy chain —
+`ServiceRegistrar` auto-advertises `docs_pack` when `dist/docs-pack/
+manifest.json` exists.
+
+## 7. Registration — automatic
+
+On boot the service publishes `service.register`; the BE registry learns
+name, base_url, capabilities, endpoints — and the `/ws/<code>/*` proxy
+path becomes reachable. Nav/sidebar entries for its screens are declared
+in the BE's `module-nav-meta` (a static per-module declaration — add a
+case when the service owns FE routes).
+
+## 8. Docs
+
+`<svc>/docs/dev-guide/index.mdx` — always. `<svc>/docs/user-guide/` only
+if the feature is end-user visible. Update `docs/dev-guide/overview.mdx`'s
+service catalog.

@@ -2,6 +2,7 @@
   "pages": [
     "overview",
     "architecture",
-    "conventions"
+    "conventions",
+    "adding-a-service"
   ]
 }

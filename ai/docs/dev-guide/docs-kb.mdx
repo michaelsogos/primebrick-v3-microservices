@@ -1,0 +1,72 @@
+---
+title: Docs Knowledge Base
+description: "The RAG ingestion pipeline end to end — docs loaders, markdown chunking, content-hash diffing, embedding providers, pack ingestion, and the lifecycle subscriber that keeps docs_kb in sync with live services."
+---
+
+# Docs knowledge base
+
+`docs_kb` is the pgvector-backed corpus that powers `search_docs` — the
+local tool the orchestrator calls when a user asks about product docs.
+This page is the vertical deep-dive into how documents get in, stay fresh,
+and get removed.
+
+## Pipeline overview
+
+```
+source (pack | filesystem fallback)
+   │  docs-loader → LoadedDoc[]  {repo, path, title, content, metadata}
+   ▼
+chunking.ts → semantic chunks (heading-aware) + metadata (heading_path)
+   │  content_hash = sha256(provider.name + embedding_input + links + entity)
+   ▼
+hash-diff vs docs_kb → unchanged chunks skip, changed → embedBatch
+   │  Xenova/all-MiniLM-L6-v2, 384-dim
+   ▼
+upsert chunks + deleteStaleChunks → scoped stale-delete per repo
+```
+
+## Sources — two, with a clear hierarchy
+
+**Docs packs (production).** Every service builds `dist/docs-pack` at
+build time and serves it at `GET /api/v1/system/docs/pack`. The pack
+carries the raw mdx *and* `openapi.json` (the runtime spec — ingested as
+one `{repo}-openapi` document).
+
+**Filesystem pipeline (dev fallback only).** `runEmbeddingPipeline(docsPath)`
+walks a local directory of mdx — gated by the `docs_fs_pipeline` config
+key for both the startup run and `POST /api/v1/ai/reindex`. Its
+stale-delete is **scoped to repos present in the loaded source**, so it
+can never wipe pack-ingested docs.
+
+## Ingestion lifecycle — `docs-pack-subscriber`
+
+Shielded NATS subscriptions drive everything:
+
+| Event | Action |
+|---|---|
+| `service.register` with `docs_pack` capability | `fetchDocsPack(base_url)` → `ingestDocsPack(payload)` — repo-scoped stale delete |
+| `service.unregister` | `deleteRepoDocs(code)` — the module's docs leave the KB with it |
+| `gateway_online` + startup | re-pull the BE pack (the BE doesn't register via NATS) |
+
+Fire-and-forget, idempotent by content-hash: re-registration costs a
+fetch + hash compare, not a re-embed.
+
+## Incrementality — `content_hash`
+
+Each chunk's hash covers the **embedder identity** plus the exact
+embedding input (title + heading path + body) plus link/entity metadata.
+Consequences:
+
+- editing a doc re-embeds only its changed chunks;
+- swapping the embedding model changes every hash → full re-embed
+  (vectors from different models are incompatible spaces anyway);
+- metadata-only edits (title/entity) still re-upsert so chunk metadata
+  stays aligned.
+
+## Search side — `docs-search-*`
+
+`POST /system/docs/search` embeds the query with the same provider and
+runs cosine-similarity (`<=>`) over the HNSW index; `/system/docs/document`
+returns a doc's chunks by path. `search_docs` (the LLM's local tool) goes
+through the same service — the assistant answers from the same corpus
+the HTTP routes expose.
