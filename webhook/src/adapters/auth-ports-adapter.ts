@@ -19,20 +19,20 @@ export class WebhookAuthConfigPort implements AuthConfigPort {
   async load(): Promise<AuthConfig> {
     const mode = (this.configLoader.get("auth_mode") as string) || "GATEWAY";
     const rolesPath = (this.configLoader.get("auth_roles_path") as string) || "roles";
-    const gatewaySecret = this.configLoader.get("gateway_secret") as string | undefined;
-    const gatewaySecretHeader = this.configLoader.get("gateway_secret_header") as string | undefined;
-    const gatewayPublicSecret = this.configLoader.get("gateway_public_secret") as string | undefined;
-    const gatewayPublicSecretHeader = this.configLoader.get("gateway_public_secret_header") as string | undefined;
+    const clientShieldSecret = this.configLoader.get("service_client_shield_secret") as string | undefined;
+    const clientShieldSecretHeader = this.configLoader.get("service_client_shield_secret_header") as string | undefined;
+    const clientShieldPublicSecret = this.configLoader.get("gateway_public_secret") as string | undefined;
+    const clientShieldPublicSecretHeader = this.configLoader.get("gateway_public_secret_header") as string | undefined;
 
     return {
       mode: mode.toUpperCase() as AuthMode,
       roles_path: rolesPath,
       oidc: {},
       gateway: {
-        secret: gatewaySecret,
-        secret_header_name: gatewaySecretHeader,
-        public_secret: gatewayPublicSecret,
-        public_secret_header_name: gatewayPublicSecretHeader,
+        secret: clientShieldSecret,
+        secret_header_name: clientShieldSecretHeader,
+        public_secret: clientShieldPublicSecret,
+        public_secret_header_name: clientShieldPublicSecretHeader,
         headers: {
           user_id: "x-user-id",
           email: "x-user-email",
