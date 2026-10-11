@@ -1,17 +1,22 @@
 /**
- * AI Orchestrator — the core logic that ties together LLM, RAG, and MCP tools.
+ * AI Orchestrator — inference only. The agentic loop is CALLER-DRIVEN (B3):
+ * caller-supplied tool definitions are exposed to the model as client-side
+ * tools (no execute) — their calls end the step and are emitted as
+ * `client-tool-call` events; the caller executes them (FE → POST
+ * /api/v1/system/mcp/call on the BE, where RBAC is enforced) and resubmits
+ * the updated history.
  *
  * Responsibilities:
  * 1. Build the system prompt (role, tone, RAG instructions, tool guidelines)
- * 2. Create the `search_docs` tool (pgvector cosine search via embedding provider)
- * 3. Connect to the BE MCP server as a client (Streamable HTTP, user's JWT)
- * 4. Merge MCP tools with the local search_docs tool
- * 5. Call `streamText` with stopWhen for multi-turn tool use
+ * 2. Create the `search_docs` tool (pgvector cosine search — server-side,
+ *    AI-domain data)
+ * 3. Create the `navigate` tool (client-side signal, never executed here)
+ * 4. Wrap caller-supplied tool defs as non-executing tools
+ * 5. Call `streamText` with stopWhen for multi-turn LOCAL tool use
  * 6. Persist messages and tool calls via onStepFinish
  */
-import { streamText, tool, stepCountIs, type ModelMessage } from "ai";
+import { streamText, tool, stepCountIs, jsonSchema, type ModelMessage, type JSONSchema7 } from "ai";
 import { z } from "zod";
-import { createMCPClient, type MCPClient } from "@ai-sdk/mcp";
 import { getLlmModel } from "./llm-provider.js";
 import { aiConfig } from "../config/ai-config.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
@@ -24,17 +29,22 @@ import { insertTelemetry } from "./telemetry-repository.js";
 import { isRedactionEnabled, redactPii } from "./redaction.js";
 import { logger } from "@primebrick/sdk";
 
+/** Caller-supplied tool definition (from GET /api/v1/system/mcp/tools). */
+export interface CallerToolDef {
+  name: string;
+  description: string;
+  input_schema: unknown;
+}
+
 export interface OrchestratorConfig {
-  /** BE base URL for MCP client (e.g. http://localhost:3001) */
-  beBaseUrl: string;
-  /** User's JWT (forwarded to MCP server as Bearer token) */
-  userJwt: string;
   /** User UUID (for conversation ownership) */
   userUuid: string;
   /** User locale (e.g. "en", "it") */
   userLocale: string;
   /** Optional conversation UUID for existing conversations */
   conversationUuid?: string;
+  /** Caller-supplied tool defs — exposed to the model as client-side tools. */
+  callerTools?: CallerToolDef[];
 }
 
 export interface StreamCallbacks {
@@ -44,8 +54,9 @@ export interface StreamCallbacks {
   onToolCall?: (toolName: string, args: unknown) => void;
   /** Called when a tool returns a result */
   onToolResult?: (toolName: string, result: unknown) => void;
-  /** Called for client-side tool calls (e.g. navigate) — the frontend must handle these */
-  onClientToolCall?: (toolName: string, args: unknown) => void;
+  /** Called for client-side tool calls (caller tools + navigate) — the
+   *  caller must execute them and resubmit the updated history. */
+  onClientToolCall?: (toolCallId: string, toolName: string, args: unknown) => void;
   /** Called when the stream finishes */
   onFinish?: (result: {
     text: string;
@@ -109,28 +120,15 @@ function createNavigateTool() {
 }
 
 /**
- * Connect to the BE MCP server and retrieve the available tools.
- * The MCP client uses Streamable HTTP transport with the user's JWT.
+ * Wrap a caller-supplied tool definition as a NON-executing tool — the
+ * model may call it, the call ends the step, and the caller executes it
+ * out-of-band (FE → BE /system/mcp/call, RBAC-enforced).
  */
-async function getMcpTools(beBaseUrl: string, userJwt: string): Promise<{
-  tools: Record<string, unknown>;
-  client: MCPClient;
-}> {
-  const client = await createMCPClient({
-    transport: {
-      type: "http",
-      url: `${beBaseUrl}/mcp`,
-      headers: {
-        Authorization: `Bearer ${userJwt}`,
-      },
-    },
-    onUncaughtError: (error) => {
-      logger.error("Uncaught error", { tags: ["MCP client"], error });
-    },
+function createCallerTool(def: CallerToolDef) {
+  return tool({
+    description: def.description,
+    inputSchema: jsonSchema(def.input_schema as JSONSchema7),
   });
-
-  const mcpTools = await client.tools();
-  return { tools: mcpTools, client };
 }
 
 /**
@@ -145,25 +143,25 @@ export async function orchestrate(
   messages: ModelMessage[],
   callbacks: StreamCallbacks,
 ): Promise<void> {
-  let mcpClient: MCPClient | null = null;
   const startTime = Date.now();
 
   // Telemetry counters — tracked across all steps.
   let toolCallCount = 0;
   let ragHitCount = 0;
 
+  // Tools without `execute` — calls end the step and surface to the caller.
+  const clientToolNames = new Set(["navigate", ...(config.callerTools ?? []).map((t) => t.name)]);
+
   try {
     // 1. Get the LLM model
     const model = getLlmModel();
     const modelName = aiConfig("llm_model") || "unknown";
 
-    // 2. Connect to MCP server and get tools
-    const { tools: mcpTools, client } = await getMcpTools(config.beBaseUrl, config.userJwt);
-    mcpClient = client;
-
-    // 3. Merge all tools: MCP tools + local search_docs + client navigate
+    // 2. Merge tools: caller-supplied defs first, local tools win on name
+    //    conflicts (search_docs is the AI-owned RAG tool — a caller-supplied
+    //    tool with the same name must not shadow it).
     const allTools = {
-      ...mcpTools,
+      ...Object.fromEntries((config.callerTools ?? []).map((d) => [d.name, createCallerTool(d)])),
       search_docs: createSearchDocsTool(),
       navigate: createNavigateTool(),
     };
@@ -220,9 +218,11 @@ export async function orchestrate(
               ragHitCount++;
             }
             callbacks.onToolCall(tc.toolName, tc.input);
-            // Client tools (navigate) get a separate callback
-            if (tc.toolName === "navigate") {
-              callbacks.onClientToolCall?.(tc.toolName, tc.input);
+            // Client tools (caller tools + navigate) get a separate
+            // callback carrying the toolCallId so the caller can echo the
+            // result back in the next request's history.
+            if (clientToolNames.has(tc.toolName)) {
+              callbacks.onClientToolCall?.(tc.toolCallId, tc.toolName, tc.input);
             }
           }
         }
@@ -284,14 +284,5 @@ export async function orchestrate(
       success: false,
       error: err.message,
     }).catch((telemetryErr) => logger.error("Telemetry insert failed", { tags: ["orchestrator"], error: telemetryErr }));
-  } finally {
-    // Always close the MCP client
-    if (mcpClient) {
-      try {
-        await mcpClient.close();
-      } catch {
-        // ignore close errors
-      }
-    }
   }
 }

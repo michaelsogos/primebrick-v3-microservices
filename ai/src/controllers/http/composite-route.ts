@@ -1,10 +1,10 @@
-import type { IncomingMessage, ServerResponse } from "node:http";
+import type { ServerResponse } from "node:http";
 import { join } from "node:path";
 import { createSseWriter, mapDalError, makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
 import { aiConfig } from "../../config/ai-config.js";
 import { HealthCheckAdapter } from "../../adapters/health-check-adapter.js";
 import { getDal } from "../../db/dal.js";
-import { orchestrate } from "../../services/orchestrator.js";
+import { orchestrate, type CallerToolDef } from "../../services/orchestrator.js";
 import type { ModelMessage } from "ai";
 import {
   createConversation,
@@ -28,14 +28,6 @@ import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
 import { getEmbeddingProvider } from "../../services/embedding-provider.js";
 import { checkRateLimit } from "../../services/rate-limiter.js";
 
-// API gateway base URL — from module config `be_base_url` (never env).
-// Set once at startup by index.ts via setBeBaseUrl(); the MCP client call
-// below is the only consumer (slated for removal in B3).
-let beBaseUrl: string | undefined;
-export function setBeBaseUrl(url: string): void {
-  beBaseUrl = url;
-}
-
 /**
  * AI routes — the ONLY shape allowed by createMicroservice: declared once as
  * RpcRoute[] and served exclusively through makeRpcRouter (auth → RBAC →
@@ -58,12 +50,23 @@ export function setBeBaseUrl(url: string): void {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Extract JWT from Authorization header (needed by the MCP client call). */
-function extractJwt(req: IncomingMessage): string | null {
-  const auth = req.headers["authorization"];
-  if (!auth || typeof auth !== "string") return null;
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
+interface ChatToolResult {
+  tool_call_id: string;
+  tool_name: string;
+  output: unknown;
+}
+
+interface ChatBody {
+  /** Absent on tool-loop continuations (the tool result IS the turn). */
+  message?: string;
+  conversation_uuid?: string;
+  /** Full transcript for the LLM — caller-owned (includes tool messages). */
+  history?: ModelMessage[];
+  /** Caller-supplied tool defs (from GET /api/v1/system/mcp/tools). */
+  tools?: CallerToolDef[];
+  /** Results of client-tool calls the caller executed — persisted as
+   *  role:"tool" rows so a reloaded conversation keeps the full loop. */
+  tool_results?: ChatToolResult[];
 }
 
 /** Send a manual JSON error response (non-standard statuses the router doesn't own, e.g. 429). */
@@ -96,35 +99,33 @@ export const AI_ROUTES: RpcRoute[] = [
     permissions: [Permission.AUTHENTICATED_USER],
     streaming: "sse",
     body: (raw) => {
-      const b = raw as { message?: unknown };
-      if (!b?.message || typeof b.message !== "string") {
-        throw new Error("Missing 'message' field in request body.");
+      const b = raw as { message?: unknown; tool_results?: unknown };
+      const hasMessage = typeof b?.message === "string" && b.message.length > 0;
+      const hasToolResults = Array.isArray(b?.tool_results) && b.tool_results.length > 0;
+      if (!hasMessage && !hasToolResults) {
+        throw new Error("Missing 'message' (or 'tool_results' for a tool-loop continuation).");
       }
-      return b as { message: string; conversation_uuid?: string; history?: ModelMessage[] };
+      return b as ChatBody;
     },
     openapi: {
       summary: "Chat with AI (SSE streaming)",
-      description: "Streams tokens via Server-Sent Events: text-delta, tool-call, tool-result, client-tool-call, finish, error. Returns X-Conversation-UUID header.",
+      description: "Streams tokens via Server-Sent Events: text-delta, tool-call, tool-result, client-tool-call, finish, error. Returns X-Conversation-UUID header. The agentic loop is caller-driven: pass `tools` (defs from GET /system/mcp/tools), receive `client-tool-call` events, execute via POST /system/mcp/call, resubmit with `tool_results` + updated `history`.",
       tags: ["ai"],
       requestSchema: {
-        type: "object", required: ["message"],
+        type: "object",
         properties: {
           message: { type: "string" },
           conversation_uuid: { type: "string", format: "uuid" },
           history: { type: "array", items: { type: "object" } },
+          tools: { type: "array", items: { type: "object" } },
+          tool_results: { type: "array", items: { type: "object" } },
         },
       },
     },
     handler: async (ctx) => {
       const { res, req, sse, user } = ctx;
-      const body = ctx.body as { message: string; conversation_uuid?: string; history?: ModelMessage[] };
+      const body = ctx.body as ChatBody;
       const userUuid = user!.id;
-      const jwt = extractJwt(req);
-
-      if (!jwt) {
-        sendError(res, 401, "Unauthorized", "Missing Authorization Bearer token — required for MCP server access.");
-        return;
-      }
 
       const rateLimit = await checkRateLimit(userUuid);
       if (!rateLimit.allowed) {
@@ -142,16 +143,11 @@ export const AI_ROUTES: RpcRoute[] = [
         return;
       }
 
-      if (!beBaseUrl) {
-        sendError(res, 503, "Service Unavailable", "Module config 'be_base_url' is not set.");
-        return;
-      }
-
       // Get or create conversation
       let conversationUuid = body.conversation_uuid;
       if (!conversationUuid) {
         // Create a new conversation with the first message as title
-        const title = body.message.slice(0, 80) + (body.message.length > 80 ? "…" : "");
+        const title = (body.message ?? "tool call").slice(0, 80) + ((body.message?.length ?? 0) > 80 ? "…" : "");
         const conv = await createConversation({ user_uuid: userUuid, title });
         conversationUuid = conv.uuid;
       } else {
@@ -163,16 +159,31 @@ export const AI_ROUTES: RpcRoute[] = [
         }
       }
 
-      // Persist the user's message
-      await insertMessage({
-        conversation_uuid: conversationUuid,
-        role: "user",
-        content: { text: body.message },
-      });
+      // Persist caller-executed tool results (role "tool" rows — the loop
+      // is caller-driven so only the client sees them execute).
+      for (const tr of body.tool_results ?? []) {
+        await insertMessage({
+          conversation_uuid: conversationUuid,
+          role: "tool",
+          content: { tool_call_id: tr.tool_call_id, tool_name: tr.tool_name, output: tr.output },
+        });
+      }
 
-      // Build the message history for the LLM
+      // Persist the user's message (absent on tool-loop continuations)
+      if (body.message) {
+        await insertMessage({
+          conversation_uuid: conversationUuid,
+          role: "user",
+          content: { text: body.message },
+        });
+      }
+
+      // Build the message history for the LLM — the caller supplies the
+      // full transcript (tool result messages included).
       const messages: ModelMessage[] = body.history ?? [];
-      messages.push({ role: "user", content: body.message });
+      if (body.message) {
+        messages.push({ role: "user", content: body.message });
+      }
 
       // The lazy ctx.sse writeHeads on first send — setHeader is still legal here.
       res.setHeader("X-Conversation-UUID", conversationUuid);
@@ -190,11 +201,10 @@ export const AI_ROUTES: RpcRoute[] = [
       // Stream the response via the orchestrator
       await orchestrate(
         {
-          beBaseUrl,
-          userJwt: jwt,
           userUuid,
           userLocale: "en",
           conversationUuid,
+          callerTools: body.tools,
         },
         messages,
         {
@@ -207,8 +217,8 @@ export const AI_ROUTES: RpcRoute[] = [
           onToolResult: (toolName, result) => {
             writer.send({ event: "tool-result", data: { tool: toolName, result } });
           },
-          onClientToolCall: (toolName, args) => {
-            writer.send({ event: "client-tool-call", data: { tool: toolName, args } });
+          onClientToolCall: (toolCallId, toolName, args) => {
+            writer.send({ event: "client-tool-call", data: { tool_call_id: toolCallId, tool: toolName, args } });
           },
           onFinish: ({ text, tokensIn, tokensOut, steps }) => {
             writer.send({ event: "finish", data: { text, tokens_in: tokensIn, tokens_out: tokensOut, steps } });

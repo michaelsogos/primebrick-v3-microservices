@@ -31,7 +31,7 @@
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "2.0.15",
+
     "@ai-sdk/openai-compatible": "3.0.11",
     "@huggingface/transformers": "4.2.0",
     "@primebrick/dal-pg": "workspace:*",

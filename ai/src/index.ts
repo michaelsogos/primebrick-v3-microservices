@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { createMicroservice, logger, composeRouteHandlers, pgServerBanner } from "@primebrick/sdk";
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
-import { compositeRouteHandler, setBeBaseUrl } from "./controllers/http/composite-route.js";
+import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 import { aiEntityRouteHandler } from "./controllers/http/entities-route.js";
 import { docsSearchRouteHandler } from "./controllers/http/docs-search-route.js";
 import { openapiRouteHandler } from "./openapi.js";
@@ -47,9 +47,6 @@ async function main(): Promise<void> {
       // Runtime config holder — every module reads ai.config_entries via
       // aiConfig() from here on. env-policy: only DATABASE_URL is env.
       initAiConfig(ctx.configLoader);
-
-      // MCP client target — module config, never env.
-      setBeBaseUrl(ctx.configLoader.require("be_base_url"));
 
       // Startup reconcile: incremental docs_kb reindex in background.
       // Hash-diff makes unchanged chunks free; the service stays usable
