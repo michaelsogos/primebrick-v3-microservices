@@ -196,5 +196,4 @@ for (const file of files) {
   }
   pages[route] = { route, ...sfacts, widgets: tfacts.widgets, i18nKeys: [...new Set(tfacts.i18nKeys)] };
 }
-process.stdout.write(JSON.stringify(pages, null, 1) + "
-");
+process.stdout.write(JSON.stringify(pages, null, 1) + "\n");

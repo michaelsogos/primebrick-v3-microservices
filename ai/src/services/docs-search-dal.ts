@@ -103,11 +103,11 @@ export async function searchDocsKb(
   const result = await pool.query(
     `WITH vec AS (
        SELECT d.id,
-              1 - (d.embedding <=> $1::vector) AS similarity
+              1 - (d.embedding <=> $1::public.vector) AS similarity
        FROM ai.docs_kb d
        WHERE ($4::text IS NULL OR d.repo = $4)
          AND ($10::text IS NULL OR d.path LIKE $10 || '%')
-       ORDER BY d.embedding <=> $1::vector
+       ORDER BY d.embedding <=> $1::public.vector
        LIMIT $2::int * $6::int
      ),
      lex AS (
@@ -125,7 +125,7 @@ export async function searchDocsKb(
      candidates AS (
        SELECT
          d.id, d.repo, d.path, d.title, d.chunk_idx, d.content, d.metadata,
-         COALESCE(v.similarity, 1 - (d.embedding <=> $1::vector)) AS similarity,
+         COALESCE(v.similarity, 1 - (d.embedding <=> $1::public.vector)) AS similarity,
          COALESCE(l.lexical_score, 0)::float8 AS lexical_score,
          (v.id IS NULL AND l.lexical_score >= $9::float8) AS lexical_match
        FROM ai.docs_kb d
@@ -219,10 +219,10 @@ async function expandDocGraph(
   const result = await pool.query(
     `SELECT DISTINCT ON (d.path)
        d.id, d.repo, d.path, d.title, d.chunk_idx, d.content, d.metadata,
-       1 - (d.embedding <=> $1::vector) AS similarity
+       1 - (d.embedding <=> $1::public.vector) AS similarity
      FROM ai.docs_kb d
      WHERE d.path = ANY($2::text[])
-     ORDER BY d.path, d.embedding <=> $1::vector`,
+     ORDER BY d.path, d.embedding <=> $1::public.vector`,
     [`[${embedding.join(",")}]`, paths],
   );
 

@@ -33,6 +33,18 @@ await pg.end();
 const T = (key) => tr[key];
 
 const humanize = (s) => s.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
+
+// identity provider display name — config-driven (casdoor today, but the
+// platform is IdP-agnostic); used for "backed by" prose on idp_* entities
+let IDP_NAME;
+const pg2 = new Client({ connectionString: DATABASE_URL });
+try {
+  await pg2.connect();
+  const { rows: [idp] } = await pg2.query(`SELECT value FROM public.config_entries WHERE key='idp_type' LIMIT 1`);
+  IDP_NAME = idp?.value ? humanize(idp.value).replace(/\b\w/g, c => c.toUpperCase()) : undefined;
+} catch {} finally {
+  await pg2.end().catch(() => {});
+}
 // indefinite article — 'a' before consonant sounds ('a user', 'a unit')
 const art = (w) => (/^(u[sn]|eu|uni|use|user|one)/i.test(w) ? 'a' : (/^[aeiou]/i.test(w) ? 'an' : 'a'));
 const titleOf = (r) => humanize(r.split('/').filter(Boolean).pop() ?? r).replace(/\b\w/g, c => c.toUpperCase());
@@ -71,12 +83,25 @@ function findMetaFiles(dir) {
   return out;
 }
 const metaByEntity = {};
+// meta files may split data into sibling files (e.g. columns imported from
+// ./list-config.ts) — resolve relative imports recursively instead of a stub
+const loadTsModule = (file, seen = new Set()) => {
+  if (seen.has(file)) return {};
+  seen.add(file);
+  const src = readFileSync(file, 'utf8');
+  const js = tsc.transpileModule(src, { compilerOptions: { module: 'CommonJS' } }).outputText;
+  const m = { exports: {} };
+  const localRequire = (spec) => {
+    if (!spec.startsWith('.')) return {};
+    const base = resolve(dirname(file), spec).replace(/\.js$/, '.ts');
+    try { return loadTsModule(base, seen); } catch { return {}; }
+  };
+  new Function('exports', 'require', 'module', js)(m.exports, localRequire, m);
+  return m.exports;
+};
 for (const f of findMetaFiles(META_DIR)) {
   try {
-    const src = readFileSync(f, 'utf8');
-    const js = tsc.transpileModule(src, { compilerOptions: { module: 'CommonJS' } }).outputText;
-    const m = { exports: {} };
-    new Function('exports', 'require', 'module', js)(m.exports, () => ({}), m);
+    const m = { exports: loadTsModule(f) };
     const meta = Object.values(m.exports).find(v => v && v.entity);
     if (meta?.entity) metaByEntity[meta.entity] = meta;
   } catch {}
@@ -339,6 +364,27 @@ for (const [route, pg] of Object.entries(pages)) {
   out.push('---\n');
   out.push(`${purpose}\n`);
 
+  // discursive intro on list pages: what a row shows + status flags +
+  // whether the entity is backed by the identity provider — all derived
+  // from meta columns (default_visible / type:boolean / idp_*), no new input
+  if (hasList && meta?.columns?.length) {
+    const joinAnd = (xs) => xs.length > 1 ? xs.slice(0, -1).join(', ') + ', and ' + xs.at(-1) : (xs[0] ?? '');
+    const visCols = meta.columns.filter(c => c.default_visible && c.type !== 'boolean');
+    const flagCols = meta.columns.filter(c => c.default_visible && c.type === 'boolean');
+    const named = visCols.map(c => `the ${T(c.label_key) ?? humanize(c.key)}`);
+    const flags = flagCols.map(c => T(c.label_key) ?? humanize(c.key));
+    if (named.length || flags.length)
+      out.push(
+        `Each row shows ${named.join(', ')}` +
+        (flags.length ? `, plus the status flags ${joinAnd(flags)}` : '') + '.\n'
+      );
+    if (meta.columns.some(c => /^idp_/.test(c.key)))
+      out.push(
+        `This ${entSingularT.toLowerCase()} is backed by ` +
+        `the identity provider${IDP_NAME ? ` (${IDP_NAME})` : ''} — its identity fields are managed there.\n`
+      );
+  }
+
   // ── Pages Routes (sibling pages of this entity) ──
   const sibs = sibPages(parentList);
   if (sibs.length > 1) {
@@ -347,7 +393,7 @@ for (const [route, pg] of Object.entries(pages)) {
       const k = kindOf(r);
       const d = k === 'create' ? `Create a new ${singular}.`
               : k === 'edit' ? `View and edit an existing ${singular}.`
-              : `List, search and manage all ${plural}.`;
+              : `List, search and manage all ${entPluralT.toLowerCase()}.`;
       out.push(`- \`${r}\` — ${d}${r === route ? ' *(this page)*' : ''}`);
     }
     out.push('');
@@ -483,6 +529,33 @@ for (const [route, pg] of Object.entries(pages)) {
         `${cons ? ` that ${cons}` : ''}${notes ? ` — ${notes}` : ''}.`);
     }
     out.push('');
+  }
+
+  // ── related entities — cross-entity links derived from meta columns
+  // whose key maps to a related entity's manual pages (RELATED map) ──
+  const knownSlugExists = (slug) =>
+    Object.keys(pages).some(r => r.split('/').filter(Boolean).pop() === slug);
+  {
+    const rels = [];
+    for (const c of meta?.columns ?? []) {
+      const slug = RELATED[c.key];
+      if (slug && knownSlugExists(slug)) {
+        const label = T(c.label_key) ?? humanize(c.key);
+        if (!rels.some(r => r.slug === slug))
+          rels.push({ slug, label });
+      }
+    }
+    for (const [fname] of fields) {
+      const slug = RELATED[fname];
+      if (slug && knownSlugExists(slug) && !rels.some(r => r.slug === slug))
+        rels.push({ slug, label: fieldLabel(fname, pg.i18nKeys) });
+    }
+    if (rels.length) {
+      out.push('## Related entities\n');
+      for (const r of rels)
+        out.push(`- A **${cap(entSingularT)}** is linked to **${titleOf(r.slug)}** through the **${r.label[0].toUpperCase() + r.label.slice(1)}** field — see [${titleOf(r.slug)}](/docs/user-guide/manual/${r.slug}).`);
+      out.push('');
+    }
   }
 
   // ── actions ──

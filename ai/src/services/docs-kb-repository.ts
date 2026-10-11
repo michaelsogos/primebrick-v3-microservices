@@ -161,10 +161,10 @@ export async function vectorSearch(
   }>(
     `SELECT
        id, repo, path, title, chunk_idx, content, metadata, content_hash,
-       1 - (embedding <=> $1::vector) AS similarity
+       1 - (embedding <=> $1::public.vector) AS similarity
      FROM docs_kb
      ${filterClause}
-     ORDER BY embedding <=> $1::vector
+     ORDER BY embedding <=> $1::public.vector
      LIMIT $2`,
     params as never[],
   );
