@@ -24,7 +24,7 @@ sub-folder with its own `src/`, `package.json`, `Dockerfile`, `db-meta/`, and
 
 | Service | Code | Port | Description |
 |---------|------|------|-------------|
-| [EmailSender](/user-guide/microservices/services/emailsender) | `emailsender` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo™ |
+| [EmailSender](/dev/microservices/services/emailsender) | `emailsender` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo™ |
 
 New microservices are added as new top-level sub-folders. Each must contain
 a `package.json` with a `name` starting with `primebrick-` and a `src/index.ts`
@@ -102,6 +102,6 @@ cd emailsender && pnpm run db:migrate
 
 ## Next steps
 
-- [Architecture](/user-guide/microservices/architecture) — NATS™ bus, BE proxy, SDK lifecycle
-- [Conventions](/user-guide/microservices/conventions) — API path conventions, data model rules
-- [EmailSender](/user-guide/microservices/services/emailsender) — Email sending microservice
+- [Architecture](/dev/microservices/architecture) — NATS™ bus, BE proxy, SDK lifecycle
+- [Conventions](/dev/microservices/conventions) — API path conventions, data model rules
+- [EmailSender](/dev/microservices/services/emailsender) — Email sending microservice

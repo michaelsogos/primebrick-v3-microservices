@@ -40,14 +40,14 @@ BOTH:
 
 **How to detect undocumented services:**
 For each microservice sub-folder, check whether
-`docs/user-guide/services/<service>.mdx` exists (where `<service>` is the
+`docs/dev-guide/services/<service>.mdx` exists (where `<service>` is the
 sub-folder name). If it does NOT exist, the service is **undocumented** and
 must get an initial doc page generated (see Step 5a).
 
 Also check whether the shared pages exist:
-- `docs/user-guide/overview.mdx`
-- `docs/user-guide/architecture.mdx`
-- `docs/user-guide/conventions.mdx`
+- `docs/dev-guide/overview.mdx`
+- `docs/dev-guide/architecture.mdx`
+- `docs/dev-guide/conventions.mdx`
 
 If any shared page is missing, it will be created in Step 5a.
 
@@ -131,20 +131,20 @@ plus any shared page touched by shared changes):
 
 | Changed topic | Page |
 |---------------|------|
-| Any per-service user-facing file | `docs/user-guide/services/<service>.mdx` |
-| `docker-templates/*` | `docs/user-guide/architecture.mdx` (deployment section) |
-| `.devin/rules/api-path-conventions.md` | `docs/user-guide/conventions.mdx` |
-| `scripts/*` scaffolding | `docs/user-guide/overview.mdx` (or `architecture.mdx`) |
+| Any per-service user-facing file | `docs/dev-guide/services/<service>.mdx` |
+| `docker-templates/*` | `docs/dev-guide/architecture.mdx` (deployment section) |
+| `.devin/rules/api-path-conventions.md` | `docs/dev-guide/conventions.mdx` |
+| `scripts/*` scaffolding | `docs/dev-guide/overview.mdx` (or `architecture.mdx`) |
 
 **The goal is surgical edits, not regeneration.** A 10-line code change
 should produce at most a few lines of doc changes, not a rewritten page.
 
-### 5. Update docs/user-guide/ and commit
+### 5. Update docs/dev-guide/ and commit
 
 #### 5a. Generate initial docs for undocumented services
 
 For each undocumented service (from Step 1), READ the service's existing
-code and CREATE `docs/user-guide/services/<service>.mdx` with:
+code and CREATE `docs/dev-guide/services/<service>.mdx` with:
 
 1. **Frontmatter**: `title`, `description`
 2. **Overview**: what the service does (from `src/index.ts` and `package.json`)
@@ -170,7 +170,7 @@ Also create any missing shared pages (`overview.mdx`, `architecture.mdx`,
 #### 5b. Surgical updates for changed services
 
 For each page that needs updating (after the anti-rewrite check in Step 4):
-- Follow `.devin/rules/docs-user-guide.md` for editorial conventions
+- Follow `.devin/rules/docs-dev-guide.md` for editorial conventions
 - Use `<Mermaid chart={...} />` for diagrams, never ```Code or ```mermaid
 - Make minimal edits — preserve existing prose structure
 
@@ -179,8 +179,8 @@ For each page that needs updating (after the anti-rewrite check in Step 4):
 Commit ALL doc updates (initial docs + surgical updates) ON the branch
 BEFORE merging:
 ```
-git add docs/user-guide/
-git commit -m "docs: update user-guide for <branch-name> changes"
+git add docs/dev-guide/
+git commit -m "docs: update dev-guide for <branch-name> changes"
 ```
 
 ### 6. Proceed with normal close

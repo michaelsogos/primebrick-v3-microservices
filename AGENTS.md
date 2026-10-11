@@ -75,18 +75,20 @@ for the full rule and upgrade procedure.
 This repository follows GitFlow. AI agents MUST follow these rules.
 Ensure you follow branch management, version tagging, and commit protocols.
 
-## User-facing documentation
+## Documentation (3 tiers — see `.devin/rules/docs-audience.md`)
 
-User-facing developer documentation lives in `docs/user-guide/` as MDX files.
-These are synced to `docs.primebrick.dev` by the docs repo's CI pipeline.
+Developer documentation lives in `docs/dev-guide/` (shared pages) and
+`<service>/docs/dev-guide/` (per-service pages) as MDX files. These are
+synced to `docs.primebrick.dev` under the dev section — never ingested
+into the end-user AI KB.
 
-- **Location**: `docs/user-guide/*.mdx` — one file per topic
-- **Ordering**: `docs/user-guide/_order.json` defines the sidebar page order
-- **Conventions**: see `.devin/rules/docs-user-guide.md` for editorial rules
+- **Shared pages**: `docs/dev-guide/{overview,architecture,conventions}.mdx`
+- **Per-service pages**: `<service>/docs/dev-guide/index.mdx` — each
+  microservice owns and ships its own docs
+- **Ordering**: `docs/dev-guide/_order.json` defines the sidebar page order
+- **Conventions**: see `.devin/rules/docs-dev-guide.md` for editorial rules
 - **Mermaid**: use `<Mermaid chart={...} />`, never ` ```Code ` or ` ```mermaid `
 - **Do NOT hand-edit** files in `docs/ai/` or `docs/skills/` — those are internal
-- **Internal docs** (`docs/ai/`, `docs/skills/`, `docs/gitflow.md`) are NOT synced
-  to the docs site — they stay in this repo for AI agents only
 
 ## Logging & Telemetry
 

@@ -1,6 +1,6 @@
 ---
 name: make-docs
-description: Check current branch diff and surgically update docs/user-guide for microservices
+description: Check current branch diff and surgically update docs/dev-guide for microservices
 allowed-tools: [read, write, edit, exec, grep, find_file_by_name]
 ---
 
@@ -17,7 +17,7 @@ each service's changes to the right doc page.
 
 The skill does TWO things:
 1. **Undocumented-service scan** — detects microservices that exist in the repo
-   but have no `docs/user-guide/services/<service>.mdx` page yet, and generates
+   but have no `docs/dev-guide/services/<service>.mdx` page yet, and generates
    initial documentation from their existing code. This runs regardless of the
    diff — existing code that was never documented MUST get a page.
 2. **Diff-based update** — for services that changed since the diff base,
@@ -56,14 +56,14 @@ BOTH:
 
 **How to detect undocumented services:**
 For each microservice sub-folder, check whether
-`docs/user-guide/services/<service>.mdx` exists (where `<service>` is the
+`docs/dev-guide/services/<service>.mdx` exists (where `<service>` is the
 sub-folder name, e.g. `emailsender`). If it does NOT exist, the service is
 **undocumented** and must get an initial doc page generated in Step 6.
 
 Also check whether the shared pages exist:
-- `docs/user-guide/overview.mdx`
-- `docs/user-guide/architecture.mdx`
-- `docs/user-guide/conventions.mdx`
+- `docs/dev-guide/overview.mdx`
+- `docs/dev-guide/architecture.mdx`
+- `docs/dev-guide/conventions.mdx`
 
 If any shared page is missing, it will be created in Step 6.
 
@@ -140,7 +140,7 @@ handled by the docs repo's `fetch-openapi.mjs` at build time).
 #### 6a. Generate initial docs for undocumented services
 
 For each undocumented service (from Step 2), READ the service's existing code
-and CREATE `docs/user-guide/services/<service>.mdx` with:
+and CREATE `docs/dev-guide/services/<service>.mdx` with:
 
 1. **Frontmatter**: `title`, `description`
 2. **Overview**: what the service does (1-2 paragraphs, from `src/index.ts`
@@ -189,7 +189,7 @@ For each missing shared page (from Step 2), create it:
 For each changed service with user-facing changes (from Step 5), apply the
 anti-rewrite check:
 
-1. Read the existing `docs/user-guide/services/<service>.mdx`
+1. Read the existing `docs/dev-guide/services/<service>.mdx`
 2. Compare against the diff
 3. Decide:
    - Already accurate → SKIP (no edit)
@@ -211,7 +211,7 @@ Apply the same anti-rewrite check.
 ### 7. Update _order.json
 
 Ensure every service page and shared page is listed in
-`docs/user-guide/_order.json` (see `.devin/rules/docs-order.md`).
+`docs/dev-guide/_order.json` (see `.devin/rules/docs-order.md`).
 Service pages go under the `services/` group, after the shared pages:
 
 ```json

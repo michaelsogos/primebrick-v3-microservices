@@ -1,7 +1,7 @@
-# Devin Rule: User-Facing Documentation
+# Devin Rule: Developer Documentation
 
 ## Trigger
-- Applies whenever AI agent creates or updates files in `docs/user-guide/`.
+- Applies whenever AI agent creates or updates files in `docs/dev-guide/`.
 
 ## Editorial conventions
 
@@ -35,17 +35,18 @@ This repo is a multi-service monorepo. Documentation is organized as one
 page per microservice plus a small set of shared pages.
 
 ```
-docs/user-guide/
+docs/dev-guide/                    # shared repo-level pages
   _order.json
-  overview.mdx              # repo overview, microservices list, architecture
-  architecture.mdx          # NATS™ bus, BE proxy, SDK lifecycle (shared)
-  conventions.mdx           # API path conventions, data model rules (shared)
-  services/
-    <service>.mdx           # one prose guide page per microservice
+  overview.mdx                     # repo overview, microservices list
+  architecture.mdx                 # NATS™ bus, BE proxy, SDK lifecycle (shared)
+  conventions.mdx                  # API path conventions, data model rules
+<service>/docs/dev-guide/
+  index.mdx                        # one prose guide page per microservice
 ```
 
-- **Guide pages** (`services/<service>.mdx`) are AI-written prose —
-  architecture, NATS™ subjects, entities, providers, deployment, lifecycle.
+- **Guide pages** (`<service>/docs/dev-guide/index.mdx`) are AI-written
+  prose — architecture, NATS™ subjects, entities, providers, deployment,
+  lifecycle. Each service owns and ships its own docs (docs-pack ready).
   They link to Zudoku's interactive API Catalog for the full operation list
   instead of duplicating it: `See the [API Catalog](/catalog/<service>) for
   the full operation list.`
@@ -56,13 +57,12 @@ docs/user-guide/
 - **Shared pages** (`overview`, `architecture`, `conventions`) cover
   cross-cutting topics: the NATS™ message bus, the BE `/ws/:serviceCode/*`
   proxy, the SDK lifecycle, API path conventions, data-model rules.
-- **Per-service pages** (`services/<service>.mdx`) cover everything
-  specific to one microservice: its HTTP routes, NATS™ subjects, entities,
-  providers, service actions, deployment config, and health behavior.
-- When a microservice changes, update ONLY its `services/<service>.mdx`
-  page (plus a shared page only if a cross-cutting topic changed).
-- When creating a new service page, add its slug
-  (`services/<service>`) to `_order.json` (see `.devin/rules/docs-order.md`).
+- **Per-service pages** (`<service>/docs/dev-guide/index.mdx`) cover
+  everything specific to one microservice: its HTTP routes, NATS™ subjects,
+  entities, providers, service actions, deployment config, health behavior.
+- When a microservice changes, update ONLY its own
+  `<service>/docs/dev-guide/index.mdx` (plus a shared page only if a
+  cross-cutting topic changed).
 - The `<service>` slug is the microservice's sub-folder name
   (e.g. `emailsender`), NOT its package name
   (`primebrick-emailsender`).
@@ -74,6 +74,6 @@ docs/user-guide/
 - ❌ Inventing APIs, props, or endpoints not in the extraction JSON or code
 - ❌ Marketing language or superlatives
 - ❌ Putting per-service route/NATS™/entity details on a shared page —
-  those belong on `services/<service>.mdx`
+  those belong on `<service>/docs/dev-guide/index.mdx`
 - ❌ Putting cross-cutting topics (NATS™ bus, BE proxy, API conventions) on
   a per-service page — those belong on the shared pages
