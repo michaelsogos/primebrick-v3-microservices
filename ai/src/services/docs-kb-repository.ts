@@ -117,6 +117,16 @@ export async function deleteDoc(repo: string, path: string): Promise<void> {
 }
 
 /**
+ * Delete every doc of one repo — used when a service unregisters
+ * (module removal cleans the KB).
+ */
+export async function deleteRepoDocs(repo: string): Promise<number> {
+  const pool = getDal().getPool();
+  const result = await pool.query(`DELETE FROM docs_kb WHERE repo = $1`, [repo]);
+  return result.rowCount ?? 0;
+}
+
+/**
  * Wipe the whole index — used by the explicit full-reinit path
  * (provider/schema change, corrupted KB, manual rebuild).
  * Destructive: callers must request it explicitly.

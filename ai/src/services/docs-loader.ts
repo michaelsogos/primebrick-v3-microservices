@@ -50,35 +50,47 @@ export function loadMdxDocs(docsPath: string): LoadedDoc[] {
 
   for (const filePath of listFilesRecursive(docsPath, ".mdx")) {
     try {
-      const raw = readFileSync(filePath, "utf-8");
-      const { frontmatter, body } = parseMdxFrontmatter(raw);
       const relPath = relative(docsPath, filePath).replace(/\\/g, "/");
       const repo = relPath.includes("/") ? relPath.split("/")[0] : "pages";
-      const title = frontmatter.title || relPath;
-      const links = extractDocLinks(body, relPath);
-
-      docs.push({
-        repo,
-        path: relPath,
-        title,
-        content: body,
-        metadata: {
-          source: "mdx",
-          repo,
-          path: relPath,
-          title,
-          content_type: detectContentType(relPath, frontmatter),
-          ...(links.length ? { links } : {}),
-          ...(frontmatter.entity ? { entity: frontmatter.entity } : {}),
-          ...(frontmatter.description ? { description: frontmatter.description } : {}),
-        },
-      });
+      const doc = loadedDocFromMdx(repo, relPath, readFileSync(filePath, "utf-8"));
+      if (doc) docs.push(doc);
     } catch (err) {
       logger.warn(`Failed to load MDX ${filePath}`, { tags: ["docs-loader"], error: err instanceof Error ? err.message : err });
     }
   }
 
   return docs;
+}
+
+/**
+ * Build a LoadedDoc from raw MDX content — the pure core shared by the
+ * filesystem loader and the docs-pack ingest (packs carry raw text, no FS).
+ * Returns null when the content cannot be parsed.
+ */
+export function loadedDocFromMdx(repo: string, path: string, raw: string): LoadedDoc | null {
+  try {
+    const { frontmatter, body } = parseMdxFrontmatter(raw);
+    const title = frontmatter.title || path;
+    const links = extractDocLinks(body, path);
+    return {
+      repo,
+      path,
+      title,
+      content: body,
+      metadata: {
+        source: "mdx",
+        repo,
+        path,
+        title,
+        content_type: detectContentType(path, frontmatter),
+        ...(links.length ? { links } : {}),
+        ...(frontmatter.entity ? { entity: frontmatter.entity } : {}),
+        ...(frontmatter.description ? { description: frontmatter.description } : {}),
+      },
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -93,45 +105,52 @@ export function loadOpenApiSpecs(openApiPath: string): LoadedDoc[] {
   const jsonFiles = listFiles(openApiPath, ".json");
   for (const filePath of jsonFiles) {
     try {
-      const raw = readFileSync(filePath, "utf-8");
-      const spec = JSON.parse(raw) as {
-        openapi?: string;
-        info?: { title?: string };
-        paths?: Record<string, Record<string, unknown>>;
-      };
       const fileName = relative(openApiPath, filePath).replace(/\\/g, "/");
       const specName = fileName.replace(/\.json$/, "");
-      const specTitle = spec.info?.title || specName;
-
-      if (!spec.paths) continue;
-
-      for (const [pathStr, methods] of Object.entries(spec.paths)) {
-        for (const [method, operation] of Object.entries(methods)) {
-          const op = operation as { summary?: string; description?: string; operationId?: string };
-          const endpoint = `${method.toUpperCase()} ${pathStr}`;
-          const content = formatOpenApiEndpoint(specTitle, method.toUpperCase(), pathStr, op);
-
-          docs.push({
-            repo: "api",
-            path: `${specName}#${endpoint}`,
-            title: op.summary || endpoint,
-            content,
-            metadata: {
-              source: "openapi",
-              repo: "api",
-              path: `${specName}#${endpoint}`,
-              title: op.summary || endpoint,
-              content_type: "api",
-              endpoint,
-            },
-          });
-        }
-      }
+      docs.push(...loadedDocsFromOpenApiSpec(specName, readFileSync(filePath, "utf-8")));
     } catch (err) {
       logger.warn(`Failed to load OpenAPI ${filePath}`, { tags: ["docs-loader"], error: err instanceof Error ? err.message : err });
     }
   }
 
+  return docs;
+}
+
+/**
+ * Chunk a raw OpenAPI JSON spec into one LoadedDoc per endpoint — the pure
+ * core shared by the filesystem loader and the docs-pack ingest.
+ */
+export function loadedDocsFromOpenApiSpec(specName: string, raw: string): LoadedDoc[] {
+  const spec = JSON.parse(raw) as {
+    openapi?: string;
+    info?: { title?: string };
+    paths?: Record<string, Record<string, unknown>>;
+  };
+  const specTitle = spec.info?.title || specName;
+  if (!spec.paths) return [];
+
+  const docs: LoadedDoc[] = [];
+  for (const [pathStr, methods] of Object.entries(spec.paths)) {
+    for (const [method, operation] of Object.entries(methods)) {
+      const op = operation as { summary?: string; description?: string; operationId?: string };
+      const endpoint = `${method.toUpperCase()} ${pathStr}`;
+      const content = formatOpenApiEndpoint(specTitle, method.toUpperCase(), pathStr, op);
+      docs.push({
+        repo: "api",
+        path: `${specName}#${endpoint}`,
+        title: op.summary || endpoint,
+        content,
+        metadata: {
+          source: "openapi",
+          repo: "api",
+          path: `${specName}#${endpoint}`,
+          title: op.summary || endpoint,
+          content_type: "api",
+          endpoint,
+        },
+      });
+    }
+  }
   return docs;
 }
 

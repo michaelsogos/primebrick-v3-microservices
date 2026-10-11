@@ -80,6 +80,42 @@ export async function runEmbeddingPipeline(
 
   // Track all (repo, path) pairs we process, to detect deleted docs later.
   const processedPaths = new Set<string>();
+  await ingestLoadedDocs(allDocs, provider, stats, processedPaths);
+
+  // Delete docs that are no longer in the source.
+  const allDbPaths = await getAllDocPaths();
+  for (const { repo, path } of allDbPaths) {
+    const pathKey = `${repo}:${path}`;
+    if (!processedPaths.has(pathKey)) {
+      await deleteDoc(repo, path);
+      stats.chunks_deleted++;
+      logger.info(`Deleted stale doc: ${pathKey}`, { tags: ["embedding-pipeline"] });
+    }
+  }
+
+  stats.total_in_db = await countDocs();
+  stats.duration_ms = Date.now() - startTime;
+
+  logger.info(`Complete: ${stats.chunks_embedded} embedded, ${stats.chunks_skipped} skipped, ${stats.chunks_deleted} deleted, ${stats.total_in_db} total in DB, ${stats.duration_ms}ms`, { tags: ["embedding-pipeline"] });
+
+  return stats;
+}
+
+/**
+ * Ingest core — chunks, hash-diffs, embeds and upserts a set of LoadedDocs.
+ * Shared by the filesystem pipeline and the docs-pack ingest (same
+ * incremental semantics: unchanged chunks skip, removed chunks delete).
+ *
+ * `processedPaths` collects every `${repo}:${path}` seen so the caller can
+ * delete stale docs within its own scope (full-source vs single-repo).
+ */
+export async function ingestLoadedDocs(
+  allDocs: LoadedDoc[],
+  provider: Awaited<ReturnType<typeof getEmbeddingProvider>>,
+  stats: PipelineStats,
+  processedPaths: Set<string>,
+): Promise<void> {
+
   // Collect chunks that need embedding (batch them for efficiency).
   const pendingEmbeddings: Array<{
     doc: LoadedDoc;
@@ -179,22 +215,4 @@ export async function runEmbeddingPipeline(
       logger.error(`Batch embedding error at offset ${i}`, { tags: ["embedding-pipeline"], error: err instanceof Error ? err.message : err });
     }
   }
-
-  // Delete docs that are no longer in the source.
-  const allDbPaths = await getAllDocPaths();
-  for (const { repo, path } of allDbPaths) {
-    const pathKey = `${repo}:${path}`;
-    if (!processedPaths.has(pathKey)) {
-      await deleteDoc(repo, path);
-      stats.chunks_deleted++;
-      logger.info(`Deleted stale doc: ${pathKey}`, { tags: ["embedding-pipeline"] });
-    }
-  }
-
-  stats.total_in_db = await countDocs();
-  stats.duration_ms = Date.now() - startTime;
-
-  logger.info(`Complete: ${stats.chunks_embedded} embedded, ${stats.chunks_skipped} skipped, ${stats.chunks_deleted} deleted, ${stats.total_in_db} total in DB, ${stats.duration_ms}ms`, { tags: ["embedding-pipeline"] });
-
-  return stats;
 }

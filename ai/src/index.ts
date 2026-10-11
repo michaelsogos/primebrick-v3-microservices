@@ -7,6 +7,7 @@ import { initDal, getDal } from "./db/dal.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 import { aiEntityRouteHandler } from "./controllers/http/entities-route.js";
 import { docsSearchRouteHandler } from "./controllers/http/docs-search-route.js";
+import { startDocsPackSubscriber } from "./controllers/nats-sub/docs-pack-subscriber.js";
 import { openapiRouteHandler } from "./openapi.js";
 import {
   ConfigRepositoryAdapter,
@@ -56,6 +57,11 @@ async function main(): Promise<void> {
       void runEmbeddingPipeline(docsPath, openApiPath)
         .then((s) => logger.info(`done: ${s.chunks_embedded} embedded, ${s.chunks_skipped} skipped, ${s.chunks_deleted} deleted (${s.duration_ms}ms)`, { tags: ["docs-reconcile"] }))
         .catch((err) => logger.error("failed", { tags: ["docs-reconcile"], error: err instanceof Error ? err.message : err }));
+
+      // Docs-pack lifecycle ingestion: pull packs on service.register
+      // (docs_pack capability), drop repo docs on unregister, and pull the
+      // BE pack once at startup (the BE never registers via NATS).
+      await startDocsPackSubscriber(aiConfig("be_base_url") ?? "http://localhost:3001");
     },
   });
 }
