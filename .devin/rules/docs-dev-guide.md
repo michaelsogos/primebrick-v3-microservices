@@ -77,3 +77,7 @@ docs/dev-guide/                    # shared repo-level pages
   those belong on `<service>/docs/dev-guide/index.mdx`
 - ❌ Putting cross-cutting topics (NATS™ bus, BE proxy, API conventions) on
   a per-service page — those belong on the shared pages
+
+## Deep dive
+
+The normative rules live here; the full mechanics and rationale are in `docs/dev-guide/overview.mdx` — link, do not duplicate.

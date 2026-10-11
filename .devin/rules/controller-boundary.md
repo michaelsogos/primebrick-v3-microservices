@@ -64,3 +64,7 @@ duplicating auth/validation/dispatch — only the controller file changes,
 the service is untouched. (NATS req/res was benchmarked and rejected:
 ~1.5× slower than the HTTP proxy, no durability/ordering, identical auth
 code-flow when done correctly.)
+
+## Deep dive
+
+The normative rules live here; the full mechanics and rationale are in `docs/dev-guide/conventions.mdx` — link, do not duplicate.

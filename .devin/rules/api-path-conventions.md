@@ -186,3 +186,7 @@ The `sendEmail` function is called via NATS™ (not HTTP) — no path change nee
 | TS entity class | PascalCase **singular** | `ProviderEntity`, `ConfigEntryEntity` |
 | API URL entity segment | snake_case **singular** | `/api/v1/entities/provider/...` |
 | OpenAPI `operationId` | snake_case | `list_providers`, `get_provider` |
+
+## Deep dive
+
+The normative rules live here; the full mechanics and rationale are in `docs/dev-guide/conventions.mdx` — link, do not duplicate.
