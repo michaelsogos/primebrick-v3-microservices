@@ -49,14 +49,17 @@ async function main(): Promise<void> {
       // aiConfig() from here on. env-policy: only DATABASE_URL is env.
       initAiConfig(ctx.configLoader);
 
-      // Startup reconcile: incremental docs_kb reindex in background.
-      // Hash-diff makes unchanged chunks free; the service stays usable
-      // while indexing catches up (fire-and-forget by design).
-      const docsPath = aiConfig("docs_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
-      const openApiPath = aiConfig("openapi_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
-      void runEmbeddingPipeline(docsPath, openApiPath)
-        .then((s) => logger.info(`done: ${s.chunks_embedded} embedded, ${s.chunks_skipped} skipped, ${s.chunks_deleted} deleted (${s.duration_ms}ms)`, { tags: ["docs-reconcile"] }))
-        .catch((err) => logger.error("failed", { tags: ["docs-reconcile"], error: err instanceof Error ? err.message : err }));
+      // Filesystem pipeline — DEV FALLBACK ONLY. In production the KB is
+      // fed by service docs packs (lifecycle pull below); the FS pipeline
+      // couples the service to the v3-docs repo layout and is opt-in via
+      // the `docs_fs_pipeline` config key.
+      if (aiConfig("docs_fs_pipeline") === "true") {
+        const docsPath = aiConfig("docs_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
+        const openApiPath = aiConfig("openapi_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
+        void runEmbeddingPipeline(docsPath, openApiPath)
+          .then((s) => logger.info(`done: ${s.chunks_embedded} embedded, ${s.chunks_skipped} skipped, ${s.chunks_deleted} deleted (${s.duration_ms}ms)`, { tags: ["docs-reconcile"] }))
+          .catch((err) => logger.error("failed", { tags: ["docs-reconcile"], error: err instanceof Error ? err.message : err }));
+      }
 
       // Docs-pack lifecycle ingestion: pull packs on service.register
       // (docs_pack capability), drop repo docs on unregister, and pull the

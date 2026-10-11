@@ -227,8 +227,16 @@ All tables are in the `ai` schema (microservice isolation).
 
 ## Embedding pipeline (indexing)
 
-The embedding pipeline populates `docs_kb` from the documentation source
-files. Run it with:
+**Production source: service docs packs.** Every service ships a
+`dist/docs-pack` (built by `pnpm generate:docs`, served at
+`GET /api/v1/system/docs/pack`). On `service.register` with the
+`docs_pack` capability the AI pulls the pack and ingests it under the
+pack's repo key; `service.unregister` drops that repo's docs. The BE's
+pack is pulled at startup and on every `gateway_online` broadcast.
+
+The **filesystem pipeline below is the dev fallback** (set
+`docs_fs_pipeline=true`). It populates `docs_kb` from the documentation
+source files. Run it with:
 
 ```bash
 cd ai && pnpm run index-docs
@@ -273,8 +281,9 @@ configuration lives in `ai.config_entries` and is read through
 | `be_base_url` | `http://localhost:3001` | Backend URL — required by `ServiceRegistrar` registration, no longer used for MCP |
 | `redact_pii` | `false` | `true` for cloud LLM PII redaction |
 | `rate_limit_capacity` / `rate_limit_refill_rate` / `rate_limit_token_cost` | `10` / `1` / `1` | Chat token-bucket settings |
-| `docs_path` | `../../primebrick-v3-docs/pages` | MDX docs path |
-| `openapi_path` | `../../primebrick-v3-docs/apis` | OpenAPI specs path |
+| `docs_fs_pipeline` | `false` | Dev fallback: `true` runs the legacy FS pipeline at startup and enables `POST /api/v1/ai/reindex` |
+| `docs_path` | `../../primebrick-v3-docs/pages` | MDX docs path (fallback only) |
+| `openapi_path` | `../../primebrick-v3-docs/apis` | OpenAPI specs path (fallback only) |
 | `nats_url`, `service_code`, `http_port`, `service_client_shield_key` | — | SDK bootstrap settings |
 
 Distributed rate limiting uses the shared `redis_url` key (BE-owned global

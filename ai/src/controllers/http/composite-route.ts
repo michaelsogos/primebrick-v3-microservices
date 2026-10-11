@@ -406,6 +406,11 @@ export const AI_ROUTES: RpcRoute[] = [
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: { summary: "Trigger embedding re-index (admin)", tags: ["ai", "embeddings"] },
     handler: async ({ res }) => {
+      // FS pipeline is the dev fallback — production KB comes from docs packs.
+      if (aiConfig("docs_fs_pipeline") !== "true") {
+        sendError(res, 400, "Reindex Disabled", "The filesystem pipeline is disabled — documentation is ingested via service docs packs. Set docs_fs_pipeline=true to use this dev fallback.");
+        return;
+      }
       const docsPath = aiConfig("docs_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
       const openApiPath = aiConfig("openapi_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
       try {

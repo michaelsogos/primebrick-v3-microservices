@@ -82,9 +82,13 @@ export async function runEmbeddingPipeline(
   const processedPaths = new Set<string>();
   await ingestLoadedDocs(allDocs, provider, stats, processedPaths);
 
-  // Delete docs that are no longer in the source.
+  // Delete docs that are no longer in the source — scoped to repos the
+  // source actually shipped this run. A doc of another repo (e.g. ingested
+  // via a service docs pack) must never be wiped by the FS fallback.
+  const sourceRepos = new Set(allDocs.map((d) => d.repo));
   const allDbPaths = await getAllDocPaths();
   for (const { repo, path } of allDbPaths) {
+    if (!sourceRepos.has(repo)) continue;
     const pathKey = `${repo}:${path}`;
     if (!processedPaths.has(pathKey)) {
       await deleteDoc(repo, path);
