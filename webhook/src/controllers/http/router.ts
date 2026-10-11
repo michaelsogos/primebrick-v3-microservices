@@ -59,11 +59,15 @@ function sendRfcError(
   }));
 }
 
-const webhookRoutes: RpcRoute[] = [
+export const webhookRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/webhook/:service_code/:intent*",
     auth: "api_key",
+    openapi: {
+      summary: "Inbound webhook ingress — forwards the request verbatim to the target microservice via JetStream",
+      tags: ["webhook"],
+    },
     permissions: [Permission.AUTHENTICATED_USER],
     rawBody: true,
     handler: async ({ params, body, req, res }) => {

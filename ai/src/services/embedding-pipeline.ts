@@ -37,11 +37,12 @@ export interface PipelineStats {
  * Run the full embedding pipeline.
  *
  * @param docsPath Path to the docs pages directory (MDX files).
- * @param openApiPath Path to the OpenAPI specs directory (JSON files).
+ * @param openApiPath Optional OpenAPI specs directory (JSON files) —
+ *   production specs arrive via service docs packs, not this fallback.
  */
 export async function runEmbeddingPipeline(
   docsPath: string,
-  openApiPath: string,
+  openApiPath?: string,
   opts?: { full?: boolean },
 ): Promise<PipelineStats> {
   const startTime = Date.now();
@@ -57,10 +58,9 @@ export async function runEmbeddingPipeline(
   };
 
   logger.info(`Loading docs from: ${docsPath}`, { tags: ["embedding-pipeline"] });
-  logger.info(`Loading OpenAPI from: ${openApiPath}`, { tags: ["embedding-pipeline"] });
 
   const mdxDocs = loadMdxDocs(docsPath);
-  const openApiDocs = loadOpenApiSpecs(openApiPath);
+  const openApiDocs = openApiPath ? loadOpenApiSpecs(openApiPath) : [];
   const allDocs = [...mdxDocs, ...openApiDocs];
   stats.docs_loaded = allDocs.length;
 

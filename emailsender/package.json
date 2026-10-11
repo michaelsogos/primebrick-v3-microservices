@@ -22,7 +22,8 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
-    "test:all": "vitest run && vitest run --config vitest.integration.config.ts"
+    "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
+    "generate:docs": "bun scripts/build-docs-pack.ts"
   },
   "dependencies": {
     "@primebrick/dal-pg": "workspace:*",

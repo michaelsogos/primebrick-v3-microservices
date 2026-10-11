@@ -412,9 +412,8 @@ export const AI_ROUTES: RpcRoute[] = [
         return;
       }
       const docsPath = aiConfig("docs_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
-      const openApiPath = aiConfig("openapi_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
       try {
-        return await runEmbeddingPipeline(docsPath, openApiPath);
+        return await runEmbeddingPipeline(docsPath);
       } catch (err) {
         const mapped = mapDalError(err, "/api/v1/actions/reindex");
         if (mapped) {

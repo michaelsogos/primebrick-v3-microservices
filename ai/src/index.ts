@@ -55,8 +55,7 @@ async function main(): Promise<void> {
       // the `docs_fs_pipeline` config key.
       if (aiConfig("docs_fs_pipeline") === "true") {
         const docsPath = aiConfig("docs_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
-        const openApiPath = aiConfig("openapi_path") ?? join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
-        void runEmbeddingPipeline(docsPath, openApiPath)
+        void runEmbeddingPipeline(docsPath)
           .then((s) => logger.info(`done: ${s.chunks_embedded} embedded, ${s.chunks_skipped} skipped, ${s.chunks_deleted} deleted (${s.duration_ms}ms)`, { tags: ["docs-reconcile"] }))
           .catch((err) => logger.error("failed", { tags: ["docs-reconcile"], error: err instanceof Error ? err.message : err }));
       }

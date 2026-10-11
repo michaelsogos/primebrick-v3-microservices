@@ -19,7 +19,8 @@
     "prestart": "pnpm run build",
     "start": "bun dist/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "generate:docs": "bun scripts/build-docs-pack.ts"
   },
   "dependencies": {
     "@primebrick/dal-pg": "workspace:*",
