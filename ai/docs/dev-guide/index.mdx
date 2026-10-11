@@ -1,6 +1,6 @@
 ---
 title: AI Microservice
-description: "AI chat assistant with RAG (Retrieval-Augmented Generation), pgvector knowledge base, and MCP tool integration."
+description: "AI chat assistant with RAG (Retrieval-Augmented Generation), pgvector knowledge base, and a caller-driven tool loop over the BE MCP gateway."
 ---
 
 # AI Microservice
@@ -10,22 +10,29 @@ about Primebrick using RAG (Retrieval-Augmented Generation). It embeds
 documentation into a pgvector knowledge base, retrieves relevant chunks at
 query time, and streams responses from a local or cloud LLM.
 
+The service is **inference-only**: it never calls application tools itself.
+The agentic loop is owned by the caller (the Frontend) — the AI emits
+`client-tool-call` SSE events, the caller executes them against the BE's
+MCP gateway (`/system/mcp/call`), and resubmits the results.
+
 - **Package:** `primebrick-ai`
 - **Service code:** `AI`
 - **Default port:** `3004`
 - **Runtime:** Bun (dev: `bun --hot`, prod: `bun dist/index.js`)
 - **Database schema:** `ai` (isolated per-service schema)
 - **Vector extension:** pgvector (cosine similarity, HNSW index)
+- **Declared capabilities:** `llm_orchestrator`, `chat_orchestrator`,
+  `vectorizing_engine`
 
 ## Architecture
 
 <Mermaid chart={`flowchart LR
-  FE[Frontend] -->|SSE POST /api/v1/ai/chat| AI[AI Microservice]
-  AI -->|embed query| EMB[Transformers.js\\nall-MiniLM-L6-v2]
-  EMB -->|384-dim vector| PG[(ai.docs_kb\\npgvector HNSW)]
-  AI -->|search_docs| PG
-  AI -->|MCP tools| BE[Backend /mcp]
-  AI -->|streamText| LLM[LLM\\nmistral.rs / cloud]
+  FE[Frontend<br/>owns the tool loop] -->|SSE POST /api/v1/ai/chat<br/>tools + history + tool_results| AI[AI Microservice]
+  FE -->|client-tool-call →<br/>POST /system/mcp/call| BE[Backend MCP gateway]
+  AI -->|embed query| EMB[Transformers.js<br/>all-MiniLM-L6-v2]
+  EMB -->|384-dim vector| PG[(ai.docs_kb<br/>pgvector HNSW)]
+  AI -->|search_docs local tool| PG
+  AI -->|streamText| LLM[LLM<br/>mistral.rs / cloud]
   LLM -->|SSE deltas| FE
   AI -->|persist| MSGS[(ai.ai_messages)]
   AI -->|telemetry| TEL[(ai.ai_telemetry)]
@@ -47,24 +54,27 @@ answers:
 4. **LLM response**: The LLM generates an answer grounded in the retrieved
    documentation.
 
-### MCP client integration
+### Caller-driven tool loop
 
-The orchestrator connects to the Backend's MCP server
-(`{BE_BASE_URL}/mcp`) using Streamable HTTP transport with the user's JWT.
-This gives the LLM access to generic CRUD tools:
+The orchestrator does **not** connect to the Backend's MCP server. Instead,
+the caller drives the loop end to end:
 
-- `list_available_entities` — list all entities the user can query
-- `list_entities` — list/search/aggregate records
-- `get_entity` — get a single record by UUID
-- `get_entity_meta` — get entity field metadata
-- `get_entity_audit` — get audit history for a record
+1. The caller fetches the tool catalog once from the BE:
+   `GET /system/mcp/tools` (includes a `read_only` flag per tool).
+2. The caller passes `tools[]` (OpenAI-style definitions) to
+   `POST /api/v1/ai/chat`.
+3. When the LLM requests a tool, the AI emits a `client-tool-call` SSE
+   event and stops — it does not execute it.
+4. The caller executes the tool via `POST /system/mcp/call` — read-only
+   tools immediately, write tools behind a user confirmation — then
+   resubmits `POST /api/v1/ai/chat` with the reconstructed `history`,
+   `tool_results[]`, and no `message`.
+5. Repeat until the model produces a final answer (`finish` event). The
+   caller bounds the loop (FE: `MAX_LOOP_STEPS = 8`).
 
-### Local search_docs tool
-
-In addition to MCP tools, the orchestrator registers a local `search_docs`
-tool that searches the RAG knowledge base directly. The LLM calls this tool
-when the user asks about framework architecture, APIs, configuration, or any
-topic covered by the documentation.
+The only server-side tool the AI executes itself is `search_docs`, a local
+tool that queries the RAG knowledge base — the LLM calls it when the user
+asks about product documentation, architecture, APIs, or configuration.
 
 ### PII redaction
 
@@ -95,19 +105,26 @@ handled by the gateway (headers: `x-user-id`, `Authorization: Bearer <jwt>`).
 | DELETE | `/api/v1/ai/conversations/:uuid` | Delete conversation | Gateway |
 | POST | `/api/v1/ai/feedback` | Submit thumbs up/down on a message | Gateway |
 | GET | `/api/v1/ai/feedback` | List user's feedback | Gateway |
-| GET | `/api/v1/ai/telemetry` | Aggregate stats + recent requests | Admin only |
-| POST | `/api/v1/ai/reindex` | Trigger embedding pipeline | Admin only |
+| GET | `/api/v1/ai/telemetry` | Aggregate stats + recent requests | `AUTHENTICATED_ADMIN` |
+| POST | `/api/v1/ai/reindex` | Trigger embedding pipeline | `AUTHENTICATED_ADMIN` |
+| POST | `/api/v1/ai/embed` | Server-side embedding of query text | `AUTHENTICATED_USER` |
+| POST | `/api/v1/system/docs/search` | Semantic search over `docs_kb` | `AUTHENTICATED_USER` |
+| POST | `/api/v1/system/docs/document` | Fetch a doc's chunks by path | `AUTHENTICATED_USER` |
 
 ### Chat endpoint
 
-`POST /api/v1/ai/chat` streams the response via Server-Sent Events (SSE).
+`POST /api/v1/ai/chat` streams the response via Server-Sent Events (SSE)
+and returns the conversation id in the `X-Conversation-UUID` header.
 
-**Request body:**
+**Request body** — `message` OR `tool_results` is required:
 
 ```json
 {
   "message": "How does RBAC work?",
-  "conversation_uuid": "optional-uuid-for-existing-conversation"
+  "conversation_uuid": "optional-uuid",
+  "history": ["full message history incl. assistant tool-call parts"],
+  "tools": ["OpenAI-style tool defs from GET /system/mcp/tools"],
+  "tool_results": ["results for a tool-loop continuation (no message)"]
 }
 ```
 
@@ -116,9 +133,9 @@ handled by the gateway (headers: `x-user-id`, `Authorization: Bearer <jwt>`).
 | Event | Payload | Description |
 |-------|---------|-------------|
 | `text-delta` | `{ text: string }` | Partial text chunk |
-| `tool-call` | `{ toolName, input }` | LLM invoked a tool |
-| `tool-result` | `{ toolName, result }` | Tool returned a result |
-| `client-tool-call` | `{ toolName, input }` | Frontend must handle (e.g. navigate) |
+| `tool-call` | `{ toolName, input }` | LLM invoked a server-side tool (`search_docs`) |
+| `tool-result` | `{ toolName, result }` | Server-side tool returned a result |
+| `client-tool-call` | `{ toolName, input }` | Caller must execute via `/system/mcp/call` |
 | `finish` | `{ text, tokensIn, tokensOut, steps }` | Stream complete |
 | `error` | `{ message }` | Error occurred |
 
@@ -227,7 +244,8 @@ cd ai && pnpm run index-docs
 6. **Upsert** content, embedding, metadata, and the input hash into `docs_kb` (ON CONFLICT update).
 7. **Delete stale chunks** (docs removed from source or chunks no longer present).
 
-The pipeline is idempotent — re-running it only re-embeds chunks whose source content, title, or heading path changed.
+The pipeline is idempotent — re-running it only re-embeds chunks whose
+source content, title, or heading path changed.
 
 ## Environment variables
 
@@ -252,7 +270,7 @@ configuration lives in `ai.config_entries` and is read through
 | `embedding_api_key` | — | Embeddings API key |
 | `embedding_dim` | `384` | Vector dimension (OpenAI provider) |
 | `embedding_local_only` / `embedding_dtype` | `false` / `q8` | transformers.js runtime options |
-| `be_base_url` | `http://localhost:3001` | Backend URL for MCP client |
+| `be_base_url` | `http://localhost:3001` | Backend URL — required by `ServiceRegistrar` registration, no longer used for MCP |
 | `redact_pii` | `false` | `true` for cloud LLM PII redaction |
 | `rate_limit_capacity` / `rate_limit_refill_rate` / `rate_limit_token_cost` | `10` / `1` / `1` | Chat token-bucket settings |
 | `docs_path` | `../../primebrick-v3-docs/pages` | MDX docs path |
@@ -278,7 +296,9 @@ The LLM provider is pluggable — any OpenAI-compatible endpoint works
 
 1. PostgreSQL with pgvector (from `infra/docker-compose.postgres.yml`)
 2. LLM container (from `infra/docker-compose.ai-llm.yml`) or a cloud LLM
-3. Backend running on port 3001 (for MCP client)
+3. Backend running on port 3001 — needed for service registration and for
+   the caller-driven tool loop (`/system/mcp/*`); the AI itself no longer
+   depends on it to serve chat
 
 ### Steps
 
