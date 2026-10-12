@@ -18,6 +18,10 @@ import { getDocHashes, getAllDocPaths, vectorSearch } from "./docs-kb-repository
 const DOC_EXT = /\.(mdx|md)$/i;
 
 export interface DocsDrift {
+  /** Docs the pack ships (source-of-truth quantity). */
+  expected_docs: number;
+  /** Chunks the pack would produce (source-of-truth quantity). */
+  expected_chunks: number;
   /** `repo:path` shipped by a pack but with zero rows in docs_kb. */
   missing_from_index: string[];
   /** `repo:path` whose expected chunk hash set differs from the DB one. */
@@ -65,7 +69,14 @@ async function expectedHashes(payload: DocsPackPayload): Promise<Map<string, Map
 export async function computeDocsDrift(payload: DocsPackPayload): Promise<DocsDrift> {
   const repo = payload.manifest.repo;
   const expected = await expectedHashes(payload);
-  const drift: DocsDrift = { missing_from_index: [], stale: [], orphans: [], unembedded_chunks: 0 };
+  const drift: DocsDrift = {
+    expected_docs: expected.size,
+    expected_chunks: [...expected.values()].reduce((n, m) => n + m.size, 0),
+    missing_from_index: [],
+    stale: [],
+    orphans: [],
+    unembedded_chunks: 0,
+  };
 
   for (const [path, hashes] of expected) {
     const db = await getDocHashes(repo, path);

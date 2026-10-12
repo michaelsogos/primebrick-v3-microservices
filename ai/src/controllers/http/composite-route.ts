@@ -418,7 +418,9 @@ export const AI_ROUTES: RpcRoute[] = [
         `SELECT repo,
                 COUNT(DISTINCT path) AS docs,
                 COUNT(*) AS chunks,
-                COUNT(*) FILTER (WHERE embedding IS NULL) AS unembedded_chunks
+                COUNT(*) FILTER (WHERE embedding IS NULL) AS unembedded_chunks,
+                COALESCE(SUM(LENGTH(content)), 0) AS content_bytes,
+                COALESCE(SUM(pg_column_size(embedding)), 0) AS vector_bytes
            FROM ai.docs_kb GROUP BY repo ORDER BY repo`,
       );
       const { rows: history } = await pool.query(
