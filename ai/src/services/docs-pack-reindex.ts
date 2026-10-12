@@ -5,10 +5,14 @@
  * behaviour (fetch → hash-diff → repo-scoped stale delete → ingest log)
  * can never drift between triggers.
  */
-import { logger, fetchDocsPack, type DocsPackPayload } from "@primebrick/sdk";
+import { logger, fetchDocsPack, requireActor, SYSTEM_ACTOR, type DocsPackPayload } from "@primebrick/sdk";
+import { field, Filter } from "@primebrick/dal-pg";
 import { ingestDocsPack } from "./docs-pack-ingest.js";
 import type { PipelineStats } from "./embedding-pipeline.js";
 import { getDal } from "../db/dal.js";
+import { entityRepo } from "../db/entity-repo.js";
+import { DocsIngestLogEntity } from "../domain/entities/docs_ingest_log_entity.js";
+import { ServiceRegistryEntity } from "../domain/entities/service_registry_entity.js";
 import { aiConfig } from "../config/ai-config.js";
 
 export type DocsIngestTrigger =
@@ -26,7 +30,9 @@ export interface ReindexResult {
   error?: string;
 }
 
-/** Persist one row per ingest run — admin "perché, da chi, quando" history. */
+/** Persist one row per ingest run — admin "perché, da chi, quando" history.
+ *  `actor` is log data: the session user UUID for manual reindex, "system"
+ *  for lifecycle triggers (requireActor throws outside an HTTP session). */
 async function logDocsIngest(
   serviceCode: string,
   repo: string | undefined,
@@ -34,14 +40,21 @@ async function logDocsIngest(
   stats: PipelineStats | undefined,
   error: string | undefined,
 ): Promise<void> {
+  let actor: string;
   try {
-    await getDal()
-      .getPool()
-      .query(
-        `INSERT INTO ai.docs_ingest_log (repo, service_code, trigger_source, ok, stats, error)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [repo ?? null, serviceCode, trigger, error == null, stats ?? {}, error ?? null],
-      );
+    actor = requireActor();
+  } catch {
+    actor = SYSTEM_ACTOR;
+  }
+  try {
+    await entityRepo().add(DocsIngestLogEntity, {
+      repo: repo ?? undefined,
+      service_code: serviceCode,
+      trigger_source: trigger,
+      ok: error == null,
+      stats: stats ?? {},
+      error: error ?? undefined,
+    }, { actor });
   } catch (err) {
     logger.warn(`docs_ingest_log write failed: ${err instanceof Error ? err.message : err}`, { tags: ["docs-pack"] });
   }
@@ -97,16 +110,19 @@ export async function pullAndIngest(
  */
 /** Live services that ship a docs pack, BE first (it never registers — it IS the registry). */
 async function docsPackTargets(beBaseUrl?: string): Promise<Array<{ code: string; base_url: string }>> {
-  const { rows } = await getDal()
-    .getPool()
-    .query<{ code: string; base_url: string }>(
-      `SELECT code, base_url FROM public.service_registry
-        WHERE status = 'online' AND is_enabled = true
-          AND capabilities ? 'docs_pack'`,
-    );
+  const rows = (await getDal().findAll<ServiceRegistryEntity, { code: string; base_url: string; capabilities: string[] }>(
+    ServiceRegistryEntity,
+    null,
+    {
+      filters: [
+        Filter.fieldValue(field(ServiceRegistryEntity, "status"), "=", "online"),
+        Filter.fieldValue(field(ServiceRegistryEntity, "is_enabled"), "=", true),
+      ],
+    },
+  )) as Array<{ code: string; base_url: string; capabilities: string[] }>;
   return [
     { code: "backend", base_url: beBaseUrl ?? aiConfig("be_base_url") ?? "http://localhost:3001" },
-    ...rows,
+    ...rows.filter((r) => Array.isArray(r.capabilities) && r.capabilities.includes("docs_pack")),
   ];
 }
 

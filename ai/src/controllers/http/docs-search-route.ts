@@ -10,7 +10,7 @@
  * gateway's OpenAPI dispatch.
  */
 import { z } from "zod";
-import { makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
+import { extJsonStringify, makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
 
 import { DocsSearchService } from "../../services/docs-search-service.js";
 import { zBoundedInt, zBoundedNumber } from "../../modules/shared/validation.js";
@@ -60,7 +60,7 @@ const routes: RpcRoute[] = [
       );
       if (!document) {
         ctx.res.writeHead(404, { "Content-Type": "application/json" });
-        ctx.res.end(JSON.stringify({ detail: "document not found" }));
+        ctx.res.end(extJsonStringify({ detail: "document not found" }));
         return;
       }
       return { document };

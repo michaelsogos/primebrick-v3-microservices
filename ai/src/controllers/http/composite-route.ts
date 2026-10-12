@@ -1,6 +1,6 @@
 import type { ServerResponse } from "node:http";
 import { join } from "node:path";
-import { createSseWriter, mapDalError, makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
+import { createSseWriter, extJsonStringify, mapDalError, makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
 import { aiConfig } from "../../config/ai-config.js";
 import { HealthCheckAdapter } from "../../adapters/health-check-adapter.js";
 import { getDal } from "../../db/dal.js";
@@ -25,8 +25,8 @@ import {
   listRecentTelemetry,
 } from "../../services/telemetry-repository.js";
 import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
-import { reindexDocsPacks, pullAllPacks } from "../../services/docs-pack-reindex.js";
-import { computeDocsDrift, runSearchProbes } from "../../services/docs-drift.js";
+import { reindexDocsPacks } from "../../services/docs-pack-reindex.js";
+import { getDocsIndexStatus } from "../../services/docs-index-status.js";
 import { getEmbeddingProvider } from "../../services/embedding-provider.js";
 import { checkRateLimit } from "../../services/rate-limiter.js";
 
@@ -74,7 +74,7 @@ interface ChatBody {
 /** Send a manual JSON error response (non-standard statuses the router doesn't own, e.g. 429). */
 function sendError(res: ServerResponse, status: number, title: string, detail: string): void {
   res.writeHead(status, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ type: "https://primebrick.io/errors/" + title.toLowerCase().replace(/\s+/g, "-"), title, status, detail }));
+  res.end(extJsonStringify({ type: "https://primebrick.io/errors/" + title.toLowerCase().replace(/\s+/g, "-"), title, status, detail }));
 }
 
 // ─── Route declarations ─────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ export const AI_ROUTES: RpcRoute[] = [
           "Content-Type": "application/json",
           "Retry-After": String(rateLimit.retryAfter ?? 60),
         });
-        res.end(JSON.stringify({
+        res.end(extJsonStringify({
           type: "https://primebrick.io/errors/rate-limited",
           title: "Rate Limited",
           status: 429,
@@ -254,7 +254,7 @@ export const AI_ROUTES: RpcRoute[] = [
     handler: async ({ user, body, res }) => {
       const conv = await createConversation({ user_uuid: user!.id, title: (body as { title?: string }).title });
       res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(conv));
+      res.end(extJsonStringify(conv));
     },
   },
 
@@ -337,7 +337,7 @@ export const AI_ROUTES: RpcRoute[] = [
         comment: b.comment,
       });
       res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(feedback));
+      res.end(extJsonStringify(feedback));
     },
   },
 
@@ -412,38 +412,8 @@ export const AI_ROUTES: RpcRoute[] = [
         "Per-repo doc/chunk counts, missing-embedding coverage, source-vs-index drift per service pack, and recent docs_ingest_log history. ?probe=1 also runs the canonical search probes (slower — embeds queries).",
       tags: ["ai", "embeddings"],
     },
-    handler: async ({ query }) => {
-      const pool = getDal().getPool();
-      const { rows: repos } = await pool.query(
-        `SELECT repo,
-                COUNT(DISTINCT path) AS docs,
-                COUNT(*) AS chunks,
-                COUNT(*) FILTER (WHERE embedding IS NULL) AS unembedded_chunks,
-                COALESCE(SUM(LENGTH(content)), 0) AS content_bytes,
-                COALESCE(SUM(pg_column_size(embedding)), 0) AS vector_bytes
-           FROM ai.docs_kb GROUP BY repo ORDER BY repo`,
-      );
-      const { rows: history } = await pool.query(
-        `SELECT id, repo, service_code, trigger_source, ok, stats, error, created_at
-           FROM ai.docs_ingest_log ORDER BY created_at DESC LIMIT 20`,
-      ).catch(() => ({ rows: [] as unknown[] }));
-      const { rows: size } = await pool.query(
-        `SELECT pg_total_relation_size('ai.docs_kb') AS total_bytes`,
-      );
-
-      const packs = await pullAllPacks();
-      const drift = await Promise.all(
-        packs.map(async (p) => {
-          if (!p.payload) return { service: p.service, error: p.error };
-          const d = await computeDocsDrift(p.payload);
-          return { service: p.service, repo: p.payload.manifest.repo, ...d };
-        }),
-      );
-
-      const withProbe = query.get("probe") === "1";
-      const probes = withProbe ? await runSearchProbes() : undefined;
-      return { repos, drift, history, probes, storage: size[0] ?? null };
-    },
+    handler: async ({ query }) =>
+      getDocsIndexStatus({ probe: query.get("probe") === "1" }),
   },
   {
     method: "POST",
@@ -473,7 +443,7 @@ export const AI_ROUTES: RpcRoute[] = [
         const mapped = mapDalError(err, "/api/v1/actions/reindex");
         if (mapped) {
           res.writeHead(mapped.status, { "Content-Type": "application/json" });
-          res.end(JSON.stringify(mapped.body));
+          res.end(extJsonStringify(mapped.body));
           return;
         }
         const message = err instanceof Error ? err.message : String(err);

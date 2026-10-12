@@ -21,8 +21,11 @@ import {
   CLIENT_SHIELD_SECRET_REF,
   type ClientShieldSecretSlot,
 } from "@primebrick/sdk";
+import { field, Filter, Project } from "@primebrick/dal-pg";
 import { initDal, getDal } from "../src/db/dal.js";
 import { reindexDocsPacks } from "../src/services/docs-pack-reindex.js";
+import { ConfigEntryEntity } from "../src/domain/entities/config_entry_entity.js";
+import { PublicConfigEntryEntity } from "../src/domain/entities/public_config_entry_entity.js";
 
 const repo = process.argv.includes("--repo")
   ? process.argv[process.argv.indexOf("--repo") + 1]
@@ -31,13 +34,14 @@ const repo = process.argv.includes("--repo")
 await initDal();
 
 // aiConfig() needs the running-service ConfigLoader — the script reads the
-// same ai.config_entries rows directly instead.
+// same ai.config_entries rows via the DAL instead.
+const valueProjection = [Project.field(field(ConfigEntryEntity, "value"))];
 const cfg = async (key: string): Promise<string | null> =>
   (
-    await getDal()
-      .getPool()
-      .query<{ value: string }>(`SELECT value FROM ai.config_entries WHERE key = $1`, [key])
-  ).rows[0]?.value ?? null;
+    await getDal().find<ConfigEntryEntity, { value: string | null }>(ConfigEntryEntity, valueProjection, {
+      filters: [Filter.fieldValue(field(ConfigEntryEntity, "key"), "=", key)],
+    })
+  )?.value ?? null;
 
 const shieldKey = await cfg("service_client_shield_key");
 const beBaseUrl = await cfg("be_base_url");
@@ -50,10 +54,14 @@ configureInternalClient(() => ({
 
 // Hydrate the rotating-secret slot exactly like SecretProvider does:
 // Redis primebrick:secrets:global:service_client_shield_secret.
-const { rows } = await getDal()
-  .getPool()
-  .query<{ value: string }>(`SELECT value FROM public.config_entries WHERE key = 'redis_url'`);
-const redisUrl = rows[0]?.value;
+const redisUrl =
+  (
+    await getDal().find<PublicConfigEntryEntity, { value: string | null }>(PublicConfigEntryEntity, [
+      Project.field(field(PublicConfigEntryEntity, "value")),
+    ], {
+      filters: [Filter.fieldValue(field(PublicConfigEntryEntity, "key"), "=", "redis_url")],
+    })
+  )?.value ?? null;
 if (redisUrl) {
   const redis = createClient({ url: redisUrl });
   try {
