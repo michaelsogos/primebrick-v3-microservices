@@ -28,7 +28,7 @@ export async function ingestDocsPack(payload: DocsPackPayload): Promise<Pipeline
     else logger.warn(`docs-pack: skipped unparsable doc ${repo}/${file.path}`, { tags: ["docs-pack"] });
   }
   if (payload.openapi) {
-    docs.push(...loadedDocsFromOpenApiSpec(`${repo}-openapi`, payload.openapi));
+    docs.push(...loadedDocsFromOpenApiSpec(`${repo}-openapi`, payload.openapi, repo));
   }
 
   const stats: PipelineStats = {

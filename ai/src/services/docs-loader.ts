@@ -120,7 +120,7 @@ export function loadOpenApiSpecs(openApiPath: string): LoadedDoc[] {
  * Chunk a raw OpenAPI JSON spec into one LoadedDoc per endpoint — the pure
  * core shared by the filesystem loader and the docs-pack ingest.
  */
-export function loadedDocsFromOpenApiSpec(specName: string, raw: string): LoadedDoc[] {
+export function loadedDocsFromOpenApiSpec(specName: string, raw: string, repo = "api"): LoadedDoc[] {
   const spec = JSON.parse(raw) as {
     openapi?: string;
     info?: { title?: string };
@@ -136,13 +136,13 @@ export function loadedDocsFromOpenApiSpec(specName: string, raw: string): Loaded
       const endpoint = `${method.toUpperCase()} ${pathStr}`;
       const content = formatOpenApiEndpoint(specTitle, method.toUpperCase(), pathStr, op);
       docs.push({
-        repo: "api",
+        repo,
         path: `${specName}#${endpoint}`,
         title: op.summary || endpoint,
         content,
         metadata: {
           source: "openapi",
-          repo: "api",
+          repo,
           path: `${specName}#${endpoint}`,
           title: op.summary || endpoint,
           content_type: "api",
