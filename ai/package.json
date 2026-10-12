@@ -29,7 +29,8 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
-    "generate:docs": "bun scripts/build-docs-pack.ts"
+    "generate:docs": "bun scripts/build-docs-pack.ts",
+    "docs:reindex": "bun scripts/reindex-packs.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "3.0.11",
@@ -40,6 +41,7 @@
     "dotenv": "17.4.2",
     "nats": "2.29.3",
     "pg": "8.22.0",
+    "redis": "6.1.0",
     "reflect-metadata": "0.2.2",
     "zod": "4.4.3"
   },

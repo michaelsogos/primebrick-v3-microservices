@@ -25,6 +25,8 @@ import {
   listRecentTelemetry,
 } from "../../services/telemetry-repository.js";
 import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
+import { reindexDocsPacks, pullAllPacks } from "../../services/docs-pack-reindex.js";
+import { computeDocsDrift, runSearchProbes } from "../../services/docs-drift.js";
 import { getEmbeddingProvider } from "../../services/embedding-provider.js";
 import { checkRateLimit } from "../../services/rate-limiter.js";
 
@@ -400,12 +402,63 @@ export const AI_ROUTES: RpcRoute[] = [
   },
 
   {
+    method: "GET",
+    path: "/api/v1/ai/docs/index-status",
+    auth: "user",
+    permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Docs KB indexing status (admin)",
+      description:
+        "Per-repo doc/chunk counts, missing-embedding coverage, source-vs-index drift per service pack, and recent docs_ingest_log history. ?probe=1 also runs the canonical search probes (slower — embeds queries).",
+      tags: ["ai", "embeddings"],
+    },
+    handler: async ({ query }) => {
+      const pool = getDal().getPool();
+      const { rows: repos } = await pool.query(
+        `SELECT repo,
+                COUNT(DISTINCT path) AS docs,
+                COUNT(*) AS chunks,
+                COUNT(*) FILTER (WHERE embedding IS NULL) AS unembedded_chunks
+           FROM ai.docs_kb GROUP BY repo ORDER BY repo`,
+      );
+      const { rows: history } = await pool.query(
+        `SELECT id, repo, service_code, trigger_source, ok, stats, error, created_at
+           FROM ai.docs_ingest_log ORDER BY created_at DESC LIMIT 20`,
+      ).catch(() => ({ rows: [] as unknown[] }));
+      const { rows: size } = await pool.query(
+        `SELECT pg_total_relation_size('ai.docs_kb') AS total_bytes`,
+      );
+
+      const packs = await pullAllPacks();
+      const drift = await Promise.all(
+        packs.map(async (p) => {
+          if (!p.payload) return { service: p.service, error: p.error };
+          const d = await computeDocsDrift(p.payload);
+          return { service: p.service, repo: p.payload.manifest.repo, ...d };
+        }),
+      );
+
+      const withProbe = query.get("probe") === "1";
+      const probes = withProbe ? await runSearchProbes() : undefined;
+      return { repos, drift, history, probes, storage: size[0] ?? null };
+    },
+  },
+  {
     method: "POST",
     path: "/api/v1/ai/reindex",
     auth: "user",
     permissions: [Permission.AUTHENTICATED_ADMIN],
-    openapi: { summary: "Trigger embedding re-index (admin)", tags: ["ai", "embeddings"] },
-    handler: async ({ res }) => {
+    openapi: {
+      summary: "Trigger documentation re-index (admin)",
+      description:
+        "Body: { mode?: 'packs'|'fs', repo?: string }. Default 'packs' — re-pulls every live service's docs pack and re-ingests incrementally (repo narrows to one pack). 'fs' is the dev-only filesystem fallback, gated by docs_fs_pipeline=true.",
+      tags: ["ai", "embeddings"],
+    },
+    handler: async ({ body, res }) => {
+      const b = (body ?? {}) as { mode?: string; repo?: string };
+      if ((b.mode ?? "packs") === "packs") {
+        return { results: await reindexDocsPacks({ repo: b.repo, trigger: "manual" }) };
+      }
       // FS pipeline is the dev fallback — production KB comes from docs packs.
       if (aiConfig("docs_fs_pipeline") !== "true") {
         sendError(res, 400, "Reindex Disabled", "The filesystem pipeline is disabled — documentation is ingested via service docs packs. Set docs_fs_pipeline=true to use this dev fallback.");
