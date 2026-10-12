@@ -23,20 +23,40 @@ import { deleteRepoDocs } from "../../services/docs-kb-repository.js";
 /** service code → KB repo key, so unregister deletes the right corpus. */
 const repoByService = new Map<string, string>();
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Retry-bounded pack pull. The gateway_online → pull race loses when the
+ * BE rotates the client-shield secret at boot: the pull fires before
+ * `secret.rotated` reaches this service → 401 → without a retry the pack
+ * (and its KB corpus) would stay stale until the next lifecycle event.
+ */
 async function pullAndIngest(baseUrl: string, serviceCode: string): Promise<void> {
-  try {
-    const payload = await fetchDocsPack(baseUrl);
-    repoByService.set(serviceCode, payload.manifest.repo);
-    const stats = await ingestDocsPack(payload);
-    logger.info(
-      `Ingested the documentation pack of service ${serviceCode} — ${stats.chunks_embedded} chunks embedded, ${stats.chunks_skipped} unchanged, ${stats.chunks_deleted} removed (${stats.docs_loaded} docs, repo "${payload.manifest.repo}")`,
-      { tags: ["docs-pack"] },
-    );
-  } catch (err) {
-    logger.error(
-      `Failed to pull or ingest the documentation pack of service ${serviceCode} at ${baseUrl}`,
-      { tags: ["docs-pack"], error: err instanceof Error ? err.message : err },
-    );
+  const MAX_ATTEMPTS = 6;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const payload = await fetchDocsPack(baseUrl);
+      repoByService.set(serviceCode, payload.manifest.repo);
+      const stats = await ingestDocsPack(payload);
+      logger.info(
+        `Ingested the documentation pack of service ${serviceCode} — ${stats.chunks_embedded} chunks embedded, ${stats.chunks_skipped} unchanged, ${stats.chunks_deleted} removed (${stats.docs_loaded} docs, repo "${payload.manifest.repo}")`,
+        { tags: ["docs-pack"] },
+      );
+      return;
+    } catch (err) {
+      if (attempt >= MAX_ATTEMPTS) {
+        logger.error(
+          `Failed to pull or ingest the documentation pack of service ${serviceCode} at ${baseUrl} after ${MAX_ATTEMPTS} attempts`,
+          { tags: ["docs-pack"], error: err instanceof Error ? err.message : err },
+        );
+        return;
+      }
+      logger.warn(
+        `docs-pack pull of ${serviceCode} failed (attempt ${attempt}/${MAX_ATTEMPTS}) — retrying in ${attempt * 5}s`,
+        { tags: ["docs-pack"], error: err instanceof Error ? err.message : err },
+      );
+      await sleep(attempt * 5000);
+    }
   }
 }
 

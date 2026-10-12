@@ -50,6 +50,12 @@ const art = (w) => (/^(u[sn]|eu|uni|use|user|one)/i.test(w) ? 'a' : (/^[aeiou]/i
 const titleOf = (r) => humanize(r.split('/').filter(Boolean).pop() ?? r).replace(/\b\w/g, c => c.toUpperCase());
 const stripIdp = (s) => s.replace(/^idp/i, '');
 
+// docs layout: generated page-manuals live under generated/ (the pipeline
+// owns them); hand-written docs live in manual/ or at user-guide root.
+// entities-crud is the one hand-written doc generated pages still link to.
+const HANDWRITTEN_SLUGS = new Set(['entities-crud']);
+const linkFor = (slug) => `/docs/user-guide/${HANDWRITTEN_SLUGS.has(slug) ? 'manual' : 'generated'}/${slug}`;
+
 function bestKey(name, keys, suffixRe) {
   const norm = name.toLowerCase().replace(/_/g, '');
   const cands = keys.filter(k => !suffixRe.test(k)).filter(k => {
@@ -480,9 +486,19 @@ for (const [route, pg] of Object.entries(pages)) {
     out.push('## Columns\n');
     out.push('| Column | Visible | Sortable | Filterable | Notes |');
     out.push('|--------|---------|----------|------------|-------|');
+    // Identity-provider link fields have no tooltip translation — they carry
+    // the same semantic on every entity (profile↔IDP correlation), so the
+    // note is emitted here instead of being left blank.
+    const inIdp = IDP_NAME ? `in ${IDP_NAME}` : 'in the identity provider';
+    const IDP_FIELD_NOTES = {
+      idp_code: `the record's identifier code ${inIdp} — the link between this row and the IDP record`,
+      idp_org: `the ${IDP_NAME ?? 'identity-provider'} organization this row belongs to`,
+      idp_username: `the login name ${inIdp}`,
+      issuer: `the identity-provider issuer that owns this identity`,
+    };
     const colRows = visible.map(c => {
       const label = T(c.label_key) ?? humanize(c.key);
-      const tip = c.tooltip ? (T(c.tooltip) ?? '') : '';
+      const tip = (c.tooltip ? (T(c.tooltip) ?? '') : '') || (IDP_FIELD_NOTES[c.key] ?? '');
       return { c, label, tip };
     });
     for (const { c, label, tip } of colRows)
@@ -553,7 +569,7 @@ for (const [route, pg] of Object.entries(pages)) {
     if (rels.length) {
       out.push('## Related entities\n');
       for (const r of rels)
-        out.push(`- A **${cap(entSingularT)}** is linked to **${titleOf(r.slug)}** through the **${r.label[0].toUpperCase() + r.label.slice(1)}** field — see [${titleOf(r.slug)}](/docs/user-guide/manual/${r.slug}).`);
+        out.push(`- A **${cap(entSingularT)}** is linked to **${titleOf(r.slug)}** through the **${r.label[0].toUpperCase() + r.label.slice(1)}** field — see [${titleOf(r.slug)}](${linkFor(r.slug)}).`);
       out.push('');
     }
   }
@@ -807,7 +823,7 @@ for (const [route, pg] of Object.entries(pages)) {
   related.add('entities-crud');
   related.delete(self);
   out.push('## Doc references\n');
-  for (const r of related) out.push(`- [${titleOf(r)}](/docs/user-guide/manual/${r})`);
+  for (const r of related) out.push(`- [${titleOf(r)}](${linkFor(r)})`);
   out.push('');
 
   const slug = isCreate ? leaf + '-create'

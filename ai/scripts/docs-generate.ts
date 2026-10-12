@@ -4,7 +4,9 @@
 //
 // Usage: bun scripts/docs-generate.ts [--no-index]
 // Env:   DATABASE_URL (required), FE_DIR, BE_DIR, DOCS_DIR
-//        DOCS_DIR default: ../../../primebrick-v3-docs/pages/frontend/guide/manual
+//        DOCS_DIR default: ../../../primebrick-be-v3/docs/user-guide/generated
+//        — generated manuals live in the OWNING repo (BE ships them in its
+//        docs pack); generated/ is pipeline-owned, manual/ is hand-written.
 import { spawnSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,7 +18,7 @@ const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const WORKSPACE = resolve(SCRIPTS, '..', '..', '..');
 const DOCS_DIR =
   process.env.DOCS_DIR ??
-  join(WORKSPACE, 'primebrick-v3-docs', 'pages', 'frontend', 'guide', 'manual');
+  join(WORKSPACE, 'primebrick-be-v3', 'docs', 'user-guide', 'generated');
 const PAGES_JSON = join(tmpdir(), 'primebrick-pages-all.json');
 
 if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not set');
