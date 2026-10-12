@@ -1,7 +1,6 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { join } from "node:path";
-import { createMicroservice, logger, pgServerBanner, composeRouteHandlers, docsPackRouteHandler } from "@primebrick/sdk";
+import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
 import { initDal, getDal } from "./db/dal.js";
 import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.js";
 import { EmailService } from "./services/email-service.js";
@@ -35,7 +34,7 @@ async function main(): Promise<void> {
     apiKeyPort: () => new EmailSenderApiKeyPort(),
     healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
 
-    routeHandler: composeRouteHandlers(compositeRouteHandler, docsPackRouteHandler(join(process.cwd(), "dist", "docs-pack"))),
+    routeHandler: compositeRouteHandler,
     endpoints: {
       // fire-and-forget: publisher never waits for a processing result
       nats_send: "nats://emailsender.send (fire-and-forget)",
