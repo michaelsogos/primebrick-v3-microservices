@@ -1,6 +1,7 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
+import { join } from "node:path";
+import { createMicroservice, logger, pgServerBanner, composeRouteHandlers, docsPackRouteHandler } from "@primebrick/sdk";
 import { initDal, getDal } from "./db/dal.js";
 import { ConfigRepositoryAdapter } from "./adapters/config-repository-adapter.js";
 import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
@@ -36,7 +37,7 @@ async function main(): Promise<void> {
     apiKeyPort: () => new CachedApiKeyPort(),
     healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
 
-    routeHandler: webhookRouteHandler,
+    routeHandler: composeRouteHandlers(webhookRouteHandler, docsPackRouteHandler(join(process.cwd(), "dist", "docs-pack"))),
     endpoints: { webhook: "/webhook" },
     // /webhook is a PUBLIC DMZ ingress — callers are external providers
     // (Brevo, …) with API-key auth, not internal services; they cannot and
