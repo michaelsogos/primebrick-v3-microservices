@@ -12,17 +12,27 @@ There is exactly ONE public API for database access: **`getDal()`** from
 Consumers (services, modules, controllers-via-services) MUST:
 - import `getDal` from `@primebrick/dal-pg` (or the repo's `db/dal.ts`
   re-export);
-- use `Repository`/`Dal` methods — `findAll`, `find`, `add`, `update`,
-  `delete`, `restore`, `query`;
-- receive `Dal`/`Repository`/`PoolClient` (tx) via parameters or the
-  singleton — never construct their own connection.
+- use `Dal` methods — `findAll`, `find`, `findByPage`, `add`, `update`,
+  `touch`, `delete`, `restore`, `hardDelete`, `*Many`, `vectorSearch`,
+  `truncate(entity)`, `count`;
+- multi-statement atomic work goes through `dal.transaction(txRepo => …)` —
+  the callback receives a tx-scoped `Repository`, NEVER a raw client;
+- connectivity/version probe is `dal.serverVersion()` (a successful call IS
+  the health probe — there is no `ping()`);
+- receive `Dal`/`Repository` (tx-scoped inside `transaction`) via parameters
+  or the singleton — never construct their own connection.
 
-Consumers MUST NOT:
+Consumers MUST NOT — NO EXCEPTIONS, EVER:
 - import `pg`, `pg.Pool`, `PoolClient` directly outside `src/db/`;
-- call `getDal().getPool()` or touch the raw pool — the pool is INTERNAL to
-  the `Dal` object; it is not a consumer API;
+- call `getDal().getPool()` / `.query(` / `client.query` anywhere in
+  application code — raw SQL is banned outright; there is no "legitimate
+  infra SQL" (`SELECT 1`/`version()`/`TRUNCATE`/`BEGIN` are all covered by
+  dedicated `Dal`/`Repository` methods);
+- call `dal.withClient` — it is `private` to dal-pg internals;
 - create `new Pool()`, `new Client()`, or raw `pool.query` calls;
-- bypass dal-pg's `Dal`/`Repository` for entity reads/writes.
+- bypass dal-pg's `Repository` for entity reads/writes;
+- write `upsert`/`INSERT … ON CONFLICT` — removed by design; the standard is
+  read (`uuid`+`version`) then `add`/`update` (optimistic lock enforced).
 
 ## Library authoring (enforced by visibility)
 
@@ -32,7 +42,14 @@ Consumers MUST NOT:
 - TS visibility: infra internals stay `private`/module-local; consumers get
   only `getDal`. New helpers that would leak `pg` types must NOT be exported
   from public barrels.
-- Lint/CI check: `pg` imports outside `src/db/` should fail review.
+- Lint/CI check: `pnpm check:standards` (wired into `prebuild` + `test`)
+  fails the build on `pg` imports, `getPool()`, `.query(`, `new Pool(`,
+  `withClient`, `upsert`, raw SQL literals, `new Repository(`,
+  `client|pool.ping(` and `JSON.stringify`/`JSON.parse` in `src/**`.
+  Legitimate sites (migration `getPool` seam, external wire formats like
+  RFC7807/Brevo/OpenAI/inbound webhooks) carry an explicit
+  `// standards-exempt: <rule> — <reason>` on the same/previous line —
+  a missing reason is itself a violation.
 
 ## Audit vs events (do NOT conflate)
 

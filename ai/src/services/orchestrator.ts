@@ -206,6 +206,7 @@ export async function orchestrate(
             },
             tokens_in: event.usage.inputTokens ?? 0,
             tokens_out: event.usage.outputTokens ?? 0,
+            actor: config.userUuid,
           });
         }
 

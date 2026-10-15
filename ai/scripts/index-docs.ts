@@ -7,7 +7,7 @@
 //
 // Env vars:
 //   DATABASE_URL — PostgreSQL connection string (required)
-//   DB_SCHEMA — schema name (default: ai)
+//   DATABASE_SCHEMA — schema name (required, assertDbEnv)
 //   DOCS_PATH — path to docs pages directory (default: ../../primebrick-v3-docs/pages)
 //   OPENAPI_PATH — path to OpenAPI specs (default: ../../primebrick-v3-docs/apis)
 //   EMBEDDING_PROVIDER — "transformers" (default) | "openai"
@@ -20,7 +20,7 @@ import "reflect-metadata";
 import { join } from "node:path";
 import { initDal, getDal } from "../src/db/dal.js";
 import { runEmbeddingPipeline } from "../src/services/embedding-pipeline.js";
-import { logger } from "@primebrick/sdk";
+import { logger, assertDbEnv } from "@primebrick/sdk";
 
 async function main(): Promise<void> {
   const url = process.env.DATABASE_URL;
@@ -28,7 +28,7 @@ async function main(): Promise<void> {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const schema = process.env.DB_SCHEMA || "ai";
+  const schema = assertDbEnv().schemas[0];
   const docsPath = process.env.DOCS_PATH || join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
   const openApiPath = process.env.OPENAPI_PATH || join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
 

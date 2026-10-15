@@ -5,14 +5,11 @@
  * behaviour (fetch → hash-diff → repo-scoped stale delete → ingest log)
  * can never drift between triggers.
  */
-import { logger, fetchDocsPack, requireActor, SYSTEM_ACTOR, type DocsPackPayload } from "@primebrick/sdk";
-import { field, Filter } from "@primebrick/dal-pg";
+import { logger, fetchDocsPack, requireActor, SYSTEM_ACTOR, callNats, type DocsPackPayload } from "@primebrick/sdk";
 import { ingestDocsPack } from "./docs-pack-ingest.js";
 import type { PipelineStats } from "./embedding-pipeline.js";
 import { getDal } from "../db/dal.js";
-import { entityRepo } from "../db/entity-repo.js";
 import { DocsIngestLogEntity } from "../domain/entities/docs_ingest_log_entity.js";
-import { ServiceRegistryEntity } from "../domain/entities/service_registry_entity.js";
 import { aiConfig } from "../config/ai-config.js";
 
 export type DocsIngestTrigger =
@@ -47,7 +44,7 @@ async function logDocsIngest(
     actor = SYSTEM_ACTOR;
   }
   try {
-    await entityRepo().add(DocsIngestLogEntity, {
+    await getDal().add(DocsIngestLogEntity, {
       repo: repo ?? undefined,
       service_code: serviceCode,
       trigger_source: trigger,
@@ -108,21 +105,27 @@ export async function pullAndIngest(
  * the BE itself (the BE never publishes service.register — it IS the
  * registry). `repo` narrows to one pack for targeted rebuilds.
  */
-/** Live services that ship a docs pack, BE first (it never registers — it IS the registry). */
+/** Live services that ship a docs pack, BE first (it never registers — it IS the registry).
+ *  Resolved via the governed `service.registry.get` NATS route — under schema
+ *  sovereignty no US may read public.service_registry directly. */
 async function docsPackTargets(beBaseUrl?: string): Promise<Array<{ code: string; base_url: string }>> {
-  const rows = (await getDal().findAll<ServiceRegistryEntity, { code: string; base_url: string; capabilities: string[] }>(
-    ServiceRegistryEntity,
-    null,
-    {
-      filters: [
-        Filter.fieldValue(field(ServiceRegistryEntity, "status"), "=", "online"),
-        Filter.fieldValue(field(ServiceRegistryEntity, "is_enabled"), "=", true),
-      ],
-    },
-  )) as Array<{ code: string; base_url: string; capabilities: string[] }>;
+  let rows: Array<{ code: string; base_url: string }> = [];
+  try {
+    const res = await callNats<Array<{ code: string; base_url: string }>>(
+      "service.registry.get",
+      { capability: "docs_pack" },
+      { timeoutMs: 3000 },
+    );
+    rows = Array.isArray(res) ? res : [];
+  } catch (err) {
+    logger.warn("service.registry.get (docs_pack) failed — BE-only reindex this run", {
+      tags: ["docs-pack"],
+      error: err instanceof Error ? err.message : err,
+    });
+  }
   return [
     { code: "backend", base_url: beBaseUrl ?? aiConfig("be_base_url") ?? "http://localhost:3001" },
-    ...rows.filter((r) => Array.isArray(r.capabilities) && r.capabilities.includes("docs_pack")),
+    ...rows,
   ];
 }
 

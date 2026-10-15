@@ -6,7 +6,8 @@ const mocks = vi.hoisted(() => ({
   load_openapi_specs: vi.fn(),
   embed_batch: vi.fn(),
   get_doc_hashes: vi.fn(),
-  upsert_doc_chunk: vi.fn(),
+  insert_doc_chunks: vi.fn(),
+  update_doc_chunks: vi.fn(),
   delete_stale_chunks: vi.fn(),
   get_all_doc_paths: vi.fn(),
   delete_doc: vi.fn(),
@@ -26,7 +27,8 @@ vi.mock('../src/services/embedding-provider.js', () => ({
   }),
 }));
 vi.mock('../src/services/docs-kb-repository.js', () => ({
-  upsertDocChunk: mocks.upsert_doc_chunk,
+  insertDocChunks: mocks.insert_doc_chunks,
+  updateDocChunks: mocks.update_doc_chunks,
   getDocHashes: mocks.get_doc_hashes,
   deleteStaleChunks: mocks.delete_stale_chunks,
   getAllDocPaths: mocks.get_all_doc_paths,
@@ -58,7 +60,8 @@ beforeEach(() => {
     texts.map(() => Array(384).fill(0.1)),
   );
   mocks.get_doc_hashes.mockResolvedValue(new Map());
-  mocks.upsert_doc_chunk.mockResolvedValue(undefined);
+  mocks.insert_doc_chunks.mockResolvedValue(undefined);
+  mocks.update_doc_chunks.mockResolvedValue(undefined);
   mocks.delete_stale_chunks.mockResolvedValue(undefined);
   mocks.get_all_doc_paths.mockResolvedValue([{ repo: doc.repo, path: doc.path }]);
   mocks.delete_doc.mockResolvedValue(undefined);
@@ -76,14 +79,14 @@ describe('embedding input and incremental reindex', () => {
       .update(`test-provider\n${expected_input}\n[]\n`)
       .digest('hex');
     expect(mocks.embed_batch).toHaveBeenCalledWith([expected_input]);
-    expect(mocks.upsert_doc_chunk).toHaveBeenCalledWith(
+    expect(mocks.insert_doc_chunks).toHaveBeenCalledWith([
       expect.objectContaining({
         title: 'RBAC',
         content: doc.content,
         content_hash: expected_hash,
         metadata: expect.objectContaining({ heading_path: 'Default roles' }),
       }),
-    );
+    ]);
   });
 
   it('re-embeds a same-content chunk when its title changed', async () => {

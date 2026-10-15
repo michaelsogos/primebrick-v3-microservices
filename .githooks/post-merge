@@ -1,0 +1,32 @@
+#!/bin/sh
+# Apply pending SQL migrations for every microservice that carries patches.
+# Only APPLIES committed, manifest-verified patches — it never generates them
+# (generation is `primebrick-db compare` + `primebrick-db sign`, a deliberate
+# dev action). A failing patch is recorded in <schema>.primebrick_database_patches
+# and retried on the next run — the hook exits non-zero with actionable output.
+set -e
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+cd "$ROOT" || exit 0
+
+if [ "${PB_SKIP_POST_MERGE_DB_MIGRATE:-}" = "1" ]; then
+  echo "post-merge: PB_SKIP_POST_MERGE_DB_MIGRATE=1 — skipping db:migrate"
+  exit 0
+fi
+
+FAILED=0
+for svc in ai emailsender webhook job-handler; do
+  if [ -f "$svc/package.json" ] && grep -q '"db:migrate"' "$svc/package.json" 2>/dev/null; then
+    if [ -z "$DATABASE_URL" ] && [ ! -f "$svc/.env" ]; then
+      echo "post-merge: $svc — DATABASE_URL not set and no .env — skipping"
+      continue
+    fi
+    echo "post-merge: $svc — applying database patches…"
+    if ! (cd "$svc" && bun run db:migrate); then
+      echo "post-merge: $svc — db:migrate FAILED (see above; recorded in registry, retried on next run)"
+      FAILED=1
+    fi
+  fi
+done
+
+exit $FAILED

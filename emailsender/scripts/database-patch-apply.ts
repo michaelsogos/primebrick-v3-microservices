@@ -1,29 +1,41 @@
-// emailsender migration runner — uses @primebrick/sdk's applyPatches.
-// The SDK is DB-agnostic; this script provides the DatabaseAdapter that wraps pg.Pool.
+// job-handler migration runner — thin wrapper over the dal-pg engine.
+// The SAME code path runs at service boot (createMicroservice dbPatches);
+// this script exists for manual/dev runs only.
 import "dotenv/config";
 import { Pool } from "pg";
 import { join } from "node:path";
-import { applyPatches, logger } from "@primebrick/sdk";
-import { DatabaseAdapter } from "../src/adapters/database-adapter.js";
+import { runMigrations } from "@primebrick/dal-pg";
+import { logger, assertDbEnv } from "@primebrick/sdk";
 
 const PATCHES_DIR = join(process.cwd(), "db-meta", "patches");
 
 async function main() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
+  const { url, schemas } = assertDbEnv();
+  const schema = schemas[0];
 
-  const pool = new Pool({ connectionString: url, max: 1 });
-  const db = new DatabaseAdapter(pool);
-
+  const pool = new Pool({ connectionString: url, max: 4 });
   try {
-    const result = await applyPatches(PATCHES_DIR, db);
-    logger.info(`Migration complete: ${result.appliedOrRegistered} applied/registered, ${result.skipped} skipped.`, { tags: ["db-patches"] });
+    const result = await runMigrations({
+      pool,
+      schema,
+      patchesDir: PATCHES_DIR,
+      allowedTrust: ["dev", "release"],
+      actor: `cli:${process.pid}`,
+      logger,
+    });
+    logger.info(
+      `db-migration: ${result.applied.length} applied, ${result.skipped.length} skipped, ${result.failed.length} failed`,
+      { tags: ["db-patches"] },
+    );
+    if (result.degraded || result.failed.length || result.securityEvents.length) {
+      process.exit(1);
+    }
   } finally {
     await pool.end();
   }
 }
 
 main().catch((err) => {
-  logger.error("Migration failed", { tags: ["db-patches"], error: err });
+  console.error("Migration failed:", err);
   process.exit(1);
 });

@@ -3,10 +3,10 @@
  * knowledge base (`ai.docs_kb`, populated by the ai microservice's manual
  * embedding pipeline).
  *
- * Raw SQL (not the DAL Repository): pgvector's cosine operator (<=>) is not
- * supported by the metadata-driven DAL. The BE never embeds text — callers
- * pass a pre-computed query embedding (384-dim float array); all vector math
- * runs inside Postgres.
+ * All SQL is built by the DAL's `vectorSearch` hybrid builder — no raw
+ * `pool.query`. The BE never embeds text — callers pass a pre-computed
+ * query embedding (384-dim float array); all vector math runs inside
+ * Postgres.
  *
  * Ranking: two-phase. Phase 1 uses the HNSW index to fetch the top-N nearest
  * chunks by cosine distance (ORDER BY embedding <=> $1 — the index is only
@@ -20,6 +20,8 @@
  * questions surface manual pages instead of raw API listings.
  */
 import { getDal } from "../db/dal.js";
+import { field, Filter, Project, type FilterExpr } from "@primebrick/dal-pg";
+import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 
 export interface DocsSearchResult {
   id: bigint;
@@ -56,6 +58,19 @@ const LEX_MATCH_MIN = 0.1;
 /** How many HNSW candidates to fetch before keyword re-ranking. */
 const OVERSAMPLE = 4;
 
+const KB_FIELDS = (["id", "repo", "path", "title", "chunk_idx", "content", "metadata"] as const)
+  .map((k) => Project.field(field(DocsKbEntity, k)));
+
+/** Row shape returned by the hybrid `vectorSearch` — KB projection plus
+ *  the channel columns the builder adds on demand. */
+type SearchRow = Pick<DocsKbEntity, "id" | "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata"> & {
+  similarity: number;
+  keyword_hits?: number;
+  lexical_score?: number;
+  lexical_match?: boolean;
+  score: number;
+};
+
 export async function searchDocsKb(
   opts: {
     embedding: number[];
@@ -81,15 +96,10 @@ export async function searchDocsKb(
   },
 ): Promise<DocsSearchResult[]> {
   const limit = Math.min(Math.max(opts.limit ?? 6, 1), 20);
-  const keywordBoost = opts.keyword_boost ?? KEYWORD_BOOST;
-  const lexicalBoost = opts.lexical_boost ?? LEXICAL_BOOST;
-  const lexMatchMin = opts.lex_match_min ?? LEX_MATCH_MIN;
-  const oversample = Math.min(Math.max(opts.oversample ?? OVERSAMPLE, 1), 10);
   const keywords = (opts.keywords ?? [])
     .map((k) => k.trim())
     .filter((k) => k.length >= 2)
     .slice(0, 10);
-  const embeddingStr = `[${opts.embedding.join(",")}]`;
 
   // Hybrid retrieval: the HNSW vector channel is unioned with a full-text
   // lexical channel (websearch_to_tsquery over the S0 keywords, 'simple'
@@ -99,83 +109,42 @@ export async function searchDocsKb(
   // stays the floor metric, `lexical_score` only re-ranks.
   const lexQuery = keywords.join(" ").trim() || null;
 
-  const pool = getDal().getPool();
-  const result = await pool.query(
-    `WITH vec AS (
-       SELECT d.id,
-              1 - (d.embedding <=> $1::public.vector) AS similarity
-       FROM ai.docs_kb d
-       WHERE ($4::text IS NULL OR d.repo = $4)
-         AND ($10::text IS NULL OR d.path LIKE $10 || '%')
-       ORDER BY d.embedding <=> $1::public.vector
-       LIMIT $2::int * $6::int
-     ),
-     lex AS (
-       SELECT d.id,
-              ts_rank_cd(to_tsvector('simple', d.content),
-                         websearch_to_tsquery('simple', $7::text)) AS lexical_score
-       FROM ai.docs_kb d
-       WHERE $7::text IS NOT NULL
-         AND ($4::text IS NULL OR d.repo = $4)
-         AND ($10::text IS NULL OR d.path LIKE $10 || '%')
-         AND to_tsvector('simple', d.content) @@ websearch_to_tsquery('simple', $7::text)
-       ORDER BY lexical_score DESC
-       LIMIT $2::int * $6::int
-     ),
-     candidates AS (
-       SELECT
-         d.id, d.repo, d.path, d.title, d.chunk_idx, d.content, d.metadata,
-         COALESCE(v.similarity, 1 - (d.embedding <=> $1::public.vector)) AS similarity,
-         COALESCE(l.lexical_score, 0)::float8 AS lexical_score,
-         (v.id IS NULL AND l.lexical_score >= $9::float8) AS lexical_match
-       FROM ai.docs_kb d
-       JOIN (SELECT id FROM vec UNION SELECT id FROM lex) cand ON cand.id = d.id
-       LEFT JOIN vec v ON v.id = d.id
-       LEFT JOIN lex l ON l.id = d.id
-     ),
-     scored AS (
-       SELECT c.*, k.keyword_hits
-       FROM candidates c
-       CROSS JOIN LATERAL (
-         SELECT COUNT(*)::int AS keyword_hits
-         FROM unnest($3::text[]) AS kw
-         WHERE c.title ILIKE '%' || kw || '%'
-            OR c.path ILIKE '%' || kw || '%'
-            OR c.content ILIKE '%' || kw || '%'
-       ) k
-     )
-     SELECT
-       id, repo, path, title, chunk_idx, content, metadata,
-       similarity, keyword_hits, lexical_score, lexical_match,
-       similarity + $5::float8 * keyword_hits + $8::float8 * lexical_score
-         + CASE metadata->>'content_type'
-             WHEN 'tutorial' THEN 0.08
-             WHEN 'conceptual' THEN 0.03
-             WHEN 'api' THEN -0.10
-             ELSE 0
-           END AS score
-     FROM scored
-     ORDER BY score DESC
-     LIMIT $2`,
-    [
-      embeddingStr,
-      limit,
-      keywords.length > 0 ? keywords : null,
-      opts.repo ?? null,
-      keywordBoost,
-      oversample,
-      lexQuery,
-      lexicalBoost,
-      lexMatchMin,
-      opts.path_prefix ?? null,
-    ],
-  );
+  const filters: FilterExpr[] = [];
+  if (opts.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", opts.repo));
+  if (opts.path_prefix) filters.push(Filter.fieldValue(field(DocsKbEntity, "path"), "LIKE", `${opts.path_prefix}%`));
 
-  const hits = result.rows.map((row) => ({
-    ...(row as Omit<DocsSearchResult, "score" | "similarity" | "keyword_hits" | "lexical_score" | "lexical_match">),
+  const rows = await getDal().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), opts.embedding, {
+    topK: limit,
+    fields: [...KB_FIELDS],
+    filters,
+    oversample: Math.min(Math.max(opts.oversample ?? OVERSAMPLE, 1), 10),
+    lexical: lexQuery
+      ? {
+          field: field(DocsKbEntity, "content"),
+          query: lexQuery,
+          config: "simple",
+          boost: opts.lexical_boost ?? LEXICAL_BOOST,
+          minScore: opts.lex_match_min ?? LEX_MATCH_MIN,
+        }
+      : undefined,
+    keywordBoost: keywords.length
+      ? {
+          terms: keywords,
+          fields: [field(DocsKbEntity, "title"), field(DocsKbEntity, "path"), field(DocsKbEntity, "content")],
+          boost: opts.keyword_boost ?? KEYWORD_BOOST,
+        }
+      : undefined,
+    scoreAdjust: {
+      expr: "metadata->>'content_type'",
+      map: { tutorial: 0.08, conceptual: 0.03, api: -0.10 },
+    },
+  });
+
+  const hits = rows.map((row) => ({
+    ...(row as unknown as Omit<DocsSearchResult, "score" | "similarity" | "keyword_hits" | "lexical_score" | "lexical_match">),
     similarity: Number(row.similarity),
-    keyword_hits: Number(row.keyword_hits),
-    lexical_score: Number(row.lexical_score),
+    keyword_hits: Number(row.keyword_hits ?? 0),
+    lexical_score: Number(row.lexical_score ?? 0),
     lexical_match: row.lexical_match === true,
     score: Number(row.score),
   }));
@@ -197,6 +166,10 @@ export async function searchDocsKb(
  * Bounded: distinct linked paths are capped to keep the context sane.
  */
 const GRAPH_MAX_PATHS = 6;
+/** Upper bound on rows fetched for graph expansion — must cover every
+ *  chunk of the ≤20 linked paths (DISTINCT ON semantics are reproduced in
+ *  JS: the builder orders by distance, we keep the first row per path). */
+const GRAPH_ROW_BUDGET = 512;
 
 async function expandDocGraph(
   embedding: number[],
@@ -215,25 +188,28 @@ async function expandDocGraph(
   const paths = linked.slice(0, Math.min(Math.max(maxPaths, 0), 20));
   if (!paths.length) return [];
 
-  const pool = getDal().getPool();
-  const result = await pool.query(
-    `SELECT DISTINCT ON (d.path)
-       d.id, d.repo, d.path, d.title, d.chunk_idx, d.content, d.metadata,
-       1 - (d.embedding <=> $1::public.vector) AS similarity
-     FROM ai.docs_kb d
-     WHERE d.path = ANY($2::text[])
-     ORDER BY d.path, d.embedding <=> $1::public.vector`,
-    [`[${embedding.join(",")}]`, paths],
-  );
+  // DISTINCT ON (path) … ORDER BY path, distance — expressed as a filtered
+  // vectorSearch + JS keep-best-per-path (identical winner semantics).
+  const rows = await getDal().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), embedding, {
+    topK: GRAPH_ROW_BUDGET,
+    fields: [...KB_FIELDS],
+    filters: [Filter.fieldValue(field(DocsKbEntity, "path"), "IN", paths)],
+  });
 
-  return result.rows.map((row) => ({
+  const bestByPath = new Map<string, (typeof rows)[number]>();
+  for (const row of rows) {
+    // Rows arrive ordered by distance — first seen per path is the winner.
+    if (!bestByPath.has(row.path)) bestByPath.set(row.path, row);
+  }
+
+  return [...bestByPath.values()].map((row) => ({
     id: row.id,
     repo: row.repo,
     path: row.path,
     title: row.title,
     chunk_idx: row.chunk_idx,
     content: row.content,
-    metadata: row.metadata,
+    metadata: row.metadata as Record<string, unknown>,
     similarity: Number(row.similarity),
     keyword_hits: 0,
     lexical_score: 0,
@@ -251,21 +227,27 @@ async function expandDocGraph(
 export async function getDocByPath(
   params: { path: string; repo?: string },
 ): Promise<{ repo: string; path: string; title: string; content: string; metadata: Record<string, unknown> } | null> {
-  const pool = getDal().getPool();
-  const result = await pool.query(
-    `SELECT repo, path, title, content, metadata
-     FROM ai.docs_kb
-     WHERE path = $1 ${params.repo ? "AND repo = $2" : ""}
-     ORDER BY repo, chunk_idx`,
-    params.repo ? [params.path, params.repo] : [params.path],
-  );
-  if (!result.rows.length) return null;
-  const first = result.rows[0];
+  const filters: FilterExpr[] = [Filter.fieldValue(field(DocsKbEntity, "path"), "=", params.path)];
+  if (params.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", params.repo));
+
+  const rows = await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
+    DocsKbEntity,
+    [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "title")), Project.field(field(DocsKbEntity, "content")), Project.field(field(DocsKbEntity, "metadata"))],
+    {
+      filters,
+      sorting: [
+        { field: field(DocsKbEntity, "repo"), dir: "ASC" },
+        { field: field(DocsKbEntity, "chunk_idx"), dir: "ASC" },
+      ],
+    },
+  ) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">[]>;
+  if (!rows.length) return null;
+  const first = rows[0]!;
   // Same path can exist in several repos — when the caller omits `repo`,
   // return only the first repo's chunks (rows are ordered by repo).
-  const content = result.rows
+  const content = rows
     .filter((r) => r.repo === first.repo)
     .map((r) => r.content)
     .join("\n\n");
-  return { repo: first.repo, path: first.path, title: first.title, content, metadata: first.metadata ?? {} };
+  return { repo: first.repo, path: first.path, title: first.title, content, metadata: (first.metadata ?? {}) as Record<string, unknown> };
 }

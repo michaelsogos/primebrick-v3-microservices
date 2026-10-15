@@ -10,7 +10,7 @@
  * - TRUNCATE between tests for isolation.
  * - Seed helpers for ProviderEntity and EmailTemplateEntity rows.
  *
- * The other tables (providers, email_templates, config, public.service_registry)
+ * The other tables (providers, email_templates, config)
  * are assumed to already exist in the DB (created by the migration patches or
  * manually). This helper only creates what's missing.
  */
@@ -18,26 +18,21 @@ import "dotenv/config";
 import { getDal, resetDal, type DalConfig } from "@primebrick/dal-pg";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../../src/domain/entities/registry.js";
 import { Filter, field } from "@primebrick/dal-pg";
+import { assertDbEnv } from "@primebrick/sdk";
 
 let dalInitialized = false;
 
 /**
  * Initialize the Dal gateway singleton once. Subsequent calls are no-ops.
- * Reads DATABASE_URL and DB_SCHEMA from env (same as src/db/dal.ts).
+ * Reads DATABASE_URL and DATABASE_SCHEMA via assertDbEnv (same as src/db/dal.ts).
  */
 export function initTestDal(): void {
   if (dalInitialized) return;
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error(
-      "DATABASE_URL is not set. Create a .env file in the emailsender directory with DATABASE_URL=postgresql://user:pass@host:port/dbname",
-    );
-  }
-  const schema = process.env.DB_SCHEMA || "emailsender";
+  const { url, schemas } = assertDbEnv();
 
   const config: DalConfig = {
     connectionString: url,
-    schema,
+    schemas,
     max: 5,
     statementTimeoutMs: 30000,
     applicationName: "primebrick-emailsender-test",
@@ -81,7 +76,7 @@ export async function setupTestSchema(): Promise<void> {
 }
 
 /**
- * Truncate all emailsender tables + public.service_registry between tests.
+ * Truncate all emailsender tables between tests.
  * Uses RESTART IDENTITY CASCADE for clean state.
  */
 export async function truncateTestTables(): Promise<void> {
@@ -94,8 +89,7 @@ export async function truncateTestTables(): Promise<void> {
       "emailsender"."providers",
       "emailsender"."email_templates",
       "emailsender"."sender_log",
-      "emailsender"."config",
-      "public"."service_registry"
+      "emailsender"."config"
     RESTART IDENTITY CASCADE;
   `);
 }

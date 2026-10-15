@@ -7,10 +7,7 @@
  *
  * Migrated from the BE's `modules/ai-cerebellum`.
  */
-import {
-  makeEntityService,
-  type EntityService,
-} from "@primebrick/dal-pg";
+import { type EntityService } from "@primebrick/dal-pg";
 import { ValidationError } from "@primebrick/sdk";
 import { AiCerebellumEntity } from "../../domain/entities/ai_cerebellum_entity.js";
 import type {
@@ -24,16 +21,15 @@ import {
   AI_CEREBELLUM_SEARCHABLE_KEYS,
   AI_CEREBELLUM_FILTERABLE_KEYS,
 } from "./list-config.js";
-import { entityRepo, entityAuditPort, entityActor } from "../../db/entity-repo.js";
+import { entityActor } from "../../db/entity-repo.js";
+import { getDal } from "../../db/dal.js";
 
 export class AiCerebellumService {
   private svc: EntityService<AiCerebellumDetailDto>;
 
   constructor() {
-    this.svc = makeEntityService<AiCerebellumDetailDto>({
+    this.svc = getDal().entityService<AiCerebellumDetailDto>({
       entity: AiCerebellumEntity,
-      repo: entityRepo(),
-      auditPort: entityAuditPort(),
       actor: entityActor,
       list: {
         searchableKeys: AI_CEREBELLUM_SEARCHABLE_KEYS,

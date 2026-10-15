@@ -1,11 +1,13 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
+import { join } from "node:path";
+import { createMicroservice, logger, pgServerBanner, assertDbEnv, CachingApiKeyPort, NatsApiKeyPort } from "@primebrick/sdk";
+import * as dalMigrations from "@primebrick/dal-pg";
 import { initDal, getDal } from "./db/dal.js";
+import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { ConfigRepositoryAdapter } from "./adapters/config-repository-adapter.js";
 import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { WebhookAuthConfigPort } from "./adapters/auth-ports-adapter.js";
-import { CachedApiKeyPort } from "./auth/precheck-port.js";
 import {
   webhookRouteHandler,
   setWebhookAuthDependencies,
@@ -22,19 +24,35 @@ async function main(): Promise<void> {
     icon: "webhook",
     iconType: "icon",
 
-    envSchema: {
-      DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
-      DB_SCHEMA: { required: false, default: "webhook", description: "Database schema name" },
-    },
+    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
+    // enforced by assertDbEnv() inside createMicroservice — envSchema has
+    // no keys left to declare.
+    envSchema: {},
 
     initDal,
     dalClose: async () => { await getDal().close(); },
-    dbBanner: () => pgServerBanner(getDal().getPool(), process.env.DATABASE_URL!),
+    dbBanner: () => pgServerBanner(getDal(), process.env.DATABASE_URL!),
+
+    // Step 2.5 — own-schema migrations BEFORE ConfigLoader/registration.
+    // Mode lives in webhook.config_entries (key db_migration.mode).
+    dbPatches: {
+      engine: dalMigrations,
+      // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
+      pool: () => getDal().getPool(),
+      schema: () => assertDbEnv().schemas[0],
+      patchesDir: join(process.cwd(), "db-meta", "patches"),
+      entityRegistry: [...ENTITY_REGISTRY],
+      allowedTrust:
+        process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
+    },
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new WebhookAuthConfigPort(configLoader),
-    apiKeyPort: () => new CachedApiKeyPort(),
-    healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
+    // No CachePort here — webhook is a public DMZ ingress without Redis;
+    // CachingApiKeyPort falls back to the bounded in-memory mode
+    // (60s positive / 10s negative / max 1000 entries).
+    apiKeyPort: () => new CachingApiKeyPort(new NatsApiKeyPort(3000)),
+    healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
     routeHandler: webhookRouteHandler,
     endpoints: { webhook: "/webhook" },

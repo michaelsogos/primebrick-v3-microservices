@@ -25,6 +25,7 @@ sub-folder with its own `src/`, `package.json`, `Dockerfile`, `db-meta/`, and
 | Service | Code | Port | Description |
 |---------|------|------|-------------|
 | [EmailSender](/dev/microservices/services/emailsender) | `emailsender` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo™ |
+| [JobHandler](/dev/microservices/job-handler) | `job` | 3006 | Job scheduling, governance, and execution observability — NATS JetStream native scheduler, business `job_rules`, run history |
 
 New microservices are added as new top-level sub-folders. Each must contain
 a `package.json` with a `name` starting with `primebrick-` and a `src/index.ts`
@@ -75,7 +76,8 @@ bun dist/index.js          # starts on port 3003 (from config table)
 
 The microservice reads its NATS™ URL, HTTP port, and service code from the
 `config_entries` table at startup via the SDK's `ConfigLoader` — not from env vars.
-The only required env vars are `DATABASE_URL` and (optionally) `DB_SCHEMA`.
+The only required env vars are `DATABASE_URL` and `DATABASE_SCHEMA` (the
+service's owned PG schema — closed-set validated by `assertDbEnv()`).
 
 To verify the service is running:
 

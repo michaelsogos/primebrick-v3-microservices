@@ -1,16 +1,16 @@
-import type { Pool } from "pg";
+import type { Dal } from "@primebrick/dal-pg";
 import type { HealthCheckPort } from "@primebrick/sdk";
 
 /**
- * Adapts pg.Pool to the SDK's HealthCheckPort interface.
- * Used by HealthCheck to verify DB connectivity via `SELECT 1`.
+ * Adapts dal-pg to the SDK's HealthCheckPort interface.
+ * Used by HealthCheck to verify DB connectivity.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly dal: Dal) {}
 
   async ping(): Promise<boolean> {
     try {
-      await this.pool.query("SELECT 1");
+      await this.dal.serverVersion();
       return true;
     } catch {
       return false;

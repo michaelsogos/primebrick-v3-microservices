@@ -11,7 +11,8 @@ import { loadMdxDocs, loadOpenApiSpecs, type LoadedDoc } from "./docs-loader.js"
 import { buildEmbeddingInput, chunkMarkdown } from "./chunking.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
 import {
-  upsertDocChunk,
+  insertDocChunks,
+  updateDocChunks,
   getDocHashes,
   deleteStaleChunks,
   getAllDocPaths,
@@ -20,7 +21,7 @@ import {
   truncateDocsKb,
 } from "./docs-kb-repository.js";
 import { createHash } from "node:crypto";
-import { logger } from "@primebrick/sdk";
+import { logger, extJsonStringify } from "@primebrick/sdk";
 
 export interface PipelineStats {
   docs_loaded: number;
@@ -128,6 +129,8 @@ export async function ingestLoadedDocs(
     embedding_input: string;
     content_hash: string;
     metadata: Record<string, unknown>;
+    /** true = row exists and content_hash changed → update; false = new → insert. */
+    exists: boolean;
   }> = [];
 
   for (const doc of allDocs) {
@@ -154,7 +157,7 @@ export async function ingestLoadedDocs(
         // Links/entity are part of the hash: metadata-only doc edits must
         // re-upsert the chunks so their metadata stays in sync.
         const contentHash = createHash("sha256")
-          .update(`${provider.name}\n${embedding_input}\n${JSON.stringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
+          .update(`${provider.name}\n${embedding_input}\n${extJsonStringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
           .digest("hex");
         const existingHash = existingHashes.get(chunk.chunk_idx);
 
@@ -170,6 +173,7 @@ export async function ingestLoadedDocs(
           content: chunk.content,
           embedding_input,
           content_hash: contentHash,
+          exists: existingHashes.has(chunk.chunk_idx),
           metadata: {
             ...doc.metadata,
             heading_path,
@@ -195,9 +199,11 @@ export async function ingestLoadedDocs(
     try {
       const embeddings = await provider.embedBatch(batch.map((b) => b.embedding_input));
 
+      const newRows: Parameters<typeof insertDocChunks>[0] = [];
+      const changedRows: Parameters<typeof updateDocChunks>[0] = [];
       for (let j = 0; j < batch.length; j++) {
         const item = batch[j];
-        await upsertDocChunk({
+        (item.exists ? changedRows : newRows).push({
           repo: item.doc.repo,
           path: item.doc.path,
           title: item.doc.title,
@@ -207,8 +213,10 @@ export async function ingestLoadedDocs(
           embedding: embeddings[j],
           metadata: item.metadata,
         });
-        stats.chunks_embedded++;
       }
+      await insertDocChunks(newRows);
+      await updateDocChunks(changedRows);
+      stats.chunks_embedded += batch.length;
 
       // Progress log every 5 batches
       if ((i / BATCH_SIZE) % 5 === 0 && i > 0) {

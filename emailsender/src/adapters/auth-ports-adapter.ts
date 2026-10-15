@@ -6,20 +6,16 @@
  * implement UserResolverPort or RoleMappingPort.
  *
  * - EmailSenderAuthConfigPort: reads auth config from the microservice's own `config` table
- * - EmailSenderApiKeyPort: looks up API keys by hash from `public.api_keys` (cross-schema)
+ * - ApiKeyPort: NOT implemented here — `index.ts` wires the shared
+ *   `CachingApiKeyPort(NatsApiKeyPort, getSdkCachePort)` directly, since
+ *   `api_keys` lives in the BE-owned `public` schema and resolution always
+ *   goes through the governed `auth.apikey.byHash` route.
  */
 
-import { getDal } from "@primebrick/dal-pg";
 import {
   type AuthConfig,
   type AuthConfigPort,
-  type ApiKeyPort,
-  type ApiKeyRecord,
   AuthMode,
-  getSdkCachePort,
-  apiKeyCacheKey,
-  API_KEY_CACHE_TTL_MS,
-  logger,
 } from "@primebrick/sdk";
 import { ConfigLoader } from "@primebrick/sdk";
 import type { ConfigRepositoryPort } from "@primebrick/sdk";
@@ -71,44 +67,3 @@ export class EmailSenderAuthConfigPort implements AuthConfigPort {
   }
 }
 
-// ─── ApiKeyPort ───────────────────────────────────────────────────────────────
-
-export class EmailSenderApiKeyPort implements ApiKeyPort {
-  async findByHash(hash: string): Promise<ApiKeyRecord | null> {
-    const cacheKey = apiKeyCacheKey(hash);
-    const port = getSdkCachePort();
-    if (port) {
-      try {
-        const cached = await port.get<ApiKeyRecord>(cacheKey);
-        if (cached) return cached;
-      } catch (e) {
-        logger.warn(`api_keys cache get failed: ${e}`, { tags: ["auth-ports"] });
-      }
-    }
-    const pool = getDal().getPool();
-    const result = await pool.query(
-      `SELECT uuid, name, permissions, is_system, is_active, expires_at
-       FROM public.api_keys
-       WHERE key_hash = $1`,
-      [hash],
-    );
-    if (result.rows.length === 0) return null;
-    const row = result.rows[0];
-    const record: ApiKeyRecord = {
-      uuid: row.uuid,
-      name: row.name,
-      permissions: row.permissions || [],
-      is_system: row.is_system || false,
-      is_active: row.is_active !== false,
-      expires_at: row.expires_at ? new Date(row.expires_at) : null,
-    };
-    if (port) {
-      try {
-        await port.set(cacheKey, record, API_KEY_CACHE_TTL_MS);
-      } catch (e) {
-        logger.warn(`api_keys cache set failed: ${e}`, { tags: ["auth-ports"] });
-      }
-    }
-    return record;
-  }
-}

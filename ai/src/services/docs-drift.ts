@@ -8,7 +8,7 @@
  * "would the guide find it?" is the search probe in the same module.
  */
 
-import { logger, type DocsPackPayload } from "@primebrick/sdk";
+import { logger, extJsonStringify, type DocsPackPayload } from "@primebrick/sdk";
 import { createHash } from "node:crypto";
 import { loadedDocFromMdx, loadedDocsFromOpenApiSpec } from "./docs-loader.js";
 import { chunkMarkdown, buildEmbeddingInput } from "./chunking.js";
@@ -57,7 +57,7 @@ async function expectedHashes(payload: DocsPackPayload): Promise<Map<string, Map
         content_type: doc.metadata.content_type,
       });
       const contentHash = createHash("sha256")
-        .update(`${provider.name}\n${embedding_input}\n${JSON.stringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
+        .update(`${provider.name}\n${embedding_input}\n${extJsonStringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
         .digest("hex");
       hashes.set(chunk.chunk_idx, contentHash);
     }

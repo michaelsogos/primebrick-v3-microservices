@@ -10,10 +10,7 @@
  * Migrated from the BE's `modules/ai-models` — `internal_code`s preserved so
  * FE error handling keeps working.
  */
-import {
-  makeEntityService,
-  type EntityService,
-} from "@primebrick/dal-pg";
+import { type EntityService } from "@primebrick/dal-pg";
 import { ValidationError } from "@primebrick/sdk";
 import { AiModelEntity } from "../../domain/entities/ai_model_entity.js";
 import type {
@@ -28,16 +25,15 @@ import {
   AI_MODEL_FILTERABLE_KEYS,
 } from "./list-config.js";
 import { powerLevelFromWorkingSet } from "./power-level.js";
-import { entityRepo, entityAuditPort, entityActor } from "../../db/entity-repo.js";
+import { entityActor } from "../../db/entity-repo.js";
+import { getDal } from "../../db/dal.js";
 
 export class AiModelsService {
   private svc: EntityService<AiModelDetailDto>;
 
   constructor() {
-    this.svc = makeEntityService<AiModelDetailDto>({
+    this.svc = getDal().entityService<AiModelDetailDto>({
       entity: AiModelEntity,
-      repo: entityRepo(),
-      auditPort: entityAuditPort(),
       actor: entityActor,
       list: {
         searchableKeys: AI_MODEL_SEARCHABLE_KEYS,

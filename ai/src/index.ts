@@ -1,13 +1,16 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { join } from "node:path";
-import { createMicroservice, logger, composeRouteHandlers, pgServerBanner } from "@primebrick/sdk";
+import { createMicroservice, logger, composeRouteHandlers, pgServerBanner, assertDbEnv } from "@primebrick/sdk";
+import * as dalMigrations from "@primebrick/dal-pg";
+import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 import { aiEntityRouteHandler } from "./controllers/http/entities-route.js";
 import { docsSearchRouteHandler } from "./controllers/http/docs-search-route.js";
 import { startDocsPackSubscriber } from "./controllers/nats-sub/docs-pack-subscriber.js";
+import { startPartitionMaintenanceJob } from "./controllers/nats-sub/partition-jobs.js";
 import { openapiRouteHandler } from "./openapi.js";
 import {
   ConfigRepositoryAdapter,
@@ -24,24 +27,37 @@ async function main(): Promise<void> {
     icon: "sparkles",
     iconType: "icon",
 
-    envSchema: {
-      DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
-      DB_SCHEMA: { required: false, default: "ai", description: "Database schema name" },
-    },
+    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
+    // enforced by assertDbEnv() inside createMicroservice — envSchema has
+    // no keys left to declare.
+    envSchema: {},
 
     initDal,
     dalClose: async () => { await getDal().close(); },
-    dbBanner: () => pgServerBanner(getDal().getPool(), process.env.DATABASE_URL!),
+    dbBanner: () => pgServerBanner(getDal(), process.env.DATABASE_URL!),
+
+    // Step 2.5 — own-schema migrations BEFORE ConfigLoader/registration.
+    // Mode lives in ai.config_entries (key db_migration.mode) — never env.
+    dbPatches: {
+      engine: dalMigrations,
+      // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
+      pool: () => getDal().getPool(),
+      schema: () => assertDbEnv().schemas[0],
+      patchesDir: join(process.cwd(), "db-meta", "patches"),
+      entityRegistry: [...ENTITY_REGISTRY],
+      allowedTrust:
+        process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
+    },
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new AiAuthConfigPort(configLoader),
     // Lazy: getDal() only works after initDal ran inside createMicroservice.
-    healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
+    healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
     routeHandler: composeRouteHandlers(openapiRouteHandler, compositeRouteHandler, aiEntityRouteHandler, docsSearchRouteHandler),
 
     customHealthChecks: {
-      llm: async () => new HealthCheckAdapter(getDal().getPool()).checkLlm(aiConfig("llm_base_url") ?? "http://localhost:8080/v1"),
+      llm: async () => new HealthCheckAdapter(getDal()).checkLlm(aiConfig("llm_base_url") ?? "http://localhost:8080/v1"),
     },
 
     onReady: async (ctx) => {
@@ -64,6 +80,11 @@ async function main(): Promise<void> {
       // (docs_pack capability), drop repo docs on unregister, and pull the
       // BE pack once at startup (the BE never registers via NATS).
       await startDocsPackSubscriber(aiConfig("be_base_url") ?? "http://localhost:3001");
+
+      // Infrastructure jobs derived from entity metadata — arms the
+      // partition-maintenance schedule + durable executor when any
+      // @PartitionField entity carries a retention. No-op otherwise.
+      await startPartitionMaintenanceJob();
     },
   });
 }

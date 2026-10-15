@@ -38,11 +38,11 @@ export class DocsIngestLogEntity implements IAuditableEntity {
   @Column({ length: 20, nullable: false })
   trigger_source: string;
 
-  @Column({ pgType: "boolean", nullable: false })
+  @Column({ nullable: false })
   ok: boolean;
 
   /** PipelineStats snapshot: docs, chunks embedded/skipped/deleted, ms, etc. */
-  @Column({ pgType: "jsonb", nullable: false, defaultSql: "'{}'::jsonb" })
+  @Column({ nullable: false, defaultSql: "'{}'::jsonb" })
   stats: Record<string, unknown>;
 
   @Column({ nullable: true })

@@ -15,7 +15,7 @@
 import type { ServerResponse } from "http";
 import { field, Filter, Project } from "@primebrick/dal-pg";
 import { getDal } from "../../db/dal.js";
-import { Permission, type RpcRoute } from "@primebrick/sdk";
+import { Permission, extJsonStringify, type RpcRoute } from "@primebrick/sdk";
 import { ProviderEntity } from "../../domain/entities/provider_entity.js";
 
 function sendError(
@@ -25,6 +25,7 @@ function sendError(
   internalCode?: string,
 ): void {
   res.writeHead(status, { "Content-Type": "application/json" });
+  // standards-exempt: ext-json — RFC7807 problem+json is plain JSON by spec
   res.end(JSON.stringify({
     type: `https://primebrick.io/errors/${internalCode || "error"}`,
     title: message,
@@ -142,7 +143,7 @@ export const providerRoutes: RpcRoute[] = [
         reply_to: b.reply_to || null,
       }, { actor: user!.id });
       res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(created));
+      res.end(extJsonStringify(created));
     },
   },
   {

@@ -1,10 +1,13 @@
 /**
  * Telemetry persistence — per-request metrics for the AI orchestrator.
  *
- * Uses raw SQL on the public.ai_telemetry table (created by the BE's
- * init_database.sql patch). Follows the same pattern as conversation-repository.ts.
+ * Entity-backed on `ai.ai_telemetry` (AiTelemetryEntity) — no raw SQL:
+ * inserts go through `dal.add`, stats through `Project.expr` aggregates,
+ * recent listing through `findAll` + sort/limit.
  */
+import { field, Project, Sort } from "@primebrick/dal-pg";
 import { getDal } from "../db/dal.js";
+import { AiTelemetryEntity } from "../domain/entities/ai_telemetry_entity.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -37,6 +40,11 @@ export interface TelemetryStats {
 
 // ─── Repository ──────────────────────────────────────────────────────────────
 
+const TELEMETRY_FIELDS = (
+  ["uuid", "conversation_uuid", "user_uuid", "model", "tokens_in", "tokens_out",
+    "steps", "tool_calls", "rag_hits", "latency_ms", "success", "error", "created_at"] as const
+).map((k) => Project.field(field(AiTelemetryEntity, k)));
+
 export async function insertTelemetry(opts: {
   conversation_uuid?: string;
   user_uuid: string;
@@ -50,55 +58,33 @@ export async function insertTelemetry(opts: {
   success: boolean;
   error?: string;
 }): Promise<TelemetryRow> {
-  const pool = getDal().getPool();
-  const result = await pool.query<TelemetryRow>(
-    `INSERT INTO ai_telemetry
-       (conversation_uuid, user_uuid, model, tokens_in, tokens_out,
-        steps, tool_calls, rag_hits, latency_ms, success, error)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-     RETURNING uuid, conversation_uuid, user_uuid, model, tokens_in, tokens_out,
-       steps, tool_calls, rag_hits, latency_ms, success, error, created_at`,
-    [
-      opts.conversation_uuid ?? null,
-      opts.user_uuid,
-      opts.model,
-      opts.tokens_in,
-      opts.tokens_out,
-      opts.steps,
-      opts.tool_calls,
-      opts.rag_hits,
-      opts.latency_ms,
-      opts.success,
-      opts.error ?? null,
-    ],
-  );
-  return result.rows[0]!;
+  return (await getDal().add(AiTelemetryEntity, {
+    conversation_uuid: opts.conversation_uuid ?? null,
+    user_uuid: opts.user_uuid,
+    model: opts.model,
+    tokens_in: opts.tokens_in,
+    tokens_out: opts.tokens_out,
+    steps: opts.steps,
+    tool_calls: opts.tool_calls,
+    rag_hits: opts.rag_hits,
+    latency_ms: opts.latency_ms,
+    success: opts.success,
+    error: opts.error ?? null,
+  }, {})) as TelemetryRow;
 }
 
 export async function getTelemetryStats(): Promise<TelemetryStats> {
-  const pool = getDal().getPool();
-  const result = await pool.query<{
-    total_requests: string;
-    successful: string;
-    failed: string;
-    total_tokens_in: string;
-    total_tokens_out: string;
-    avg_latency_ms: string;
-    total_tool_calls: string;
-    total_rag_hits: string;
-  }>(
-    `SELECT
-       COUNT(*)::text AS total_requests,
-       COUNT(*) FILTER (WHERE success)::text AS successful,
-       COUNT(*) FILTER (WHERE NOT success)::text AS failed,
-       COALESCE(SUM(tokens_in), 0)::text AS total_tokens_in,
-       COALESCE(SUM(tokens_out), 0)::text AS total_tokens_out,
-       COALESCE(AVG(latency_ms), 0)::text AS avg_latency_ms,
-       COALESCE(SUM(tool_calls), 0)::text AS total_tool_calls,
-       COALESCE(SUM(rag_hits), 0)::text AS total_rag_hits
-     FROM ai_telemetry`,
-  );
-  const row = result.rows[0]!;
+  const rows = (await getDal().findAll(AiTelemetryEntity, [
+    Project.expr("COUNT(*)::text", "total_requests"),
+    Project.expr("COUNT(*) FILTER (WHERE success)::text", "successful"),
+    Project.expr("COUNT(*) FILTER (WHERE NOT success)::text", "failed"),
+    Project.expr("COALESCE(SUM(tokens_in), 0)::text", "total_tokens_in"),
+    Project.expr("COALESCE(SUM(tokens_out), 0)::text", "total_tokens_out"),
+    Project.expr("COALESCE(AVG(latency_ms), 0)::text", "avg_latency_ms"),
+    Project.expr("COALESCE(SUM(tool_calls), 0)::text", "total_tool_calls"),
+    Project.expr("COALESCE(SUM(rag_hits), 0)::text", "total_rag_hits"),
+  ])) as Record<string, string>[];
+  const row = rows[0] ?? {};
   return {
     total_requests: BigInt(row.total_requests ?? 0),
     successful: BigInt(row.successful ?? 0),
@@ -112,14 +98,10 @@ export async function getTelemetryStats(): Promise<TelemetryStats> {
 }
 
 export async function listRecentTelemetry(limit: number = 50): Promise<TelemetryRow[]> {
-  const pool = getDal().getPool();
-  const result = await pool.query<TelemetryRow>(
-    `SELECT uuid, conversation_uuid, user_uuid, model, tokens_in, tokens_out,
-       steps, tool_calls, rag_hits, latency_ms, success, error, created_at
-     FROM ai_telemetry
-     ORDER BY created_at DESC
-     LIMIT $1`,
-    [limit],
-  );
-  return result.rows;
+  // findByPage(page=1) — FindOptions has no bare `limit`; top-N goes
+  // through the paginated path.
+  const page = await getDal().findByPage(AiTelemetryEntity, 1, limit, [...TELEMETRY_FIELDS], {
+    sorting: [Sort.by(field(AiTelemetryEntity, "created_at"), "DESC")],
+  });
+  return page.entities as TelemetryRow[];
 }

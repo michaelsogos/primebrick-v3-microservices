@@ -87,7 +87,7 @@ export type AiModelDetailRow = {
   sort_order: number;
   download_size_mb?: number;
   vram_mb?: number;
-  kv_cache_bytes_per_token?: number;
+  kv_cache_bytes_per_token?: bigint;
   flops_per_token?: number;
   working_set_mb?: number;
   working_set_source: string;

@@ -1,12 +1,15 @@
 import "dotenv/config";
 import "reflect-metadata";
-import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
+import { join } from "node:path";
+import { createMicroservice, logger, pgServerBanner, assertDbEnv, CachingApiKeyPort, NatsApiKeyPort, getSdkCachePort } from "@primebrick/sdk";
+import * as dalMigrations from "@primebrick/dal-pg";
 import { initDal, getDal } from "./db/dal.js";
+import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.js";
 import { EmailService } from "./services/email-service.js";
 import { subscribeToWebhooks, setWebhookApiKeyPort } from "./controllers/nats-sub/webhook-subscriber.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
-import { EmailSenderAuthConfigPort, EmailSenderApiKeyPort } from "./adapters/auth-ports-adapter.js";
+import { EmailSenderAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import {
   ConfigRepositoryAdapter,
   HealthCheckAdapter,
@@ -20,19 +23,33 @@ async function main(): Promise<void> {
     icon: "mail",
     iconType: "icon",
 
-    envSchema: {
-      DATABASE_URL: { required: true, description: "PostgreSQL connection string" },
-      DB_SCHEMA: { required: false, default: "emailsender", description: "Database schema name" },
-    },
+    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
+    // enforced by assertDbEnv() inside createMicroservice — envSchema has
+    // no keys left to declare.
+    envSchema: {},
 
     initDal,
     dalClose: async () => { await getDal().close(); },
-    dbBanner: () => pgServerBanner(getDal().getPool(), process.env.DATABASE_URL!),
+    dbBanner: () => pgServerBanner(getDal(), process.env.DATABASE_URL!),
+
+    // Step 2.5 — own-schema migrations BEFORE ConfigLoader/registration.
+    // Mode lives in emailsender.config_entries (key db_migration.mode).
+    dbPatches: {
+      engine: dalMigrations,
+      // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
+      pool: () => getDal().getPool(),
+      schema: () => assertDbEnv().schemas[0],
+      patchesDir: join(process.cwd(), "db-meta", "patches"),
+      entityRegistry: [...ENTITY_REGISTRY],
+      allowedTrust:
+        process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
+    },
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new EmailSenderAuthConfigPort(configLoader),
-    apiKeyPort: () => new EmailSenderApiKeyPort(),
-    healthCheckPort: () => new HealthCheckAdapter(getDal().getPool()),
+    apiKeyPort: () =>
+      new CachingApiKeyPort(new NatsApiKeyPort(3000), () => getSdkCachePort()),
+    healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
     routeHandler: compositeRouteHandler,
     endpoints: {

@@ -10,7 +10,6 @@ export class ConfigRepositoryAdapter implements ConfigRepositoryPort {
   async findAll(): Promise<Array<{ key: string; value: string | null }>> {
     const dal = getDal();
     const rows = await dal.findAll<ConfigEntryEntity>(ConfigEntryEntity, null, {
-      deletedRecords: "EXCLUDED",
     });
     if (!Array.isArray(rows)) return [];
     return rows.map((r) => ({ key: r.key, value: r.value ?? null }));

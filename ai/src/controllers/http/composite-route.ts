@@ -77,6 +77,16 @@ function sendError(res: ServerResponse, status: number, title: string, detail: s
   res.end(extJsonStringify({ type: "https://primebrick.io/errors/" + title.toLowerCase().replace(/\s+/g, "-"), title, status, detail }));
 }
 
+/**
+ * `?version=` contract — optimistic-lock value supplied by the caller on
+ * every write (same convention as the SDK entity-router `requireVersion`).
+ * The repository never derives it: a stale version must fail, not refetch.
+ */
+function requireVersionQuery(query: URLSearchParams): number | null {
+  const n = Number(query.get("version"));
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
 // ─── Route declarations ─────────────────────────────────────────────────────
 
 export const AI_ROUTES: RpcRoute[] = [
@@ -88,7 +98,7 @@ export const AI_ROUTES: RpcRoute[] = [
     openapi: { summary: "AI service health", description: "LLM connectivity + model info.", tags: ["ai"] },
     handler: async () => {
       const llmBaseUrl = aiConfig("llm_base_url") ?? "http://localhost:8080/v1";
-      const adapter = new HealthCheckAdapter(getDal().getPool());
+      const adapter = new HealthCheckAdapter(getDal());
       const llmHealth = await adapter.checkLlm(llmBaseUrl);
       return { ok: true, service: "ai", llm: llmHealth };
     },
@@ -150,7 +160,7 @@ export const AI_ROUTES: RpcRoute[] = [
       if (!conversationUuid) {
         // Create a new conversation with the first message as title
         const title = (body.message ?? "tool call").slice(0, 80) + ((body.message?.length ?? 0) > 80 ? "…" : "");
-        const conv = await createConversation({ user_uuid: userUuid, title });
+        const conv = await createConversation({ actor: userUuid, title });
         conversationUuid = conv.uuid;
       } else {
         // Verify conversation ownership
@@ -168,6 +178,7 @@ export const AI_ROUTES: RpcRoute[] = [
           conversation_uuid: conversationUuid,
           role: "tool",
           content: { tool_call_id: tr.tool_call_id, tool_name: tr.tool_name, output: tr.output },
+          actor: userUuid,
         });
       }
 
@@ -177,6 +188,7 @@ export const AI_ROUTES: RpcRoute[] = [
           conversation_uuid: conversationUuid,
           role: "user",
           content: { text: body.message },
+          actor: userUuid,
         });
       }
 
@@ -252,7 +264,7 @@ export const AI_ROUTES: RpcRoute[] = [
     body: (raw) => raw as { title?: string },
     openapi: { summary: "Create a conversation", tags: ["ai", "conversations"], requestSchema: { type: "object", properties: { title: { type: "string" } } } },
     handler: async ({ user, body, res }) => {
-      const conv = await createConversation({ user_uuid: user!.id, title: (body as { title?: string }).title });
+      const conv = await createConversation({ actor: user!.id, title: (body as { title?: string }).title });
       res.writeHead(201, { "Content-Type": "application/json" });
       res.end(extJsonStringify(conv));
     },
@@ -286,13 +298,18 @@ export const AI_ROUTES: RpcRoute[] = [
       return b as { title: string };
     },
     openapi: { summary: "Update conversation title", tags: ["ai", "conversations"], requestSchema: { type: "object", required: ["title"], properties: { title: { type: "string" } } } },
-    handler: async ({ user, params, body, res }) => {
+    handler: async ({ user, params, body, query, res }) => {
+      const version = requireVersionQuery(query);
+      if (version === null) {
+        sendError(res, 400, "Bad Request", "Query param 'version' (int) is required for this write.");
+        return;
+      }
       const conv = await getConversation(params.uuid, user!.id);
       if (!conv) {
         sendError(res, 404, "Not Found", "Conversation not found or does not belong to this user.");
         return;
       }
-      await updateConversationTitle(params.uuid, (body as { title: string }).title);
+      await updateConversationTitle(params.uuid, (body as { title: string }).title, version, user!.id);
       return { ...conv, title: (body as { title: string }).title };
     },
   },
@@ -303,13 +320,18 @@ export const AI_ROUTES: RpcRoute[] = [
     auth: "user",
     permissions: [Permission.AUTHENTICATED_USER],
     openapi: { summary: "Delete a conversation", tags: ["ai", "conversations"], paramSchema: { uuid: { type: "string", format: "uuid" } } },
-    handler: async ({ user, params, res }) => {
+    handler: async ({ user, params, query, res }) => {
+      const version = requireVersionQuery(query);
+      if (version === null) {
+        sendError(res, 400, "Bad Request", "Query param 'version' (int) is required for this write.");
+        return;
+      }
       const conv = await getConversation(params.uuid, user!.id);
       if (!conv) {
         sendError(res, 404, "Not Found", "Conversation not found or does not belong to this user.");
         return;
       }
-      await deleteConversation(params.uuid, user!.id);
+      await deleteConversation(params.uuid, version, user!.id);
       res.writeHead(204);
       res.end();
     },
@@ -332,7 +354,7 @@ export const AI_ROUTES: RpcRoute[] = [
       const feedback = await insertFeedback({
         message_uuid: b.message_uuid,
         conversation_uuid: b.conversation_uuid,
-        user_uuid: user!.id,
+        actor: user!.id,
         rating: b.rating,
         comment: b.comment,
       });

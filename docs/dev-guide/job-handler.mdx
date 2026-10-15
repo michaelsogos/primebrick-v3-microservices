@@ -1,0 +1,85 @@
+---
+title: JobHandler — job scheduling & governance
+description: Job scheduling via NATS JetStream native scheduler, business rules engine, execution observability
+---
+
+# JobHandler (`primebrick-job`)
+
+JobHandler is the **scheduler, governance, and observability** service for the
+Primebrick job fabric. It never executes domain work — every job's executor
+lives in the owning domain service.
+
+## Architecture
+
+```
+Service boot                primebrick-job                 JetStream           owning service
+────────────                ──────────────                 ─────────           ──────────────
+entity registry has
+@PartitionField? ──declare──▶ jobs.ctl.schedule.request ──▶ jobs.schedule.<svc>.<name>
+                            (L1+L2 shield, namespace check)      │ (NATS native scheduler)
+                                                                 ▼
+                                                    jobs.due.<lane>.<svc>.<action>
+                                                                 │
+                            ◀── jobs.result.<svc>.<name> ◀── durable consumer ──▶ executor
+                            │                                                    (DAL/service logic)
+                            ▼
+                      job.job_runs (status, duration, error, report)
+```
+
+- **Scheduler** = the NATS server (`allow_msg_schedules` on the `JOBS` stream).
+- **Sole writer of `jobs.schedule.*`** = job-handler via `jobs.ctl.schedule.request`.
+- **Executor** = a durable JetStream consumer inside the domain service.
+- **Rules** = `job.job_rules` domain data (NOT config) — armed by the rules engine.
+- **Infrastructure jobs** = metadata-derived (`@PartitionField` on an entity →
+  the owning service self-declares its own schedule at boot).
+
+## Subjects
+
+| Subject | Purpose |
+|---------|---------|
+| `jobs.schedule.<owner>.<name>` | Schedule declaration (stored, last-msg-wins) |
+| `jobs.due.user.<svc>.<action>[.<id>]` | Due message — user lane (auth propagates) |
+| `jobs.due.system.<svc>.<action>[.<id>]` | Due message — system lane |
+| `jobs.result.<svc>.<name>` | Execution report → recorded in `job.job_runs` |
+| `jobs.cancel.*` | Schedule cancellation |
+| `jobs.ctl.schedule.request` / `jobs.ctl.schedule.cancel` | Governed control routes |
+
+## Namespace security
+
+A remote caller may only declare inside its own `jobs.schedule.<svc>.*`
+namespace **and** the due target must land back on its own service
+(`jobs.due.<lane>.<same-svc>.*`). Internal callers (rules engine, admin HTTP
+action) own the `job` namespace and may target any service — that's the point
+of admin-managed schedules.
+
+## Domain data (schema `job`)
+
+- `job_rules` — business rules: `event_subject` → `schedule_spec` + `target_subject`.
+- `job_schedules` — mirror of every armed schedule (`kind`: `infra_derived` | `rule` | `manual`,
+  `schedule_type`: `recurring` | `once`, `status`: `armed` | `disarmed`).
+- `job_runs` — execution history: status, `duration_ms`, error fields, report (jsonb).
+- `config_entries` — mandatory per-service config (cadence, ports, shield refs).
+
+## HTTP surface (via BE `/ws/job/*` proxy)
+
+| Route | Description |
+|-------|-------------|
+| `GET /api/v1/entities/job_rule|job_schedule|job_run/…` | Canonical entity CRUD (meta/list/get/…) |
+| `POST /api/v1/actions/schedule-job` | Arm a manual schedule (admin) |
+| `POST /api/v1/actions/disarm-job` | Disarm a schedule (admin) |
+| `POST /api/v1/actions/job-run-stats` | Per-schedule execution buckets for sparklines — adaptive `bucket_unit` (hour/day/week/month chosen so the span lands in ~8–30 buckets) |
+
+## Partition maintenance (first real consumer)
+
+`@PartitionField` on an entity marks it partitioned; `@PartitionChildOf` marks
+the logical children purged leaf→root before each partition drop. The owning
+service calls `dal.partitionMaintenance(ENTITY_REGISTRY)` from its executor —
+job-handler only sees subjects, never tables.
+
+Config: `partition_maintenance_schedule` in the service's `config_entries`
+(default `@daily`).
+
+## Admin UI
+
+`/(app)/system/jobs` — recurring / one-time / rules / run-history views with
+per-row Kestra-style stacked-bar execution sparklines.

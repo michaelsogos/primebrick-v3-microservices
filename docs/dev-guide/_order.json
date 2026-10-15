@@ -3,6 +3,7 @@
     "overview",
     "architecture",
     "conventions",
-    "adding-a-service"
+    "adding-a-service",
+    "job-handler"
   ]
 }

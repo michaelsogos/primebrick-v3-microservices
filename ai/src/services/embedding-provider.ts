@@ -138,6 +138,7 @@ class OpenAICompatibleEmbeddingProvider implements EmbeddingProvider {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
+      // standards-exempt: ext-json — OpenAI-compatible embeddings API wire format is plain JSON
       body: JSON.stringify({ model: this.model, input: texts }),
       signal: AbortSignal.timeout(30000),
     });

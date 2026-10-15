@@ -94,6 +94,7 @@ export const webhookRoutes: RpcRoute[] = [
       let parsed: unknown = null;
       if (rawBody) {
         try {
+          // standards-exempt: ext-json — inbound webhook payload is external plain-JSON wire format
           parsed = JSON.parse(rawBody);
         } catch {
           sendRfcError(res, 400, "Invalid JSON", "Request body is not valid JSON", "WEBHOOK_INVALID_BODY", "LOW");

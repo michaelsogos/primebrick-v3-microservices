@@ -8,8 +8,7 @@ import {
   DeletableField,
   DeletableFieldType,
   type IAuditableEntity,
-  type IDeletableEntity,
-} from "@primebrick/dal-pg";
+  type IDeletableEntity, type UUID } from "@primebrick/dal-pg";
 
 @Entity("providers", "emailsender")
 export class ProviderEntity implements IAuditableEntity, IDeletableEntity {
@@ -17,7 +16,7 @@ export class ProviderEntity implements IAuditableEntity, IDeletableEntity {
   id: bigint;
 
   @Unique()
-  uuid: string;
+  uuid: UUID;
 
   @Column({ length: 50, nullable: false })
   provider: string;
@@ -26,16 +25,16 @@ export class ProviderEntity implements IAuditableEntity, IDeletableEntity {
   api_key: string;
 
   @Column({ nullable: true })
-  api_endpoint: string;
+  api_endpoint?: string;
 
   @Column({ nullable: true })
-  from_email: string;
+  from_email?: string;
 
   @Column({ nullable: true })
-  from_name: string;
+  from_name?: string;
 
   @Column({ nullable: true })
-  reply_to: string;
+  reply_to?: string;
 
   @AuditableField(AuditableFieldType.CREATED_AT)
   created_at: Date;

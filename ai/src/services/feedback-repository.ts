@@ -1,10 +1,16 @@
 /**
  * Feedback persistence — user thumbs up/down on AI assistant messages.
  *
- * Uses raw SQL on the public.ai_feedback table (created by the BE's
- * init_database.sql patch). Follows the same pattern as conversation-repository.ts.
+ * Standard DAL entity (`AiFeedbackEntity`, `ai` schema) — no raw SQL.
+ * `IAuditableEntity` without audit trail: `created_by` IS the voter —
+ * it replaced the former `user_uuid` domain column (stamped via
+ * `add(..., { actor })`).
  */
 import { getDal } from "../db/dal.js";
+import { field, Filter, Project, Sort } from "@primebrick/dal-pg";
+import { AiConversationEntity } from "../domain/entities/ai_conversation_entity.js";
+import { AiFeedbackEntity } from "../domain/entities/ai_feedback_entity.js";
+import { commitStamped } from "./conversation-repository.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -12,66 +18,71 @@ export interface FeedbackRow {
   uuid: string;
   message_uuid: string;
   conversation_uuid: string | null;
-  user_uuid: string;
+  /** Voter — the DAL-stamped `created_by` (session user uuid). */
+  created_by: string;
   rating: "up" | "down";
   comment: string | null;
   created_at: Date;
 }
+
+const FB_FIELDS = (["uuid", "message_uuid", "conversation_uuid", "created_by", "rating", "comment", "created_at"] as const)
+  .map((k) => Project.field(field(AiFeedbackEntity, k)));
 
 // ─── Repository ──────────────────────────────────────────────────────────────
 
 export async function insertFeedback(opts: {
   message_uuid: string;
   conversation_uuid?: string;
-  user_uuid: string;
+  actor: string;
   rating: "up" | "down";
   comment?: string;
 }): Promise<FeedbackRow> {
-  const pool = getDal().getPool();
-  const result = await pool.query<FeedbackRow>(
-    `INSERT INTO ai_feedback (message_uuid, conversation_uuid, user_uuid, rating, comment)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING uuid, message_uuid, conversation_uuid, user_uuid, rating, comment, created_at`,
-    [
-      opts.message_uuid,
-      opts.conversation_uuid ?? null,
-      opts.user_uuid,
-      opts.rating,
-      opts.comment ?? null,
-    ],
-  );
-  return result.rows[0]!;
+  // Feedback is a child event of the conversation — the row and the
+  // parent's `last_seen_at` watermark commit as ONE deferred statement
+  // (`ref()` binds the watermark server-side to the insert's RETURNING;
+  // concurrent child events serialize on the parent's version, ERR01
+  // losers retry on a fresh read).
+  return await commitStamped(opts.conversation_uuid, (tx, convVersion) => {
+    const fb = tx.add(AiFeedbackEntity, {
+      message_uuid: opts.message_uuid,
+      conversation_uuid: opts.conversation_uuid,
+      rating: opts.rating,
+      comment: opts.comment,
+    }, { actor: opts.actor });
+    if (opts.conversation_uuid) {
+      tx.update(AiConversationEntity, {
+        uuid: opts.conversation_uuid,
+        version: convVersion!,
+        last_seen_at: fb.ref("created_at"),
+      }, { actor: opts.actor });
+    }
+    return { result: fb as unknown as { value: FeedbackRow } };
+  });
 }
 
 export async function getFeedbackByMessage(
   messageUuid: string,
-  userUuid: string,
+  actor: string,
 ): Promise<FeedbackRow | null> {
-  const pool = getDal().getPool();
-  const result = await pool.query<FeedbackRow>(
-    `SELECT uuid, message_uuid, conversation_uuid, user_uuid, rating, comment, created_at
-     FROM ai_feedback
-     WHERE message_uuid = $1 AND user_uuid = $2
-     LIMIT 1`,
-    [messageUuid, userUuid],
-  );
-  return result.rows[0] ?? null;
+  const row = await getDal().find(AiFeedbackEntity, FB_FIELDS, {
+    filters: [
+      Filter.fieldValue(field(AiFeedbackEntity, "message_uuid"), "=", messageUuid),
+      Filter.fieldValue(field(AiFeedbackEntity, "created_by"), "=", actor),
+    ],
+    throwIfNotFound: false,
+  });
+  return (row as FeedbackRow | null) ?? null;
 }
 
 export async function listFeedbackByUser(
-  userUuid: string,
+  actor: string,
   limit: number = 50,
 ): Promise<FeedbackRow[]> {
-  const pool = getDal().getPool();
-  const result = await pool.query<FeedbackRow>(
-    `SELECT uuid, message_uuid, conversation_uuid, user_uuid, rating, comment, created_at
-     FROM ai_feedback
-     WHERE user_uuid = $1
-     ORDER BY created_at DESC
-     LIMIT $2`,
-    [userUuid, limit],
-  );
-  return result.rows;
+  const page = await getDal().findByPage(AiFeedbackEntity, 1, limit, FB_FIELDS, {
+    filters: [Filter.fieldValue(field(AiFeedbackEntity, "created_by"), "=", actor)],
+    sorting: [Sort.by(field(AiFeedbackEntity, "created_at"), "DESC")],
+  });
+  return page.entities as FeedbackRow[];
 }
 
 export async function getFeedbackStats(): Promise<{
@@ -79,22 +90,11 @@ export async function getFeedbackStats(): Promise<{
   up: bigint;
   down: bigint;
 }> {
-  const pool = getDal().getPool();
-  const result = await pool.query<{
-    total: string;
-    up: string;
-    down: string;
-  }>(
-    `SELECT
-       COUNT(*)::text AS total,
-       COUNT(*) FILTER (WHERE rating = 'up')::text AS up,
-       COUNT(*) FILTER (WHERE rating = 'down')::text AS down
-     FROM ai_feedback`,
-  );
-  const row = result.rows[0]!;
-  return {
-    total: BigInt(row.total ?? 0),
-    up: BigInt(row.up ?? 0),
-    down: BigInt(row.down ?? 0),
-  };
+  const rows = await getDal().findAll(AiFeedbackEntity, [
+    Project.expr("COUNT(*)", "total"),
+    Project.expr("COUNT(*) FILTER (WHERE rating = 'up')", "up"),
+    Project.expr("COUNT(*) FILTER (WHERE rating = 'down')", "down"),
+  ]);
+  const row = (rows as { total: bigint; up: bigint; down: bigint }[])[0]!;
+  return { total: row.total, up: row.up, down: row.down };
 }

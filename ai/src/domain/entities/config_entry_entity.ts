@@ -7,7 +7,7 @@ import {
   AuditableFieldType,
   DeletableField,
   DeletableFieldType,
-  type IAuditableEntity,
+  type IAuditableEntity, type UUID,
 } from "@primebrick/dal-pg";
 
 @Entity("config_entries", "ai")
@@ -16,7 +16,7 @@ export class ConfigEntryEntity implements IAuditableEntity {
   id!: bigint;
 
   @Unique()
-  uuid!: string;
+  uuid!: UUID;
 
   @Unique()
   @Column({ length: 100, nullable: false })

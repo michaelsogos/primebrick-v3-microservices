@@ -10,8 +10,10 @@ import { AiModelEntity } from "./ai_model_entity.js";
 import { AiCerebellumEntity } from "./ai_cerebellum_entity.js";
 import { ConfigEntryEntity } from "./config_entry_entity.js";
 import { DocsIngestLogEntity } from "./docs_ingest_log_entity.js";
-import { ServiceRegistryEntity } from "./service_registry_entity.js";
-import { PublicConfigEntryEntity } from "./public_config_entry_entity.js";
+import { AiConversationEntity } from "./ai_conversation_entity.js";
+import { AiMessageEntity } from "./ai_message_entity.js";
+import { AiFeedbackEntity } from "./ai_feedback_entity.js";
+import { AiTelemetryEntity } from "./ai_telemetry_entity.js";
 
 export const ENTITY_REGISTRY = [
   DocsKbEntity,
@@ -19,8 +21,10 @@ export const ENTITY_REGISTRY = [
   AiCerebellumEntity,
   ConfigEntryEntity,
   DocsIngestLogEntity,
-  ServiceRegistryEntity,
-  PublicConfigEntryEntity,
+  AiConversationEntity,
+  AiMessageEntity,
+  AiFeedbackEntity,
+  AiTelemetryEntity,
 ] as const;
 
 export {
@@ -29,7 +33,9 @@ export {
   AiCerebellumEntity,
   ConfigEntryEntity,
   DocsIngestLogEntity,
-  ServiceRegistryEntity,
-  PublicConfigEntryEntity,
+  AiConversationEntity,
+  AiMessageEntity,
+  AiFeedbackEntity,
+  AiTelemetryEntity,
 };
 export type { EntityClass };

@@ -38,10 +38,12 @@ service follows — nothing more, nothing less.
 
 One `createMicroservice(options)` call. Required options:
 
-`serviceName`, `envSchema` (typically just `DATABASE_URL` +
-`DB_SCHEMA`), `initDal`/`dalClose`, `configRepositoryAdapter`,
-`authConfigPort`, `healthCheckPort`, `routeHandler` (factory-produced
-only).
+`serviceName`, `envSchema` (closed-set: exactly `DATABASE_URL` +
+`DATABASE_SCHEMA` — `assertDbEnv()` parses `DATABASE_SCHEMA` into the
+`string[]` domain; `[0]` is the service's owned schema and is sent to the
+BE as the `service.register` schema claim), `initDal`/`dalClose`,
+`configRepositoryAdapter`, `authConfigPort`, `healthCheckPort`,
+`routeHandler` (factory-produced only).
 
 Domain wiring goes in `onReady(ctx)` — NATS subscribers, config holder
 init, cron jobs. See SDK's *microservice-anatomy* for the full 12-stage

@@ -19,7 +19,7 @@
  *
  * The table lives in the `ai` schema — owned exclusively by this service.
  */
-import type { IAuditableEntity, IExposableEntity } from "@primebrick/dal-pg";
+import type { IAuditableEntity, IExposableEntity, UUID } from "@primebrick/dal-pg";
 import {
   Column,
   Entity,
@@ -41,7 +41,7 @@ export class AiCerebellumEntity implements IAuditableEntity, IExposableEntity {
   id: bigint;
 
   @Unique()
-  uuid: string;
+  uuid: UUID;
 
   /** Assistant identifier (e.g. `regex`, `json_config`).
    *  Composite unique (assistant_key, model_id, dtype) — non-partial: a
@@ -77,11 +77,11 @@ export class AiCerebellumEntity implements IAuditableEntity, IExposableEntity {
   enable_thinking?: boolean;
 
   /** NULL = inherit ai_models.temperature. */
-  @Column({ pgType: "numeric", nullable: true })
+  @Column({ nullable: true })
   temperature?: number;
 
   /** NULL = inherit ai_models.top_p. */
-  @Column({ pgType: "numeric", nullable: true })
+  @Column({ nullable: true })
   top_p?: number;
 
   /** NULL = inherit ai_models.max_tokens. */
@@ -89,18 +89,18 @@ export class AiCerebellumEntity implements IAuditableEntity, IExposableEntity {
   max_tokens?: number;
 
   /** NULL = inherit ai_models.repetition_penalty. */
-  @Column({ pgType: "numeric", nullable: true })
+  @Column({ nullable: true })
   repetition_penalty?: number;
 
   /** Partial execution-config override — merged over ai_models.execution_config.
    *  NULL = inherit the whole execution_config. */
-  @Column({ pgType: "jsonb", nullable: true })
+  @Column({ nullable: true })
   execution_config?: Record<string, any>;
 
   /** Per-tuning test measurements keyed by test case. JSONB — same shape as
    *  ai_models.test_scores, kept separate so tuning scores never overwrite
    *  model-level scores. */
-  @Column({ pgType: "jsonb", nullable: true })
+  @Column({ nullable: true })
   test_scores?: Record<string, any>;
 
   /** Visual recommendation badge ('RECOMMENDED' | 'NOT_RECOMMENDED' | NULL).
@@ -113,13 +113,13 @@ export class AiCerebellumEntity implements IAuditableEntity, IExposableEntity {
    *  evidence proves this (assistant, model, dtype) combo broken. The
    *  assistant picker hides models whose cerebellum row for that
    *  assistant is incompatible. */
-  @Column({ pgType: "boolean", nullable: false, defaultSql: "true" })
+  @Column({ nullable: false, defaultSql: "true" })
   is_compatible: boolean;
 
   /** Per-assistant default model: at most one row per assistant_key
    *  (partial unique index). When set, the assistant panel loads this
    *  model instead of the global `ai_assistant_model` config fallback. */
-  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
+  @Column({ nullable: false, defaultSql: "false" })
   is_default: boolean;
 
   @AuditableField(AuditableFieldType.CREATED_AT)
