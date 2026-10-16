@@ -2,15 +2,18 @@
  * Rate limiter for the AI chat endpoint.
  *
  * Uses a token bucket algorithm per-user (identified by x-user-id header).
- * - If REDIS_URL is set, uses Redis for distributed rate limiting.
- * - If REDIS_URL is not set, falls back to in-memory rate limiting (single instance).
+ * - If the shared redis_url (from BE global config) is set, uses Redis for
+ *   distributed rate limiting.
+ * - Otherwise falls back to in-memory rate limiting (single instance).
  *
- * Config (env vars):
- * - REDIS_URL: Redis connection string (optional, falls back to in-memory)
- * - AI_RATE_LIMIT_CAPACITY: max tokens in the bucket (default: 10)
- * - AI_RATE_LIMIT_REFILL_RATE: tokens refilled per second (default: 1)
- * - AI_RATE_LIMIT_TOKEN_COST: tokens consumed per chat request (default: 1)
+ * Config (ai.config_entries — env-policy: no env vars besides DATABASE_URL):
+ * - rate_limit_capacity: max tokens in the bucket (default: 10)
+ * - rate_limit_refill_rate: tokens refilled per second (default: 1)
+ * - rate_limit_token_cost: tokens consumed per chat request (default: 1)
  */
+
+import { logger, getSharedConfig } from "@primebrick/sdk";
+import { aiConfig } from "../config/ai-config.js";
 
 interface Bucket {
   tokens: number;
@@ -21,18 +24,18 @@ const inMemoryBuckets = new Map<string, Bucket>();
 let redisClient: { incr: (key: string) => Promise<number>; expire: (key: string, seconds: number) => Promise<void> } | null = null;
 let redisInitPromise: Promise<void> | null = null;
 
-const CAPACITY = parseInt(process.env.AI_RATE_LIMIT_CAPACITY || "10", 10);
-const REFILL_RATE = parseFloat(process.env.AI_RATE_LIMIT_REFILL_RATE || "1");
-const TOKEN_COST = parseInt(process.env.AI_RATE_LIMIT_TOKEN_COST || "1", 10);
+const CAPACITY = () => parseInt(aiConfig("rate_limit_capacity") ?? "10", 10);
+const REFILL_RATE = () => parseFloat(aiConfig("rate_limit_refill_rate") ?? "1");
+const TOKEN_COST = () => parseInt(aiConfig("rate_limit_token_cost") ?? "1", 10);
 
 /**
- * Initialize Redis client if REDIS_URL is set.
+ * Initialize Redis client if the BE shared config carries redis_url.
  * Lazy init — only called on first rate limit check.
  */
 async function initRedis(): Promise<void> {
   if (redisInitPromise) return redisInitPromise;
   redisInitPromise = (async () => {
-    const redisUrl = process.env.REDIS_URL;
+    const redisUrl = getSharedConfig().redis_url;
     if (!redisUrl) return;
 
     try {
@@ -48,9 +51,9 @@ async function initRedis(): Promise<void> {
         incr: (key: string) => client.incr(key),
         expire: (key: string, seconds: number) => client.expire(key, seconds),
       };
-      console.log("[rate-limiter] Redis connected for distributed rate limiting");
+      logger.info("Redis connected for distributed rate limiting", { tags: ["rate-limiter"] });
     } catch (e) {
-      console.warn("[rate-limiter] Redis init failed, falling back to in-memory:", e instanceof Error ? e.message : e);
+      logger.warn("Redis init failed, falling back to in-memory", { tags: ["rate-limiter"], error: e instanceof Error ? e.message : e });
     }
   })();
   return redisInitPromise;
@@ -81,14 +84,14 @@ async function checkRedisRateLimit(userUuid: string): Promise<{
   retryAfter?: number;
 }> {
   const key = `ai:rate:${userUuid}`;
-  const windowSeconds = Math.ceil(CAPACITY / REFILL_RATE);
+  const windowSeconds = Math.ceil(CAPACITY() / REFILL_RATE());
 
   const count = await redisClient!.incr(key);
   if (count === 1) {
     await redisClient!.expire(key, windowSeconds);
   }
 
-  if (count > CAPACITY) {
+  if (count > CAPACITY()) {
     return { allowed: false, retryAfter: windowSeconds };
   }
   return { allowed: true };
@@ -105,21 +108,21 @@ function checkInMemoryRateLimit(userUuid: string): {
   let bucket = inMemoryBuckets.get(userUuid);
 
   if (!bucket) {
-    bucket = { tokens: CAPACITY, lastRefill: now };
+    bucket = { tokens: CAPACITY(), lastRefill: now };
     inMemoryBuckets.set(userUuid, bucket);
   }
 
   // Refill tokens based on elapsed time
   const elapsedSeconds = (now - bucket.lastRefill) / 1000;
-  bucket.tokens = Math.min(CAPACITY, bucket.tokens + elapsedSeconds * REFILL_RATE);
+  bucket.tokens = Math.min(CAPACITY(), bucket.tokens + elapsedSeconds * REFILL_RATE());
   bucket.lastRefill = now;
 
-  if (bucket.tokens >= TOKEN_COST) {
-    bucket.tokens -= TOKEN_COST;
+  if (bucket.tokens >= TOKEN_COST()) {
+    bucket.tokens -= TOKEN_COST();
     return { allowed: true };
   }
 
-  const tokensNeeded = TOKEN_COST - bucket.tokens;
-  const retryAfter = Math.ceil(tokensNeeded / REFILL_RATE);
+  const tokensNeeded = TOKEN_COST() - bucket.tokens;
+  const retryAfter = Math.ceil(tokensNeeded / REFILL_RATE());
   return { allowed: false, retryAfter };
 }

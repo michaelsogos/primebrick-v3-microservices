@@ -1,0 +1,119 @@
+---
+title: Webhook Ingress
+description: "Webhook ingress router that authenticates API keys, checks service registration, and queues events through JetStream."
+---
+
+# Webhook Ingress
+
+The `webhook` microservice exposes a provider-agnostic HTTP ingress. It verifies an API key, confirms that the target service is enabled and online, then publishes the JSON payload to NATS JetStream. The target microservice receives the event and remains responsible for validating its business meaning, authenticating the forwarded credential, and enforcing its own permissions.
+
+- **Package:** `primebrick-webhook`
+- **Service code:** `webhook`
+- **Runtime:** Bun (`bun --hot src/index.ts` in development; `bun dist/index.js` in production)
+- **Database:** `webhook` schema — owns only its `config_entries` table; API-key and service-registry lookups are delegated to the Backend over NATS
+
+## HTTP route
+
+The custom route is:
+
+```text
+POST /webhook/{service_code}/{intent...}
+```
+
+`service_code` identifies the registered target microservice. The optional `intent` is the remaining path, forwarded as a string; the webhook service does not interpret it. The request body must be valid JSON. An empty body is forwarded as `null`.
+
+For example, a request to `/webhook/emailsender/delivery/status` with a JSON body is queued for service `emailsender` with intent `delivery/status`.
+
+The JetStream message body has this shape:
+
+```json
+{
+  "service_code": "emailsender",
+  "intent": "delivery/status",
+  "received_at": "2026-01-01T12:00:00.000Z",
+  "body": { "event": "delivered" }
+}
+```
+
+The original `Authorization` header is forwarded as a NATS header so the target service can authenticate the caller again. Other HTTP headers are not forwarded.
+
+The ingress returns HTTP 200 after JetStream acknowledges the publish:
+
+```json
+{ "received": true, "seq": "42" }
+```
+
+The `seq` value is the JetStream publish sequence serialized as a string. A publish failure returns HTTP 502 so the external provider can retry.
+
+## Authentication and authorization
+
+Every webhook request must include an API key in the `Authorization` header, using either `ApiKey <key>` or `Bearer <key>` when the key starts with `pbk_`. The Backend verifies the key hash and returns its active state, expiry, and permission metadata over NATS request/reply. The webhook service caches positive results for 60 seconds and negative results for 10 seconds (up to 1,000 entries).
+
+The ingress precheck is not the target service's final authorization decision. The target receives the original Authorization value and must re-verify it and apply its own RBAC rules for the requested operation.
+
+## Target routing
+
+The service keeps an in-memory cache from the Backend's lifecycle subjects:
+
+- `service.register` and `service.heartbeat` update the service's online state.
+- `service.unregister` removes the cached service.
+- `service.stale` marks it stale.
+
+A positive online cache entry is routable. Other states are checked against the Backend with the `service.registry.get` request/reply subject using `{ "code": "<service_code>" }`. The registry row must be enabled and online. Unknown service codes or lookups that cannot resolve a registry row return HTTP 404; known but disabled or unavailable services return HTTP 502.
+
+## NATS delivery
+
+At startup, the service ensures a JetStream stream named `WEBHOOK` with the subject filter `webhook.>`. For each accepted request, it publishes to:
+
+```text
+webhook.<service_code>.received
+```
+
+The stream's delivery consumers belong to the target microservices. This ingress does not call a target service's business endpoint directly and does not provide provider-specific signature validation.
+
+## HTTP errors
+
+Errors use the RFC 7807-style JSON shape with `type`, `title`, `status`, `detail`, `internal_code`, and `severity` fields.
+
+| Status | Condition |
+|--------|-----------|
+| 400 | Request body is not valid JSON |
+| 401 | Authorization header is missing, invalid, inactive, or expired |
+| 404 | Target service code is unknown, or the registry lookup could not resolve a service row |
+| 500 | API-key dependencies were not initialized |
+| 502 | Target service is known but disabled/unavailable, the Backend lookup fails, or JetStream publish fails |
+
+## Configuration and deployment
+
+The service uses `createMicroservice`. Following the env policy, only the
+database bootstrap comes from env:
+
+| Variable | Required | Default | Purpose |
+|----------|----------|---------|---------|
+| `DATABASE_URL` | yes | — | PostgreSQL connection string (owns the `webhook.config_entries` table) |
+| `DB_SCHEMA` | no | `webhook` | Database schema name |
+
+Everything else lives in `webhook.config_entries` and is loaded by
+`ConfigLoader` at startup: `nats_url`, `service_code`, `http_port`,
+`service_base_url` (public URL advertised in the registry), and
+`service_client_shield_key`.
+
+For local development and build commands:
+
+```bash
+cd webhook
+pnpm run dev
+pnpm run build
+pnpm run start
+```
+
+The SDK exposes the public `/health` route and manages service registration, periodic heartbeats, NATS connection lifecycle, and graceful shutdown. The webhook service's health adapter has no database to check; NATS connectivity is monitored by the SDK.
+
+The service does not currently define an `openapi-route.ts`, so the interactive API Catalog does not have a generated OpenAPI specification for this route yet.
+
+## Next steps
+
+- [Microservice architecture](/dev/microservices/architecture)
+- [API path conventions](/dev/microservices/conventions)
+- [EmailSender microservice](./emailsender)
+- [AI microservice](./ai)

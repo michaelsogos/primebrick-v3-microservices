@@ -11,19 +11,19 @@
  *
  * The library does NOT install `process.on(...)` handlers — graceful shutdown
  * is wired in `index.ts` (the consumer owns NATS, HTTP, Sentry, etc.).
+ *
+ * The env contract (DATABASE_URL + DATABASE_SCHEMA, nothing else) is
+ * enforced by assertDbEnv — the first schema is the owned one (`emailsender`).
  */
 import { getDal } from "@primebrick/dal-pg";
+import { assertDbEnv } from "@primebrick/sdk";
 
 export function initDal(): void {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL is not set");
-  }
-  const schema = process.env.DB_SCHEMA || "emailsender";
+  const { url, schemas } = assertDbEnv();
 
   getDal({
     connectionString: url,
-    schema,
+    schemas,
     max: 10,
     statementTimeoutMs: 30000,
     applicationName: "primebrick-emailsender",

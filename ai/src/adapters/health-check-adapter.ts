@@ -1,17 +1,17 @@
-import type { Pool } from "pg";
+import type { Dal } from "@primebrick/dal-pg";
 import type { HealthCheckPort, HealthCheckResult } from "@primebrick/sdk";
 import { NatsClient } from "@primebrick/sdk";
 
 /**
- * Adapts pg.Pool to the SDK's HealthCheckPort interface.
- * Used by HealthCheck to verify DB connectivity via `SELECT 1`.
+ * Adapts dal-pg to the SDK's HealthCheckPort interface.
+ * Used by HealthCheck to verify DB connectivity.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  constructor(private readonly pool: Pool) {}
+  constructor(private readonly dal: Dal) {}
 
   async ping(): Promise<boolean> {
     try {
-      await this.pool.query("SELECT 1");
+      await this.dal.serverVersion();
       return true;
     } catch {
       return false;
@@ -55,6 +55,7 @@ export class HealthCheckAdapter implements HealthCheckPort {
           const healthText = await healthRes.text();
           // mistral.rs /health returns plain text version or JSON
           try {
+            // standards-exempt: ext-json — external wire payload (mistral.rs /health) — must not bigint-ify
             const healthJson = JSON.parse(healthText);
             version = healthJson.version ?? healthJson.mistralrs_version;
           } catch {

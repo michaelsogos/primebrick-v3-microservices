@@ -14,7 +14,7 @@ services:
       - "3003:3003"  # Direct mapping, no dynamic port needed in dev
     environment:
       DATABASE_URL: postgresql://primebrick:primebrick@primebrick-postgres-18:5432/primebrick
-      DB_SCHEMA: emailsender
+      DATABASE_SCHEMA: emailsender
       SERVICE_BASE_URL: http://localhost:3003
       NODE_ENV: development
     networks:

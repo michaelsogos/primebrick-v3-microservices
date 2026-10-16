@@ -38,6 +38,11 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 6. **Async Code**: Use `async/await` syntax exclusively. Always handle errors with clean `try/catch` blocks. Never silence caught errors.
 7. **Environment**: Never commit `.env` files. Provide a `.env.example` file specifying all required configuration variables.
 8. **API Path Conventions (MANDATORY)**: All HTTP routes MUST follow the standardized path conventions. Entity CRUD routes use `/api/v1/entities/:entity/...`, service actions use `/api/v1/actions/:action`, webhooks use `/webhook`. See [.devin/rules/api-path-conventions.md](./.devin/rules/api-path-conventions.md) for the full specification. This is required for the BE MCP Server generic tool dispatch to work.
+9. **MVC transport layout (MANDATORY)**: Transport adapters live under `src/controllers/` (`http/`, `nats-sub/`; NATS req/res is banned — `NatsClient.request`/`subscribeRequest` were removed, sync replies use governed `callNats`/`makeNatsRequestRoute` correlation) and contain NO business logic — auth, payload validation, ONE service call, transport response only. Business logic lives in `src/services/` and must be callable identically from any transport. See [.devin/rules/controller-boundary.md](./.devin/rules/controller-boundary.md).
+10. **Webhook ingress**: External S2S webhooks NEVER hit a business microservice directly — they go through the `webhook` service (`primebrick-webhook`), a DB-less registration-driven router: `POST /webhook/{service_code}/{intent...}` → API-key precheck (401 wall) → JetStream `webhook.<code>.received` → the target US consumes via a durable `nats-sub` controller and runs its own auth + RBAC. A new US becomes routable by registering normally — no `webhook` release needed.
+11. **Route handlers are factory-produced (MANDATORY)**: every HTTP route MUST be declared as `RpcRoute[]` and mounted via the SDK's `makeRpcRouter` (plus `makeOpenApiHandler` for `/api/v1/openapi.json`, `composeRouteHandlers` to chain). `createMicroservice` REJECTS the boot when `routeHandler` is not factory-produced (runtime brand check) — arbitrary `(req, res, url) => boolean` functions do not exist in this repo. Auth (`"user"` gateway-resolved / `"api_key"` / `"public"`), RBAC `permissions` (mandatory on non-public routes), body validation and RFC 7807 errors come from the factory — never hand-rolled.
+12. **NATS queue groups (MANDATORY)**: `NatsClient.subscribe`/`subscribeRequest` take `{ queue }` on every WORK subject (one replica processes each message — e.g. `emailsender.send` → `{ queue: "emailsender" }`). Broadcast subjects EVERY instance must receive (lifecycle events like `service.gateway_online`, `config.changed`, `client_shield_registry.changed`, registry-cache feeds) stay unqueued. JetStream consumers keep their durable identity — no queue needed.
+13. **Env policy (MANDATORY)**: the ONLY env-sourced settings are `DATABASE_URL` + `DATABASE_SCHEMA` (closed-set validated by `assertDbEnv()` — unknown `DB_*`/`DATABASE_*` keys crash boot). `DATABASE_SCHEMA` declares the service's owned PG schema: it drives the DAL `schemas` domain (entity guard rejects tables outside it), the `search_path`, and the `service.register` schema claim in `service_registry`. All runtime config lives in `{schema}.config_entries` (loaded via `ConfigLoader` / the service's config holder) — `service_code`, `http_port`, `service_base_url`, `nats_url`, provider keys, feature flags. Never read `process.env` for runtime settings.
 
 ## Commands
 
@@ -70,15 +75,24 @@ for the full rule and upgrade procedure.
 This repository follows GitFlow. AI agents MUST follow these rules.
 Ensure you follow branch management, version tagging, and commit protocols.
 
-## User-facing documentation
+## Documentation (3 tiers — see `.devin/rules/docs-audience.md`)
 
-User-facing developer documentation lives in `docs/user-guide/` as MDX files.
-These are synced to `docs.primebrick.dev` by the docs repo's CI pipeline.
+Developer documentation lives in `docs/dev-guide/` (shared pages) and
+`<service>/docs/dev-guide/` (per-service pages) as MDX files. These are
+synced to `docs.primebrick.dev` under the dev section — never ingested
+into the end-user AI KB.
 
-- **Location**: `docs/user-guide/*.mdx` — one file per topic
-- **Ordering**: `docs/user-guide/_order.json` defines the sidebar page order
-- **Conventions**: see `.devin/rules/docs-user-guide.md` for editorial rules
+- **Shared pages**: `docs/dev-guide/{overview,architecture,conventions}.mdx`
+- **Per-service pages**: `<service>/docs/dev-guide/index.mdx` — each
+  microservice owns and ships its own docs
+- **Ordering**: `docs/dev-guide/_order.json` defines the sidebar page order
+- **Conventions**: see `.devin/rules/docs-dev-guide.md` for editorial rules
 - **Mermaid**: use `<Mermaid chart={...} />`, never ` ```Code ` or ` ```mermaid `
 - **Do NOT hand-edit** files in `docs/ai/` or `docs/skills/` — those are internal
-- **Internal docs** (`docs/ai/`, `docs/skills/`, `docs/gitflow.md`) are NOT synced
-  to the docs site — they stay in this repo for AI agents only
+
+## Logging & Telemetry
+
+- Use `logger` from `@primebrick/sdk` — never `console.*` in new code.
+- Microservices get async logging + OTel automatically via `createMicroservice`: console bridge first, then `SharedConfig.telemetry` fetch + `config.changed` hot-reload (no process restarts).
+- Do NOT duplicate telemetry config in service-local config tables — it is BE-owned (single point).
+- See [.devin/rules/logging-telemetry.md](./.devin/rules/logging-telemetry.md).

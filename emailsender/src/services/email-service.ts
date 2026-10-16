@@ -1,7 +1,8 @@
 import Handlebars from "handlebars";
+import { logger } from "@primebrick/sdk";
 import { getDal } from "../db/dal.js";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
-import type { SendEmailRequest, SendEmailResponse } from "../nats/types.js";
+import type { SendEmailRequest, SendEmailResponse } from "../controllers/nats-sub/types.js";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
 import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
 
@@ -128,7 +129,7 @@ export class EmailService {
         logId: logRow.id,
       };
     } catch (error) {
-      console.error("Error sending email:", error);
+      logger.error("Error sending email", { tags: ["email-service"], error });
 
       // Log the failed communication
       // NOTE: `interpolated_sent_message` and `template_uuid` are populated
@@ -155,7 +156,7 @@ export class EmailService {
           {},
         );
       } catch (logError) {
-        console.error("Error logging failed email:", logError);
+        logger.error("Error logging failed email", { tags: ["email-service"], error: logError });
       }
 
       return {

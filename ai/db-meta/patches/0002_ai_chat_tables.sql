@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS "ai"."docs_kb" (
   "title" text NOT NULL,
   "chunk_idx" int NOT NULL,
   "content" text NOT NULL,
-  "embedding" vector(384) NOT NULL,
+  "embedding" vector(1024) NOT NULL,
   "metadata" jsonb NOT NULL DEFAULT '{}'::jsonb,
   "content_hash" text NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT now(),

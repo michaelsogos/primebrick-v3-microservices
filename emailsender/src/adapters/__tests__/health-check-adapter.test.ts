@@ -9,12 +9,12 @@ vi.mock("@primebrick/sdk", () => ({
 
 import { HealthCheckAdapter } from "../health-check-adapter.js";
 
-// We need to mock the Pool constructor — HealthCheckAdapter only uses pool.query
-function makePoolMock(throwOnQuery = false) {
+// Mock the Dal gateway — HealthCheckAdapter only uses dal.serverVersion()
+function makeDalMock(throwOnPing = false) {
   return {
-    query: vi.fn(async () => {
-      if (throwOnQuery) throw new Error("DB connection refused");
-      return { rows: [{ ok: 1 }] };
+    serverVersion: vi.fn(async () => {
+      if (throwOnPing) throw new Error("DB connection refused");
+      return "18.4";
     }),
   } as any;
 }
@@ -23,7 +23,7 @@ describe("HealthCheckAdapter", () => {
   let adapter: HealthCheckAdapter;
 
   beforeEach(() => {
-    adapter = new HealthCheckAdapter(makePoolMock());
+    adapter = new HealthCheckAdapter(makeDalMock());
   });
 
   it("ping() returns true when DB query succeeds", async () => {
@@ -32,7 +32,7 @@ describe("HealthCheckAdapter", () => {
   });
 
   it("ping() returns false when DB query throws", async () => {
-    const badAdapter = new HealthCheckAdapter(makePoolMock(true));
+    const badAdapter = new HealthCheckAdapter(makeDalMock(true));
     const result = await badAdapter.ping();
     expect(result).toBe(false);
   });

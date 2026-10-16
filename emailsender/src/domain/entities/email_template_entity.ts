@@ -5,16 +5,15 @@ import {
   Unique,
   AuditableField,
   AuditableFieldType,
-  type IAuditableEntity,
-} from "@primebrick/dal-pg";
+  type IAuditableEntity, type UUID } from "@primebrick/dal-pg";
 
-@Entity("email_templates")
+@Entity("email_templates", "emailsender")
 export class EmailTemplateEntity implements IAuditableEntity {
   @Key()
   id: bigint;
 
   @Unique()
-  uuid: string;
+  uuid: UUID;
 
   @Column({ length: 100, nullable: false })
   code: string;
@@ -23,19 +22,19 @@ export class EmailTemplateEntity implements IAuditableEntity {
   language_iso: string;
 
   @Column({ nullable: true })
-  subject: string;
+  subject?: string;
 
   @Column({ nullable: true })
-  body_html: string;
+  body_html?: string;
 
   @Column({ nullable: true })
-  body_text: string;
+  body_text?: string;
 
   @Column({ nullable: true })
-  mjml_source: string;
+  mjml_source?: string;
 
-  @Column({ pgType: "jsonb", nullable: true })
-  variables: Record<string, unknown>;
+  @Column({ nullable: true })
+  variables?: Record<string, unknown>;
 
   @AuditableField(AuditableFieldType.CREATED_AT)
   created_at: Date;

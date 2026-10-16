@@ -9,6 +9,7 @@
  */
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import type { LanguageModel } from "ai";
+import { aiConfig } from "../config/ai-config.js";
 
 export interface LlmProviderConfig {
   base_url: string;
@@ -22,15 +23,15 @@ let cachedConfigKey: string | null = null;
 /**
  * Get the configured LLM chat model.
  *
- * Config (env vars or ai.config table):
- * - LLM_BASE_URL: OpenAI-compatible base URL (default: http://localhost:8080)
- * - LLM_API_KEY: API key (default: "not-required" for local mistral.rs)
- * - LLM_MODEL: model name (default: Qwen3-4B-Instruct-2507)
+ * Config (ai.config_entries — env-policy: no env vars besides DATABASE_URL):
+ * - llm_base_url: OpenAI-compatible base URL (default: http://localhost:8080/v1)
+ * - llm_api_key: API key (default: "not-required" for local mistral.rs)
+ * - llm_model: model name (default: Qwen3-4B-Instruct-2507)
  */
 export function getLlmModel(config?: Partial<LlmProviderConfig>): LanguageModel {
-  const baseUrl = config?.base_url ?? process.env.LLM_BASE_URL ?? "http://localhost:8080/v1";
-  const apiKey = config?.api_key ?? process.env.LLM_API_KEY ?? "not-required";
-  const model = config?.model ?? process.env.LLM_MODEL ?? "Qwen3-4B-Instruct-2507";
+  const baseUrl = config?.base_url ?? aiConfig("llm_base_url") ?? "http://localhost:8080/v1";
+  const apiKey = config?.api_key ?? aiConfig("llm_api_key") ?? "not-required";
+  const model = config?.model ?? aiConfig("llm_model") ?? "Qwen3-4B-Instruct-2507";
 
   const configKey = `${baseUrl}|${apiKey}|${model}`;
   if (cachedModel && cachedConfigKey === configKey) return cachedModel;

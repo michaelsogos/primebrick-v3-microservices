@@ -6,15 +6,15 @@
  * implement UserResolverPort or RoleMappingPort.
  *
  * - EmailSenderAuthConfigPort: reads auth config from the microservice's own `config` table
- * - EmailSenderApiKeyPort: looks up API keys by hash from `public.api_keys` (cross-schema)
+ * - ApiKeyPort: NOT implemented here — `index.ts` wires the shared
+ *   `CachingApiKeyPort(NatsApiKeyPort, getSdkCachePort)` directly, since
+ *   `api_keys` lives in the BE-owned `public` schema and resolution always
+ *   goes through the governed `auth.apikey.byHash` route.
  */
 
-import { getDal } from "@primebrick/dal-pg";
 import {
   type AuthConfig,
   type AuthConfigPort,
-  type ApiKeyPort,
-  type ApiKeyRecord,
   AuthMode,
 } from "@primebrick/sdk";
 import { ConfigLoader } from "@primebrick/sdk";
@@ -29,20 +29,20 @@ export class EmailSenderAuthConfigPort implements AuthConfigPort {
     // Read auth-related keys from the microservice's own config table
     const mode = (this.configLoader.get("auth_mode") as string) || "GATEWAY";
     const rolesPath = (this.configLoader.get("auth_roles_path") as string) || "roles";
-    const gatewaySecret = this.configLoader.get("gateway_secret") as string | undefined;
-    const gatewaySecretHeader = this.configLoader.get("gateway_secret_header") as string | undefined;
-    const gatewayPublicSecret = this.configLoader.get("gateway_public_secret") as string | undefined;
-    const gatewayPublicSecretHeader = this.configLoader.get("gateway_public_secret_header") as string | undefined;
+    const clientShieldSecret = this.configLoader.get("service_client_shield_secret") as string | undefined;
+    const clientShieldSecretHeader = this.configLoader.get("service_client_shield_secret_header") as string | undefined;
+    const clientShieldPublicSecret = this.configLoader.get("gateway_public_secret") as string | undefined;
+    const clientShieldPublicSecretHeader = this.configLoader.get("gateway_public_secret_header") as string | undefined;
 
     return {
       mode: mode.toUpperCase() as AuthMode,
       roles_path: rolesPath,
       oidc: {},
       gateway: {
-        secret: gatewaySecret,
-        secret_header_name: gatewaySecretHeader,
-        public_secret: gatewayPublicSecret,
-        public_secret_header_name: gatewayPublicSecretHeader,
+        secret: clientShieldSecret,
+        secret_header_name: clientShieldSecretHeader,
+        public_secret: clientShieldPublicSecret,
+        public_secret_header_name: clientShieldPublicSecretHeader,
         headers: {
           user_id: "x-user-id",
           email: "x-user-email",
@@ -67,26 +67,3 @@ export class EmailSenderAuthConfigPort implements AuthConfigPort {
   }
 }
 
-// ─── ApiKeyPort ───────────────────────────────────────────────────────────────
-
-export class EmailSenderApiKeyPort implements ApiKeyPort {
-  async findByHash(hash: string): Promise<ApiKeyRecord | null> {
-    const pool = getDal().getPool();
-    const result = await pool.query(
-      `SELECT uuid, name, permissions, is_system, is_active, expires_at
-       FROM public.api_keys
-       WHERE key_hash = $1`,
-      [hash],
-    );
-    if (result.rows.length === 0) return null;
-    const row = result.rows[0];
-    return {
-      uuid: row.uuid,
-      name: row.name,
-      permissions: row.permissions || [],
-      is_system: row.is_system || false,
-      is_active: row.is_active !== false,
-      expires_at: row.expires_at ? new Date(row.expires_at) : null,
-    };
-  }
-}

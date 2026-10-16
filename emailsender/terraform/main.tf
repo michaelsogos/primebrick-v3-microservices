@@ -35,7 +35,7 @@ resource "docker_container" "microservice" {
   # Everything else comes from the emailsender.config table at startup.
   env = [
     "DATABASE_URL=postgresql://${var.postgres_user}:${var.postgres_password}@${var.postgres_host}:${var.postgres_port}/${var.postgres_db}",
-    "DB_SCHEMA=${var.db_schema}",
+    "DATABASE_SCHEMA=${var.db_schema}",
     "SERVICE_BASE_URL=${var.service_base_url}",
     "NODE_ENV=production",
   ]
