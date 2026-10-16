@@ -1,0 +1,320 @@
+---
+title: AI Microservice
+description: "AI chat assistant with RAG (Retrieval-Augmented Generation), pgvector knowledge base, and a caller-driven tool loop over the BE MCP gateway."
+---
+
+# AI Microservice
+
+The AI microservice provides an in-app chat assistant that answers questions
+about Primebrick using RAG (Retrieval-Augmented Generation). It embeds
+documentation into a pgvector knowledge base, retrieves relevant chunks at
+query time, and streams responses from a local or cloud LLM.
+
+The service is **inference-only**: it never calls application tools itself.
+The agentic loop is owned by the caller (the Frontend) — the AI emits
+`client-tool-call` SSE events, the caller executes them against the BE's
+MCP gateway (`/system/mcp/call`), and resubmits the results.
+
+- **Package:** `primebrick-ai`
+- **Service code:** `AI`
+- **Default port:** `3004`
+- **Runtime:** Bun (dev: `bun --hot`, prod: `bun dist/index.js`)
+- **Database schema:** `ai` (isolated per-service schema)
+- **Vector extension:** pgvector (cosine similarity, HNSW index)
+- **Declared capabilities:** `llm_orchestrator`, `chat_orchestrator`,
+  `vectorizing_engine`
+
+## Architecture
+
+<Mermaid chart={`flowchart LR
+  FE[Frontend<br/>owns the tool loop] -->|SSE POST /api/v1/ai/chat<br/>tools + history + tool_results| AI[AI Microservice]
+  FE -->|client-tool-call →<br/>POST /system/mcp/call| BE[Backend MCP gateway]
+  AI -->|embed query| EMB[Transformers.js<br/>all-MiniLM-L6-v2]
+  EMB -->|384-dim vector| PG[(ai.docs_kb<br/>pgvector HNSW)]
+  AI -->|search_docs local tool| PG
+  AI -->|streamText| LLM[LLM<br/>mistral.rs / cloud]
+  LLM -->|SSE deltas| FE
+  AI -->|persist| MSGS[(ai.ai_messages)]
+  AI -->|telemetry| TEL[(ai.ai_telemetry)]
+`} />
+
+## Components
+
+### RAG pipeline
+
+The RAG (Retrieval-Augmented Generation) pipeline powers documentation-aware
+answers:
+
+1. **Embedding**: The user's query is embedded using
+   `Xenova/all-MiniLM-L6-v2` (384-dim, CPU/WASM via Transformers.js).
+2. **Vector search**: The embedding is compared against `ai.docs_kb` using
+   pgvector cosine distance (`<=>` operator) with an HNSW index.
+3. **Context injection**: The top-k chunks are injected into the LLM prompt
+   as context.
+4. **LLM response**: The LLM generates an answer grounded in the retrieved
+   documentation.
+
+### Caller-driven tool loop
+
+The orchestrator does **not** connect to the Backend's MCP server. Instead,
+the caller drives the loop end to end:
+
+1. The caller fetches the tool catalog once from the BE:
+   `GET /system/mcp/tools` (includes a `read_only` flag per tool).
+2. The caller passes `tools[]` (OpenAI-style definitions) to
+   `POST /api/v1/ai/chat`.
+3. When the LLM requests a tool, the AI emits a `client-tool-call` SSE
+   event and stops — it does not execute it.
+4. The caller executes the tool via `POST /system/mcp/call` — read-only
+   tools immediately, write tools behind a user confirmation — then
+   resubmits `POST /api/v1/ai/chat` with the reconstructed `history`,
+   `tool_results[]`, and no `message`.
+5. Repeat until the model produces a final answer (`finish` event). The
+   caller bounds the loop (FE: `MAX_LOOP_STEPS = 8`).
+
+The only server-side tool the AI executes itself is `search_docs`, a local
+tool that queries the RAG knowledge base — the LLM calls it when the user
+asks about product documentation, architecture, APIs, or configuration.
+
+### PII redaction
+
+When `REDACT_PII=true` (recommended for cloud LLMs), the orchestrator
+redacts personally identifiable information from messages before sending
+them to the LLM:
+
+- Emails → `[EMAIL_1]`, `[EMAIL_2]`, ...
+- Phone numbers → `[PHONE_1]`, ...
+- Credit card numbers → `[CARD_1]`, ... (with Luhn validation)
+
+Original messages with real PII are persisted to the database unchanged.
+Only the LLM sees the redacted version.
+
+## HTTP routes
+
+All routes are proxied by the Backend via `/ws/ai/*`. Authentication is
+handled by the gateway (headers: `x-user-id`, `Authorization: Bearer <jwt>`).
+
+| Method | Path | Purpose | Auth |
+|--------|------|---------|------|
+| GET | `/api/v1/ai/health` | AI health check (LLM connectivity + model info) | Gateway |
+| POST | `/api/v1/ai/chat` | Chat endpoint with SSE streaming | Gateway + rate limit |
+| GET | `/api/v1/ai/conversations` | List user's conversations | Gateway |
+| POST | `/api/v1/ai/conversations` | Create new conversation | Gateway |
+| GET | `/api/v1/ai/conversations/:uuid` | Get conversation with messages | Gateway |
+| PATCH | `/api/v1/ai/conversations/:uuid` | Update conversation title | Gateway |
+| DELETE | `/api/v1/ai/conversations/:uuid` | Delete conversation | Gateway |
+| POST | `/api/v1/ai/feedback` | Submit thumbs up/down on a message | Gateway |
+| GET | `/api/v1/ai/feedback` | List user's feedback | Gateway |
+| GET | `/api/v1/ai/telemetry` | Aggregate stats + recent requests | `AUTHENTICATED_ADMIN` |
+| POST | `/api/v1/ai/reindex` | Trigger embedding pipeline | `AUTHENTICATED_ADMIN` |
+| POST | `/api/v1/ai/embed` | Server-side embedding of query text | `AUTHENTICATED_USER` |
+| POST | `/api/v1/system/docs/search` | Semantic search over `docs_kb` | `AUTHENTICATED_USER` |
+| POST | `/api/v1/system/docs/document` | Fetch a doc's chunks by path | `AUTHENTICATED_USER` |
+
+### Chat endpoint
+
+`POST /api/v1/ai/chat` streams the response via Server-Sent Events (SSE)
+and returns the conversation id in the `X-Conversation-UUID` header.
+
+**Request body** — `message` OR `tool_results` is required:
+
+```json
+{
+  "message": "How does RBAC work?",
+  "conversation_uuid": "optional-uuid",
+  "history": ["full message history incl. assistant tool-call parts"],
+  "tools": ["OpenAI-style tool defs from GET /system/mcp/tools"],
+  "tool_results": ["results for a tool-loop continuation (no message)"]
+}
+```
+
+**SSE events:**
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `text-delta` | `{ text: string }` | Partial text chunk |
+| `tool-call` | `{ toolName, input }` | LLM invoked a server-side tool (`search_docs`) |
+| `tool-result` | `{ toolName, result }` | Server-side tool returned a result |
+| `client-tool-call` | `{ toolName, input }` | Caller must execute via `/system/mcp/call` |
+| `finish` | `{ text, tokensIn, tokensOut, steps }` | Stream complete |
+| `error` | `{ message }` | Error occurred |
+
+### Rate limiting
+
+The chat endpoint uses a token bucket algorithm per user (identified by
+`x-user-id` header). Configuration:
+
+| Config key | Default | Description |
+|------------|---------|-------------|
+| `rate_limit_capacity` | `10` | Max tokens in bucket per user |
+| `rate_limit_refill_rate` | `1` | Tokens refilled per second |
+| `rate_limit_token_cost` | `1` | Tokens consumed per chat request |
+
+If the shared `redis_url` config is set, rate limiting is distributed
+across instances. Otherwise, an in-memory token bucket is used
+(single-instance only).
+
+## Database schema
+
+All tables are in the `ai` schema (microservice isolation).
+
+### docs_kb — RAG knowledge base
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `bigint` | Auto-increment PK |
+| `repo` | `text` | Source repo (backend, frontend, sdk, dal, microservices, api) |
+| `path` | `text` | Doc path within the repo |
+| `title` | `text` | Doc title (from frontmatter) |
+| `chunk_idx` | `int` | Chunk index within the doc |
+| `content` | `text` | Chunk text content |
+| `embedding` | `vector(384)` | Embedding vector (pgvector) |
+| `metadata` | `jsonb` | Additional metadata (source, content_type, heading_path) |
+| `content_hash` | `text` | SHA-256 of the exact embedding input: title, heading path, and chunk body |
+
+**Index:** HNSW on `embedding` with `vector_cosine_ops` (m=16, ef_construction=64).
+
+### ai_conversations — Chat conversations
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `uuid` | `uuid` | PK |
+| `user_uuid` | `uuid` | Owner |
+| `title` | `text` | Conversation title |
+| `created_at` | `timestamptz` | Creation timestamp |
+| `updated_at` | `timestamptz` | Last update timestamp |
+
+### ai_messages — Chat messages
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `uuid` | `uuid` | PK |
+| `conversation_uuid` | `uuid` | FK → ai_conversations (CASCADE) |
+| `role` | `text` | `user`, `assistant` |
+| `content` | `jsonb` | `{ text, tool_calls, tool_results }` |
+| `tokens_in` | `int` | Input tokens |
+| `tokens_out` | `int` | Output tokens |
+| `created_at` | `timestamptz` | Creation timestamp |
+
+### ai_telemetry — Per-request telemetry
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `bigint` | Auto-increment PK |
+| `uuid` | `uuid` | Unique request ID |
+| `conversation_uuid` | `uuid` | Associated conversation |
+| `user_uuid` | `uuid` | Requesting user |
+| `model` | `text` | LLM model name |
+| `tokens_in` | `int` | Total input tokens |
+| `tokens_out` | `int` | Total output tokens |
+| `steps` | `int` | Reasoning steps (tool call rounds) |
+| `tool_calls` | `int` | Total tool calls |
+| `rag_hits` | `int` | search_docs calls |
+| `latency_ms` | `int` | End-to-end latency |
+| `success` | `boolean` | Whether the request succeeded |
+| `error` | `text` | Error message (if failed) |
+
+### ai_feedback — User feedback
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `bigint` | Auto-increment PK |
+| `uuid` | `uuid` | Unique feedback ID |
+| `message_uuid` | `uuid` | Message being rated |
+| `user_uuid` | `uuid` | User who rated |
+| `rating` | `text` | `up` or `down` |
+| `comment` | `text` | Optional comment |
+
+## Embedding pipeline (indexing)
+
+**Production source: service docs packs.** Every service ships a
+`dist/docs-pack` (built by `pnpm generate:docs`, served at
+`GET /api/v1/system/docs/pack`). On `service.register` with the
+`docs_pack` capability the AI pulls the pack and ingests it under the
+pack's repo key; `service.unregister` drops that repo's docs. The BE's
+pack is pulled at startup and on every `gateway_online` broadcast.
+Packs are self-contained: they carry `openapi.json` (the service
+runtime spec) alongside the MDX docs, so `openapi_path` is retired.
+
+The **filesystem pipeline below is the dev fallback** (set
+`docs_fs_pipeline=true`). It populates `docs_kb` from the documentation
+source files. Run it with:
+
+```bash
+cd ai && pnpm run index-docs
+```
+
+**Flow:**
+
+1. **Load docs** from `DOCS_PATH` (MDX files) and `OPENAPI_PATH` (JSON specs).
+2. **Parse frontmatter** with LF or CRLF line endings, extracting the document title, then chunk the body by headings and paragraphs.
+3. **Build embedding input** for each chunk from the document title, heading path, and chunk body. The stored `content` remains the original chunk body.
+4. **Compute SHA-256** over that exact embedding input; skip chunks whose `content_hash` matches the database.
+5. **Batch embed** changed inputs (batch size 16) via the embedding provider.
+6. **Upsert** content, embedding, metadata, and the input hash into `docs_kb` (ON CONFLICT update).
+7. **Delete stale chunks** (docs removed from source or chunks no longer present).
+
+The pipeline is idempotent — re-running it only re-embeds chunks whose
+source content, title, or heading path changed.
+
+## Environment variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `DB_SCHEMA` | No | `ai` | Database schema |
+
+These are the **only** env-sourced settings (env policy). All runtime
+configuration lives in `ai.config_entries` and is read through
+`src/config/ai-config.ts`:
+
+| Config key | Default | Description |
+|------------|---------|-------------|
+| `service_base_url` | `http://localhost:3004` | Service URL for BE proxy |
+| `llm_base_url` | `http://localhost:8080/v1` | LLM endpoint (OpenAI-compatible) |
+| `llm_model` | `Qwen3-4B-Instruct-2507` | LLM model name |
+| `llm_api_key` | `not-required` | LLM API key (not needed for local) |
+| `embedding_provider` | `transformers` | `transformers` or `openai` |
+| `embedding_model` | `Xenova/all-MiniLM-L6-v2` | Embedding model |
+| `embedding_base_url` | — | OpenAI-compatible embeddings URL |
+| `embedding_api_key` | — | Embeddings API key |
+| `embedding_dim` | `384` | Vector dimension (OpenAI provider) |
+| `embedding_local_only` / `embedding_dtype` | `false` / `q8` | transformers.js runtime options |
+| `be_base_url` | `http://localhost:3001` | Backend URL — required by `ServiceRegistrar` registration, no longer used for MCP |
+| `redact_pii` | `false` | `true` for cloud LLM PII redaction |
+| `rate_limit_capacity` / `rate_limit_refill_rate` / `rate_limit_token_cost` | `10` / `1` / `1` | Chat token-bucket settings |
+| `docs_fs_pipeline` | `false` | Dev fallback: `true` runs the legacy FS pipeline at startup and enables `POST /api/v1/ai/reindex` |
+| `docs_path` | `../../primebrick-v3-docs/pages` | MDX docs path (fallback only) |
+
+| `nats_url`, `service_code`, `http_port`, `service_client_shield_key` | — | SDK bootstrap settings |
+
+Distributed rate limiting uses the shared `redis_url` key (BE-owned global
+config), not a service env var.
+
+## LLM runtime
+
+The default LLM is a local mistral.rs container running
+Qwen3-4B-Instruct-2507 (Q4_K_M quantization). See the Backend's
+`infra/docker-compose.ai-llm.yml` for the container configuration.
+
+The LLM provider is pluggable — any OpenAI-compatible endpoint works
+(OpenAI, Anthropic via proxy, DeepSeek, Groq, etc.) by changing
+`LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL`.
+
+## Local development
+
+### Prerequisites
+
+1. PostgreSQL with pgvector (from `infra/docker-compose.postgres.yml`)
+2. LLM container (from `infra/docker-compose.ai-llm.yml`) or a cloud LLM
+3. Backend running on port 3001 — needed for service registration and for
+   the caller-driven tool loop (`/system/mcp/*`); the AI itself no longer
+   depends on it to serve chat
+
+### Steps
+
+1. Copy `.env.example` to `.env` and adjust values
+2. Apply migrations: `pnpm run db:migrate`
+3. Index docs: `pnpm run index-docs`
+4. Start dev server: `pnpm run dev`
+5. Verify health: `curl http://localhost:3004/health`

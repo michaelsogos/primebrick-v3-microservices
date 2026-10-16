@@ -1,15 +1,17 @@
 // index-docs script — runs the embedding pipeline to populate docs_kb.
 //
 // Usage:
-//   bun scripts/index-docs.ts
+//   bun scripts/index-docs.ts [--full]
+//   --full  truncate docs_kb first, then re-embed everything (explicit
+//           destructive reinit — provider/dimension change, corrupted KB)
 //
 // Env vars:
 //   DATABASE_URL — PostgreSQL connection string (required)
-//   DB_SCHEMA — schema name (default: ai)
+//   DATABASE_SCHEMA — schema name (required, assertDbEnv)
 //   DOCS_PATH — path to docs pages directory (default: ../../primebrick-v3-docs/pages)
 //   OPENAPI_PATH — path to OpenAPI specs (default: ../../primebrick-v3-docs/apis)
 //   EMBEDDING_PROVIDER — "transformers" (default) | "openai"
-//   EMBEDDING_MODEL — model name (default: Xenova/all-MiniLM-L6-v2)
+//   EMBEDDING_MODEL — model name (default: lmo3/multilingual-e5-large-instruct, 1024-dim)
 //
 // This script is idempotent: re-running it only re-embeds chunks whose
 // content_hash has changed. Unchanged chunks are skipped.
@@ -18,6 +20,7 @@ import "reflect-metadata";
 import { join } from "node:path";
 import { initDal, getDal } from "../src/db/dal.js";
 import { runEmbeddingPipeline } from "../src/services/embedding-pipeline.js";
+import { logger, assertDbEnv } from "@primebrick/sdk";
 
 async function main(): Promise<void> {
   const url = process.env.DATABASE_URL;
@@ -25,26 +28,20 @@ async function main(): Promise<void> {
     throw new Error("DATABASE_URL is not set");
   }
 
-  const schema = process.env.DB_SCHEMA || "ai";
+  const schema = assertDbEnv().schemas[0];
   const docsPath = process.env.DOCS_PATH || join(process.cwd(), "..", "..", "primebrick-v3-docs", "pages");
   const openApiPath = process.env.OPENAPI_PATH || join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
 
-  console.log("[index-docs] Initializing DAL...");
-  initDal();
+  logger.info("Initializing DAL...", { tags: ["index-docs"] });
+  getDal();
 
   try {
-    const stats = await runEmbeddingPipeline(docsPath, openApiPath);
-    console.log("\n[index-docs] Pipeline complete:");
-    console.log(`  Docs loaded:     ${stats.docs_loaded}`);
-    console.log(`  Chunks created:  ${stats.chunks_created}`);
-    console.log(`  Chunks embedded: ${stats.chunks_embedded}`);
-    console.log(`  Chunks skipped:  ${stats.chunks_skipped} (unchanged)`);
-    console.log(`  Chunks deleted:  ${stats.chunks_deleted} (stale)`);
-    console.log(`  Errors:          ${stats.errors}`);
-    console.log(`  Total in DB:     ${stats.total_in_db}`);
-    console.log(`  Duration:        ${(stats.duration_ms / 1000).toFixed(1)}s`);
+    const full = process.argv.includes("--full");
+    if (full) logger.info("--full: docs_kb will be truncated before re-embed", { tags: ["index-docs"] });
+    const stats = await runEmbeddingPipeline(docsPath, openApiPath, { full });
+    logger.info("Pipeline complete:", { tags: ["index-docs"], stats });
   } catch (error) {
-    console.error("[index-docs] Pipeline failed:", error);
+    logger.error("Pipeline failed", { tags: ["index-docs"], error });
     process.exit(1);
   } finally {
     await getDal().close();

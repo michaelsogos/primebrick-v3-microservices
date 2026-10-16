@@ -38,6 +38,7 @@ export class BrevoClient {
         "Content-Type": "application/json",
         "api-key": this.apiKey,
       },
+      // standards-exempt: ext-json — external wire payload (Brevo REST) — strict plain JSON, bigint must throw loudly
       body: JSON.stringify(request),
     });
 
@@ -45,6 +46,7 @@ export class BrevoClient {
       const errorText = await response.text();
       let error: BrevoError;
       try {
+        // standards-exempt: ext-json — external wire payload (Brevo error body) — must not bigint-ify
         error = JSON.parse(errorText);
       } catch {
         error = { code: response.status.toString(), message: errorText || response.statusText };

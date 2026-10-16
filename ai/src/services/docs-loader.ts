@@ -14,6 +14,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
 import { parseMdxFrontmatter } from "./chunking.js";
+import { logger } from "@primebrick/sdk";
 
 export interface LoadedDoc {
   repo: string;
@@ -29,51 +30,67 @@ export interface LoadedDoc {
     heading_path?: string;
     entity?: string;
     endpoint?: string;
+    /** Frontmatter description — fed into the contextual embedding preamble. */
+    description?: string;
+    /** KB paths this doc links to (doc-graph expansion — MDX only). */
+    links?: string[];
   };
 }
 
 /**
  * Load all MDX docs from the docs path.
  *
- * Expected structure: DOCS_PATH / repo / guide / (recursive .mdx files)
+ * Structure: DOCS_PATH / repo / (recursive .mdx files — every page is indexed,
+ * not only `guide/`: api/ and getting-started/ pages are part of the KB).
+ * Top-level loose files (e.g. pages/index.mdx) are assigned to the `pages` repo.
  * Repos: backend, frontend, dal, sdk, microservices, getting-started, api
  */
 export function loadMdxDocs(docsPath: string): LoadedDoc[] {
   const docs: LoadedDoc[] = [];
-  const repos = listDirs(docsPath);
 
-  for (const repo of repos) {
-    const repoGuidePath = join(docsPath, repo, "guide");
-    if (!exists(repoGuidePath)) continue;
-
-    const mdxFiles = listFilesRecursive(repoGuidePath, ".mdx");
-    for (const filePath of mdxFiles) {
-      try {
-        const raw = readFileSync(filePath, "utf-8");
-        const { frontmatter, body } = parseMdxFrontmatter(raw);
-        const relPath = relative(docsPath, filePath).replace(/\\/g, "/");
-        const title = frontmatter.title || relPath;
-
-        docs.push({
-          repo,
-          path: relPath,
-          title,
-          content: body,
-          metadata: {
-            source: "mdx",
-            repo,
-            path: relPath,
-            title,
-            content_type: detectContentType(relPath, frontmatter),
-          },
-        });
-      } catch (err) {
-        console.warn(`Failed to load MDX ${filePath}:`, err instanceof Error ? err.message : err);
-      }
+  for (const filePath of listFilesRecursive(docsPath, ".mdx")) {
+    try {
+      const relPath = relative(docsPath, filePath).replace(/\\/g, "/");
+      const repo = relPath.includes("/") ? relPath.split("/")[0] : "pages";
+      const doc = loadedDocFromMdx(repo, relPath, readFileSync(filePath, "utf-8"));
+      if (doc) docs.push(doc);
+    } catch (err) {
+      logger.warn(`Failed to load MDX ${filePath}`, { tags: ["docs-loader"], error: err instanceof Error ? err.message : err });
     }
   }
 
   return docs;
+}
+
+/**
+ * Build a LoadedDoc from raw MDX content — the pure core shared by the
+ * filesystem loader and the docs-pack ingest (packs carry raw text, no FS).
+ * Returns null when the content cannot be parsed.
+ */
+export function loadedDocFromMdx(repo: string, path: string, raw: string): LoadedDoc | null {
+  try {
+    const { frontmatter, body } = parseMdxFrontmatter(raw);
+    const title = frontmatter.title || path;
+    const links = extractDocLinks(body, path);
+    return {
+      repo,
+      path,
+      title,
+      content: body,
+      metadata: {
+        source: "mdx",
+        repo,
+        path,
+        title,
+        content_type: detectContentType(path, frontmatter),
+        ...(links.length ? { links } : {}),
+        ...(frontmatter.entity ? { entity: frontmatter.entity } : {}),
+        ...(frontmatter.description ? { description: frontmatter.description } : {}),
+      },
+    };
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -88,45 +105,53 @@ export function loadOpenApiSpecs(openApiPath: string): LoadedDoc[] {
   const jsonFiles = listFiles(openApiPath, ".json");
   for (const filePath of jsonFiles) {
     try {
-      const raw = readFileSync(filePath, "utf-8");
-      const spec = JSON.parse(raw) as {
-        openapi?: string;
-        info?: { title?: string };
-        paths?: Record<string, Record<string, unknown>>;
-      };
       const fileName = relative(openApiPath, filePath).replace(/\\/g, "/");
       const specName = fileName.replace(/\.json$/, "");
-      const specTitle = spec.info?.title || specName;
-
-      if (!spec.paths) continue;
-
-      for (const [pathStr, methods] of Object.entries(spec.paths)) {
-        for (const [method, operation] of Object.entries(methods)) {
-          const op = operation as { summary?: string; description?: string; operationId?: string };
-          const endpoint = `${method.toUpperCase()} ${pathStr}`;
-          const content = formatOpenApiEndpoint(specTitle, method.toUpperCase(), pathStr, op);
-
-          docs.push({
-            repo: "api",
-            path: `${specName}#${endpoint}`,
-            title: op.summary || endpoint,
-            content,
-            metadata: {
-              source: "openapi",
-              repo: "api",
-              path: `${specName}#${endpoint}`,
-              title: op.summary || endpoint,
-              content_type: "api",
-              endpoint,
-            },
-          });
-        }
-      }
+      docs.push(...loadedDocsFromOpenApiSpec(specName, readFileSync(filePath, "utf-8")));
     } catch (err) {
-      console.warn(`Failed to load OpenAPI ${filePath}:`, err instanceof Error ? err.message : err);
+      logger.warn(`Failed to load OpenAPI ${filePath}`, { tags: ["docs-loader"], error: err instanceof Error ? err.message : err });
     }
   }
 
+  return docs;
+}
+
+/**
+ * Chunk a raw OpenAPI JSON spec into one LoadedDoc per endpoint — the pure
+ * core shared by the filesystem loader and the docs-pack ingest.
+ */
+export function loadedDocsFromOpenApiSpec(specName: string, raw: string, repo = "api"): LoadedDoc[] {
+  // standards-exempt: ext-json — external wire payload (OpenAPI spec file) — must not bigint-ify
+  const spec = JSON.parse(raw) as {
+    openapi?: string;
+    info?: { title?: string };
+    paths?: Record<string, Record<string, unknown>>;
+  };
+  const specTitle = spec.info?.title || specName;
+  if (!spec.paths) return [];
+
+  const docs: LoadedDoc[] = [];
+  for (const [pathStr, methods] of Object.entries(spec.paths)) {
+    for (const [method, operation] of Object.entries(methods)) {
+      const op = operation as { summary?: string; description?: string; operationId?: string };
+      const endpoint = `${method.toUpperCase()} ${pathStr}`;
+      const content = formatOpenApiEndpoint(specTitle, method.toUpperCase(), pathStr, op);
+      docs.push({
+        repo,
+        path: `${specName}#${endpoint}`,
+        title: op.summary || endpoint,
+        content,
+        metadata: {
+          source: "openapi",
+          repo,
+          path: `${specName}#${endpoint}`,
+          title: op.summary || endpoint,
+          content_type: "api",
+          endpoint,
+        },
+      });
+    }
+  }
   return docs;
 }
 
@@ -144,6 +169,43 @@ function formatOpenApiEndpoint(
   if (op.description) lines.push(`\n${op.description}`);
   if (op.operationId) lines.push(`\n**Operation ID:** ${op.operationId}`);
   return lines.join("\n");
+}
+
+/**
+ * Extract outbound markdown links from an MDX body and normalize them to
+ * KB paths (as stored in docs_kb.path). Handles the docs-site slug scheme:
+ * `/docs/user-guide/<slug>` → `frontend/guide/<slug>.mdx`.
+ * External URLs, anchors and mailto are skipped; self-links removed.
+ */
+function extractDocLinks(body: string, selfPath: string): string[] {
+  const links = new Set<string>();
+  for (const m of body.matchAll(/\[[^\]]*\]\(\s*<?([^)>\s]+)>?[^)]*\)/g)) {
+    let href = m[1];
+    if (/^(https?:|mailto:|tel:|#)/i.test(href)) continue;
+    href = href.split("#")[0].split("?")[0].replace(/\/+$/, "");
+    if (!href) continue;
+    if (href.startsWith("/docs/user-guide/")) {
+      href = `frontend/guide/${href.slice("/docs/user-guide/".length)}`;
+    } else if (href.startsWith("/docs/")) {
+      href = href.slice("/docs/".length);
+    } else if (!href.startsWith("/")) {
+      const dir = selfPath.split("/").slice(0, -1).join("/");
+      href = dir ? `${dir}/${href}` : href;
+    } else {
+      continue; // absolute non-docs path — not a KB link
+    }
+    // Normalize ./ and ../ segments (e.g. "api/./rbac.mdx" → "api/rbac.mdx",
+    // "api/../x.mdx" → "x.mdx").
+    const parts: string[] = [];
+    for (const seg of href.split("/")) {
+      if (seg === "..") parts.pop();
+      else if (seg && seg !== ".") parts.push(seg);
+    }
+    href = parts.join("/");
+    if (!href.endsWith(".mdx")) href += ".mdx";
+    if (href !== selfPath) links.add(href);
+  }
+  return [...links];
 }
 
 function detectContentType(

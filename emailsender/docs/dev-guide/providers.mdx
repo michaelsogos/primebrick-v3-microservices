@@ -1,0 +1,52 @@
+---
+title: Provider Model
+description: "How email sending resolves its provider today — the providers table, the single Brevo adapter, template lookup, sender_log — and where a second provider would plug in."
+---
+
+# Provider model
+
+## Status quo — one adapter
+
+Today the service supports exactly one provider: **`brevo`**. The send
+path in `email-service.ts` is:
+
+1. **Provider config** — `dal.find` on `emailsender.providers`
+   `WHERE provider = 'brevo'`; admins create this row via the FE
+   (`POST/PUT /api/v1/entities/provider`) with `api_key`, `api_endpoint`,
+   `from_email`, `from_name`, `reply_to`. Missing → explicit error
+   ("admin must configure the Brevo provider").
+2. **Client** — `new BrevoClient(api_key, api_endpoint ?? "https://api.brevo.com/v1")`
+   constructed inline (injectable for tests).
+3. **Template** — `email_templates` row matched on
+   `(code, language_iso)` from the request; Handlebars renders
+   subject + body with the request's `params`.
+4. **Send** — `POST {endpoint}/smtp/emails`, `api-key` header.
+5. **`sender_log`** — one row per attempt, success and failure; rendered
+   content and template uuid are hoisted outside the try so a failed send
+   still logs the interpolated message for forensics.
+
+## Inbound triggers
+
+| Subject | Durability | Flow |
+|---|---|---|
+| `emailsender.send` | fire-and-forget pub/sub | `subscribeToEmailSendRequests` → `sendEmail(request, actorId)` |
+| `webhook.emailsender.received` | JetStream `WEBHOOK` stream | `subscribeToWebhooks` — external provider callbacks routed through the webhook ingress |
+
+Request fields on the NATS contract are **camelCase** (`templateCode`,
+`languageIso`); DB columns stay `snake_case` — the service maps at the
+boundary, which is the only legal place for the translation.
+
+## Adding a second provider — the real extension point
+
+There is no provider interface today — adding one means:
+
+1. a new `providers/<name>.ts` client (same shape as `BrevoClient`:
+   `(apiKey, apiEndpoint)` → `sendEmail(request)`);
+2. a provider branch in `email-service.sendEmail` where `brevo` is
+   currently hardcoded — resolve the config row by `request.provider`
+   (or a default) and construct the matching client;
+3. `ProviderEntity.provider` already carries the discriminator — the
+   config table needs no schema change.
+
+Keep the `sender_log` contract identical for every provider: log before
+returning, include rendered content on failure, never log `api_key`.

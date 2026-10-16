@@ -44,8 +44,8 @@ POST   /api/v1/entities/:entity/bulk-restore      → bulk restore (array of UUI
 ```
 
 Rules:
-- `:entity` is the snake_case plural noun (e.g. `providers`, `templates`,
-  `config_entries`, `sender_logs`). NEVER singular, NEVER camelCase.
+- `:entity` is the snake_case **singular** noun (e.g. `provider`, `template`,
+  `config_entry`, `sender_log`). NEVER plural, NEVER camelCase.
 - `:uuid` is always the UUID path parameter.
 - Not all entities support all operations. Unsupported operations simply do
   not register that route. The OpenAPI spec MUST only list operations that
@@ -53,10 +53,24 @@ Rules:
 - The `meta` endpoint returns the entity's field schema (same structure as
   the BE's `*.meta.ts` exports). This is consumed by the MCP `get_entity_meta`
   tool and by the FE for dynamic form generation.
+- The `meta` response MUST include an `actions` array
+  (`[{op, permissions[], sentinel?, enabled}]`) describing which endpoint ops
+  exist and what they require — the FE gates every CTA fail-closed against it.
+  In microservices this array is hand-written in the meta module but MUST
+  match the actually-registered routes (the BE derives it automatically;
+  `enabled` may be toggled via `actions_overrides`).
 - The `list` endpoint MUST accept the standard query parameters:
   `search`, `search_in`, `sort_key`, `sort_dir`, `page`, `page_size`,
   `filters`, `deleted_records`. See the BE's customer/organization list
   endpoints for the reference implementation.
+- **Write-payload standard (`{entity}` envelope):** single-entity
+  `POST`/`PUT` bodies MUST be `{ entity: {...} }` — flat entity fields at the
+  body root are rejected (hard break, same contract as the BE). A
+  `translations` sibling is NOT accepted (no translations table in this
+  schema) — return `400 VALIDATION_ERROR`. Microservices have no Zod
+  dependency, so the envelope is validated manually in the route. The MCP
+  proxy dispatch already wraps tool args into `{ entity }` — no per-tool
+  change needed.
 
 ### Category 2: Service Actions (`/api/v1/actions/:action`)
 
@@ -120,12 +134,12 @@ Every microservice MUST export a complete OpenAPI 3.x spec at
 ## What NOT to do
 
 - ❌ `/api/v1/providers` (no `/entities/` prefix) — use
-  `/api/v1/entities/providers/list` instead
-- ❌ `/api/v1/providers/:uuid` — use `/api/v1/entities/providers/:uuid`
+  `/api/v1/entities/provider/list` instead
+- ❌ `/api/v1/providers/:uuid` — use `/api/v1/entities/provider/:uuid`
 - ❌ `/api/v1/sendEmail` (camelCase action) — use
   `/api/v1/actions/send-email`
-- ❌ `/api/v1/provider` (singular entity name) — use
-  `/api/v1/entities/providers` (plural)
+- ❌ `/api/v1/providers` (plural entity name) — use
+  `/api/v1/entities/provider` (singular)
 - ❌ Entity routes mixed with action routes under the same path prefix
 - ❌ Missing `operationId` in OpenAPI spec
 - ❌ Missing `summary`/`description` in OpenAPI spec
@@ -137,12 +151,12 @@ refactored:
 
 | Current path | New path |
 |---|---|
-| `GET /api/v1/providers` | `GET /api/v1/entities/providers/list` |
-| `GET /api/v1/providers/:uuid` | `GET /api/v1/entities/providers/:uuid` |
-| `POST /api/v1/providers` | `POST /api/v1/entities/providers` |
-| `PUT /api/v1/providers/:uuid` | `PUT /api/v1/entities/providers/:uuid` |
-| `DELETE /api/v1/providers/:uuid` | `DELETE /api/v1/entities/providers/:uuid` |
-| `GET /api/v1/config` | `GET /api/v1/entities/config_entries/list` |
+| `GET /api/v1/providers` | `GET /api/v1/entities/provider/list` |
+| `GET /api/v1/providers/:uuid` | `GET /api/v1/entities/provider/:uuid` |
+| `POST /api/v1/providers` | `POST /api/v1/entities/provider` |
+| `PUT /api/v1/providers/:uuid` | `PUT /api/v1/entities/provider/:uuid` |
+| `DELETE /api/v1/providers/:uuid` | `DELETE /api/v1/entities/provider/:uuid` |
+| `GET /api/v1/config` | `GET /api/v1/entities/config_entry/list` |
 | `POST /webhook` | `POST /webhook` (no change — Category 3) |
 
 The `sendEmail` function is called via NATS™ (not HTTP) — no path change needed.
@@ -153,7 +167,7 @@ The `sendEmail` function is called via NATS™ (not HTTP) — no path change nee
   new entity CRUD routes.
 - AI agent MUST use `/api/v1/actions/:action` for non-CRUD business actions.
 - AI agent MUST NOT create entity routes outside the `/api/v1/entities/` prefix.
-- AI agent MUST NOT use singular entity names in paths (always plural).
+- AI agent MUST NOT use plural entity names in paths (always singular).
 - AI agent MUST NOT use camelCase in path segments (always snake_case).
 - AI agent MUST include `operationId`, `summary`, and `description` in every
   OpenAPI operation.
@@ -163,3 +177,16 @@ The `sendEmail` function is called via NATS™ (not HTTP) — no path change nee
   the `/api/v1/entities/:entity/...` pattern as a violation.
 - When creating a new microservice, the entity CRUD pattern is the DEFAULT
   — deviations require explicit user approval.
+
+## Naming convention
+
+| Layer | Name form | Example |
+|---|---|---|
+| PG table | snake_case **plural** | `providers`, `config_entries`, `sender_logs` |
+| TS entity class | PascalCase **singular** | `ProviderEntity`, `ConfigEntryEntity` |
+| API URL entity segment | snake_case **singular** | `/api/v1/entities/provider/...` |
+| OpenAPI `operationId` | snake_case | `list_providers`, `get_provider` |
+
+## Deep dive
+
+The normative rules live here; the full mechanics and rationale are in `docs/dev-guide/conventions.mdx` — link, do not duplicate.

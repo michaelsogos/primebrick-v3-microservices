@@ -1,9 +1,0 @@
-{
-  "pages": [
-    "overview",
-    "architecture",
-    "conventions",
-    "services/emailsender",
-    "services/ai"
-  ]
-}

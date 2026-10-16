@@ -2,46 +2,58 @@
  * docs_kb entity — knowledge base chunks with pgvector embedding.
  *
  * Each row is a chunk of documentation (MDX, OpenAPI spec, or auto-generated
- * reference doc) that has been embedded into a 384-dim vector for RAG retrieval.
+ * reference doc) that has been embedded into a vector for RAG retrieval.
  *
- * The table is created in the public schema (not the ai schema) because it is
- * shared with the BE for MCP entity registry access and vector search.
+ * The table lives in the `ai` schema — schema sovereignty: ai owns its RAG
+ * knowledge base end-to-end (BE/MCP reach it through ai's API surface).
  */
 import {
   Entity,
   Key,
+  Unique,
+  Index,
   Column,
+  Vector,
 } from "@primebrick/dal-pg";
 
-@Entity("docs_kb", "public")
+@Entity("docs_kb", "ai")
 export class DocsKbEntity {
   @Key()
   id!: bigint;
 
+  /** Chunk identity — UNIQUE(repo, path, chunk_idx) in DDL. matchBy selector
+   *  for update/hardDelete bulk ops. */
+  @Unique("docs_kb_repo_path_chunk_idx_uq", 0)
+  @Index()
   @Column({ length: 50, nullable: false })
   repo!: string;
 
+  @Unique("docs_kb_repo_path_chunk_idx_uq", 1)
   @Column({ nullable: false })
   path!: string;
 
   @Column({ nullable: false })
   title!: string;
 
-  @Column({ nullable: false })
+  @Unique("docs_kb_repo_path_chunk_idx_uq", 2)
+  @Column({ pgType: "int4", nullable: false })
   chunk_idx!: number;
 
-  @Column({ nullable: false, pgType: "text" })
+  @Column({ nullable: false })
   content!: string;
 
-  // vector(384) — stored as string for DAL compatibility, queried via raw SQL.
-  // The DAL does not natively support pgvector types; vector search is done
-  // via raw SQL in the DocsKbRepository.
-  @Column({ nullable: false, pgType: "text" })
-  embedding!: string;
+  // vector(1024) — `Vector` is runtime-identifiable number[]; the DAL binds
+  // it as the '[v1,v2,…]' literal on write and hydrates it on read. `jsType`
+  // is the runtime hydration marker (a bare `Vector` annotation is invisible
+  // at runtime — without it a jsonb round-trip would surface a raw string).
+  @Index({ using: "hnsw", opclass: "vector_cosine_ops" })
+  @Column({ nullable: false, length: 1024, jsType: "vector" })
+  embedding!: Vector;
 
-  @Column({ nullable: false, pgType: "jsonb" })
+  @Column({ nullable: false })
   metadata!: object;
 
+  @Index()
   @Column({ nullable: false })
   content_hash!: string;
 

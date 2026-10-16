@@ -1,0 +1,1861 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-15T16:28:46.207Z",
+  "source": "entities",
+  "tables": {
+    "ai.docs_kb": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "docs_kb",
+      "entityClassName": "DocsKbEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "repo": {
+          "name": "repo",
+          "ordinalPosition": 2,
+          "dataType": "varchar(50)",
+          "typname": "varchar(50)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "repo",
+          "isNullable": false
+        },
+        "path": {
+          "name": "path",
+          "ordinalPosition": 3,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "path",
+          "isNullable": false
+        },
+        "title": {
+          "name": "title",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "title",
+          "isNullable": false
+        },
+        "chunk_idx": {
+          "name": "chunk_idx",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "chunk_idx",
+          "isNullable": false
+        },
+        "content": {
+          "name": "content",
+          "ordinalPosition": 6,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "content",
+          "isNullable": false
+        },
+        "embedding": {
+          "name": "embedding",
+          "ordinalPosition": 7,
+          "dataType": "vector(1024)",
+          "typname": "vector(1024)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "embedding",
+          "isNullable": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "ordinalPosition": 8,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "metadata",
+          "isNullable": false
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "ordinalPosition": 9,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "content_hash",
+          "isNullable": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 10,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 11,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "docs_kb_repo_idx",
+          "columns": [
+            "repo"
+          ],
+          "using": "btree"
+        },
+        {
+          "name": "docs_kb_embedding_idx",
+          "columns": [
+            "embedding"
+          ],
+          "using": "hnsw",
+          "opclass": "vector_cosine_ops"
+        },
+        {
+          "name": "docs_kb_content_hash_idx",
+          "columns": [
+            "content_hash"
+          ],
+          "using": "btree"
+        },
+        {
+          "name": "docs_kb_repo_path_chunk_idx_uq",
+          "columns": [
+            "repo",
+            "path",
+            "chunk_idx"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.ai_models": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "ai_models",
+      "entityClassName": "AiModelEntity",
+      "isAuditable": true,
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "model_id": {
+          "name": "model_id",
+          "ordinalPosition": 3,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "model_id",
+          "isNullable": false
+        },
+        "dtype": {
+          "name": "dtype",
+          "ordinalPosition": 4,
+          "dataType": "varchar(20)",
+          "typname": "varchar(20)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "dtype",
+          "isNullable": true
+        },
+        "engine_type": {
+          "name": "engine_type",
+          "ordinalPosition": 5,
+          "dataType": "varchar(20)",
+          "typname": "varchar(20)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "engine_type",
+          "isNullable": false,
+          "defaultSql": "'webllm'"
+        },
+        "name": {
+          "name": "name",
+          "ordinalPosition": 6,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "name",
+          "isNullable": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 7,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
+          "isNullable": true
+        },
+        "description_key": {
+          "name": "description_key",
+          "ordinalPosition": 8,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "description_key",
+          "isNullable": true
+        },
+        "power_level": {
+          "name": "power_level",
+          "ordinalPosition": 9,
+          "dataType": "integer",
+          "typname": "integer",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "power_level",
+          "isNullable": false,
+          "defaultSql": "3"
+        },
+        "rank": {
+          "name": "rank",
+          "ordinalPosition": 10,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "rank",
+          "isNullable": false,
+          "defaultSql": "1.0"
+        },
+        "test_scores": {
+          "name": "test_scores",
+          "ordinalPosition": 11,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "test_scores",
+          "isNullable": true
+        },
+        "enable_thinking": {
+          "name": "enable_thinking",
+          "ordinalPosition": 12,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "enable_thinking",
+          "isNullable": false,
+          "defaultSql": "false"
+        },
+        "temperature": {
+          "name": "temperature",
+          "ordinalPosition": 13,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "temperature",
+          "isNullable": false,
+          "defaultSql": "0.70"
+        },
+        "top_p": {
+          "name": "top_p",
+          "ordinalPosition": 14,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "top_p",
+          "isNullable": false,
+          "defaultSql": "0.90"
+        },
+        "max_tokens": {
+          "name": "max_tokens",
+          "ordinalPosition": 15,
+          "dataType": "integer",
+          "typname": "integer",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "max_tokens",
+          "isNullable": false,
+          "defaultSql": "256"
+        },
+        "repetition_penalty": {
+          "name": "repetition_penalty",
+          "ordinalPosition": 16,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "repetition_penalty",
+          "isNullable": false,
+          "defaultSql": "1.10"
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "ordinalPosition": 17,
+          "dataType": "integer",
+          "typname": "integer",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sort_order",
+          "isNullable": false,
+          "defaultSql": "100"
+        },
+        "download_size_mb": {
+          "name": "download_size_mb",
+          "ordinalPosition": 18,
+          "dataType": "integer",
+          "typname": "integer",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "download_size_mb",
+          "isNullable": true
+        },
+        "vram_mb": {
+          "name": "vram_mb",
+          "ordinalPosition": 19,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "vram_mb",
+          "isNullable": true
+        },
+        "is_compatible": {
+          "name": "is_compatible",
+          "ordinalPosition": 20,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "is_compatible",
+          "isNullable": false,
+          "defaultSql": "true"
+        },
+        "kv_cache_bytes_per_token": {
+          "name": "kv_cache_bytes_per_token",
+          "ordinalPosition": 21,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "kv_cache_bytes_per_token",
+          "isNullable": true
+        },
+        "flops_per_token": {
+          "name": "flops_per_token",
+          "ordinalPosition": 22,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "flops_per_token",
+          "isNullable": true
+        },
+        "working_set_mb": {
+          "name": "working_set_mb",
+          "ordinalPosition": 23,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "working_set_mb",
+          "isNullable": true
+        },
+        "working_set_source": {
+          "name": "working_set_source",
+          "ordinalPosition": 24,
+          "dataType": "varchar(20)",
+          "typname": "varchar(20)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "working_set_source",
+          "isNullable": false,
+          "defaultSql": "'hf_estimate'"
+        },
+        "working_set_detail": {
+          "name": "working_set_detail",
+          "ordinalPosition": 25,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "working_set_detail",
+          "isNullable": true
+        },
+        "execution_config": {
+          "name": "execution_config",
+          "ordinalPosition": 26,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "execution_config",
+          "isNullable": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 27,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 28,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 29,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 30,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 31,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 32,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_at",
+          "isNullable": true
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 33,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_by",
+          "isNullable": true
+        }
+      },
+      "indexes": [
+        {
+          "name": "ai_models_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        },
+        {
+          "name": "ai_models_model_id_dtype_uq",
+          "columns": [
+            "model_id",
+            "dtype"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.ai_cerebellum": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "ai_cerebellum",
+      "entityClassName": "AiCerebellumEntity",
+      "isAuditable": true,
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "assistant_key": {
+          "name": "assistant_key",
+          "ordinalPosition": 3,
+          "dataType": "varchar(60)",
+          "typname": "varchar(60)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "assistant_key",
+          "isNullable": false
+        },
+        "model_id": {
+          "name": "model_id",
+          "ordinalPosition": 4,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "model_id",
+          "isNullable": false
+        },
+        "dtype": {
+          "name": "dtype",
+          "ordinalPosition": 5,
+          "dataType": "varchar(40)",
+          "typname": "varchar(40)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "dtype",
+          "isNullable": true
+        },
+        "name": {
+          "name": "name",
+          "ordinalPosition": 6,
+          "dataType": "varchar(80)",
+          "typname": "varchar(80)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "name",
+          "isNullable": false
+        },
+        "description_key": {
+          "name": "description_key",
+          "ordinalPosition": 7,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "description_key",
+          "isNullable": true
+        },
+        "enable_thinking": {
+          "name": "enable_thinking",
+          "ordinalPosition": 8,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "enable_thinking",
+          "isNullable": true
+        },
+        "temperature": {
+          "name": "temperature",
+          "ordinalPosition": 9,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "temperature",
+          "isNullable": true
+        },
+        "top_p": {
+          "name": "top_p",
+          "ordinalPosition": 10,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "top_p",
+          "isNullable": true
+        },
+        "max_tokens": {
+          "name": "max_tokens",
+          "ordinalPosition": 11,
+          "dataType": "integer",
+          "typname": "integer",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "max_tokens",
+          "isNullable": true
+        },
+        "repetition_penalty": {
+          "name": "repetition_penalty",
+          "ordinalPosition": 12,
+          "dataType": "float8",
+          "typname": "float8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "repetition_penalty",
+          "isNullable": true
+        },
+        "execution_config": {
+          "name": "execution_config",
+          "ordinalPosition": 13,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "execution_config",
+          "isNullable": true
+        },
+        "test_scores": {
+          "name": "test_scores",
+          "ordinalPosition": 14,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "test_scores",
+          "isNullable": true
+        },
+        "recommendation": {
+          "name": "recommendation",
+          "ordinalPosition": 15,
+          "dataType": "varchar(20)",
+          "typname": "varchar(20)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "recommendation",
+          "isNullable": true
+        },
+        "is_compatible": {
+          "name": "is_compatible",
+          "ordinalPosition": 16,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "is_compatible",
+          "isNullable": false,
+          "defaultSql": "true"
+        },
+        "is_default": {
+          "name": "is_default",
+          "ordinalPosition": 17,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "is_default",
+          "isNullable": false,
+          "defaultSql": "false"
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 18,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 19,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 20,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 21,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 22,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_at",
+          "isNullable": true
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 24,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_by",
+          "isNullable": true
+        }
+      },
+      "indexes": [
+        {
+          "name": "ai_cerebellum_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        },
+        {
+          "name": "ai_cerebellum_assistant_model_dtype_uq",
+          "columns": [
+            "assistant_key",
+            "model_id",
+            "dtype"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.config_entries": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "config_entries",
+      "entityClassName": "ConfigEntryEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "key": {
+          "name": "key",
+          "ordinalPosition": 3,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "key",
+          "isNullable": false
+        },
+        "value": {
+          "name": "value",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "value",
+          "isNullable": true
+        },
+        "type": {
+          "name": "type",
+          "ordinalPosition": 5,
+          "dataType": "varchar(50)",
+          "typname": "varchar(50)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "type",
+          "isNullable": false
+        },
+        "type_config": {
+          "name": "type_config",
+          "ordinalPosition": 6,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "type_config",
+          "isNullable": true
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 7,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
+          "isNullable": true
+        },
+        "description_key": {
+          "name": "description_key",
+          "ordinalPosition": 8,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "description_key",
+          "isNullable": true
+        },
+        "reserved": {
+          "name": "reserved",
+          "ordinalPosition": 9,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "reserved",
+          "isNullable": false
+        },
+        "group_key": {
+          "name": "group_key",
+          "ordinalPosition": 10,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "group_key",
+          "isNullable": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 11,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 12,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 13,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 14,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 15,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 16,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_at",
+          "isNullable": true
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 17,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_by",
+          "isNullable": true
+        }
+      },
+      "indexes": [
+        {
+          "name": "config_entries_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        },
+        {
+          "name": "config_entries_key_uq",
+          "columns": [
+            "key"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.docs_ingest_log": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "docs_ingest_log",
+      "entityClassName": "DocsIngestLogEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "repo": {
+          "name": "repo",
+          "ordinalPosition": 2,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "repo",
+          "isNullable": true
+        },
+        "service_code": {
+          "name": "service_code",
+          "ordinalPosition": 3,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "service_code",
+          "isNullable": false
+        },
+        "trigger_source": {
+          "name": "trigger_source",
+          "ordinalPosition": 4,
+          "dataType": "varchar(20)",
+          "typname": "varchar(20)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "trigger_source",
+          "isNullable": false
+        },
+        "ok": {
+          "name": "ok",
+          "ordinalPosition": 5,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "ok",
+          "isNullable": false
+        },
+        "stats": {
+          "name": "stats",
+          "ordinalPosition": 6,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "stats",
+          "isNullable": false,
+          "defaultSql": "'{}'::jsonb"
+        },
+        "error": {
+          "name": "error",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "error",
+          "isNullable": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 8,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 9,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 10,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 11,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 13,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_at",
+          "isNullable": true
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 14,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_by",
+          "isNullable": true
+        }
+      }
+    },
+    "ai.ai_conversations": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "ai_conversations",
+      "entityClassName": "AiConversationEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "title": {
+          "name": "title",
+          "ordinalPosition": 3,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "title",
+          "isNullable": true
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "ordinalPosition": 4,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "last_seen_at",
+          "isNullable": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 5,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 6,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 7,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 8,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 9,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        }
+      },
+      "partition": {
+        "column": "last_seen_at",
+        "interval": "1 month",
+        "retention": "6 months",
+        "keepTable": false
+      },
+      "indexes": [
+        {
+          "name": "ai_conversations_uuid_uq",
+          "columns": [
+            "uuid",
+            "last_seen_at"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.ai_messages": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "ai_messages",
+      "entityClassName": "AiMessageEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "conversation_uuid": {
+          "name": "conversation_uuid",
+          "ordinalPosition": 3,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "conversation_uuid",
+          "isNullable": false
+        },
+        "role": {
+          "name": "role",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "role",
+          "isNullable": false
+        },
+        "content": {
+          "name": "content",
+          "ordinalPosition": 5,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "content",
+          "isNullable": false
+        },
+        "tokens_in": {
+          "name": "tokens_in",
+          "ordinalPosition": 6,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "tokens_in",
+          "isNullable": true
+        },
+        "tokens_out": {
+          "name": "tokens_out",
+          "ordinalPosition": 7,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "tokens_out",
+          "isNullable": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 8,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 9,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 10,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 11,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        }
+      },
+      "partitionChildOf": {
+        "parentTable": "ai_conversations",
+        "parentSchema": "ai",
+        "refColumn": "conversation_uuid",
+        "parentRefColumn": "uuid"
+      },
+      "indexes": [
+        {
+          "name": "ai_messages_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.ai_feedback": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "ai_feedback",
+      "entityClassName": "AiFeedbackEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "message_uuid": {
+          "name": "message_uuid",
+          "ordinalPosition": 3,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "message_uuid",
+          "isNullable": false
+        },
+        "conversation_uuid": {
+          "name": "conversation_uuid",
+          "ordinalPosition": 4,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "conversation_uuid",
+          "isNullable": true
+        },
+        "rating": {
+          "name": "rating",
+          "ordinalPosition": 5,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "rating",
+          "isNullable": false
+        },
+        "comment": {
+          "name": "comment",
+          "ordinalPosition": 6,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "comment",
+          "isNullable": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 7,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 8,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 9,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 10,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 11,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        }
+      },
+      "partitionChildOf": {
+        "parentTable": "ai_conversations",
+        "parentSchema": "ai",
+        "refColumn": "conversation_uuid",
+        "parentRefColumn": "uuid"
+      },
+      "indexes": [
+        {
+          "name": "ai_feedback_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "ai.ai_telemetry": {
+      "kind": "table",
+      "schema": "ai",
+      "name": "ai_telemetry",
+      "entityClassName": "AiTelemetryEntity",
+      "columns": {
+        "id": {
+          "name": "id",
+          "ordinalPosition": 1,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": true,
+          "propertyKey": "id",
+          "isNullable": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false
+        },
+        "conversation_uuid": {
+          "name": "conversation_uuid",
+          "ordinalPosition": 3,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "conversation_uuid",
+          "isNullable": true
+        },
+        "user_uuid": {
+          "name": "user_uuid",
+          "ordinalPosition": 4,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "user_uuid",
+          "isNullable": false
+        },
+        "model": {
+          "name": "model",
+          "ordinalPosition": 5,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "model",
+          "isNullable": false
+        },
+        "tokens_in": {
+          "name": "tokens_in",
+          "ordinalPosition": 6,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "tokens_in",
+          "isNullable": false
+        },
+        "tokens_out": {
+          "name": "tokens_out",
+          "ordinalPosition": 7,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "tokens_out",
+          "isNullable": false
+        },
+        "steps": {
+          "name": "steps",
+          "ordinalPosition": 8,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "steps",
+          "isNullable": false
+        },
+        "tool_calls": {
+          "name": "tool_calls",
+          "ordinalPosition": 9,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "tool_calls",
+          "isNullable": false
+        },
+        "rag_hits": {
+          "name": "rag_hits",
+          "ordinalPosition": 10,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "rag_hits",
+          "isNullable": false
+        },
+        "latency_ms": {
+          "name": "latency_ms",
+          "ordinalPosition": 11,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "latency_ms",
+          "isNullable": false
+        },
+        "success": {
+          "name": "success",
+          "ordinalPosition": 12,
+          "dataType": "boolean",
+          "typname": "boolean",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "success",
+          "isNullable": false
+        },
+        "error": {
+          "name": "error",
+          "ordinalPosition": 13,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "error",
+          "isNullable": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 14,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "ai_telemetry_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    }
+  }
+}

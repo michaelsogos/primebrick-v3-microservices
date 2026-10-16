@@ -26,7 +26,7 @@ function makeNatsMock() {
 }
 
 const baseConfig = {
-  serviceCode: "EMAILSENDER",
+  serviceCode: "emailsender",
   baseUrl: "http://localhost:3003",
   endpoints: { webhook: "http://localhost:3003/webhook", health: "http://localhost:3003/health" },
   service_version: "1.0.0",
@@ -48,7 +48,7 @@ describe("ServiceRegistrar — NATS registration", () => {
     expect(nats.publish).toHaveBeenCalledTimes(1);
     const call = nats.calls[0];
     expect(call.subject).toBe(SERVICE_SUBJECTS.REGISTER);
-    expect(call.payload.code).toBe("EMAILSENDER");
+    expect(call.payload.code).toBe("emailsender");
     expect(call.payload.base_url).toBe("http://localhost:3003");
     expect(call.payload.endpoints).toEqual(baseConfig.endpoints);
     expect(call.payload.service_version).toBe("1.0.0");
@@ -64,7 +64,7 @@ describe("ServiceRegistrar — NATS registration", () => {
     expect(nats.publish).toHaveBeenCalledTimes(1);
     const call = nats.calls[0];
     expect(call.subject).toBe(SERVICE_SUBJECTS.HEARTBEAT);
-    expect(call.payload.code).toBe("EMAILSENDER");
+    expect(call.payload.code).toBe("emailsender");
     expect(call.payload.service_version).toBe("1.0.0");
     // heartbeat does NOT include endpoints
     expect(call.payload.endpoints).toBeUndefined();
@@ -76,7 +76,7 @@ describe("ServiceRegistrar — NATS registration", () => {
     expect(nats.publish).toHaveBeenCalledTimes(1);
     const call = nats.calls[0];
     expect(call.subject).toBe(SERVICE_SUBJECTS.UNREGISTER);
-    expect(call.payload.code).toBe("EMAILSENDER");
+    expect(call.payload.code).toBe("emailsender");
     expect(call.payload.base_url).toBe("http://localhost:3003");
     expect(call.payload.is_behind_scaler).toBe(false);
   });
