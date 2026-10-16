@@ -11,6 +11,7 @@ import {
   Entity,
   Key,
   Unique,
+  Index,
   Column,
   Vector,
 } from "@primebrick/dal-pg";
@@ -23,6 +24,7 @@ export class DocsKbEntity {
   /** Chunk identity — UNIQUE(repo, path, chunk_idx) in DDL. matchBy selector
    *  for update/hardDelete bulk ops. */
   @Unique("docs_kb_repo_path_chunk_idx_uq", 0)
+  @Index()
   @Column({ length: 50, nullable: false })
   repo!: string;
 
@@ -44,12 +46,14 @@ export class DocsKbEntity {
   // it as the '[v1,v2,…]' literal on write and hydrates it on read. `jsType`
   // is the runtime hydration marker (a bare `Vector` annotation is invisible
   // at runtime — without it a jsonb round-trip would surface a raw string).
+  @Index({ using: "hnsw", opclass: "vector_cosine_ops" })
   @Column({ nullable: false, length: 1024, jsType: "vector" })
   embedding!: Vector;
 
   @Column({ nullable: false })
   metadata!: object;
 
+  @Index()
   @Column({ nullable: false })
   content_hash!: string;
 

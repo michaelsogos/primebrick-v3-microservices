@@ -11,7 +11,7 @@
  *   /api/v1/entities/ai_cerebellum/meta|list|:uuid|restore|audit
  *
  * Services are constructed lazily on first request — `getDal()` only
- * resolves after `initDal()` ran inside `createMicroservice`, while this
+ * resolves after `getDal()` ran inside `createMicroservice`, while this
  * handler is composed at module import time.
  *
  * MFA step-up on delete is intentionally NOT wired yet — it requires the

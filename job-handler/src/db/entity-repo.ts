@@ -4,7 +4,7 @@
  * Entity services draw their Repository from `getDal()` (the DAL gateway
  * owns the pool + schema-domain guard) — no ad-hoc `new Repository(pool)`
  * and no `dal.repository()` leak into consumers. `getDal()` only resolves
- * after `initDal()` ran inside `createMicroservice`, so services call it
+ * after `getDal()` ran inside `createMicroservice`, so services call it
  * inside their constructor/first use, never at module import time.
  */
 import { requireActor } from "@primebrick/sdk";

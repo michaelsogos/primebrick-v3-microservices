@@ -6,7 +6,7 @@ const EMAIL_RESPONSE_SUBJECT = "emailsender.response";
 
 /**
  * Inbound email work item. Two-layer inbound model enforced by the SDK
- * factory: FIRST the publisher's client shield (UA+key vs client_registry —
+ * factory: FIRST the publisher's client shield (UA+key vs client_shield_registry —
  * "BE may talk to emailsender"), THEN the user layer ("is this actor allowed
  * to send email"): gateway secret + AuthUser + RBAC EMAILSENDER_SEND.
  * A valid shield with missing/insufficient user context is denied — service

@@ -159,7 +159,7 @@ async function main(): Promise<void> {
   logger.info(`User UUID: ${userUuid}`, { tags: ["eval"] });
   logger.info("", { tags: ["eval"] });
 
-  initDal();
+  getDal();
 
   const results: CaseResult[] = [];
   for (const c of evalCases) {

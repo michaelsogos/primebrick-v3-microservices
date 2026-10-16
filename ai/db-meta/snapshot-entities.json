@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-15T15:15:26.688Z",
+  "generatedAt": "2026-10-15T16:28:46.207Z",
   "source": "entities",
   "tables": {
     "ai.docs_kb": {
@@ -132,6 +132,28 @@
         }
       },
       "indexes": [
+        {
+          "name": "docs_kb_repo_idx",
+          "columns": [
+            "repo"
+          ],
+          "using": "btree"
+        },
+        {
+          "name": "docs_kb_embedding_idx",
+          "columns": [
+            "embedding"
+          ],
+          "using": "hnsw",
+          "opclass": "vector_cosine_ops"
+        },
+        {
+          "name": "docs_kb_content_hash_idx",
+          "columns": [
+            "content_hash"
+          ],
+          "using": "btree"
+        },
         {
           "name": "docs_kb_repo_path_chunk_idx_uq",
           "columns": [

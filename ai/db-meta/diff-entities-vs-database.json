@@ -1,7 +1,35 @@
 {
   "version": 2,
-  "generatedAt": "2026-10-15T15:15:27.023Z",
+  "generatedAt": "2026-10-15T16:28:46.376Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "ai.docs_kb": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "docs_kb_repo_path_chunk_idx_key"
+      ],
+      "indexMismatches": [
+        {
+          "name": "docs_kb_embedding_idx",
+          "entityUsing": "hnsw",
+          "databaseUsing": "hnsw",
+          "entityColumns": [
+            "embedding"
+          ],
+          "databaseColumns": [
+            "embedding vector_cosine_ops"
+          ]
+        }
+      ],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

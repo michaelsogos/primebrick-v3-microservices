@@ -31,7 +31,7 @@ const repo = process.argv.includes("--repo")
   ? process.argv[process.argv.indexOf("--repo") + 1]
   : undefined;
 
-await initDal();
+await getDal();
 
 // aiConfig() needs the running-service ConfigLoader — the script reads the
 // same ai.config_entries rows via the DAL instead.

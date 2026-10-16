@@ -2,7 +2,7 @@
  * Integration test setup helper for emailsender.
  *
  * Provides:
- * - initDal() once via the getDal() gateway (the gateway owns the pg.Pool,
+ * - getDal() once via the getDal() gateway (the gateway owns the pg.Pool,
  *   registers type parsers, sets search_path/statement_timeout).
  * - Idempotent DDL for the sender_log table (the only
  *   emailsender table NOT created by the existing migration patches — it

@@ -5,13 +5,25 @@
 
 ## The rule
 
-There is exactly ONE public API for database access: **`getDal()`** from
-`@primebrick/dal-pg` (initialized once in `src/db/dal-gateway.ts` /
-`<us>/src/db/dal.ts`).
+Database access has a two-step convention:
+
+- **`initDal()`** — bootstrap-only, called ONCE in `index.ts`; lives inside
+  the service's own gateway module `<us>/src/db/dal.ts` (which wraps
+  `getDal(config)` from `@primebrick/dal-pg`).
+- **`getDal()`** — the accessor every other call site uses; fails fast
+  with `"config is required on the first call"` if a method runs before
+  bootstrap. Worker services should resolve it lazily (first use), never
+  in constructors — constructors run at router-mount, before bootstrap.
+
+Target shape (already live in the BE): worker services extend
+`DomainService<TEntity>` from `@primebrick/dal-pg` — lazy `this.dal`/
+`this.svc` seams, no per-domain `*_dal.ts`/`*-repo.ts` wrapper files
+(existing ones like `docs-search-dal.ts`/`*-repository.ts` are legacy
+debt — do NOT create new ones; new services extend `DomainService`).
 
 Consumers (services, modules, controllers-via-services) MUST:
 - import `getDal` from `@primebrick/dal-pg` (or the repo's `db/dal.ts`
-  re-export);
+  re-export) — or inherit `this.dal` from `DomainService`;
 - use `Dal` methods — `findAll`, `find`, `findByPage`, `add`, `update`,
   `touch`, `delete`, `restore`, `hardDelete`, `*Many`, `vectorSearch`,
   `truncate(entity)`, `count`;

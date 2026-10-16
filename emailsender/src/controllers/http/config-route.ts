@@ -13,7 +13,7 @@
 import type { ServerResponse } from "http";
 import { field, Filter, Project } from "@primebrick/dal-pg";
 import { getDal } from "../../db/dal.js";
-import { Permission, type RpcRoute } from "@primebrick/sdk";
+import { Permission, extJsonStringify, type RpcRoute } from "@primebrick/sdk";
 import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
 
 function sendError(
@@ -23,8 +23,9 @@ function sendError(
   internalCode?: string,
 ): void {
   res.writeHead(status, { "Content-Type": "application/json" });
-  // standards-exempt: ext-json — RFC7807 problem+json is plain JSON by spec
-  res.end(JSON.stringify({
+  // extJsonStringify: byte-identical to JSON.stringify on plain types and
+  // bigint-safe (emits a bare JSON number instead of throwing).
+  res.end(extJsonStringify({
     type: `https://primebrick.io/errors/${internalCode || "error"}`,
     title: message,
     status,

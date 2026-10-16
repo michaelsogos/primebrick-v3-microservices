@@ -121,7 +121,7 @@ export function loadOpenApiSpecs(openApiPath: string): LoadedDoc[] {
  * core shared by the filesystem loader and the docs-pack ingest.
  */
 export function loadedDocsFromOpenApiSpec(specName: string, raw: string, repo = "api"): LoadedDoc[] {
-  // standards-exempt: ext-json — OpenAPI spec is an external plain-JSON file format
+  // standards-exempt: ext-json — external wire payload (OpenAPI spec file) — must not bigint-ify
   const spec = JSON.parse(raw) as {
     openapi?: string;
     info?: { title?: string };
