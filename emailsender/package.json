@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "primebrick-emailsender",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "capabilities": [
     "email_sender"
   ],
@@ -12,7 +12,7 @@
   },
   "scripts": {
     "version:auto": "node ../scripts/version-sync.mjs",
-    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check",
+    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs",
     "dev": "bun --hot src/index.ts",
     "build": "tsc",
     "prestart": "pnpm run build",
