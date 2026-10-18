@@ -20,6 +20,7 @@
  * questions surface manual pages instead of raw API listings.
  */
 import { getDal } from "../db/dal.js";
+import { extJsonParse } from "@primebrick/sdk";
 import { field, Filter, Project, type FilterExpr } from "@primebrick/dal-pg";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 
@@ -216,6 +217,91 @@ async function expandDocGraph(
     score: Number(row.similarity),
     graph_expanded: true,
   }));
+}
+
+/**
+ * Docs index — one entry per doc page (`chunk_idx = 0` carries the full
+ * metadata), ordered by the repo's `_order.json` manifests when present.
+ * `order_manifest` rows and non-mdx sources (openapi chunks) are excluded.
+ * Entries expose `entity` for in-product context matching (page → doc).
+ */
+export interface DocsIndexEntry {
+  path: string;
+  title: string;
+  /** Position in the repo's `_order.json` — null when the page is unlisted. */
+  order: number | null;
+  entity?: string;
+  description?: string;
+}
+
+export interface DocsIndexRepo {
+  repo: string;
+  entries: DocsIndexEntry[];
+}
+
+export async function getDocsIndex(): Promise<DocsIndexRepo[]> {
+  const rows = (await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
+    DocsKbEntity,
+    [
+      Project.field(field(DocsKbEntity, "repo")),
+      Project.field(field(DocsKbEntity, "path")),
+      Project.field(field(DocsKbEntity, "title")),
+      Project.field(field(DocsKbEntity, "content")),
+      Project.field(field(DocsKbEntity, "metadata")),
+    ],
+    { filters: [Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), "=", 0)] },
+  )) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">[]>;
+
+  // Order manifests: repo+dir → slug → position (slugs are extensionless,
+  // relative to the manifest's directory).
+  const orderByRepo = new Map<string, Map<string, number>>();
+  const docs = rows.filter((r) => {
+    const meta = r.metadata as Record<string, unknown> | undefined;
+    if (meta?.order_manifest === true) {
+      try {
+        const parsed = extJsonParse<{ pages?: unknown }>(r.content);
+        if (Array.isArray(parsed?.pages)) {
+          const dir = r.path.split("/").slice(0, -1).join("/");
+          const m = orderByRepo.get(r.repo) ?? new Map<string, number>();
+          parsed.pages.forEach((slug, i) => {
+            if (typeof slug === "string") m.set(dir ? `${dir}/${slug}` : slug, i);
+          });
+          orderByRepo.set(r.repo, m);
+        }
+      } catch {
+        /* malformed manifest — ordering falls back to alphabetical */
+      }
+      return false;
+    }
+    return meta?.source === "mdx";
+  });
+
+  const byRepo = new Map<string, DocsIndexEntry[]>();
+  for (const r of docs) {
+    const meta = r.metadata as Record<string, unknown> | undefined;
+    const order = orderByRepo.get(r.repo)?.get(r.path.replace(/\.mdx$/i, "")) ?? null;
+    const entry: DocsIndexEntry = {
+      path: r.path,
+      title: r.title,
+      order,
+      ...(meta?.entity ? { entity: String(meta.entity) } : {}),
+      ...(meta?.description ? { description: String(meta.description) } : {}),
+    };
+    const list = byRepo.get(r.repo) ?? [];
+    list.push(entry);
+    byRepo.set(r.repo, list);
+  }
+
+  return [...byRepo.entries()]
+    .map(([repo, entries]) => ({
+      repo,
+      entries: entries.sort(
+        (a, b) =>
+          (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER) ||
+          a.title.localeCompare(b.title),
+      ),
+    }))
+    .sort((a, b) => a.repo.localeCompare(b.repo));
 }
 
 /**
