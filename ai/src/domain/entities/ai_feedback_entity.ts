@@ -12,15 +12,17 @@ import {
   Key,
   Unique,
   PartitionChildOf,
-  AuditableField,
-  AuditableFieldType,
-  type IAuditableEntity, type UUID,
+  type IAuditableEntity,
+  type UUID,
+  EntityBase,
+  Auditable,
 } from "@primebrick/dal-pg";
 import { AiConversationEntity } from "./ai_conversation_entity.js";
 
 @Entity("ai_feedback", "ai")
 @PartitionChildOf({ parent: AiConversationEntity, ref: "conversation_uuid" })
-export class AiFeedbackEntity implements IAuditableEntity {
+export class AiFeedbackEntity
+  extends Auditable(EntityBase) {
   @Key()
   id!: bigint;
 
@@ -40,20 +42,10 @@ export class AiFeedbackEntity implements IAuditableEntity {
   @Column({ nullable: true })
   comment?: string;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at!: Date;
 
   /** Voter = actor (session user uuid). Replaces the old `user_uuid`
    *  domain column. */
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by!: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at!: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by!: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version!: number;
 }
