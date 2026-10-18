@@ -197,9 +197,11 @@ export async function vectorSearch(
     {
       topK,
       fields: KB_PROJECTIONS,
-      filters: repoFilter
-        ? [Filter.fieldValue(field(DocsKbEntity, "repo"), "=", repoFilter)]
-        : undefined,
+      filters: [
+        // chunk_idx = -1 rows carry the full raw doc for display — never a hit.
+        Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), ">=", 0),
+        ...(repoFilter ? [Filter.fieldValue(field(DocsKbEntity, "repo"), "=", repoFilter)] : []),
+      ],
     },
   )) as SearchResult[];
 }

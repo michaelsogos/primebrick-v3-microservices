@@ -25,12 +25,16 @@ import { field, Filter, Project } from "@primebrick/dal-pg";
 import { initDal, getDal } from "../src/db/dal.js";
 import { reindexDocsPacks } from "../src/services/docs-pack-reindex.js";
 import { ConfigEntryEntity } from "../src/domain/entities/config_entry_entity.js";
-import { PublicConfigEntryEntity } from "../src/domain/entities/public_config_entry_entity.js";
+// redis_url lives in public.config_entries — BE-owned schema. The ai registry
+// deliberately has no public-schema entity (sovereignty), so this dev script
+// reads it with a raw pg client instead of an entity.
+import { Client as PgClient } from "pg";
 
 const repo = process.argv.includes("--repo")
   ? process.argv[process.argv.indexOf("--repo") + 1]
   : undefined;
 
+initDal();
 await getDal();
 
 // aiConfig() needs the running-service ConfigLoader — the script reads the
@@ -54,14 +58,19 @@ configureInternalClient(() => ({
 
 // Hydrate the rotating-secret slot exactly like SecretProvider does:
 // Redis primebrick:secrets:global:service_client_shield_secret.
-const redisUrl =
-  (
-    await getDal().find<PublicConfigEntryEntity, { value: string | null }>(PublicConfigEntryEntity, [
-      Project.field(field(PublicConfigEntryEntity, "value")),
-    ], {
-      filters: [Filter.fieldValue(field(PublicConfigEntryEntity, "key"), "=", "redis_url")],
-    })
-  )?.value ?? null;
+let redisUrl: string | null = null;
+{
+  const pg = new PgClient({ connectionString: process.env.DATABASE_URL });
+  try {
+    await pg.connect();
+    const r = await pg.query<{ value: string }>(
+      "SELECT value FROM public.config_entries WHERE key = 'redis_url' AND deleted_at IS NULL",
+    );
+    redisUrl = r.rows[0]?.value ?? null;
+  } finally {
+    await pg.end().catch(() => {});
+  }
+}
 if (redisUrl) {
   const redis = createClient({ url: redisUrl });
   try {

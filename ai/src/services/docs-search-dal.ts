@@ -110,7 +110,10 @@ export async function searchDocsKb(
   // stays the floor metric, `lexical_score` only re-ranks.
   const lexQuery = keywords.join(" ").trim() || null;
 
-  const filters: FilterExpr[] = [];
+  const filters: FilterExpr[] = [
+    // chunk_idx = -1 rows carry the full raw doc for display — never a hit.
+    Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), ">=", 0),
+  ];
   if (opts.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", opts.repo));
   if (opts.path_prefix) filters.push(Filter.fieldValue(field(DocsKbEntity, "path"), "LIKE", `${opts.path_prefix}%`));
 
@@ -194,7 +197,10 @@ async function expandDocGraph(
   const rows = await getDal().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), embedding, {
     topK: GRAPH_ROW_BUDGET,
     fields: [...KB_FIELDS],
-    filters: [Filter.fieldValue(field(DocsKbEntity, "path"), "IN", paths)],
+    filters: [
+      Filter.fieldValue(field(DocsKbEntity, "path"), "IN", paths),
+      Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), ">=", 0),
+    ],
   });
 
   const bestByPath = new Map<string, (typeof rows)[number]>();
@@ -316,9 +322,9 @@ export async function getDocByPath(
   const filters: FilterExpr[] = [Filter.fieldValue(field(DocsKbEntity, "path"), "=", params.path)];
   if (params.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", params.repo));
 
-  const rows = await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
+  const rows = await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata">>(
     DocsKbEntity,
-    [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "title")), Project.field(field(DocsKbEntity, "content")), Project.field(field(DocsKbEntity, "metadata"))],
+    [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "title")), Project.field(field(DocsKbEntity, "chunk_idx")), Project.field(field(DocsKbEntity, "content")), Project.field(field(DocsKbEntity, "metadata"))],
     {
       filters,
       sorting: [
@@ -326,14 +332,19 @@ export async function getDocByPath(
         { field: field(DocsKbEntity, "chunk_idx"), dir: "ASC" },
       ],
     },
-  ) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">[]>;
+  ) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata">[]>;
   if (!rows.length) return null;
   const first = rows[0]!;
   // Same path can exist in several repos — when the caller omits `repo`,
   // return only the first repo's chunks (rows are ordered by repo).
-  const content = rows
-    .filter((r) => r.repo === first.repo)
-    .map((r) => r.content)
-    .join("\n\n");
-  return { repo: first.repo, path: first.path, title: first.title, content, metadata: (first.metadata ?? {}) as Record<string, unknown> };
+  const repoRows = rows.filter((r) => r.repo === first.repo);
+  // Prefer the doc-source row (chunk_idx = -1): the full raw body is
+  // faithful markdown — re-joined chunks are lossy (atomic bullets,
+  // sentence joins). Fallback keeps serving pre-source-row corpora.
+  const sourceRow = repoRows.find((r) => r.chunk_idx === -1);
+  const content = sourceRow
+    ? sourceRow.content
+    : repoRows.filter((r) => r.chunk_idx !== -1).map((r) => r.content).join("\n\n");
+  const metaRow = repoRows.find((r) => r.chunk_idx === 0) ?? first;
+  return { repo: first.repo, path: first.path, title: first.title, content, metadata: (metaRow.metadata ?? {}) as Record<string, unknown> };
 }

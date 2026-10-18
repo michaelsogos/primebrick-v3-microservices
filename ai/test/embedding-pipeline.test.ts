@@ -78,13 +78,20 @@ describe('embedding input and incremental reindex', () => {
     const expected_hash = createHash('sha256')
       .update(`test-provider\n${expected_input}\n[]\n`)
       .digest('hex');
-    expect(mocks.embed_batch).toHaveBeenCalledWith([expected_input]);
+    // Second embedded input: the chunk_idx=-1 doc-source row embeds the bare
+    // title (display-only row, never a search hit).
+    expect(mocks.embed_batch).toHaveBeenCalledWith([expected_input, 'RBAC']);
     expect(mocks.insert_doc_chunks).toHaveBeenCalledWith([
       expect.objectContaining({
         title: 'RBAC',
         content: doc.content,
         content_hash: expected_hash,
         metadata: expect.objectContaining({ heading_path: 'Default roles' }),
+      }),
+      expect.objectContaining({
+        chunk_idx: -1,
+        content: doc.content,
+        metadata: expect.objectContaining({ doc_source: true }),
       }),
     ]);
   });
@@ -100,10 +107,12 @@ describe('embedding input and incremental reindex', () => {
 
     const stats = await runEmbeddingPipeline('/docs', '/openapi');
 
-    expect(stats.chunks_embedded).toBe(1);
+    // Chunk 0 re-embeds (title changed) + the new doc-source row embeds.
+    expect(stats.chunks_embedded).toBe(2);
     expect(stats.chunks_skipped).toBe(0);
     expect(mocks.embed_batch).toHaveBeenCalledWith([
       `Document: "Access Control" (tutorial)\n\nSection: Default roles\n\n${doc.content}`,
+      'Access Control',
     ]);
   });
 });
