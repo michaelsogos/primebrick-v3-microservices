@@ -8,7 +8,7 @@
  * runs against the service's own schema.
  */
 import { getEmbeddingProvider } from "./embedding-provider.js";
-import { searchDocsKb, getDocByPath } from "./docs-search-dal.js";
+import { searchDocsKb, getDocByPath, getDocsIndex } from "./docs-search-dal.js";
 
 export class DocsSearchService {
   async search(params: {
@@ -42,5 +42,10 @@ export class DocsSearchService {
 
   async getDocument(params: { path: string; repo?: string }) {
     return getDocByPath(params);
+  }
+
+  /** Ordered repo→pages tree for the in-product docs browser. */
+  async getIndex() {
+    return getDocsIndex();
   }
 }

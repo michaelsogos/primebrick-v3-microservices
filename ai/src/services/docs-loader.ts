@@ -34,6 +34,9 @@ export interface LoadedDoc {
     description?: string;
     /** KB paths this doc links to (doc-graph expansion — MDX only). */
     links?: string[];
+    /** `_order.json` manifest rows — ordering metadata for the docs index,
+     *  not real pages. Excluded from search/index consumers. */
+    order_manifest?: boolean;
   };
 }
 

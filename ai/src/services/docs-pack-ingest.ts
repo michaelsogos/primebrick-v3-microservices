@@ -8,6 +8,7 @@
  * unchanged chunks are free, re-ingest on re-registration is cheap.
  */
 
+import { basename } from "node:path";
 import { logger, type DocsPackPayload } from "@primebrick/sdk";
 import { loadedDocFromMdx, loadedDocsFromOpenApiSpec, type LoadedDoc } from "./docs-loader.js";
 import { ingestLoadedDocs, type PipelineStats } from "./embedding-pipeline.js";
@@ -22,7 +23,27 @@ export async function ingestDocsPack(payload: DocsPackPayload): Promise<Pipeline
 
   const docs: LoadedDoc[] = [];
   for (const file of payload.files) {
-    if (!DOC_EXT.test(file.path)) continue; // _order.json, .gitkeep, …
+    // _order.json ships the curated page order — ingest it as a flagged
+    // doc row (hash-driven, self-updating) so the docs index can order
+    // entries. NOT a page: consumers exclude order_manifest rows.
+    if (basename(file.path) === "_order.json") {
+      docs.push({
+        repo,
+        path: file.path,
+        title: "_order",
+        content: file.content,
+        metadata: {
+          source: "mdx",
+          repo,
+          path: file.path,
+          title: "_order",
+          content_type: "reference",
+          order_manifest: true,
+        },
+      });
+      continue;
+    }
+    if (!DOC_EXT.test(file.path)) continue;
     const doc = loadedDocFromMdx(repo, file.path, file.content);
     if (doc) docs.push(doc);
     else logger.warn(`docs-pack: skipped unparsable doc ${repo}/${file.path}`, { tags: ["docs-pack"] });
