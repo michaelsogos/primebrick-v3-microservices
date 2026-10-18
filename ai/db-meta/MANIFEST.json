@@ -1,10 +1,10 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-15T15:15:37.755Z",
+  "issued_at": "2026-10-18T12:25:23.983Z",
   "patches": {
-    "0001_initial_schema_ai": "daf43b893c8ca11b6c8246afd6bc830d138709d6347c89328d9e87456c7543ae",
-    "0002_ai_chat_tables": "a2686f2070958c0889b79e0a1994885109399b167b3a33ce661a7565bfedb0b2",
+    "0001_initial_schema_ai": "a2b325ad28646384bc736c18cc06fe1b3d9448e54159a9bc0b1a7568e987ed48",
+    "0002_ai_chat_tables": "ce76245e065658e3a07274f6f703d8bd59eeb23db0690e8313443011b6c3fa96",
     "0002_seed_microservice_config": "3a921056a58eca194c4c81c26dcc7c3e98534867508b0993a55be1a90a70f655",
     "0003_seed_runtime_config": "91927a2be09af65153b8dafac7dc3e25cfe2becc3174f876757d57bcf84df6ee",
     "0004_move_entity_tables_to_ai_schema": "184732c8365ab2ce2b91ab27c8cebdbfdd4153ab62787430603309545d6642af",
@@ -13,5 +13,5 @@
     "20261013210000_audit_columns_not_null": "21912748f9646b6afcec9420179964a40f9a455964e4b027b88398fa12383742",
     "20261015144424_drift_ai_docs_kb_ai_ai_models_ai_ai_cerebellum_ai_docs_ingest_log": "890851eee750aa22dd394f4767756ce0b76c3a1a47330e65eb7bded64fbd7e5f"
   },
-  "signature": "qfRC62iqUIkOYrEGCnfNzEolZOIQO/41b9x4FP0qqGt94nw5gOKOb7WS5F7L0SD8L6D9rwMrkaeSCnpB30NlBQ=="
+  "signature": "3d76u/+BwC+hITlVTyh4J51IBDRbgIQI1PA+FTMYTrcFDN96dwgDsnD9EEfJ3SR0rONfiidoOywMbiMlO2yzCQ=="
 }
