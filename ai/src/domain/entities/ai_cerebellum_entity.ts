@@ -19,24 +19,26 @@
  *
  * The table lives in the `ai` schema — owned exclusively by this service.
  */
-import type { IAuditableEntity, IExposableEntity, UUID } from "@primebrick/dal-pg";
+
+import type { UUID, IExposableEntity } from "@primebrick/dal-pg";
 import {
   Column,
   Entity,
   Key,
   Unique,
-  AuditableField,
-  DeletableField,
-  AuditableFieldType,
-  DeletableFieldType,
   AuditTrail,
+  EntityBase,
+  Auditable,
+  Deletable,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
 @Entity("ai_cerebellum", "ai")
 @AuditTrail()
 @Cached(300_000) // 5 min TTL — reference data, changes rarely
-export class AiCerebellumEntity implements IAuditableEntity, IExposableEntity {
+export class AiCerebellumEntity
+  extends Deletable(Auditable(EntityBase))
+  implements IExposableEntity {
   @Key()
   id: bigint;
 
@@ -122,24 +124,10 @@ export class AiCerebellumEntity implements IAuditableEntity, IExposableEntity {
   @Column({ nullable: false, defaultSql: "false" })
   is_default: boolean;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at: Date;
 
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version: number;
 
-  @DeletableField(DeletableFieldType.DELETED_AT)
-  deleted_at?: Date;
 
-  @DeletableField(DeletableFieldType.DELETED_BY)
-  deleted_by?: string;
 }
