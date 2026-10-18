@@ -3,15 +3,15 @@ import {
   Key,
   Unique,
   Column,
-  AuditableField,
-  AuditableFieldType,
-  DeletableField,
-  DeletableFieldType,
-  type IAuditableEntity, type UUID,
+  type UUID,
+  EntityBase,
+  Auditable,
+  Deletable,
 } from "@primebrick/dal-pg";
 
 @Entity("config_entries", "ai")
-export class ConfigEntryEntity implements IAuditableEntity {
+export class ConfigEntryEntity
+  extends Deletable(Auditable(EntityBase)) {
   @Key()
   id!: bigint;
 
@@ -43,24 +43,10 @@ export class ConfigEntryEntity implements IAuditableEntity {
   @Column({ length: 100, nullable: true })
   group_key?: string;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at!: Date;
 
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by!: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at!: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by!: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version!: number;
 
-  @DeletableField(DeletableFieldType.DELETED_AT)
-  deleted_at?: Date;
 
-  @DeletableField(DeletableFieldType.DELETED_BY)
-  deleted_by?: string;
 }

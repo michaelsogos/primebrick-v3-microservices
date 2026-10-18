@@ -12,19 +12,20 @@
  * NO @AuditTrail(): log rows are append-only, never updated or deleted —
  * trailing an immutable log would duplicate information already on the row.
  */
+import type { UUID } from "@primebrick/dal-pg";
 import {
   Column,
   Entity,
   Key,
-  AuditableField,
-  AuditableFieldType,
-  DeletableField,
-  DeletableFieldType,
   type IAuditableEntity,
+  EntityBase,
+  Auditable,
+  Deletable,
 } from "@primebrick/dal-pg";
 
 @Entity("docs_ingest_log", "ai")
-export class DocsIngestLogEntity implements IAuditableEntity {
+export class DocsIngestLogEntity
+  extends Deletable(Auditable(EntityBase)) {
   @Key()
   id: bigint;
 
@@ -48,24 +49,10 @@ export class DocsIngestLogEntity implements IAuditableEntity {
   @Column({ nullable: true })
   error?: string;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at: Date;
 
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version: number;
 
-  @DeletableField(DeletableFieldType.DELETED_AT)
-  deleted_at?: Date;
 
-  @DeletableField(DeletableFieldType.DELETED_BY)
-  deleted_by?: string;
 }

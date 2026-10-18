@@ -20,13 +20,15 @@ import {
   Key,
   Unique,
   PartitionField,
-  AuditableField,
-  AuditableFieldType,
-  type IAuditableEntity, type UUID,
+  type IAuditableEntity,
+  type UUID,
+  EntityBase,
+  Auditable,
 } from "@primebrick/dal-pg";
 
 @Entity("ai_conversations", "ai")
-export class AiConversationEntity implements IAuditableEntity {
+export class AiConversationEntity
+  extends Auditable(EntityBase) {
   /** Internal PK — FK/JOIN performance only, never exposed to callers. */
   @Key()
   id!: bigint;
@@ -51,20 +53,10 @@ export class AiConversationEntity implements IAuditableEntity {
   @Column({ nullable: false })
   last_seen_at!: Date;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at!: Date;
 
   /** Owner = actor (session user uuid). Replaces the old `user_uuid`
    *  domain column — identical information, standard stamping. */
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by!: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at!: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by!: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version!: number;
 }

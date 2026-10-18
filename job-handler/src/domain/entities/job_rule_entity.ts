@@ -15,15 +15,15 @@ import {
   Key,
   Unique,
   Column,
-  AuditableField,
-  AuditableFieldType,
-  DeletableField,
-  DeletableFieldType,
-  type IAuditableEntity,
-  type IDeletableEntity, type UUID } from "@primebrick/dal-pg";
+  type UUID,
+  EntityBase,
+  Auditable,
+  Deletable,
+} from "@primebrick/dal-pg";
 
 @Entity("job_rules", "job")
-export class JobRuleEntity implements IAuditableEntity, IDeletableEntity {
+export class JobRuleEntity
+  extends Deletable(Auditable(EntityBase)) {
   @Key()
   id!: bigint;
 
@@ -61,24 +61,10 @@ export class JobRuleEntity implements IAuditableEntity, IDeletableEntity {
   @Column({ nullable: false })
   enabled!: boolean;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at!: Date;
 
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by!: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at!: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by!: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version!: number;
 
-  @DeletableField(DeletableFieldType.DELETED_AT)
-  deleted_at?: Date;
 
-  @DeletableField(DeletableFieldType.DELETED_BY)
-  deleted_by?: string;
 }

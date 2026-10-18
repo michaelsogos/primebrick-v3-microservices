@@ -3,12 +3,14 @@ import {
   Entity,
   Key,
   Unique,
-  AuditableField,
-  AuditableFieldType,
-  type IAuditableEntity, type UUID } from "@primebrick/dal-pg";
+  type UUID,
+  EntityBase,
+  Auditable,
+} from "@primebrick/dal-pg";
 
 @Entity("email_templates", "emailsender")
-export class EmailTemplateEntity implements IAuditableEntity {
+export class EmailTemplateEntity
+  extends Auditable(EntityBase) {
   @Key()
   id: bigint;
 
@@ -36,18 +38,8 @@ export class EmailTemplateEntity implements IAuditableEntity {
   @Column({ nullable: true })
   variables?: Record<string, unknown>;
 
-  @AuditableField(AuditableFieldType.CREATED_AT)
-  created_at: Date;
 
-  @AuditableField(AuditableFieldType.CREATED_BY)
-  created_by: string;
 
-  @AuditableField(AuditableFieldType.UPDATED_AT)
-  updated_at: Date;
 
-  @AuditableField(AuditableFieldType.UPDATED_BY)
-  updated_by: string;
 
-  @AuditableField(AuditableFieldType.VERSION)
-  version: number;
 }
