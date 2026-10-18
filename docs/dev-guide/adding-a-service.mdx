@@ -53,8 +53,9 @@ boot sequence.
 
 ```
 db-meta/
-  patches/           # ordered, sha256-registered migrations (applyPatches)
-  fire-and-forget/   # one-off operational SQL (idempotent, manual)
+  patches/           # ordered, sha256-registered migrations (dal-pg runMigrations, at boot)
+  MANIFEST.json      # Ed25519-signed patch_name → content_sha256 map
+  keys.json          # trusted signing keys (dev/release)
 ```
 
 Seed at minimum: `http_port`, `service_base_url`,

@@ -54,12 +54,16 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 
 ## Database patches
 
-Each microservice has its own `db-meta/patches/` directory and uses `@primebrick/sdk`'s `applyPatches()` runner via `bun scripts/database-patch-apply.ts`.
+Each microservice owns `db-meta/` (`patches/` + signed `MANIFEST.json` + `keys.json`)
+and runs the **dal-pg migration engine** (`runMigrations`) at boot via the
+`dbPatches` option of `createMicroservice`; `bun scripts/database-patch-apply.ts`
+invokes the same code path for manual runs (`pnpm db:migrate`).
 
-If `db:migrate` fails with "exists in registry with a different content_sha256", see
-[.devin/rules/patch-sha256-management.md](./.devin/rules/patch-sha256-management.md).
-**Never create a new initial patch** — update the existing one in place and create a
-fire-and-forget script to update the registry hash on existing databases.
+See [.devin/rules/db-patches.md](./.devin/rules/db-patches.md) — **never edit a
+shipped patch** (sha256 mismatch is a security event), ship a new one instead.
+`db-meta/fire-and-forget/` is retired (deleted); one-off SQL lives in workspace
+`temp/`, never committed. After adding a patch, re-sign the manifest:
+`primebrick-db sign --db-meta db-meta --key @<keyfile> --key-id <id>`.
 
 ## Package Versioning — FIXED versions only (MANDATORY)
 

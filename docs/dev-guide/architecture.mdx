@@ -114,8 +114,9 @@ only shared table is `public.service_registry`, which lives in the
 
 - **DAL:** `@primebrick/dal-pg` with entity decorators (`@Entity`,
   `@Column`, `@Key`, `@Unique`, `@AuditableField`, `@DeletableField`)
-- **Migrations:** each microservice has its own `db-meta/patches/`
-  directory, applied via `@primebrick/sdk`'s `applyPatches()` runner
+- **Migrations:** each microservice has its own `db-meta/` directory
+  (`patches/` + signed `MANIFEST.json`), applied by the dal-pg
+  `runMigrations` engine at service boot (`dbPatches` option)
 - **Schema override:** the `@Entity` decorator accepts an optional second
   argument for the schema name (e.g. `@Entity("service_registry", "public")`)
 
