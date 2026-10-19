@@ -9,10 +9,14 @@
    *   3. JOB RULES          — job_rule rows
    *   4. RUN HISTORY        — job_run execution records
    *
-   * Rendering boundaries:
-   *   - EntityListTable + AppPageBreadcrumb are HOST components mounted via
-   *     ctx.mount_host (separate Svelte roots inside remote DOM).
-   *   - `default_cell` / `host_button` are HOST snippets {@render}ed inline.
+   * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
+   *   - EntityListTable / AppPageBreadcrumb / Button are HOST components
+   *     mounted via ctx.mount_host (separate Svelte roots inside remote
+   *     DOM; Button goes through the <HostLeaf> helper at leaf granularity).
+   *   - `cell` forwarded to the tables is the HOST-owned `jobs_cell`
+   *     snippet from the shim — invoked inside host render, it routes
+   *     module-owned cell types to a remote root via
+   *     components.remote.cell_mount (RemoteMountSlot).
    *   - Everything else (layout, sections, schedule dialog, sparkline,
    *     list state machines) is remote-owned — this chunk's own Svelte.
    */
@@ -24,56 +28,15 @@
     type ModulePageHost,
   } from '@primebrick/ui';
   import { useRemoteEntityList, type RemoteEntityListState } from './remote-list.svelte';
-  import RunStatsSparkline, { type RunStatsBucket } from './RunStatsSparkline.svelte';
-  import type {
-    EntityListTableHostProps,
-    HostCellArgs,
-    JobsComponents,
-  } from './host-contract';
+  import { loadRunStats } from './run-stats.svelte';
+  import HostLeaf from './HostLeaf.svelte';
+  import type { EntityListTableHostProps, JobsComponents } from './host-contract';
 
   type JobRow = { uuid: string; schedule_subject?: string } & Record<string, unknown>;
 
   let { ctx }: { ctx: ModulePageHost } = $props();
   const comps = $derived(ctx.components as JobsComponents | undefined);
   const t = (key: string, params?: Record<string, unknown>) => ctx.i18n.t(key, params);
-
-  /** Scalable UoM: 312ms → "312ms", 67000 → "1m 07s", 7.4e6 → "2h 03m". */
-  function humanizeMs(ms: number): string {
-    if (ms < 1000) return `${Math.round(ms)}ms`;
-    const s = Math.floor(ms / 1000);
-    if (s < 60) return `${s}s`;
-    const m = Math.floor(s / 60);
-    if (m < 60) return `${m}m ${String(s % 60).padStart(2, '0')}s`;
-    const h = Math.floor(m / 60);
-    return `${h}h ${String(m % 60).padStart(2, '0')}m`;
-  }
-
-  // ── run stats (Kestra-style histogram feed) ──────────────────────────
-  let runStats = $state<Record<string, RunStatsBucket[]>>({});
-  let runStatsUnit = $state<string>('day');
-
-  async function loadRunStats(rows: JobRow[]) {
-    const subjects = rows.map((r) => r.schedule_subject).filter((s): s is string => !!s);
-    if (!subjects.length) return;
-    try {
-      const res = await ctx.api('/api/v1/actions/job-run-stats', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: extJsonStringify({ schedule_subjects: subjects }),
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as {
-        bucket_unit?: string;
-        stats?: Record<string, RunStatsBucket[]>;
-      };
-      if (data.stats) {
-        runStats = { ...runStats, ...data.stats };
-        if (data.bucket_unit) runStatsUnit = data.bucket_unit;
-      }
-    } catch {
-      // sparkline is best-effort — the table still renders without it
-    }
-  }
 
   // ── four list scopes ─────────────────────────────────────────────────
   // untrack: ctx is immutable by host contract — the prop reference is
@@ -84,7 +47,7 @@
       basePath: '/api/v1/entities/job_schedule',
       storageKeyPrefix: 'pb:jobs:recurring:',
       fixedFilters: [{ field: 'schedule_type', op: '=', value: 'recurring' }],
-      onRowsLoaded: (rows) => void loadRunStats(rows),
+      onRowsLoaded: (rows) => void loadRunStats(ctx, rows),
       errorScopeKey: 'jobs',
     }),
   );
@@ -95,7 +58,7 @@
       basePath: '/api/v1/entities/job_schedule',
       storageKeyPrefix: 'pb:jobs:once:',
       fixedFilters: [{ field: 'schedule_type', op: '=', value: 'once' }],
-      onRowsLoaded: (rows) => void loadRunStats(rows),
+      onRowsLoaded: (rows) => void loadRunStats(ctx, rows),
       errorScopeKey: 'jobs',
     }),
   );
@@ -171,7 +134,9 @@
       onRefresh: () => void list.refreshRows(),
       selectionLabelSingularKey: `system.entities.${tk}.singular`,
       selectionLabelKey: `system.entities.${tk}.plural`,
-      cell: jobCell,
+      // HOST-owned snippet (shim) — invoked inside host render: safe. It
+      // routes module-owned cell types back to us via remote.cell_mount.
+      cell: comps?.jobs_cell,
     };
   }
 
@@ -279,10 +244,14 @@
         <div class="flex items-center justify-between gap-2">
           <h1 class="truncate text-xl font-semibold leading-tight">{t('system.jobs.title')}</h1>
           {#if comps}
-            {@render comps.host_button({
-              label: t('system.jobs.scheduleNew'),
-              onclick: () => (scheduleDialogOpen = true),
-            })}
+            <HostLeaf
+              {ctx}
+              comp={comps.Button}
+              props={{
+                label: t('system.jobs.scheduleNew'),
+                onclick: () => (scheduleDialogOpen = true),
+              }}
+            />
           {/if}
         </div>
       </div>
@@ -414,45 +383,37 @@
       </div>
       {#if comps}
         <div class="flex justify-end gap-2">
-          {@render comps.host_button({
-            label: t('app.common.cancel'),
-            variant: 'ghost',
-            onclick: () => (scheduleDialogOpen = false),
-          })}
-          {@render comps.host_button({
-            label: t('system.jobs.scheduleDialog.arm'),
-            disabled:
-              schedBusy ||
-              !schedName.trim() ||
-              !schedSpec.trim() ||
-              !schedTargetService.trim() ||
-              !schedTargetAction.trim(),
-            onclick: () => void submitSchedule(),
-          })}
+          <HostLeaf
+            {ctx}
+            comp={comps.Button}
+            props={{
+              label: t('app.common.cancel'),
+              variant: 'ghost',
+              onclick: () => (scheduleDialogOpen = false),
+            }}
+          />
+          <HostLeaf
+            {ctx}
+            comp={comps.Button}
+            props={{
+              label: t('system.jobs.scheduleDialog.arm'),
+              disabled:
+                schedBusy ||
+                !schedName.trim() ||
+                !schedSpec.trim() ||
+                !schedTargetService.trim() ||
+                !schedTargetAction.trim(),
+              onclick: () => void submitSchedule(),
+            }}
+          />
         </div>
       {/if}
     </div>
   </div>
 {/if}
 
-<!-- cell override for the host EntityListTable — remote renders the two
-     special cells, everything else delegates to the host's standard
-     TableCell via the default_cell snippet (live IANA state forwarded). -->
-{#snippet jobCell({
-  row,
-  column,
-  datetimeIanaModeByKey,
-  datetimeIanaRenderTick,
-}: HostCellArgs<JobRow>)}
-  {#if column.type === 'run_stats_sparkline'}
-    <RunStatsSparkline
-      buckets={runStats[String(row.schedule_subject ?? '')]}
-      bucketUnit={runStatsUnit}
-    />
-  {:else if column.key === 'duration_ms'}
-    {@const ms = Number(row.duration_ms ?? NaN)}
-    <span class="min-w-0 truncate">{Number.isFinite(ms) ? humanizeMs(ms) : '—'}</span>
-  {:else if comps}
-    {@render comps.default_cell({ row, column, datetimeIanaModeByKey, datetimeIanaRenderTick })}
-  {/if}
-{/snippet}
+<!-- Custom cells are not remote snippets — the host shim's `jobs_cell`
+     routes `run_stats_sparkline`/`duration_ms` columns to RemoteMountSlot,
+     which calls this chunk's `cell_mount` export (see index.ts). The
+     remote cell root renders RemoteCellShell — sparkline reads the shared
+     run-stats module state. -->

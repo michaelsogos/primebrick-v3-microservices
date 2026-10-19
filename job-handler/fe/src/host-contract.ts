@@ -66,14 +66,6 @@ export type EntityListTableHostProps<TRow extends Record<string, unknown>> = {
   datetimeIanaRenderTick?: number;
 };
 
-export type HostButtonArgs = {
-  label: string;
-  onclick: () => void;
-  disabled?: boolean;
-  variant?: string;
-  size?: string;
-};
-
 export type BreadcrumbSegment = {
   label: string;
   href?: string;
@@ -84,16 +76,21 @@ export type BreadcrumbSegment = {
 export type JobsComponents = {
   EntityListTable: Component<Record<string, unknown>>;
   AppPageBreadcrumb: Component<Record<string, unknown>>;
+  /** Host Button — leaf-mounted via <HostLeaf> (ctx.mount_host). */
+  Button: Component<Record<string, unknown>>;
+  /**
+   * HOST-owned `cell` snippet for EntityListTable — forwarded verbatim as
+   * the table's `cell` prop. It runs inside host render (same bundle →
+   * safe) and routes module-owned cell types to the remote via
+   * `components.remote.cell_mount` + RemoteMountSlot.
+   */
+  jobs_cell: Snippet<[HostCellArgs<Record<string, unknown>>]>;
   settingsTabMenuSegment: (args: {
     pathname: string;
     searchParams: URLSearchParams;
     t: (key: string) => string;
   }) => unknown;
   onConnectivityRestored: (handler: (detail: { previous: string }) => void) => () => void;
-  /** Standard TableCell fallback for remote `cell` overrides. */
-  default_cell: Snippet<[HostCellArgs<Record<string, unknown>>]>;
-  /** Host Button leaf — keeps module CTAs identical to app chrome. */
-  host_button: Snippet<[HostButtonArgs]>;
 };
 
 export type { EntityMetaResponse };

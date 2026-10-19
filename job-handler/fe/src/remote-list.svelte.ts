@@ -251,7 +251,11 @@ export function useRemoteEntityList<TRow extends Record<string, unknown>>(
     if (_state.meta) return;
     const res = await apiWithTimeout(opts.ctx, `${opts.basePath}/meta`, undefined, FETCH_TIMEOUT_MS);
     if (!res.ok) throw new Error(`META_FAILED:${res.status}`);
-    _state.meta = extJsonParse<EntityMetaResponse>(await res.text());
+    // Plain JSON, not ext-json — identical to the host's meta-cache: column
+    // `order`/page sizes must stay Numbers (BigInt breaks Array.sort and
+    // numeric consumers). ext-json bigint decoding is only for /list rows
+    // (total + bigint-typed fields), as in the host composable.
+    _state.meta = (await res.json()) as EntityMetaResponse;
     applyMetaDefaults();
   }
 

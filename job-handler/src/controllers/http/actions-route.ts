@@ -83,7 +83,10 @@ async function runStats(body: RunStatsBody): Promise<unknown> {
           { sql: "now() - make_interval(secs => ? / 1000.0)", params: [spanMs] },
         ),
       ],
-      groupBy: [GroupBy.expr("date_trunc(?::text, created_at)", [unit])],
+      // Group on the select alias — a parameterized date_trunc in GROUP BY
+      // binds a different `$n` than the projection's, so Postgres treats
+      // them as distinct expressions ("must appear in GROUP BY clause").
+      groupBy: [GroupBy.expr("bucket_start")],
       sorting: [Sort.byAlias("bucket_start")],
     },
   )) as StatRow[];
