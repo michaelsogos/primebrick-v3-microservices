@@ -1,11 +1,11 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-15T14:42:42.083Z",
+  "issued_at": "2026-10-19T21:02:24.490Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
     "0003_schedule_type": "3dd5ee3a75b27154776f5bd2902ae96ff95cc7f77cb0070ad238352cef12d6bc"
   },
-  "signature": ""
+  "signature": "cpXr5M2CmUv1N1XtTpPWO+4J++W9/j5plXbINdalC8nq6FTQu6/MqpB6klqQh28Hd3VE23wnR7owr44SAEBlCA=="
 }
