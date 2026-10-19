@@ -26,10 +26,11 @@
     "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json"
   },
   "dependencies": {
+    "@nats-io/jetstream": "3.4.0",
+    "@nats-io/transport-node": "3.4.0",
     "@primebrick/dal-pg": "workspace:*",
     "@primebrick/sdk": "workspace:*",
     "dotenv": "17.4.2",
-    "nats": "2.29.3",
     "pg": "8.23.1",
     "reflect-metadata": "0.2.2",
     "zod": "4.6.7"

@@ -37,11 +37,12 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "3.0.72",
     "@huggingface/transformers": "4.3.1",
+    "@nats-io/jetstream": "3.4.0",
+    "@nats-io/transport-node": "3.4.0",
     "@primebrick/dal-pg": "workspace:*",
     "@primebrick/sdk": "workspace:*",
     "ai": "7.0.144",
     "dotenv": "17.4.2",
-    "nats": "2.29.3",
     "pg": "8.23.1",
     "redis": "6.3.0",
     "reflect-metadata": "0.2.2",
