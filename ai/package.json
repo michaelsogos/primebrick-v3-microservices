@@ -35,23 +35,23 @@
     "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "3.0.11",
-    "@huggingface/transformers": "4.2.0",
+    "@ai-sdk/openai-compatible": "3.0.72",
+    "@huggingface/transformers": "4.3.1",
     "@primebrick/dal-pg": "workspace:*",
     "@primebrick/sdk": "workspace:*",
-    "ai": "7.0.30",
+    "ai": "7.0.144",
     "dotenv": "17.4.2",
     "nats": "2.29.3",
-    "pg": "8.22.0",
-    "redis": "6.1.0",
+    "pg": "8.23.1",
+    "redis": "6.3.0",
     "reflect-metadata": "0.2.2",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
-    "@types/pg": "8.20.0",
+    "@types/pg": "8.23.1",
     "typescript": "6.0.3",
-    "vite": "8.1.5",
+    "vite": "8.3.4",
     "vitest": "4.1.10"
   }
 }
