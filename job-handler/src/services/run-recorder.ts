@@ -30,7 +30,9 @@ export const JOBS_STREAM = "JOBS";
  */
 function plainJson<T>(v: T): T {
   if (v === undefined) return v;
-  return JSON.parse(extJsonStringify(v)) as T;
+  // The round-trip must NOT extJsonParse (that would re-bigintify) —
+  // the whole point is folding bigint → number.
+  return JSON.parse(extJsonStringify(v)) as T; // standards-exempt: ext-json — sanitizer needs plain parse
 }
 
 interface JobResultEnvelope {

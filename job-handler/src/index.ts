@@ -15,6 +15,7 @@ import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { JobAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { jobEntityRouteHandler } from "./controllers/http/entities-route.js";
 import { jobActionsRouteHandler } from "./controllers/http/actions-route.js";
+import { moduleAssetsRouteHandler } from "./controllers/http/module-assets-route.js";
 import { composeRouteHandlers, assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
@@ -57,7 +58,7 @@ async function main(): Promise<void> {
     authConfigPort: (configLoader) => new JobAuthConfigPort(configLoader),
     healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
-    routeHandler: composeRouteHandlers(jobEntityRouteHandler, jobActionsRouteHandler),
+    routeHandler: composeRouteHandlers(jobEntityRouteHandler, jobActionsRouteHandler, moduleAssetsRouteHandler),
 
     onReady: async () => {
       // JOBS stream — scheduler storage. Wildcards kept NARROW on purpose:
