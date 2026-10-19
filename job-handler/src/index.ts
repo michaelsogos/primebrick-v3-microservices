@@ -30,6 +30,27 @@ async function main(): Promise<void> {
     icon: "schedule",
     iconType: "icon",
 
+    // Module self-declaration — persisted in service_registry.endpoints.nav.
+    // The job module OWNS /system/jobs: nav link, route census entry and the
+    // remote chunk URL are published by this service, never hardcoded inside
+    // another module's nav registry. Longest-prefix matching makes the route
+    // resolve to `job` even though it lives under the shared `/system` path.
+    nav: {
+      icon: "schedule",
+      route_prefixes: ["/system/jobs"],
+      nav: [
+        { id: "jobs", label_key: "system.jobs.nav", href: "/system/jobs", icon: "list-clock" },
+      ],
+      routes: [
+        {
+          route: "/system/jobs",
+          kind: "page",
+          component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+          component_format: "esm-mount",
+        },
+      ],
+    },
+
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
