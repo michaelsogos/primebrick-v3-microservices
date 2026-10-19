@@ -42,7 +42,7 @@
     "@primebrick/dal-pg": "workspace:*",
     "@primebrick/sdk": "workspace:*",
     "ai": "7.0.144",
-    "dotenv": "17.4.2",
+    "dotenv": "18.0.8",
     "pg": "8.23.1",
     "redis": "6.3.0",
     "reflect-metadata": "0.2.2",
