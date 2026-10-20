@@ -7,8 +7,8 @@
  * and it will eventually be split out into a standalone product.
  *
  * What it does today: declares the crm module (nav + route census) so the
- * module switcher and route ownership resolve `/system/customers` and
- * `/crm` to `crm` instead of being borrowed from another module's static
+ * module switcher and route ownership resolve `/crm/customers` and
+ * `/crm/pipeline` to `crm` instead of being borrowed from another module's static
  * registry. The customer entity pages themselves stay BE-served for now
  * (route decls reference entity `customer` rendered by the FE pipeline);
  * entity API ownership migrates to this service in a later phase.
@@ -40,21 +40,23 @@ async function main(): Promise<void> {
     icon: "users",
     iconType: "icon",
 
+    // Root level — the CRM module IS its own root level: its FE route
+    // prefix is `/{part_of}/{code}` = /crm (validated at registration).
+    partOf: "crm",
+
     // Module self-declaration — persisted in service_registry.endpoints.nav.
-    // The crm module OWNS /system/customers and /crm: nav links and the
-    // route census are published by this service, never hardcoded inside
-    // another module's nav registry (MODULE_NAV.crm was removed from the
-    // BE). Longest-prefix matching makes these routes resolve to `crm`
-    // even under the shared `/system` path.
+    // The crm module OWNS /crm: nav links and the route census are
+    // published by this service, never hardcoded inside another module's
+    // nav registry (MODULE_NAV.crm was removed from the BE).
     nav: {
-      route_prefixes: ["/system/customers", "/crm"],
+      route_prefixes: ["/crm"],
       nav: [
-        { id: "customers", label_key: "crm.customers.nav", href: "/system/customers", icon: "users" },
+        { id: "customers", label_key: "crm.customers.nav", href: "/crm/customers", icon: "users" },
         { id: "pipeline", label_key: "crm.pipeline.nav", href: "/crm/pipeline", icon: "git-branch" },
       ],
       routes: [
-        { route: "/system/customers", kind: "list", entity: "customer" },
-        { route: "/system/customers/new", kind: "create", entity: "customer" },
+        { route: "/crm/customers", kind: "list", entity: "customer", label_key: "crm.customers.nav" },
+        { route: "/crm/customers/new", kind: "create", entity: "customer", label_key: "app.common.new", icon: "plus" },
         { route: "/crm/pipeline", kind: "page" },
       ],
     },

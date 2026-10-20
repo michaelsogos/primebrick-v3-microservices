@@ -99,6 +99,14 @@ by the service itself in the `endpoints.nav` block of the
 census — validated at enrollment; the BE's static `module-nav-meta`
 registry is reserved for BE-owned modules like `settings`).
 
+**Root level**: the service declares `partOf` in its registration options
+(`service_registry.part_of`). Its single FE route namespace is derived,
+never free-chosen: `/{part_of}/{code}` — e.g. `partOf: "system"` + code
+`job` → all nav hrefs and census routes under `/system/job/**`. When the
+service IS its own root (`partOf === code`, e.g. crm) the namespace
+collapses to `/{code}` → `/crm/**`. A mismatch is rejected at register
+time.
+
 ## 8. Docs
 
 `<svc>/docs/dev-guide/index.mdx` — always. `<svc>/docs/user-guide/` only

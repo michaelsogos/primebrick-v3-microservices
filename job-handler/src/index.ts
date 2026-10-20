@@ -30,36 +30,43 @@ async function main(): Promise<void> {
     icon: "list-clock",
     iconType: "icon",
 
+    // Root level — this module is part of the `system` level: its FE route
+    // prefix is derived as `/{part_of}/{code}` = /system/job (validated at
+    // registration; the prefix is never free-chosen).
+    partOf: "system",
+
     // Module self-declaration — persisted in service_registry.endpoints.nav.
-    // The job module OWNS /jobs: nav links, route census entries and the
-    // remote chunk URL are published by this service, never hardcoded inside
-    // another module's nav registry. The module lives on its OWN prefix —
-    // never under /system (that namespace belongs to the settings shell).
+    // The job module OWNS /system/job: nav links, route census entries and
+    // the remote chunk URL are published by this service, never hardcoded
+    // inside another module's nav registry.
     nav: {
-      route_prefixes: ["/jobs"],
+      route_prefixes: ["/system/job"],
       nav: [
-        { id: "jobs", label_key: "job.jobs.nav", href: "/jobs", icon: "list-clock" },
-        { id: "runs", label_key: "job.jobs.nav_runs", href: "/jobs/runs", icon: "play" },
-        { id: "rules", label_key: "job.jobs.nav_rules", href: "/jobs/rules", icon: "list-checks" },
+        { id: "jobs", label_key: "job.jobs.nav", href: "/system/job", icon: "list-clock" },
+        { id: "runs", label_key: "job.jobs.nav_runs", href: "/system/job/runs", icon: "play" },
+        { id: "rules", label_key: "job.jobs.nav_rules", href: "/system/job/rules", icon: "list-checks" },
       ],
       routes: [
         // Host-rendered EntityTablePage lists — the standard archetype,
         // delivered statically by the FE; the service declares ownership.
-        { route: "/jobs", kind: "list", entity: "job_schedule", label_key: "job.jobs.nav" },
-        { route: "/jobs/runs", kind: "list", entity: "job_run", label_key: "job.jobs.nav_runs" },
-        { route: "/jobs/rules", kind: "list", entity: "job_rule", label_key: "job.jobs.nav_rules" },
+        { route: "/system/job", kind: "list", entity: "job_schedule", label_key: "job.jobs.nav" },
+        { route: "/system/job/runs", kind: "list", entity: "job_run", label_key: "job.jobs.nav_runs" },
+        { route: "/system/job/rules", kind: "list", entity: "job_rule", label_key: "job.jobs.nav_rules" },
         // The custom surfaces: manual schedule creation (its form composes
         // schedule_subject/target — not a plain entity form) and rule
         // creation (event subject → filter → schedule workflow). Both ride
         // the same esm-mount chunk, which dispatches on ctx.nav.route.
         {
-          route: "/jobs/new",
-          kind: "page",
+          route: "/system/job/new",
+          kind: "create",
+          entity: "job_schedule",
+          label_key: "job.jobs.scheduleNew",
+          icon: "calendar-plus",
           component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
           component_format: "esm-mount",
         },
         {
-          route: "/jobs/rules/new",
+          route: "/system/job/rules/new",
           kind: "create",
           entity: "job_rule",
           label_key: "job.jobs.ruleForm.title",

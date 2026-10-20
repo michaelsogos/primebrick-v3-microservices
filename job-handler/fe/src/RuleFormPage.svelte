@@ -1,11 +1,11 @@
 <script lang="ts">
   /**
-   * RuleFormPage — /jobs/rules/new, module-owned (job-handler) remote page.
+   * RuleFormPage — /system/job/rules/new, module-owned (job-handler) remote page.
    *
    * Rule creation composes `event_subject` → optional payload filter →
    * `schedule_spec` + `target_subject` (what the rules-engine arms when the
    * event matches) — a workflow surface, not a plain entity form, so like
-   * /jobs/new it rides the remote chunk instead of the host archetype.
+   * /system/job/new it rides the remote chunk instead of the host archetype.
    *
    * Submission is the canonical entity create route:
    *   POST /api/v1/entities/job_rule  { entity: {…} }
@@ -64,7 +64,7 @@
       });
       if (!res.ok) throw new Error(`RULE_CREATE_FAILED:${res.status}`);
       ctx.notify({ impact: 'LOW', message: t('job.jobs.ruleForm.created'), scope: 'jobs.rules' });
-      window.location.assign('/jobs/rules');
+      window.location.assign('/system/job/rules');
     } catch (e) {
       ctx.notify({
         impact: 'MEDIUM',
@@ -173,7 +173,7 @@
         {#if comps}
           <div class="flex justify-end gap-2">
             <a
-              href="/jobs/rules"
+              href="/system/job/rules"
               class="border-input bg-background inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
             >
               {t('app.common.cancel')}
