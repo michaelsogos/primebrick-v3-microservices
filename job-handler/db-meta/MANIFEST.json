@@ -1,14 +1,16 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-20T16:03:14.338Z",
+  "issued_at": "2026-10-20T19:33:42.302Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
     "0003_schedule_type": "3dd5ee3a75b27154776f5bd2902ae96ff95cc7f77cb0070ad238352cef12d6bc",
     "0004_job_translations": "879f2cde1105a99ecb851ce0f5bd1c3ee1ab3610d568ae1dbe7679bc9966386f",
     "0005_job_entity_labels": "aa51e29fdb46da4c4188d6560dc2ccb43c73820cdc8293c3df27d1f50f21d9d1",
-    "0006_job_entities_ns": "c23632c389823e3d17846be54c8345fc19a254a14babdb7d8e12ac1ae7440c6b"
+    "0006_job_entities_ns": "c23632c389823e3d17846be54c8345fc19a254a14babdb7d8e12ac1ae7440c6b",
+    "0007_job_presets_rules_nav": "6802edbedfb93d140124e95ab1ebb203296ad98d8872683e75ba01dd2ce23b47",
+    "0008_job_section_schedules": "9cc1ee27f0a8b9e4011c1ce1773e32ec1ca136eefc2213498aa66f536b9debc2"
   },
-  "signature": "uP66N0Pf/S7+QQSUZxup4zEl7aksr6vkSwJ9RE81OjmPZs2K6BF44kMvMdq0Fqa0vomBwpQ9swxsPhFpNGFmBA=="
+  "signature": "4krAcdLE+LzMn/2AnkuV3FnxMcfCJmyH4dAmaxtvY2aNwj6v4RBcj6q0vPKketxrYDlQVedxEyzoov8AZH6jCQ=="
 }

@@ -2,23 +2,24 @@
   /**
    * JobsPage — /system/jobs, module-owned (job-handler).
    *
-   * Job governance admin page — four entity-list views over the job service
+   * Job governance admin page — two entity-list views over the job service
    * (via ctx.api → /ws/job proxy):
-   *   1. JOBS RECURRING     — job_schedule rows where schedule_type=recurring
-   *   2. JOBS EXECUTED ONCE — job_schedule rows where schedule_type=once
-   *   3. JOB RULES          — job_rule rows
-   *   4. RUN HISTORY        — job_run execution records
+   *   1. JOB SCHEDULES — job_schedule rows, scope via the meta-declared
+   *      `schedule_kind` toolbar preset (recurring / once / all)
+   *   2. RUN HISTORY   — job_run execution records
+   *
+   * (Job rules moved to the host-rendered `/system/jobs/rules` list page.)
    *
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
    *   - EntityListTable / AppPageBreadcrumb / Button are HOST components
    *     mounted via ctx.mount_host (separate Svelte roots inside remote
    *     DOM; Button goes through the <HostLeaf> helper at leaf granularity).
    *   - `cell` forwarded to the tables is the HOST-owned `jobs_cell`
-   *     snippet from the shim — invoked inside host render, it routes
-   *     module-owned cell types to a remote root via
-   *     components.remote.cell_mount (RemoteMountSlot).
-   *   - Everything else (layout, sections, schedule dialog, sparkline,
-   *     list state machines) is remote-owned — this chunk's own Svelte.
+   *     snippet from the shim — invoked inside host render; it only keeps
+   *     the `duration_ms` humanizer now that `type:"sparkline"` is a
+   *     builtin (fed by the engine's meta-declared batch fetch).
+   *   - Everything else (layout, sections, schedule dialog, list state
+   *     machines) is remote-owned — this chunk's own Svelte.
    */
   import { onMount, untrack } from 'svelte';
   import {
@@ -28,7 +29,6 @@
     type ModulePageHost,
   } from '@primebrick/ui';
   import { useRemoteEntityList, type RemoteEntityListState } from './remote-list.svelte';
-  import { loadRunStats } from './run-stats.svelte';
   import HostLeaf from './HostLeaf.svelte';
   import type { EntityListTableHostProps, JobsComponents } from './host-contract';
 
@@ -38,36 +38,14 @@
   const comps = $derived(ctx.components as JobsComponents | undefined);
   const t = (key: string, params?: Record<string, unknown>) => ctx.i18n.t(key, params);
 
-  // ── four list scopes ─────────────────────────────────────────────────
+  // ── two list scopes ──────────────────────────────────────────────────
   // untrack: ctx is immutable by host contract — the prop reference is
   // intentionally captured once at init, not tracked.
-  const recurring = untrack(() =>
+  const schedules = untrack(() =>
     useRemoteEntityList<JobRow>({
       ctx,
       basePath: '/api/v1/entities/job_schedule',
-      storageKeyPrefix: 'pb:jobs:recurring:',
-      fixedFilters: [{ field: 'schedule_type', op: '=', value: 'recurring' }],
-      onRowsLoaded: (rows) => void loadRunStats(ctx, rows),
-      errorScopeKey: 'jobs',
-    }),
-  );
-
-  const once = untrack(() =>
-    useRemoteEntityList<JobRow>({
-      ctx,
-      basePath: '/api/v1/entities/job_schedule',
-      storageKeyPrefix: 'pb:jobs:once:',
-      fixedFilters: [{ field: 'schedule_type', op: '=', value: 'once' }],
-      onRowsLoaded: (rows) => void loadRunStats(ctx, rows),
-      errorScopeKey: 'jobs',
-    }),
-  );
-
-  const rules = untrack(() =>
-    useRemoteEntityList<JobRow>({
-      ctx,
-      basePath: '/api/v1/entities/job_rule',
-      storageKeyPrefix: 'pb:jobs:rules:',
+      storageKeyPrefix: 'pb:jobs:schedules:',
       errorScopeKey: 'jobs',
     }),
   );
@@ -83,9 +61,7 @@
 
   // ── host component mounting (mount_host bridge) ──────────────────────
   let breadcrumbEl = $state<HTMLDivElement>();
-  let recurringEl = $state<HTMLDivElement>();
-  let onceEl = $state<HTMLDivElement>();
-  let rulesEl = $state<HTMLDivElement>();
+  let schedulesEl = $state<HTMLDivElement>();
   let runsEl = $state<HTMLDivElement>();
 
   function tableProps(list: RemoteEntityListState<JobRow>): EntityListTableHostProps<JobRow> {
@@ -139,8 +115,14 @@
       onRefresh: () => void list.refreshRows(),
       selectionLabelSingularKey: `${entitiesNs}.entities.${tk}.singular`,
       selectionLabelKey: `${entitiesNs}.entities.${tk}.plural`,
-      // HOST-owned snippet (shim) — invoked inside host render: safe. It
-      // routes module-owned cell types back to us via remote.cell_mount.
+      // Meta-declared toolbar presets (schedule_type scope) + builtin
+      // sparkline buckets — resolved/fetched by the list engine.
+      filterPresets: list.filterPresets,
+      presetSelections: list.presetSelections,
+      onPresetChange: list.onPresetChange,
+      sparklineData: list.sparklineData,
+      // HOST-owned snippet (shim) — invoked inside host render: safe.
+      // Only the `duration_ms` humanizer remains a custom cell.
       cell: comps?.jobs_cell,
     };
   }
@@ -165,9 +147,7 @@
     });
   }
 
-  mountTable(() => recurringEl, recurring);
-  mountTable(() => onceEl, once);
-  mountTable(() => rulesEl, rules);
+  mountTable(() => schedulesEl, schedules);
   mountTable(() => runsEl, runs);
 
   // Breadcrumb — mounted once into the header slot.
@@ -214,8 +194,7 @@
       if (!res.ok) throw new Error(`SCHEDULE_FAILED:${res.status}`);
       scheduleDialogOpen = false;
       ctx.notify({ impact: 'LOW', message: t('job.jobs.scheduledOk'), scope: 'jobs.schedule' });
-      void recurring.refreshRows();
-      void once.refreshRows();
+      void schedules.refreshRows();
     } catch (e) {
       ctx.notify({
         impact: 'MEDIUM',
@@ -228,7 +207,7 @@
   }
 
   async function init() {
-    await Promise.allSettled([recurring.init(), once.init(), runs.init(), rules.init()]);
+    await Promise.allSettled([schedules.init(), runs.init()]);
   }
 
   onMount(() => {
@@ -265,23 +244,9 @@
     <div class="flex min-h-0 flex-col gap-8 overflow-y-auto">
       <section class="space-y-2">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('job.jobs.sections.recurring')}
+          {t('job.jobs.sections.schedules')}
         </h2>
-        <div bind:this={recurringEl}></div>
-      </section>
-
-      <section class="space-y-2">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('job.jobs.sections.once')}
-        </h2>
-        <div bind:this={onceEl}></div>
-      </section>
-
-      <section class="space-y-2">
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('job.jobs.sections.rules')}
-        </h2>
-        <div bind:this={rulesEl}></div>
+        <div bind:this={schedulesEl}></div>
       </section>
 
       <section class="space-y-2">
@@ -417,8 +382,6 @@
   </div>
 {/if}
 
-<!-- Custom cells are not remote snippets — the host shim's `jobs_cell`
-     routes `run_stats_sparkline`/`duration_ms` columns to RemoteMountSlot,
-     which calls this chunk's `cell_mount` export (see index.ts). The
-     remote cell root renders RemoteCellShell — sparkline reads the shared
-     run-stats module state. -->
+<!-- The host shim's `jobs_cell` keeps only the `duration_ms` humanizer —
+     `type:"sparkline"` is a builtin cell fed by `sparklineData` (the list
+     engine batch-fetches `column.sparkline.endpoint` after every load). -->

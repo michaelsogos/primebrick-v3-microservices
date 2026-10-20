@@ -3,7 +3,7 @@
  *
  *   POST /api/v1/actions/schedule-job   — manual schedule arming (admin)
  *   POST /api/v1/actions/job-run-stats  — per-schedule execution buckets
- *                                        for the run_stats_sparkline cells
+ *                                        for the `sparkline` cells
  *
  * Same service layer as the NATS route — the HTTP controller is a pure
  * transport adapter (boundary rule).

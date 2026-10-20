@@ -39,6 +39,7 @@ async function main(): Promise<void> {
       route_prefixes: ["/system/jobs"],
       nav: [
         { id: "jobs", label_key: "job.jobs.nav", href: "/system/jobs", icon: "list-clock" },
+        { id: "rules", label_key: "job.jobs.nav_rules", href: "/system/jobs/rules", icon: "list-checks" },
       ],
       routes: [
         {
@@ -46,6 +47,15 @@ async function main(): Promise<void> {
           kind: "page",
           component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
           component_format: "esm-mount",
+        },
+        // Host-rendered EntityTablePage bound to job_rule — the service
+        // declares ownership; the FE static route resolves api_base via
+        // ENTITY_SERVICE_MAP (see /system/jobs/rules/+page.svelte).
+        {
+          route: "/system/jobs/rules",
+          kind: "list",
+          entity: "job_rule",
+          label_key: "job.jobs.nav_rules",
         },
       ],
     },

@@ -69,7 +69,9 @@ export const jobScheduleMeta: EntityMeta = {
     },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", order: 40 },
     {
-      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45, filterable: true,
+      // NOT `filterable` — the `schedule_kind` filter preset owns this
+      // field (a sheet filter AND-ed with the preset would contradict it).
+      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45,
       badge: { values: {
         recurring: { label_key: V("job_schedule", "recurring"), color: "blue" },
         once: { label_key: V("job_schedule", "once"), color: "purple" },
@@ -83,13 +85,64 @@ export const jobScheduleMeta: EntityMeta = {
         disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" },
       } },
     },
-    // Mini execution histogram — Kestra-style per-row sparkline fed by
-    // the job-run-stats action (keyed by schedule_subject).
-    { key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "run_stats_sparkline", order: 70 },
+    // Mini execution histogram — builtin `sparkline` cell fed by ONE batch
+    // POST per rows load (virtual column, keyed by schedule_subject).
+    {
+      key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "sparkline", order: 70,
+      sparkline: {
+        endpoint: "/actions/job-run-stats",
+        request_field: "schedule_subjects",
+        row_key: "schedule_subject",
+        series: [
+          { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
+          { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
+          { field: "skipped", color: "fill-amber-400", label_key: V("job_run", "skipped") },
+        ],
+      },
+    },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80, sortable: true },
     { key: "updated_at", label_key: F("job_schedule", "updated_at"), type: "datetime", order: 90, sortable: true },
   ],
-  table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
+  table: {
+    default_view: "table",
+    default_sort: UPDATED_DESC,
+    default_page_size: 25,
+    page_size_options: [10, 25, 50],
+    // Mutually-exclusive scope selector in the toolbar (tandem with the
+    // soft-delete group): one option always active, AND-ed into every list
+    // call. `schedule_kind` owns the `schedule_type` field (not filterable).
+    filter_presets: [
+      {
+        id: "schedule_kind",
+        display: "button_group",
+        label_key: "job.entities.job_schedule.presets.schedule_kind.label",
+        default_option: "recurring",
+        options: [
+          {
+            id: "recurring",
+            label_key: "job.entities.job_schedule.presets.schedule_kind.recurring",
+            icon: "repeat",
+            tooltip_key: "job.entities.job_schedule.presets.schedule_kind.recurring_tip",
+            where: [{ field: "schedule_type", op: "=", value: "recurring" }],
+          },
+          {
+            id: "once",
+            label_key: "job.entities.job_schedule.presets.schedule_kind.once",
+            icon: "clock",
+            tooltip_key: "job.entities.job_schedule.presets.schedule_kind.once_tip",
+            where: [{ field: "schedule_type", op: "=", value: "once" }],
+          },
+          {
+            id: "all",
+            label_key: "job.entities.job_schedule.presets.schedule_kind.all",
+            icon: "list",
+            tooltip_key: "job.entities.job_schedule.presets.schedule_kind.all_tip",
+            where: [],
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export const jobRunMeta: EntityMeta = {
