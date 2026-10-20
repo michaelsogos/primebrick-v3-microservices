@@ -47,7 +47,6 @@ async function main(): Promise<void> {
     // BE). Longest-prefix matching makes these routes resolve to `crm`
     // even under the shared `/system` path.
     nav: {
-      icon: "users",
       route_prefixes: ["/system/customers", "/crm"],
       nav: [
         { id: "customers", label_key: "crm.customers.nav", href: "/system/customers", icon: "users" },

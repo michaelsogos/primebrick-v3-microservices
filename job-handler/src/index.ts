@@ -36,7 +36,6 @@ async function main(): Promise<void> {
     // another module's nav registry. Longest-prefix matching makes the route
     // resolve to `job` even though it lives under the shared `/system` path.
     nav: {
-      icon: "list-clock",
       route_prefixes: ["/system/jobs"],
       nav: [
         { id: "jobs", label_key: "job.jobs.nav", href: "/system/jobs", icon: "list-clock" },
