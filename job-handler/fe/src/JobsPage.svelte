@@ -94,9 +94,14 @@
       meta?.translation_key && isSnakeCaseSingular(meta.translation_key)
         ? meta.translation_key
         : meta?.entity;
+    // Entity-label namespace comes from the served meta — `job.entities.*`
+    // keys live in the `job` module's own translations schema, never
+    // `system.entities.*` (that namespace belongs to BE-owned entities).
+    const entitiesNs = meta?.entities_ns ?? 'system';
     return {
       entity: meta?.entity,
       translationKey: tk,
+      entities_ns: entitiesNs,
       uid: meta?.uid ?? 'uuid',
       columnOrderStorageKey: list.columnOrderStorageKey,
       columns: list.columns,
@@ -132,8 +137,8 @@
       onAdvancedFiltersChange: list.onAdvancedFiltersChange,
       onResetFilters: list.onResetFilters,
       onRefresh: () => void list.refreshRows(),
-      selectionLabelSingularKey: `system.entities.${tk}.singular`,
-      selectionLabelKey: `system.entities.${tk}.plural`,
+      selectionLabelSingularKey: `${entitiesNs}.entities.${tk}.singular`,
+      selectionLabelKey: `${entitiesNs}.entities.${tk}.plural`,
       // HOST-owned snippet (shim) — invoked inside host render: safe. It
       // routes module-owned cell types back to us via remote.cell_mount.
       cell: comps?.jobs_cell,

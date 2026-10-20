@@ -4,50 +4,30 @@
  * Default sort `updated_at desc` comes from HERE (metadata), never
  * hardcoded in the FE.
  *
- * Convention: label_key = `system.entities.<entity>.fields.<column>`;
- * badge label_key = `system.entities.<entity>.status.<value>` (same as
- * customer.status.* on the BE entities).
+ * Contract: `EntityMeta`/`MetaColumn` come from `@primebrick/sdk`
+ * (re-exported from `@primebrick/core`) — service metas MUST NOT
+ * re-declare the shared contract locally.
+ *
+ * Convention: every label key lives in THIS module's namespace —
+ * `job.entities.<entity>.fields.<column>`, badge value keys
+ * `job.entities.<entity>.status.<value>`. `entities_ns: "job"` declares
+ * the ownership so the FE composes `job.entities.*` (never
+ * `system.entities.*`) for these entities. Keys are written by the
+ * module's own `job.translations` patches — the namespace write boundary
+ * rejects anything outside `job.*`.
  */
 
-export interface MetaColumn {
-  key: string;
-  label_key: string;
-  type:
-    | "text" | "badge" | "boolean" | "color" | "datetime" | "number"
-    | "run_stats_sparkline";
-  order: number;
-  sortable?: boolean;
-  filterable?: boolean;
-  searchable?: boolean;
-  default_visible?: boolean;
-  badge?: { values: Record<string, { label_key: string; color: string }> };
-}
-
-export interface EntityMeta {
-  entity: string;
-  translation_key: string;
-  title_key: string;
-  uid: string;
-  display_field: string;
-  display_name?: string;
-  columns: MetaColumn[];
-  table?: {
-    default_view: "table" | "cards" | "cards_list";
-    default_sort?: { key: string; dir: "asc" | "desc" };
-    default_page_size?: number;
-    page_size_options?: number[];
-  };
-  actions_overrides?: Record<string, { enabled?: boolean }>;
-}
+import type { EntityMeta } from "@primebrick/sdk";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
-const F = (e: string, c: string) => `system.entities.${e}.fields.${c}`;
-const V = (e: string, v: string) => `system.entities.${e}.status.${v}`;
+const F = (e: string, c: string) => `job.entities.${e}.fields.${c}`;
+const V = (e: string, v: string) => `job.entities.${e}.status.${v}`;
 
 export const jobRuleMeta: EntityMeta = {
   entity: "job_rule",
   translation_key: "job_rule",
-  title_key: "system.entities.job_rule.title",
+  entities_ns: "job",
+  title_key: "job.entities.job_rule.title",
   uid: "uuid",
   display_field: "name",
   columns: [
@@ -72,7 +52,8 @@ export const jobRuleMeta: EntityMeta = {
 export const jobScheduleMeta: EntityMeta = {
   entity: "job_schedule",
   translation_key: "job_schedule",
-  title_key: "system.entities.job_schedule.title",
+  entities_ns: "job",
+  title_key: "job.entities.job_schedule.title",
   uid: "uuid",
   display_field: "schedule_subject",
   columns: [
@@ -114,7 +95,8 @@ export const jobScheduleMeta: EntityMeta = {
 export const jobRunMeta: EntityMeta = {
   entity: "job_run",
   translation_key: "job_run",
-  title_key: "system.entities.job_run.title",
+  entities_ns: "job",
+  title_key: "job.entities.job_run.title",
   uid: "uuid",
   display_field: "job_name",
   columns: [

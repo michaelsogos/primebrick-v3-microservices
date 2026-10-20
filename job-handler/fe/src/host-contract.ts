@@ -24,6 +24,9 @@ export type HostCellArgs<TRow extends Record<string, unknown>> = {
 export type EntityListTableHostProps<TRow extends Record<string, unknown>> = {
   entity?: string;
   translationKey?: string;
+  /** Entity-label i18n namespace (`meta.entities_ns`) — forwarded to the
+   *  host table so dialogs/sheets compose `<ns>.entities.*` keys. */
+  entities_ns?: string;
   uid: string;
   columnOrderStorageKey?: string;
   columns: MetaColumn[];
