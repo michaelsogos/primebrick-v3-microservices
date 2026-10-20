@@ -31,31 +31,30 @@ async function main(): Promise<void> {
     iconType: "icon",
 
     // Module self-declaration — persisted in service_registry.endpoints.nav.
-    // The job module OWNS /system/jobs: nav link, route census entry and the
+    // The job module OWNS /jobs: nav links, route census entries and the
     // remote chunk URL are published by this service, never hardcoded inside
-    // another module's nav registry. Longest-prefix matching makes the route
-    // resolve to `job` even though it lives under the shared `/system` path.
+    // another module's nav registry. The module lives on its OWN prefix —
+    // never under /system (that namespace belongs to the settings shell).
     nav: {
-      route_prefixes: ["/system/jobs"],
+      route_prefixes: ["/jobs"],
       nav: [
-        { id: "jobs", label_key: "job.jobs.nav", href: "/system/jobs", icon: "list-clock" },
-        { id: "rules", label_key: "job.jobs.nav_rules", href: "/system/jobs/rules", icon: "list-checks" },
+        { id: "jobs", label_key: "job.jobs.nav", href: "/jobs", icon: "list-clock" },
+        { id: "runs", label_key: "job.jobs.nav_runs", href: "/jobs/runs", icon: "play" },
+        { id: "rules", label_key: "job.jobs.nav_rules", href: "/jobs/rules", icon: "list-checks" },
       ],
       routes: [
+        // Host-rendered EntityTablePage lists — the standard archetype,
+        // delivered statically by the FE; the service declares ownership.
+        { route: "/jobs", kind: "list", entity: "job_schedule", label_key: "job.jobs.nav" },
+        { route: "/jobs/runs", kind: "list", entity: "job_run", label_key: "job.jobs.nav_runs" },
+        { route: "/jobs/rules", kind: "list", entity: "job_rule", label_key: "job.jobs.nav_rules" },
+        // The only custom surface: manual schedule creation (its form
+        // composes schedule_subject/target — not a plain entity form).
         {
-          route: "/system/jobs",
+          route: "/jobs/new",
           kind: "page",
           component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
           component_format: "esm-mount",
-        },
-        // Host-rendered EntityTablePage bound to job_rule — the service
-        // declares ownership; the FE static route resolves api_base via
-        // ENTITY_SERVICE_MAP (see /system/jobs/rules/+page.svelte).
-        {
-          route: "/system/jobs/rules",
-          kind: "list",
-          entity: "job_rule",
-          label_key: "job.jobs.nav_rules",
         },
       ],
     },
