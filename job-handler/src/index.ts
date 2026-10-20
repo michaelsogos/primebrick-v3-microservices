@@ -27,7 +27,7 @@ async function main(): Promise<void> {
     serviceDisplayName: "Job Handler",
     serviceDescription:
       "Jobs orchestration — sole writer of jobs.schedule.*, rules engine over job_rules, run-history tap on jobs.result.>",
-    icon: "calendar-clock",
+    icon: "list-clock",
     iconType: "icon",
 
     // Module self-declaration — persisted in service_registry.endpoints.nav.
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
     // another module's nav registry. Longest-prefix matching makes the route
     // resolve to `job` even though it lives under the shared `/system` path.
     nav: {
-      icon: "calendar-clock",
+      icon: "list-clock",
       route_prefixes: ["/system/jobs"],
       nav: [
         { id: "jobs", label_key: "job.jobs.nav", href: "/system/jobs", icon: "list-clock" },
