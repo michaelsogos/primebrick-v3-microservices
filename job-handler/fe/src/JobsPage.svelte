@@ -208,7 +208,7 @@
       });
       if (!res.ok) throw new Error(`SCHEDULE_FAILED:${res.status}`);
       scheduleDialogOpen = false;
-      ctx.notify({ impact: 'LOW', message: t('system.jobs.scheduledOk'), scope: 'jobs.schedule' });
+      ctx.notify({ impact: 'LOW', message: t('job.jobs.scheduledOk'), scope: 'jobs.schedule' });
       void recurring.refreshRows();
       void once.refreshRows();
     } catch (e) {
@@ -242,13 +242,13 @@
       <div class="min-w-0 flex-1 space-y-1">
         <div bind:this={breadcrumbEl}></div>
         <div class="flex items-center justify-between gap-2">
-          <h1 class="truncate text-xl font-semibold leading-tight">{t('system.jobs.title')}</h1>
+          <h1 class="truncate text-xl font-semibold leading-tight">{t('job.jobs.title')}</h1>
           {#if comps}
             <HostLeaf
               {ctx}
               comp={comps.Button}
               props={{
-                label: t('system.jobs.scheduleNew'),
+                label: t('job.jobs.scheduleNew'),
                 onclick: () => (scheduleDialogOpen = true),
               }}
             />
@@ -260,28 +260,28 @@
     <div class="flex min-h-0 flex-col gap-8 overflow-y-auto">
       <section class="space-y-2">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('system.jobs.sections.recurring')}
+          {t('job.jobs.sections.recurring')}
         </h2>
         <div bind:this={recurringEl}></div>
       </section>
 
       <section class="space-y-2">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('system.jobs.sections.once')}
+          {t('job.jobs.sections.once')}
         </h2>
         <div bind:this={onceEl}></div>
       </section>
 
       <section class="space-y-2">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('system.jobs.sections.rules')}
+          {t('job.jobs.sections.rules')}
         </h2>
         <div bind:this={rulesEl}></div>
       </section>
 
       <section class="space-y-2">
         <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          {t('system.jobs.sections.runs')}
+          {t('job.jobs.sections.runs')}
         </h2>
         <div bind:this={runsEl}></div>
       </section>
@@ -306,16 +306,16 @@
     >
       <div>
         <h2 class="text-lg font-semibold leading-none tracking-tight">
-          {t('system.jobs.scheduleDialog.title')}
+          {t('job.jobs.scheduleDialog.title')}
         </h2>
         <p class="mt-1.5 text-sm text-muted-foreground">
-          {t('system.jobs.scheduleDialog.desc')}
+          {t('job.jobs.scheduleDialog.desc')}
         </p>
       </div>
       <div class="grid gap-4 py-2">
         <div class="grid gap-1.5">
           <label class="text-sm font-medium leading-none" for="sched-name">
-            {t('system.jobs.scheduleDialog.name')}
+            {t('job.jobs.scheduleDialog.name')}
           </label>
           <input
             id="sched-name"
@@ -326,7 +326,7 @@
         </div>
         <div class="grid gap-1.5">
           <label class="text-sm font-medium leading-none" for="sched-spec">
-            {t('system.jobs.scheduleDialog.spec')}
+            {t('job.jobs.scheduleDialog.spec')}
           </label>
           <input
             id="sched-spec"
@@ -338,7 +338,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="sched-lane">
-              {t('system.jobs.scheduleDialog.lane')}
+              {t('job.jobs.scheduleDialog.lane')}
             </label>
             <select
               id="sched-lane"
@@ -351,7 +351,7 @@
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="sched-tgt-svc">
-              {t('system.jobs.scheduleDialog.targetService')}
+              {t('job.jobs.scheduleDialog.targetService')}
             </label>
             <input
               id="sched-tgt-svc"
@@ -363,7 +363,7 @@
         </div>
         <div class="grid gap-1.5">
           <label class="text-sm font-medium leading-none" for="sched-tgt-act">
-            {t('system.jobs.scheduleDialog.targetAction')}
+            {t('job.jobs.scheduleDialog.targetAction')}
           </label>
           <input
             id="sched-tgt-act"
@@ -373,7 +373,7 @@
           />
         </div>
         <p class="text-muted-foreground text-xs">
-          {t('system.jobs.scheduleDialog.preview', {
+          {t('job.jobs.scheduleDialog.preview', {
             values: {
               subject: `jobs.schedule.job.${schedName.trim() || '<name>'}`,
               target: `jobs.due.${schedLane}.${schedTargetService.trim() || '<svc>'}.${schedTargetAction.trim() || '<action>'}`,
@@ -396,7 +396,7 @@
             {ctx}
             comp={comps.Button}
             props={{
-              label: t('system.jobs.scheduleDialog.arm'),
+              label: t('job.jobs.scheduleDialog.arm'),
               disabled:
                 schedBusy ||
                 !schedName.trim() ||
