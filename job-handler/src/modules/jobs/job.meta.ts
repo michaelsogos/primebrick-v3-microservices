@@ -128,14 +128,14 @@ export const jobScheduleMeta: EntityMeta = {
           {
             id: "once",
             label_key: "job.entities.job_schedule.presets.schedule_kind.once",
-            icon: "clock",
+            icon: "zap",
             tooltip_key: "job.entities.job_schedule.presets.schedule_kind.once_tip",
             where: [{ field: "schedule_type", op: "=", value: "once" }],
           },
           {
             id: "all",
             label_key: "job.entities.job_schedule.presets.schedule_kind.all",
-            icon: "list",
+            icon: "list-clock",
             tooltip_key: "job.entities.job_schedule.presets.schedule_kind.all_tip",
             where: [],
           },

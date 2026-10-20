@@ -94,8 +94,10 @@ manifest.json` exists.
 On boot the service publishes `service.register`; the BE registry learns
 name, base_url, capabilities, endpoints — and the `/ws/<code>/*` proxy
 path becomes reachable. Nav/sidebar entries for its screens are declared
-in the BE's `module-nav-meta` (a static per-module declaration — add a
-case when the service owns FE routes).
+by the service itself in the `endpoints.nav` block of the
+`service.register` payload (`route_prefixes` + `nav[]` + full `routes`
+census — validated at enrollment; the BE's static `module-nav-meta`
+registry is reserved for BE-owned modules like `settings`).
 
 ## 8. Docs
 

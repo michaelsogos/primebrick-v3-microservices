@@ -48,11 +48,21 @@ async function main(): Promise<void> {
         { route: "/jobs", kind: "list", entity: "job_schedule", label_key: "job.jobs.nav" },
         { route: "/jobs/runs", kind: "list", entity: "job_run", label_key: "job.jobs.nav_runs" },
         { route: "/jobs/rules", kind: "list", entity: "job_rule", label_key: "job.jobs.nav_rules" },
-        // The only custom surface: manual schedule creation (its form
-        // composes schedule_subject/target — not a plain entity form).
+        // The custom surfaces: manual schedule creation (its form composes
+        // schedule_subject/target — not a plain entity form) and rule
+        // creation (event subject → filter → schedule workflow). Both ride
+        // the same esm-mount chunk, which dispatches on ctx.nav.route.
         {
           route: "/jobs/new",
           kind: "page",
+          component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+          component_format: "esm-mount",
+        },
+        {
+          route: "/jobs/rules/new",
+          kind: "create",
+          entity: "job_rule",
+          label_key: "job.jobs.ruleForm.title",
           component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
           component_format: "esm-mount",
         },

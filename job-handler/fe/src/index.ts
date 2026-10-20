@@ -1,10 +1,10 @@
 /**
- * jobs-page chunk — `esm-mount` entry for the /jobs/new remote page.
+ * jobs-page chunk — `esm-mount` entry for the job module's remote pages.
  *
- * The job module's list pages (/jobs, /jobs/runs, /jobs/rules) are all
- * host-rendered standard EntityTablePage archetypes (kind:"list"); the
- * remote chunk carries only the manual-schedule form, the module's one
- * genuinely custom surface.
+ * The list pages (/jobs, /jobs/runs, /jobs/rules) are host-rendered standard
+ * EntityTablePage archetypes (kind:"list"); the remote chunk carries the two
+ * genuinely custom surfaces: the manual-schedule form (/jobs/new) and the
+ * rule-creation form (/jobs/rules/new), dispatched by ctx.nav.route.
  *
  * The host (`RemotePageMount`) imports this module and calls mountPage(el,
  * ctx); the returned mount instance is disposed via svelte's `unmount()`
@@ -14,7 +14,9 @@
 import { mount } from 'svelte';
 import type { ModulePageHost } from '@primebrick/ui';
 import SchedulePage from './SchedulePage.svelte';
+import RuleFormPage from './RuleFormPage.svelte';
 
 export function mountPage(el: HTMLElement, ctx: ModulePageHost) {
-  return mount(SchedulePage, { target: el, props: { ctx } });
+  const Page = ctx.nav.route === '/jobs/rules/new' ? RuleFormPage : SchedulePage;
+  return mount(Page, { target: el, props: { ctx } });
 }
