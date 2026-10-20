@@ -13,7 +13,7 @@
 import type { ServerResponse } from "http";
 import { field, Filter, Project } from "@primebrick/dal-pg";
 import { getDal } from "../../db/dal.js";
-import { Permission, extJsonStringify, type RpcRoute } from "@primebrick/sdk";
+import { Permission, extJsonStringify, assertWritableConfigKey, type RpcRoute } from "@primebrick/sdk";
 import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
 
 function sendError(
@@ -122,6 +122,14 @@ export const configEntryRoutes: RpcRoute[] = [
     handler: async ({ params, body, user }) => {
       const dal = getDal();
       const b = body as Record<string, unknown>;
+      // Static-identity keys (service_code, service_base_url) are part of
+      // the deployed artifact — never runtime-editable (B3). Reject before
+      // the write; resolves the row to learn its key.
+      const target = await dal.find(ConfigEntryEntity, [Project.field(field(ConfigEntryEntity, "key"))], {
+        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
+        throwIfNotFound: false,
+      }) as { key?: string } | null;
+      if (target?.key) assertWritableConfigKey(target.key);
       await dal.update(
         ConfigEntryEntity,
         { uuid: params.uuid, value: b.value as string, version: Number(b.version) },
