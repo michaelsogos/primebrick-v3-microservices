@@ -30,6 +30,7 @@ import { ConfigRepositoryAdapter } from "./adapters/config-repository-adapter.js
 import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { CrmAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { assertDbEnv } from "@primebrick/sdk";
+import { CRM_NAV } from "./nav-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -55,18 +56,7 @@ async function main(): Promise<void> {
     // page inside the System app ("a foot in two shoes"). The code stays
     // the URL's second segment in every prefix, so longest-prefix
     // ownership keeps resolving module=breadcrumb.
-    nav: {
-      route_prefixes: ["/crm", "/system/crm"],
-      nav: [
-        { id: "customers", label_key: "crm.customers.nav", href: "/crm/customers", icon: "users" },
-        { id: "pipeline", label_key: "crm.pipeline.nav", href: "/system/crm/pipeline", icon: "git-branch" },
-      ],
-      routes: [
-        { route: "/crm/customers", kind: "list", entity: "customer", label_key: "crm.customers.nav" },
-        { route: "/crm/customers/new", kind: "create", entity: "customer", label_key: "app.common.new", icon: "plus" },
-        { route: "/system/crm/pipeline", kind: "page" },
-      ],
-    },
+    nav: CRM_NAV,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has

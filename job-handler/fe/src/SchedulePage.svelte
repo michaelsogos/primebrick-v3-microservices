@@ -1,12 +1,14 @@
 <script lang="ts">
   /**
-   * SchedulePage — /system/job/new, module-owned (job-handler) remote page.
+   * SchedulePage — /system/job/job-schedules/create, module-owned
+   * (job-handler) remote page.
    *
    * The job module's ONLY custom surface: manual schedule creation. The
    * form composes `schedule_subject` + `target` (lane/service/action) —
    * a workflow, not a plain entity form, so it can't ride the standard
-   * EntityTablePage archetype. All list pages (/system/job, /system/job/runs,
-   * /system/job/rules) are host-rendered standard lists declared kind:"list".
+   * EntityTablePage archetype. All list pages (/system/job/job-schedules,
+   * /system/job/runs, /system/job/rules) are host-rendered standard lists
+   * declared kind:"list".
    *
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
    *   - AppPageBreadcrumb / Button are HOST components mounted via
@@ -57,7 +59,7 @@
       });
       if (!res.ok) throw new Error(`SCHEDULE_FAILED:${res.status}`);
       ctx.notify({ impact: 'LOW', message: t('job.jobs.scheduledOk'), scope: 'jobs.schedule' });
-      window.location.assign('/system/job');
+      window.location.assign('/system/job/job-schedules');
     } catch (e) {
       ctx.notify({
         impact: 'MEDIUM',
@@ -168,7 +170,7 @@
         {#if comps}
           <div class="flex justify-end gap-2">
             <a
-              href="/system/job"
+              href="/system/job/job-schedules"
               class="border-input bg-background inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
             >
               {t('app.common.cancel')}

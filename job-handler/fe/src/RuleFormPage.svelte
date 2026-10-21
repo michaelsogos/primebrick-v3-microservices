@@ -1,11 +1,13 @@
 <script lang="ts">
   /**
-   * RuleFormPage — /system/job/rules/new, module-owned (job-handler) remote page.
+   * RuleFormPage — /system/job/rules/create, module-owned (job-handler)
+   * remote page.
    *
    * Rule creation composes `event_subject` → optional payload filter →
    * `schedule_spec` + `target_subject` (what the rules-engine arms when the
    * event matches) — a workflow surface, not a plain entity form, so like
-   * /system/job/new it rides the remote chunk instead of the host archetype.
+   * /system/job/job-schedules/create it rides the remote chunk instead of
+   * the host archetype.
    *
    * Submission is the canonical entity create route:
    *   POST /api/v1/entities/job_rule  { entity: {…} }

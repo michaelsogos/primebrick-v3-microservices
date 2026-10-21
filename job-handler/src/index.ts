@@ -20,6 +20,7 @@ import { composeRouteHandlers, assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startRulesEngine } from "./services/rules-engine.js";
+import { JOB_NAV } from "./nav-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -44,42 +45,7 @@ async function main(): Promise<void> {
     // The job module OWNS /system/job: nav links, route census entries and
     // the remote chunk URL are published by this service, never hardcoded
     // inside another module's nav registry.
-    nav: {
-      route_prefixes: ["/system/job"],
-      nav: [
-        { id: "jobs", label_key: "job.jobs.nav", href: "/system/job", icon: "list-clock" },
-        { id: "runs", label_key: "job.jobs.nav_runs", href: "/system/job/runs", icon: "play" },
-        { id: "rules", label_key: "job.jobs.nav_rules", href: "/system/job/rules", icon: "list-checks" },
-      ],
-      routes: [
-        // Host-rendered EntityTablePage lists — the standard archetype,
-        // delivered statically by the FE; the service declares ownership.
-        { route: "/system/job", kind: "list", entity: "job_schedule", label_key: "job.jobs.nav" },
-        { route: "/system/job/runs", kind: "list", entity: "job_run", label_key: "job.jobs.nav_runs" },
-        { route: "/system/job/rules", kind: "list", entity: "job_rule", label_key: "job.jobs.nav_rules" },
-        // The custom surfaces: manual schedule creation (its form composes
-        // schedule_subject/target — not a plain entity form) and rule
-        // creation (event subject → filter → schedule workflow). Both ride
-        // the same esm-mount chunk, which dispatches on ctx.nav.route.
-        {
-          route: "/system/job/new",
-          kind: "create",
-          entity: "job_schedule",
-          label_key: "job.jobs.scheduleNew",
-          icon: "calendar-plus",
-          component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
-          component_format: "esm-mount",
-        },
-        {
-          route: "/system/job/rules/new",
-          kind: "create",
-          entity: "job_rule",
-          label_key: "job.jobs.ruleForm.title",
-          component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
-          component_format: "esm-mount",
-        },
-      ],
-    },
+    nav: JOB_NAV,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
