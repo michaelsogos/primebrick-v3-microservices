@@ -107,6 +107,12 @@ service IS its own root (`partOf === code`, e.g. crm) the namespace
 collapses to `/{code}` → `/crm/**`. A mismatch is rejected at register
 time.
 
+**Display name**: declare `labelKey` (→ `service_registry.label_key`) —
+the i18n key for the module's localized name, resolved against the
+service's OWN `*.translations` schema (seed it there, like `nav[].label_key`
+entries). Every UI surface (app launcher, breadcrumbs, module menus)
+renders it via `resolveModuleLabel` with the raw `name` as fallback.
+
 ## 8. Docs
 
 `<svc>/docs/dev-guide/index.mdx` — always. `<svc>/docs/user-guide/` only

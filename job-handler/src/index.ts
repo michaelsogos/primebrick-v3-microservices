@@ -35,6 +35,11 @@ async function main(): Promise<void> {
     // registration; the prefix is never free-chosen).
     partOf: "system",
 
+    // Module display-name key — resolved against this service's own
+    // `job.translations` namespace by every UI surface (launcher,
+    // breadcrumbs, module menus); fallback: raw registry `name`.
+    labelKey: "job.module.name",
+
     // Module self-declaration — persisted in service_registry.endpoints.nav.
     // The job module OWNS /system/job: nav links, route census entries and
     // the remote chunk URL are published by this service, never hardcoded

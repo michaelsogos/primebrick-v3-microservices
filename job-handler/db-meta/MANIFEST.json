@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-20T21:22:38.804Z",
+  "issued_at": "2026-10-21T00:45:27.696Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -14,7 +14,8 @@
     "0009_job_nav_runs": "079a594831566eec661529deb4b4b99635cc07a791aed2f8ccbdddf2a5615fce",
     "0010_job_audit_tables": "cd7867df8d8b2ab085f5c7c6513f33a43621fb8c1cfbfea2c21c19e972c16e3d",
     "0011_job_audit_partman": "543effbe76f5990f914135a9e713a902ff12abcfa1b4fcc25624fd4b3a12654f",
-    "0012_job_rule_form": "21cda5cd13d0cbabc61d6a5498c8eca6182b27dbdb4a837334013baad15b4e5d"
+    "0012_job_rule_form": "21cda5cd13d0cbabc61d6a5498c8eca6182b27dbdb4a837334013baad15b4e5d",
+    "0013_job_module_label": "f8ef421c97b1e91786422606f5a8def3673ff60cc3969613faf2bbc2d8cfa368"
   },
-  "signature": "zaJq4R+hi8GiMj+SP7qEURC5N5rgPs+t7bg8ZZUcIeCQrP5wah3Vd+YPTbmsQGyprGIb15x0XNzn9/Rr8RMJDg=="
+  "signature": "fgv6u64J8slReqTXy05Zbspc6Dr/XMMZt+9eT+jOPe0p+wFPK827AiiU6Pwv9AzPZ0KglYsSO0f1rzL00gBDAA=="
 }

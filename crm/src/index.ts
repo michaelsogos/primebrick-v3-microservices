@@ -44,6 +44,11 @@ async function main(): Promise<void> {
     // prefix is `/{part_of}/{code}` = /crm (validated at registration).
     partOf: "crm",
 
+    // Module display-name key — resolved against this service's own
+    // `crm.translations` namespace by every UI surface (launcher,
+    // breadcrumbs, module menus); fallback: raw registry `name`.
+    labelKey: "crm.module.name",
+
     // Module self-declaration — persisted in service_registry.endpoints.nav.
     // The crm module OWNS /crm plus an EXTRA root membership under
     // `system`: the pipeline page lives at /system/crm/pipeline — a crm
