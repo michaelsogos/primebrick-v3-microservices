@@ -3,6 +3,7 @@
  *
  *   POST /api/v1/system/docs/search    → { results: DocsSearchResult[] }
  *   POST /api/v1/system/docs/document  → { document } | 404
+ *   POST /api/v1/system/docs/index     → { repos: DocsIndexRepo[] }
  *
  * Paths identical to the former BE routes so the BE→US `/ws/ai` proxy is a
  * pure transport hop. The FE calls `/ws/ai/api/v1/system/docs/*`; the MCP
@@ -65,6 +66,13 @@ const routes: RpcRoute[] = [
       }
       return { document };
     },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/system/docs/index",
+    permissions: [Permission.AUTHENTICATED_USER],
+    body: (raw) => z.object({}).passthrough().parse(raw),
+    handler: async () => ({ repos: await service.getIndex() }),
   },
 ];
 

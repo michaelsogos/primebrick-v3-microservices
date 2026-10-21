@@ -1,0 +1,4 @@
+{
+  "i18n_namespaces": ["app", "system", "job"],
+  "i18n_sql_exempt": ["0005_job_entity_labels.sql"]
+}

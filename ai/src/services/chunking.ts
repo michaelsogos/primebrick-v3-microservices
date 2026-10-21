@@ -10,6 +10,8 @@
  * Default: 512 tokens max, 64 tokens overlap (~256 chars/token for English).
  * For all-MiniLM-L6-v2, 512 tokens is the max sequence length (truncated if longer).
  */
+import { createHash } from "node:crypto";
+import { extJsonStringify } from "@primebrick/sdk";
 
 export interface Chunk {
   content: string;
@@ -178,6 +180,29 @@ function splitUnits(text: string): Unit[] {
     flushText();
   }
   return units;
+}
+
+/**
+ * The `chunk_idx` reserved for the DOC SOURCE row: one row per mdx doc
+ * carrying the full raw markdown body — chunking is lossy by design (atomic
+ * bullets, sentence joins), so faithful page display/dereference reads this
+ * row instead of re-joining chunks. Excluded from search (`chunk_idx >= 0`
+ * filter), from the docs index (`chunk_idx = 0`), and never produced for
+ * openapi chunks or `order_manifest` rows.
+ */
+export const DOC_SOURCE_CHUNK_IDX = -1;
+
+/** Hash for the doc-source row — same input space as per-chunk hashes
+ *  (provider identity + content + link/entity metadata), but computed on the
+ *  FULL raw body so any source edit re-upserts it. Shared by
+ *  embedding-pipeline (write) and docs-drift (expected set). */
+export function docSourceContentHash(
+  doc: { content: string; metadata: { links?: unknown; entity?: string } },
+  providerName: string,
+): string {
+  return createHash("sha256")
+    .update(`${providerName}\n${doc.content}\n${extJsonStringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
+    .digest("hex");
 }
 
 /**

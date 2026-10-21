@@ -24,6 +24,9 @@ async function main(): Promise<void> {
     icon: "webhook",
     iconType: "icon",
 
+    // Root level — system module: route prefix /system/webhook.
+    partOf: "system",
+
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.

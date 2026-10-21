@@ -8,7 +8,7 @@
  * Deletes stale chunks (docs removed from source or chunks no longer present).
  */
 import { loadMdxDocs, loadOpenApiSpecs, type LoadedDoc } from "./docs-loader.js";
-import { buildEmbeddingInput, chunkMarkdown } from "./chunking.js";
+import { buildEmbeddingInput, chunkMarkdown, docSourceContentHash, DOC_SOURCE_CHUNK_IDX } from "./chunking.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
 import {
   insertDocChunks,
@@ -179,6 +179,32 @@ export async function ingestLoadedDocs(
             heading_path,
           },
         });
+      }
+
+      // Doc-source row (mdx only): the chunker is lossy for display purposes
+      // — atomic bullets and sentence joins destroy list/table structure.
+      // chunk_idx = -1 carries the full raw body so getDocByPath can serve
+      // the faithful page (docs browser, docs_fetch tool). Not searchable:
+      // readers filter `chunk_idx >= 0`.
+      if (doc.metadata.source === "mdx" && !doc.metadata.order_manifest) {
+        validIndices.push(DOC_SOURCE_CHUNK_IDX);
+        const srcHash = docSourceContentHash(doc, provider.name);
+        const existingSrcHash = existingHashes.get(DOC_SOURCE_CHUNK_IDX);
+        if (existingSrcHash !== srcHash) {
+          stats.chunks_created++;
+          pendingEmbeddings.push({
+            doc,
+            chunk_idx: DOC_SOURCE_CHUNK_IDX,
+            content: doc.content,
+            // The row is never a search target — a compact title vector is
+            // enough to satisfy the NOT NULL column without polluting cosine
+            // scores with a full-document embedding.
+            embedding_input: doc.title,
+            content_hash: srcHash,
+            exists: existingSrcHash !== undefined,
+            metadata: { ...doc.metadata, doc_source: true },
+          });
+        }
       }
 
       // Mark stale chunks for deletion (chunks no longer in the source).

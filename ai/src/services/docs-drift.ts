@@ -11,7 +11,7 @@
 import { logger, extJsonStringify, type DocsPackPayload } from "@primebrick/sdk";
 import { createHash } from "node:crypto";
 import { loadedDocFromMdx, loadedDocsFromOpenApiSpec } from "./docs-loader.js";
-import { chunkMarkdown, buildEmbeddingInput } from "./chunking.js";
+import { chunkMarkdown, buildEmbeddingInput, docSourceContentHash, DOC_SOURCE_CHUNK_IDX } from "./chunking.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
 import { getDocHashes, getAllDocPaths, vectorSearch } from "./docs-kb-repository.js";
 
@@ -60,6 +60,10 @@ async function expectedHashes(payload: DocsPackPayload): Promise<Map<string, Map
         .update(`${provider.name}\n${embedding_input}\n${extJsonStringify(doc.metadata.links ?? [])}\n${doc.metadata.entity ?? ""}`)
         .digest("hex");
       hashes.set(chunk.chunk_idx, contentHash);
+    }
+    // Doc-source row (chunk_idx = -1) — mirror of the pipeline's mdx-only rule.
+    if (doc.metadata.source === "mdx" && !doc.metadata.order_manifest) {
+      hashes.set(DOC_SOURCE_CHUNK_IDX, docSourceContentHash(doc, provider.name));
     }
     out.set(doc.path, hashes);
   }

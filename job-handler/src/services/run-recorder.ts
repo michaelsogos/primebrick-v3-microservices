@@ -14,12 +14,26 @@
 import {
   NatsClient,
   dueLaneVerify,
+  extJsonStringify,
   logger,
 } from "@primebrick/sdk";
 import { getDal } from "../db/dal.js";
 import { JobRunEntity } from "../domain/entities/job_run_entity.js";
 
 export const JOBS_STREAM = "JOBS";
+
+/**
+ * NatsClient decodes payloads with extJsonParse — every integer arrives as
+ * native bigint. node-pg serializes object params with plain JSON.stringify,
+ * which rejects bigint; fold them back to plain JSON before the jsonb insert
+ * (jsonb has no distinct bigint type anyway).
+ */
+function plainJson<T>(v: T): T {
+  if (v === undefined) return v;
+  // The round-trip must NOT extJsonParse (that would re-bigintify) —
+  // the whole point is folding bigint → number.
+  return JSON.parse(extJsonStringify(v)) as T; // standards-exempt: ext-json — sanitizer needs plain parse
+}
 
 interface JobResultEnvelope {
   job?: string;
@@ -65,10 +79,10 @@ export async function startRunRecorder(): Promise<void> {
           status,
           error_code: isError ? "EXECUTION_ERROR" : undefined,
           error_detail: isError ? (data.error ?? String(data.report ?? "")).slice(0, 2000) : undefined,
-          duration_ms: data.duration_ms,
+          duration_ms: data.duration_ms === undefined ? undefined : Number(data.duration_ms),
           redelivery_count: meta.info?.redeliveryCount,
           initiator: parsed.svc,
-          report: data.report,
+          report: plainJson(data.report),
         } as never,
         { actor: `system:${parsed.svc}` } as never,
       );

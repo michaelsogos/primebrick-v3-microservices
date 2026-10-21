@@ -253,8 +253,8 @@ file watch for hot reload.
 cd emailsender && pnpm run db:migrate
 ```
 
-Uses `@primebrick/sdk`'s `applyPatches()` runner via
-`bun scripts/database-patch-apply.ts`.
+Uses the dal-pg `runMigrations` engine via
+`bun scripts/database-patch-apply.ts` (same code path as boot).
 
 ## Health & Lifecycle
 

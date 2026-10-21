@@ -27,7 +27,7 @@ import {
   type HeaderProvider,
   logger,
 } from "@primebrick/sdk";
-import type { MsgHdrs } from "nats";
+import type { MsgHdrs } from "@nats-io/transport-node";
 import { WebhookService } from "../../services/webhook-service.js";
 
 const WEBHOOK_STREAM = "WEBHOOK";

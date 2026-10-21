@@ -1,11 +1,22 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-15T14:42:42.083Z",
+  "issued_at": "2026-10-21T10:57:53.254Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
-    "0003_schedule_type": "3dd5ee3a75b27154776f5bd2902ae96ff95cc7f77cb0070ad238352cef12d6bc"
+    "0003_schedule_type": "3dd5ee3a75b27154776f5bd2902ae96ff95cc7f77cb0070ad238352cef12d6bc",
+    "0004_job_translations": "879f2cde1105a99ecb851ce0f5bd1c3ee1ab3610d568ae1dbe7679bc9966386f",
+    "0005_job_entity_labels": "aa51e29fdb46da4c4188d6560dc2ccb43c73820cdc8293c3df27d1f50f21d9d1",
+    "0006_job_entities_ns": "c23632c389823e3d17846be54c8345fc19a254a14babdb7d8e12ac1ae7440c6b",
+    "0007_job_presets_rules_nav": "6802edbedfb93d140124e95ab1ebb203296ad98d8872683e75ba01dd2ce23b47",
+    "0008_job_section_schedules": "9cc1ee27f0a8b9e4011c1ce1773e32ec1ca136eefc2213498aa66f536b9debc2",
+    "0009_job_nav_runs": "079a594831566eec661529deb4b4b99635cc07a791aed2f8ccbdddf2a5615fce",
+    "0010_job_audit_tables": "cd7867df8d8b2ab085f5c7c6513f33a43621fb8c1cfbfea2c21c19e972c16e3d",
+    "0011_job_audit_partman": "543effbe76f5990f914135a9e713a902ff12abcfa1b4fcc25624fd4b3a12654f",
+    "0012_job_rule_form": "21cda5cd13d0cbabc61d6a5498c8eca6182b27dbdb4a837334013baad15b4e5d",
+    "0013_job_module_label": "f8ef421c97b1e91786422606f5a8def3673ff60cc3969613faf2bbc2d8cfa368",
+    "0014_job_schedules_page_label": "4940488141a736449c1cf5f32f26ddf6f88e5f37100e7928891dadf23636dfec"
   },
-  "signature": ""
+  "signature": "WiA8pG3k5GeVgFQ3DOzOdslcc1W5q9nP8b2ZvMR8LzAHf07V5VuF0racnTOMDboWEGA8T/oKy0HUZnj+dfgVDg=="
 }

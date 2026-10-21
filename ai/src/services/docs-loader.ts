@@ -34,6 +34,9 @@ export interface LoadedDoc {
     description?: string;
     /** KB paths this doc links to (doc-graph expansion — MDX only). */
     links?: string[];
+    /** `_order.json` manifest rows — ordering metadata for the docs index,
+     *  not real pages. Excluded from search/index consumers. */
+    order_manifest?: boolean;
   };
 }
 
@@ -71,7 +74,7 @@ export function loadedDocFromMdx(repo: string, path: string, raw: string): Loade
   try {
     const { frontmatter, body } = parseMdxFrontmatter(raw);
     const title = frontmatter.title || path;
-    const links = extractDocLinks(body, path);
+    const links = extractDocLinks(body, path, repo);
     return {
       repo,
       path,
@@ -174,10 +177,11 @@ function formatOpenApiEndpoint(
 /**
  * Extract outbound markdown links from an MDX body and normalize them to
  * KB paths (as stored in docs_kb.path). Handles the docs-site slug scheme:
- * `/docs/user-guide/<slug>` → `frontend/guide/<slug>.mdx`.
+ * `/docs/user-guide/<slug>` → `<repo>/guide/<slug>.mdx` (user-guide pages are
+ * namespaced under the owning repo so the browser can route cross-repo).
  * External URLs, anchors and mailto are skipped; self-links removed.
  */
-function extractDocLinks(body: string, selfPath: string): string[] {
+function extractDocLinks(body: string, selfPath: string, selfRepo: string): string[] {
   const links = new Set<string>();
   for (const m of body.matchAll(/\[[^\]]*\]\(\s*<?([^)>\s]+)>?[^)]*\)/g)) {
     let href = m[1];
@@ -185,7 +189,7 @@ function extractDocLinks(body: string, selfPath: string): string[] {
     href = href.split("#")[0].split("?")[0].replace(/\/+$/, "");
     if (!href) continue;
     if (href.startsWith("/docs/user-guide/")) {
-      href = `frontend/guide/${href.slice("/docs/user-guide/".length)}`;
+      href = `${selfRepo}/guide/${href.slice("/docs/user-guide/".length)}`;
     } else if (href.startsWith("/docs/")) {
       href = href.slice("/docs/".length);
     } else if (!href.startsWith("/")) {

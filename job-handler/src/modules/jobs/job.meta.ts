@@ -4,50 +4,30 @@
  * Default sort `updated_at desc` comes from HERE (metadata), never
  * hardcoded in the FE.
  *
- * Convention: label_key = `system.entities.<entity>.fields.<column>`;
- * badge label_key = `system.entities.<entity>.status.<value>` (same as
- * customer.status.* on the BE entities).
+ * Contract: `EntityMeta`/`MetaColumn` come from `@primebrick/sdk`
+ * (re-exported from `@primebrick/core`) — service metas MUST NOT
+ * re-declare the shared contract locally.
+ *
+ * Convention: every label key lives in THIS module's namespace —
+ * `job.entities.<entity>.fields.<column>`, badge value keys
+ * `job.entities.<entity>.status.<value>`. `entities_ns: "job"` declares
+ * the ownership so the FE composes `job.entities.*` (never
+ * `system.entities.*`) for these entities. Keys are written by the
+ * module's own `job.translations` patches — the namespace write boundary
+ * rejects anything outside `job.*`.
  */
 
-export interface MetaColumn {
-  key: string;
-  label_key: string;
-  type:
-    | "text" | "badge" | "boolean" | "color" | "datetime" | "number"
-    | "run_stats_sparkline";
-  order: number;
-  sortable?: boolean;
-  filterable?: boolean;
-  searchable?: boolean;
-  default_visible?: boolean;
-  badge?: { values: Record<string, { label_key: string; color: string }> };
-}
-
-export interface EntityMeta {
-  entity: string;
-  translation_key: string;
-  title_key: string;
-  uid: string;
-  display_field: string;
-  display_name?: string;
-  columns: MetaColumn[];
-  table?: {
-    default_view: "table" | "cards" | "cards_list";
-    default_sort?: { key: string; dir: "asc" | "desc" };
-    default_page_size?: number;
-    page_size_options?: number[];
-  };
-  actions_overrides?: Record<string, { enabled?: boolean }>;
-}
+import type { EntityMeta } from "@primebrick/sdk";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
-const F = (e: string, c: string) => `system.entities.${e}.fields.${c}`;
-const V = (e: string, v: string) => `system.entities.${e}.status.${v}`;
+const F = (e: string, c: string) => `job.entities.${e}.fields.${c}`;
+const V = (e: string, v: string) => `job.entities.${e}.status.${v}`;
 
 export const jobRuleMeta: EntityMeta = {
   entity: "job_rule",
   translation_key: "job_rule",
-  title_key: "system.entities.job_rule.title",
+  entities_ns: "job",
+  title_key: "job.entities.job_rule.title",
   uid: "uuid",
   display_field: "name",
   columns: [
@@ -72,7 +52,8 @@ export const jobRuleMeta: EntityMeta = {
 export const jobScheduleMeta: EntityMeta = {
   entity: "job_schedule",
   translation_key: "job_schedule",
-  title_key: "system.entities.job_schedule.title",
+  entities_ns: "job",
+  title_key: "job.entities.job_schedule.title",
   uid: "uuid",
   display_field: "schedule_subject",
   columns: [
@@ -88,7 +69,9 @@ export const jobScheduleMeta: EntityMeta = {
     },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", order: 40 },
     {
-      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45, filterable: true,
+      // NOT `filterable` — the `schedule_kind` filter preset owns this
+      // field (a sheet filter AND-ed with the preset would contradict it).
+      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45,
       badge: { values: {
         recurring: { label_key: V("job_schedule", "recurring"), color: "blue" },
         once: { label_key: V("job_schedule", "once"), color: "purple" },
@@ -102,19 +85,71 @@ export const jobScheduleMeta: EntityMeta = {
         disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" },
       } },
     },
-    // Mini execution histogram — Kestra-style per-row sparkline fed by
-    // the job-run-stats action (keyed by schedule_subject).
-    { key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "run_stats_sparkline", order: 70 },
+    // Mini execution histogram — builtin `sparkline` cell fed by ONE batch
+    // POST per rows load (virtual column, keyed by schedule_subject).
+    {
+      key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "sparkline", order: 70,
+      sparkline: {
+        endpoint: "/actions/job-run-stats",
+        request_field: "schedule_subjects",
+        row_key: "schedule_subject",
+        series: [
+          { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
+          { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
+          { field: "skipped", color: "fill-amber-400", label_key: V("job_run", "skipped") },
+        ],
+      },
+    },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80, sortable: true },
     { key: "updated_at", label_key: F("job_schedule", "updated_at"), type: "datetime", order: 90, sortable: true },
   ],
-  table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
+  table: {
+    default_view: "table",
+    default_sort: UPDATED_DESC,
+    default_page_size: 25,
+    page_size_options: [10, 25, 50],
+    // Mutually-exclusive scope selector in the toolbar (tandem with the
+    // soft-delete group): one option always active, AND-ed into every list
+    // call. `schedule_kind` owns the `schedule_type` field (not filterable).
+    filter_presets: [
+      {
+        id: "schedule_kind",
+        display: "button_group",
+        label_key: "job.entities.job_schedule.presets.schedule_kind.label",
+        default_option: "recurring",
+        options: [
+          {
+            id: "recurring",
+            label_key: "job.entities.job_schedule.presets.schedule_kind.recurring",
+            icon: "repeat",
+            tooltip_key: "job.entities.job_schedule.presets.schedule_kind.recurring_tip",
+            where: [{ field: "schedule_type", op: "=", value: "recurring" }],
+          },
+          {
+            id: "once",
+            label_key: "job.entities.job_schedule.presets.schedule_kind.once",
+            icon: "zap",
+            tooltip_key: "job.entities.job_schedule.presets.schedule_kind.once_tip",
+            where: [{ field: "schedule_type", op: "=", value: "once" }],
+          },
+          {
+            id: "all",
+            label_key: "job.entities.job_schedule.presets.schedule_kind.all",
+            icon: "list-clock",
+            tooltip_key: "job.entities.job_schedule.presets.schedule_kind.all_tip",
+            where: [],
+          },
+        ],
+      },
+    ],
+  },
 };
 
 export const jobRunMeta: EntityMeta = {
   entity: "job_run",
   translation_key: "job_run",
-  title_key: "system.entities.job_run.title",
+  entities_ns: "job",
+  title_key: "job.entities.job_run.title",
   uid: "uuid",
   display_field: "job_name",
   columns: [

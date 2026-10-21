@@ -20,6 +20,7 @@
  * questions surface manual pages instead of raw API listings.
  */
 import { getDal } from "../db/dal.js";
+import { extJsonParse } from "@primebrick/sdk";
 import { field, Filter, Project, type FilterExpr } from "@primebrick/dal-pg";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 
@@ -109,7 +110,10 @@ export async function searchDocsKb(
   // stays the floor metric, `lexical_score` only re-ranks.
   const lexQuery = keywords.join(" ").trim() || null;
 
-  const filters: FilterExpr[] = [];
+  const filters: FilterExpr[] = [
+    // chunk_idx = -1 rows carry the full raw doc for display — never a hit.
+    Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), ">=", 0),
+  ];
   if (opts.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", opts.repo));
   if (opts.path_prefix) filters.push(Filter.fieldValue(field(DocsKbEntity, "path"), "LIKE", `${opts.path_prefix}%`));
 
@@ -193,7 +197,10 @@ async function expandDocGraph(
   const rows = await getDal().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), embedding, {
     topK: GRAPH_ROW_BUDGET,
     fields: [...KB_FIELDS],
-    filters: [Filter.fieldValue(field(DocsKbEntity, "path"), "IN", paths)],
+    filters: [
+      Filter.fieldValue(field(DocsKbEntity, "path"), "IN", paths),
+      Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), ">=", 0),
+    ],
   });
 
   const bestByPath = new Map<string, (typeof rows)[number]>();
@@ -219,6 +226,91 @@ async function expandDocGraph(
 }
 
 /**
+ * Docs index — one entry per doc page (`chunk_idx = 0` carries the full
+ * metadata), ordered by the repo's `_order.json` manifests when present.
+ * `order_manifest` rows and non-mdx sources (openapi chunks) are excluded.
+ * Entries expose `entity` for in-product context matching (page → doc).
+ */
+export interface DocsIndexEntry {
+  path: string;
+  title: string;
+  /** Position in the repo's `_order.json` — null when the page is unlisted. */
+  order: number | null;
+  entity?: string;
+  description?: string;
+}
+
+export interface DocsIndexRepo {
+  repo: string;
+  entries: DocsIndexEntry[];
+}
+
+export async function getDocsIndex(): Promise<DocsIndexRepo[]> {
+  const rows = (await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
+    DocsKbEntity,
+    [
+      Project.field(field(DocsKbEntity, "repo")),
+      Project.field(field(DocsKbEntity, "path")),
+      Project.field(field(DocsKbEntity, "title")),
+      Project.field(field(DocsKbEntity, "content")),
+      Project.field(field(DocsKbEntity, "metadata")),
+    ],
+    { filters: [Filter.fieldValue(field(DocsKbEntity, "chunk_idx"), "=", 0)] },
+  )) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">[]>;
+
+  // Order manifests: repo+dir → slug → position (slugs are extensionless,
+  // relative to the manifest's directory).
+  const orderByRepo = new Map<string, Map<string, number>>();
+  const docs = rows.filter((r) => {
+    const meta = r.metadata as Record<string, unknown> | undefined;
+    if (meta?.order_manifest === true) {
+      try {
+        const parsed = extJsonParse<{ pages?: unknown }>(r.content);
+        if (Array.isArray(parsed?.pages)) {
+          const dir = r.path.split("/").slice(0, -1).join("/");
+          const m = orderByRepo.get(r.repo) ?? new Map<string, number>();
+          parsed.pages.forEach((slug, i) => {
+            if (typeof slug === "string") m.set(dir ? `${dir}/${slug}` : slug, i);
+          });
+          orderByRepo.set(r.repo, m);
+        }
+      } catch {
+        /* malformed manifest — ordering falls back to alphabetical */
+      }
+      return false;
+    }
+    return meta?.source === "mdx";
+  });
+
+  const byRepo = new Map<string, DocsIndexEntry[]>();
+  for (const r of docs) {
+    const meta = r.metadata as Record<string, unknown> | undefined;
+    const order = orderByRepo.get(r.repo)?.get(r.path.replace(/\.mdx$/i, "")) ?? null;
+    const entry: DocsIndexEntry = {
+      path: r.path,
+      title: r.title,
+      order,
+      ...(meta?.entity ? { entity: String(meta.entity) } : {}),
+      ...(meta?.description ? { description: String(meta.description) } : {}),
+    };
+    const list = byRepo.get(r.repo) ?? [];
+    list.push(entry);
+    byRepo.set(r.repo, list);
+  }
+
+  return [...byRepo.entries()]
+    .map(([repo, entries]) => ({
+      repo,
+      entries: entries.sort(
+        (a, b) =>
+          (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER) ||
+          a.title.localeCompare(b.title),
+      ),
+    }))
+    .sort((a, b) => a.repo.localeCompare(b.repo));
+}
+
+/**
  * Fetch a whole document by (repo, path) — the `docs_fetch` tool backend
  * for the agentic guide loop: the model sees a cited path in an excerpt and
  * can dereference the FULL page, not just the retrieved chunk.
@@ -230,9 +322,9 @@ export async function getDocByPath(
   const filters: FilterExpr[] = [Filter.fieldValue(field(DocsKbEntity, "path"), "=", params.path)];
   if (params.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", params.repo));
 
-  const rows = await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
+  const rows = await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata">>(
     DocsKbEntity,
-    [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "title")), Project.field(field(DocsKbEntity, "content")), Project.field(field(DocsKbEntity, "metadata"))],
+    [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "title")), Project.field(field(DocsKbEntity, "chunk_idx")), Project.field(field(DocsKbEntity, "content")), Project.field(field(DocsKbEntity, "metadata"))],
     {
       filters,
       sorting: [
@@ -240,14 +332,19 @@ export async function getDocByPath(
         { field: field(DocsKbEntity, "chunk_idx"), dir: "ASC" },
       ],
     },
-  ) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">[]>;
+  ) as Awaited<Pick<DocsKbEntity, "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata">[]>;
   if (!rows.length) return null;
   const first = rows[0]!;
   // Same path can exist in several repos — when the caller omits `repo`,
   // return only the first repo's chunks (rows are ordered by repo).
-  const content = rows
-    .filter((r) => r.repo === first.repo)
-    .map((r) => r.content)
-    .join("\n\n");
-  return { repo: first.repo, path: first.path, title: first.title, content, metadata: (first.metadata ?? {}) as Record<string, unknown> };
+  const repoRows = rows.filter((r) => r.repo === first.repo);
+  // Prefer the doc-source row (chunk_idx = -1): the full raw body is
+  // faithful markdown — re-joined chunks are lossy (atomic bullets,
+  // sentence joins). Fallback keeps serving pre-source-row corpora.
+  const sourceRow = repoRows.find((r) => r.chunk_idx === -1);
+  const content = sourceRow
+    ? sourceRow.content
+    : repoRows.filter((r) => r.chunk_idx !== -1).map((r) => r.content).join("\n\n");
+  const metaRow = repoRows.find((r) => r.chunk_idx === 0) ?? first;
+  return { repo: first.repo, path: first.path, title: first.title, content, metadata: (metaRow.metadata ?? {}) as Record<string, unknown> };
 }
