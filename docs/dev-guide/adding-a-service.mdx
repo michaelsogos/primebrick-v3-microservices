@@ -94,8 +94,24 @@ manifest.json` exists.
 On boot the service publishes `service.register`; the BE registry learns
 name, base_url, capabilities, endpoints — and the `/ws/<code>/*` proxy
 path becomes reachable. Nav/sidebar entries for its screens are declared
-in the BE's `module-nav-meta` (a static per-module declaration — add a
-case when the service owns FE routes).
+by the service itself in the `endpoints.nav` block of the
+`service.register` payload (`route_prefixes` + `nav[]` + full `routes`
+census — validated at enrollment; the BE's static `module-nav-meta`
+registry is reserved for BE-owned modules like `settings`).
+
+**Root level**: the service declares `partOf` in its registration options
+(`service_registry.part_of`). Its single FE route namespace is derived,
+never free-chosen: `/{part_of}/{code}` — e.g. `partOf: "system"` + code
+`job` → all nav hrefs and census routes under `/system/job/**`. When the
+service IS its own root (`partOf === code`, e.g. crm) the namespace
+collapses to `/{code}` → `/crm/**`. A mismatch is rejected at register
+time.
+
+**Display name**: declare `labelKey` (→ `service_registry.label_key`) —
+the i18n key for the module's localized name, resolved against the
+service's OWN `*.translations` schema (seed it there, like `nav[].label_key`
+entries). Every UI surface (app launcher, breadcrumbs, module menus)
+renders it via `resolveModuleLabel` with the raw `name` as fallback.
 
 ## 8. Docs
 

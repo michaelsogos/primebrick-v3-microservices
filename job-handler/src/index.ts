@@ -15,10 +15,12 @@ import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { JobAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { jobEntityRouteHandler } from "./controllers/http/entities-route.js";
 import { jobActionsRouteHandler } from "./controllers/http/actions-route.js";
+import { moduleAssetsRouteHandler } from "./controllers/http/module-assets-route.js";
 import { composeRouteHandlers, assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startRulesEngine } from "./services/rules-engine.js";
+import { JOB_NAV } from "./nav-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -26,8 +28,24 @@ async function main(): Promise<void> {
     serviceDisplayName: "Job Handler",
     serviceDescription:
       "Jobs orchestration — sole writer of jobs.schedule.*, rules engine over job_rules, run-history tap on jobs.result.>",
-    icon: "schedule",
+    icon: "list-clock",
     iconType: "icon",
+
+    // Root level — this module is part of the `system` level: its FE route
+    // prefix is derived as `/{part_of}/{code}` = /system/job (validated at
+    // registration; the prefix is never free-chosen).
+    partOf: "system",
+
+    // Module display-name key — resolved against this service's own
+    // `job.translations` namespace by every UI surface (launcher,
+    // breadcrumbs, module menus); fallback: raw registry `name`.
+    labelKey: "job.module.name",
+
+    // Module self-declaration — persisted in service_registry.endpoints.nav.
+    // The job module OWNS /system/job: nav links, route census entries and
+    // the remote chunk URL are published by this service, never hardcoded
+    // inside another module's nav registry.
+    nav: JOB_NAV,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
@@ -57,7 +75,7 @@ async function main(): Promise<void> {
     authConfigPort: (configLoader) => new JobAuthConfigPort(configLoader),
     healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
-    routeHandler: composeRouteHandlers(jobEntityRouteHandler, jobActionsRouteHandler),
+    routeHandler: composeRouteHandlers(jobEntityRouteHandler, jobActionsRouteHandler, moduleAssetsRouteHandler),
 
     onReady: async () => {
       // JOBS stream — scheduler storage. Wildcards kept NARROW on purpose:

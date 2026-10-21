@@ -23,6 +23,9 @@ async function main(): Promise<void> {
     icon: "mail",
     iconType: "icon",
 
+    // Root level — system module: route prefix /system/emailsender.
+    partOf: "system",
+
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
