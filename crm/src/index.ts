@@ -45,19 +45,21 @@ async function main(): Promise<void> {
     partOf: "crm",
 
     // Module self-declaration — persisted in service_registry.endpoints.nav.
-    // The crm module OWNS /crm: nav links and the route census are
-    // published by this service, never hardcoded inside another module's
-    // nav registry (MODULE_NAV.crm was removed from the BE).
+    // The crm module OWNS /crm plus an EXTRA root membership under
+    // `system`: the pipeline page lives at /system/crm/pipeline — a crm
+    // page inside the System app ("a foot in two shoes"). The code stays
+    // the URL's second segment in every prefix, so longest-prefix
+    // ownership keeps resolving module=breadcrumb.
     nav: {
-      route_prefixes: ["/crm"],
+      route_prefixes: ["/crm", "/system/crm"],
       nav: [
         { id: "customers", label_key: "crm.customers.nav", href: "/crm/customers", icon: "users" },
-        { id: "pipeline", label_key: "crm.pipeline.nav", href: "/crm/pipeline", icon: "git-branch" },
+        { id: "pipeline", label_key: "crm.pipeline.nav", href: "/system/crm/pipeline", icon: "git-branch" },
       ],
       routes: [
         { route: "/crm/customers", kind: "list", entity: "customer", label_key: "crm.customers.nav" },
         { route: "/crm/customers/new", kind: "create", entity: "customer", label_key: "app.common.new", icon: "plus" },
-        { route: "/crm/pipeline", kind: "page" },
+        { route: "/system/crm/pipeline", kind: "page" },
       ],
     },
 
