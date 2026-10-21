@@ -11,7 +11,7 @@
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
    *   - AppPageBreadcrumb / Button are HOST components mounted via
    *     ctx.mount_host as separate roots (HostLeaf for leaf granularity).
-   *   - moduleMenuSegment is a host-state-bound function passed through
+   *   - moduleBreadcrumbSegments is a host-state-bound function passed through
    *     ctx.components — it reads the resolved module nav in the host.
    *   - The form itself is remote-owned (this chunk's own Svelte + DOM).
    */
@@ -29,7 +29,7 @@
     const el = breadcrumbEl;
     const c = comps;
     if (!el || !c || !ctx.mount_host) return;
-    const segments = [c.moduleMenuSegment({ pathname: ctx.nav.route, t })];
+    const segments = c.moduleBreadcrumbSegments({ pathname: ctx.nav.route, t });
     const h = ctx.mount_host(c.AppPageBreadcrumb, el, { segments });
     return () => void h.destroy();
   });

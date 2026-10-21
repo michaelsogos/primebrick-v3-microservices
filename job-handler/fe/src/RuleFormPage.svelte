@@ -29,7 +29,7 @@
     const el = breadcrumbEl;
     const c = comps;
     if (!el || !c || !ctx.mount_host) return;
-    const segments = [c.moduleMenuSegment({ pathname: ctx.nav.route, t })];
+    const segments = c.moduleBreadcrumbSegments({ pathname: ctx.nav.route, t });
     const h = ctx.mount_host(c.AppPageBreadcrumb, el, { segments });
     return () => void h.destroy();
   });
