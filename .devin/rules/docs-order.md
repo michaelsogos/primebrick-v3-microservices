@@ -20,20 +20,23 @@
     "overview",
     "architecture",
     "conventions",
-    "services/emailsender"
+    "adding-a-service"
   ]
 }
 ```
 
 ## Per-service pages
-This repo is a multi-service monorepo. Per-service pages live under the
-`services/` group, after the shared pages (`overview`, `architecture`,
-`conventions`). Each service has ONE prose guide page:
-`services/<service>` — the AI-written guide page.
+This repo is a multi-service monorepo. Per-service docs live inside the
+service folder itself — **`<service>/docs/dev-guide/index.mdx`** (plus
+optional sibling pages, each with its own `_order.json`), NOT in the
+root `docs/dev-guide/` tree. The root tree holds only shared pages
+(`overview`, `architecture`, `conventions`, `adding-a-service`).
+
+Each service's `_order.json` (`<service>/docs/dev-guide/_order.json`)
+defines its own sidebar order; `index.mdx` is the service landing page.
 
 The API reference is NOT an MDX page — it is handled by Zudoku's interactive
 API Catalog, fed by the docs repo's `fetch-openapi.mjs` script at build time.
 
-The service slug is the microservice's sub-folder name
-(e.g. `emailsender`), NOT its package name. Add new service pages in
-logical reading order (typically after existing services).
+The service folder name is the doc slug (e.g. `emailsender`), NOT the
+package name.

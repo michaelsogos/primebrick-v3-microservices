@@ -1,0 +1,47 @@
+---
+title: CRM — module-ownership case study
+description: CRM playground service — proves a module can own navigation, route prefixes and translations via service registration; entity APIs migrate here in a later phase
+---
+
+# CRM (`primebrick-crm`)
+
+CRM is a **playground/case-study service** for the module-ownership
+architecture — not a business product module. It proves that a microservice
+can own its own navigation, route prefixes and translations through service
+registration. It will eventually be split out into a standalone product.
+
+## What it does today
+
+- Declares the `crm` **root level** (`partOf: "crm"` — the CRM module IS its
+  own root level, unlike the `system` services).
+- Owns the `/crm` route prefix: `/crm/customers`, plus an extra root-level
+  membership under `system` (`/system/crm/pipeline` — "a foot in two shoes").
+- Registers `CRM_NAV` (`nav-declaration.ts`) via `service_registry.endpoints.nav`.
+- Translates its own module label (`labelKey: "crm.module.name"`) in the
+  `crm.translations` namespace.
+
+The customer entity pages stay BE-served for now — route declarations
+reference entity `customer` rendered by the FE metadata pipeline. Entity API
+ownership migrates to this service in a later phase.
+
+## Boundaries
+
+- **No HTTP controllers and no NATS subscribers** — the service registers
+  metadata only (nav, translations, route census).
+- **DB ownership**: owns its own `db-meta/` (signed `MANIFEST.json`,
+  `keys.json`, `patches/` — e.g. `0002_seed_config.sql` seeds `http_port`
+  and sibling config entries).
+- **Root level `crm`** is distinct from `system`: `service_registry.part_of`
+  separates the two domains (see `overview.mdx`).
+
+## Configuration
+
+- Port: **3007** (`config_entries.http_port`, seeded by `0002_seed_config.sql`).
+- Env policy: `DATABASE_URL` + `DATABASE_SCHEMA` only (see
+  `docs/ai/env-policy.md`); everything else lives in `config_entries`.
+- Dev: `bun --hot src/index.ts` from `primebrick-us-v3/crm/`.
+
+## Adapters
+
+- `ConfigRepositoryAdapter` — `config_entries` governance.
+- `HealthCheckAdapter`, `CrmAuthConfigPort` — SDK lifecycle ports.

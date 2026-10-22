@@ -25,7 +25,7 @@ sub-folder with its own `src/`, `package.json`, `Dockerfile`, `db-meta/`, and
 | Service | Code | Port | Description |
 |---------|------|------|-------------|
 | [EmailSender](/dev/microservices/services/emailsender) | `emailsender` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo™ |
-| [JobHandler](/dev/microservices/job-handler) | `job` | 3006 | Job scheduling, governance, and execution observability — NATS JetStream native scheduler, business `job_rules`, run history |
+| [JobHandler](/dev/microservices/services/job-handler) | `job` | 3006 | Job scheduling, governance, and execution observability — NATS JetStream native scheduler, business `job_rules`, run history |
 
 New microservices are added as new top-level sub-folders. Each must contain
 a `package.json` with a `name` starting with `primebrick-` and a `src/index.ts`

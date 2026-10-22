@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   const openApiPath = process.env.OPENAPI_PATH || join(process.cwd(), "..", "..", "primebrick-v3-docs", "apis");
 
   logger.info("Initializing DAL...", { tags: ["index-docs"] });
-  getDal();
+  initDal();
 
   try {
     const full = process.argv.includes("--full");

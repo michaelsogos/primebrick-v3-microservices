@@ -1,14 +1,15 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-18T12:25:24.661Z",
+  "issued_at": "2026-10-22T17:46:47.732Z",
   "patches": {
     "0001_initial_schema": "bf568cb440d74198aa2a9285f6149c85f701549e17ddd126e5ebeb09ec23546e",
     "0002_seed_emailsender_config": "d2e6513b6a7b83d52a885ca3a6553d857530652060c796b5e8dbb49114c33628",
     "0003_create_translations_table": "3aeb63fe9220db0272a60b3780ea66d7772f4fe72c2c60fd33f617b17786d503",
     "0004_seed_gateway_secret": "7586bdc9c798227caa83cd2eadfece66b4e62ff784e1105d6b9cea9c2b170c07",
+    "0005_seed_bootstrap_config": "8c6b9ab8d6df2fd034ed6c90ac5af65149249df31f5c03a229ce721bbac9896b",
     "20261013210100_audit_columns_not_null": "f56d3e58442086194dc3f417d82946f740c40a69a6c78abedf557c2c6770c835",
     "20261015144425_noop": "2902349d2344c1beff78b07a11d84323360a3bcc3c5b60d27ebd820b09c96b7f"
   },
-  "signature": "3SjQw07WPk9v0yiJ5jKyKJO6ksv0zxqf9NmZgJ4ruZXBsw1NF4AbTF2IWSznJKV1/AbuNsvyd8E07bxzBvdXDw=="
+  "signature": "hXWZF+YHZkT/KwfvHUwbmadT/KtIrdCUsDO3f5FUNq4+a1s1O5+w75TQmRO4IGfwNqpVsVkkDBzz5Fl/aiRzAA=="
 }

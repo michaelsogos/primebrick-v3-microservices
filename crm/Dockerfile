@@ -1,0 +1,33 @@
+# ─── Builder stage ─────────────────────────────────────────────────────
+FROM oven/bun:1.1.0-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm run build
+
+# ─── Production stage ──────────────────────────────────────────────────
+FROM oven/bun:1.1.0-alpine
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
+
+COPY --from=builder /app/dist ./dist
+
+# NODE_ENV is a platform env var — supplied at image level (never in .env,
+# never in config_entries). production → release-trusted migration
+# signatures only + Secure session cookies.
+ENV NODE_ENV=production
+# Internal port is always 3007 — comes from config table, not ENV.
+# Host port mapping is handled by Terraform.
+EXPOSE 3007
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD bun -e "fetch('http://localhost:3007/health').then(r => process.exit(r.status === 200 ? 0 : 1)).catch(() => process.exit(1))"
+
+CMD ["bun", "dist/index.js"]

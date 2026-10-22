@@ -91,7 +91,7 @@ database bootstrap comes from env:
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
 | `DATABASE_URL` | yes | — | PostgreSQL connection string (owns the `webhook.config_entries` table) |
-| `DB_SCHEMA` | no | `webhook` | Database schema name |
+| `DATABASE_SCHEMA` | yes | — | Declared schema domain (`webhook`; CSV/JSON array for multi-schema — `[0]` is owned) |
 
 Everything else lives in `webhook.config_entries` and is loaded by
 `ConfigLoader` at startup: `nats_url`, `service_code`, `http_port`,

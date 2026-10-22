@@ -225,7 +225,7 @@ Called by the `POST /webhook` route. Flow:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | yes | — | PostgreSQL® connection string |
-| `DB_SCHEMA` | no | `emailsender` | Database schema name |
+| `DATABASE_SCHEMA` | yes | — | Declared schema domain (`emailsender`; CSV/JSON array for multi-schema — `[0]` is owned) |
 
 These are the **only** env-sourced settings. Everything else — `nats_url`,
 `service_code`, `http_port`, `service_base_url` (exposed URL for BE proxy

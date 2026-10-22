@@ -79,7 +79,7 @@ For releases and hotfixes, you must manually update the version in `package.json
 
 ## Repository-Specific Rules
 
-- When working from meta-workspace root, use `cd microservices && git <command>`
+- When working from meta-workspace root, use `cd primebrick-us-v3 && git <command>`
 
 ## Commit rules
 

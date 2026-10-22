@@ -10,14 +10,15 @@ Manually refresh developer documentation for this repo. Run this when you want
 to update docs without closing a GitFlow branch, or to verify docs are current.
 
 This repo is a **multi-service monorepo**: each microservice lives in a
-self-contained sub-folder (`emailsender/`, future services to follow) with its
+self-contained sub-folder (`ai/`, `emailsender/`, `webhook/`, `job-handler/`,
+`crm/`) with its
 own `src/`, `package.json`, `Dockerfile`, `db-meta/`. The skill is
 **service-aware**: it groups changed files by their service sub-folder and maps
 each service's changes to the right doc page.
 
 The skill does TWO things:
 1. **Undocumented-service scan** — detects microservices that exist in the repo
-   but have no `docs/dev-guide/services/<service>.mdx` page yet, and generates
+   but have no `<service>/docs/dev-guide/index.mdx` page yet, and generates
    initial documentation from their existing code. This runs regardless of the
    diff — existing code that was never documented MUST get a page.
 2. **Diff-based update** — for services that changed since the diff base,
@@ -56,7 +57,7 @@ BOTH:
 
 **How to detect undocumented services:**
 For each microservice sub-folder, check whether
-`docs/dev-guide/services/<service>.mdx` exists (where `<service>` is the
+`<service>/docs/dev-guide/index.mdx` exists (where `<service>` is the
 sub-folder name, e.g. `emailsender`). If it does NOT exist, the service is
 **undocumented** and must get an initial doc page generated in Step 6.
 
@@ -110,8 +111,8 @@ For EACH changed service, user-facing files are (paths relative to
 
 | Path pattern | Doc topic |
 |--------------|-----------|
-| `src/server/*-route.ts`, `src/server/openapi-route.ts` | HTTP routes & OpenAPI |
-| `src/nats/handlers.ts`, `src/nats/types.ts` | NATS™ subjects & request/reply |
+| `src/controllers/http/*-route.ts`, `src/controllers/http/openapi-route.ts` | HTTP routes & OpenAPI |
+| `src/controllers/nats-sub/*.ts`, `src/controllers/nats-sub/types.ts` | NATS™ subjects & request/reply |
 | `src/domain/entities/*.ts`, `src/domain/entities/registry.ts` | Entities & data model |
 | `src/providers/*.ts` | Provider integrations |
 | `src/services/*.ts` | Service actions |
@@ -140,17 +141,17 @@ handled by the docs repo's `fetch-openapi.mjs` at build time).
 #### 6a. Generate initial docs for undocumented services
 
 For each undocumented service (from Step 2), READ the service's existing code
-and CREATE `docs/dev-guide/services/<service>.mdx` with:
+and CREATE `<service>/docs/dev-guide/index.mdx` with:
 
 1. **Frontmatter**: `title`, `description`
 2. **Overview**: what the service does (1-2 paragraphs, from `src/index.ts`
    and `package.json` description)
-3. **HTTP routes**: read `src/server/*-route.ts` — high-level summary of
+3. **HTTP routes**: read `src/controllers/http/*-route.ts` — high-level summary of
    route groups (entity CRUD, actions, webhooks, system). Do NOT list every
    operation — the full API reference is in Zudoku's interactive API Catalog,
    generated from the OpenAPI spec by `fetch-openapi.mjs`. Link to it:
    `See the [API Catalog](/catalog/<service>) for the full operation list.`
-4. **NATS™ subjects**: read `src/nats/handlers.ts` and `src/nats/types.ts` —
+4. **NATS™ subjects**: read `src/controllers/nats-sub/*.ts` and `src/controllers/nats-sub/types.ts` —
    list every subject the service subscribes to or publishes, with
    request/response schemas.
 5. **Entities**: read `src/domain/entities/*.ts` and `registry.ts` — list
@@ -189,7 +190,7 @@ For each missing shared page (from Step 2), create it:
 For each changed service with user-facing changes (from Step 5), apply the
 anti-rewrite check:
 
-1. Read the existing `docs/dev-guide/services/<service>.mdx`
+1. Read the existing `<service>/docs/dev-guide/index.mdx`
 2. Compare against the diff
 3. Decide:
    - Already accurate → SKIP (no edit)
@@ -210,20 +211,10 @@ Apply the same anti-rewrite check.
 
 ### 7. Update _order.json
 
-Ensure every service page and shared page is listed in
-`docs/dev-guide/_order.json` (see `.devin/rules/docs-order.md`).
-Service pages go under the `services/` group, after the shared pages:
-
-```json
-{
-  "pages": [
-    "overview",
-    "architecture",
-    "conventions",
-    "services/emailsender"
-  ]
-}
-```
+Each doc tree has its own `_order.json` (see `.devin/rules/docs-order.md`):
+- Shared pages → `docs/dev-guide/_order.json`
+- Service pages → `<service>/docs/dev-guide/_order.json` (`index.mdx` is the
+  service landing page — excluded from the list)
 
 Add newly created pages. Do NOT remove pages that still exist.
 

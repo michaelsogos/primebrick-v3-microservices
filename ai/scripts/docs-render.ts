@@ -52,9 +52,11 @@ const stripIdp = (s) => s.replace(/^idp/i, '');
 
 // docs layout: generated page-manuals live under generated/ (the pipeline
 // owns them); hand-written docs live in manual/ or at user-guide root.
-// entities-crud is the one hand-written doc generated pages still link to.
+// entities-crud lives in the dev-guide (developer-tier) — generated pages
+// still cross-link to it.
 const HANDWRITTEN_SLUGS = new Set(['entities-crud']);
-const linkFor = (slug) => `/docs/user-guide/${HANDWRITTEN_SLUGS.has(slug) ? 'manual' : 'generated'}/${slug}`;
+const linkFor = (slug) =>
+  HANDWRITTEN_SLUGS.has(slug) ? `/docs/dev-guide/${slug}` : `/docs/user-guide/generated/${slug}`;
 
 function bestKey(name, keys, suffixRe) {
   const norm = name.toLowerCase().replace(/_/g, '');

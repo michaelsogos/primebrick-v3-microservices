@@ -13,9 +13,10 @@ services:
     ports:
       - "3003:3003"  # Direct mapping, no dynamic port needed in dev
     environment:
+      # Closed-set contract: only the DB pair is a real env var.
+      # service_base_url / nats_url / etc. live in config_entries.
       DATABASE_URL: postgresql://primebrick:primebrick@primebrick-postgres-18:5432/primebrick
       DATABASE_SCHEMA: emailsender
-      SERVICE_BASE_URL: http://localhost:3003
       NODE_ENV: development
     networks:
       - primebrick-infra-net

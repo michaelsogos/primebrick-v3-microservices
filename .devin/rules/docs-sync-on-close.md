@@ -40,7 +40,7 @@ BOTH:
 
 **How to detect undocumented services:**
 For each microservice sub-folder, check whether
-`docs/dev-guide/services/<service>.mdx` exists (where `<service>` is the
+`<service>/docs/dev-guide/index.mdx` exists (where `<service>` is the
 sub-folder name). If it does NOT exist, the service is **undocumented** and
 must get an initial doc page generated (see Step 5a).
 
@@ -90,8 +90,8 @@ user-facing (paths relative to `<service>/`):
 
 | Path pattern | Doc topic |
 |--------------|-----------|
-| `src/server/*-route.ts`, `src/server/openapi-route.ts` | HTTP routes & OpenAPI |
-| `src/nats/handlers.ts`, `src/nats/types.ts` | NATS™ subjects & request/reply |
+| `src/controllers/http/*-route.ts`, `src/controllers/http/openapi-route.ts` | HTTP routes & OpenAPI |
+| `src/controllers/nats-sub/*.ts`, `src/controllers/nats-sub/types.ts` | NATS™ subjects & request/reply |
 | `src/domain/entities/*.ts`, `src/domain/entities/registry.ts` | Entities & data model |
 | `src/providers/*.ts` | Provider integrations |
 | `src/services/*.ts` | Service actions |
@@ -131,7 +131,7 @@ plus any shared page touched by shared changes):
 
 | Changed topic | Page |
 |---------------|------|
-| Any per-service user-facing file | `docs/dev-guide/services/<service>.mdx` |
+| Any per-service user-facing file | `<service>/docs/dev-guide/index.mdx` |
 | `docker-templates/*` | `docs/dev-guide/architecture.mdx` (deployment section) |
 | `.devin/rules/api-path-conventions.md` | `docs/dev-guide/conventions.mdx` |
 | `scripts/*` scaffolding | `docs/dev-guide/overview.mdx` (or `architecture.mdx`) |
@@ -144,14 +144,14 @@ should produce at most a few lines of doc changes, not a rewritten page.
 #### 5a. Generate initial docs for undocumented services
 
 For each undocumented service (from Step 1), READ the service's existing
-code and CREATE `docs/dev-guide/services/<service>.mdx` with:
+code and CREATE `<service>/docs/dev-guide/index.mdx` with:
 
 1. **Frontmatter**: `title`, `description`
 2. **Overview**: what the service does (from `src/index.ts` and `package.json`)
-3. **HTTP routes**: from `src/server/*-route.ts` — high-level summary of
+3. **HTTP routes**: from `src/controllers/http/*-route.ts` — high-level summary of
    route groups. Link to Zudoku's API Catalog for the full operation list:
    `See the [API Catalog](/catalog/<service>) for the full operation list.`
-4. **NATS™ subjects**: from `src/nats/handlers.ts` and `types.ts`
+4. **NATS™ subjects**: from `src/controllers/nats-sub/*.ts` and `types.ts`
 5. **Entities**: from `src/domain/entities/*.ts` and `registry.ts`
 6. **Providers**: from `src/providers/*.ts`
 7. **Service actions**: from `src/services/*.ts`

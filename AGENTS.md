@@ -92,6 +92,8 @@ into the end-user AI KB.
 - **Ordering**: `docs/dev-guide/_order.json` defines the sidebar page order
 - **Conventions**: see `.devin/rules/docs-dev-guide.md` for editorial rules
 - **Mermaid**: use `<Mermaid chart={...} />`, never ` ```Code ` or ` ```mermaid `
+- **DAL access**: `.devin/rules/dal-usage.md` — governed `DomainService`/`svc`
+  API; no consumer `*_dal.ts`/`*-repo.ts` layer
 - **Do NOT hand-edit** files in `docs/ai/` or `docs/skills/` — those are internal
 
 ## Logging & Telemetry
