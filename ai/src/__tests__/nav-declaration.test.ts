@@ -29,4 +29,27 @@ describe("AI_NAV declaration", () => {
       expect(sheet.component_format).toBe("esm-mount");
     }
   });
+
+  it("declares the two remote pages under /system/ai on the ai-pages chunk", () => {
+    const routes = (AI_NAV.routes ?? []).map((r) => r.route).sort();
+    expect(routes).toEqual(["/system/ai", "/system/ai/docs-index"]);
+    for (const route of AI_NAV.routes ?? []) {
+      expect(route.kind).toBe("page");
+      expect(route.component_url).toBe("/ws/ai/api/v1/module-assets/ai-pages.js");
+      expect(route.component_format).toBe("esm-mount");
+      expect(route.label_key).toMatch(/^ai\./);
+    }
+  });
+
+  it("nav links resolve to declared routes and live under ai.* labels", () => {
+    const hrefs = (AI_NAV.routes ?? []).map((r) => r.route);
+    for (const link of AI_NAV.nav) {
+      expect(hrefs).toContain(link.href);
+      expect(link.label_key).toMatch(/^ai\./);
+    }
+  });
+
+  it("module-level access is the derived access.system.ai namespace", () => {
+    expect(AI_NAV.access).toBe("access.system.ai");
+  });
 });

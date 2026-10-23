@@ -22,6 +22,7 @@ async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "ai",
     serviceDisplayName: "AI Assistant",
+    labelKey: "ai.module.name",
     serviceDescription: "AI chat microservice with RAG knowledge base",
     icon: "sparkles",
     iconType: "icon",

@@ -17,6 +17,7 @@ import { AI_ROUTES } from "./controllers/http/composite-route.js";
 import { DOCS_SEARCH_ROUTES } from "./controllers/http/docs-search-route.js";
 import { aiEntityDecls } from "./controllers/http/entities-route.js";
 import { moduleAssetsRoutes } from "./controllers/http/module-assets-route.js";
+import { configEntryRoutes } from "./controllers/http/config-route.js";
 
 export const aiRouteHandler = makeServiceRoutes({
   info: {
@@ -35,7 +36,8 @@ export const aiRouteHandler = makeServiceRoutes({
     { name: "ai_models", description: "AI model catalog entity" },
     { name: "ai_cerebellum", description: "Per-assistant tuning presets" },
     { name: "docs", description: "Docs knowledge-base search" },
+    { name: "config_entries", description: "AI-owned config entries" },
   ],
   entities: aiEntityDecls,
-  rpc: [AI_ROUTES, DOCS_SEARCH_ROUTES, moduleAssetsRoutes],
+  rpc: [AI_ROUTES, DOCS_SEARCH_ROUTES, moduleAssetsRoutes, configEntryRoutes],
 });

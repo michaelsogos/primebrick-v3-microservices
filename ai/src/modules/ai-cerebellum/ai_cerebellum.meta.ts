@@ -12,7 +12,8 @@ import {
 export const aiCerebellumMeta: EntityMeta = {
   entity: "ai_cerebellum",
   translation_key: "ai_cerebellum",
-  title_key: "system.entities.ai_cerebellum.title",
+  entities_ns: "ai",
+  title_key: "ai.entities.ai_cerebellum.title",
   uid: "uuid",
   display_field: "assistant_key",
   columns: AI_CEREBELLUM_LIST_COLUMNS,
