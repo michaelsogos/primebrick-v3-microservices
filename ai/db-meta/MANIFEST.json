@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha",
-  "issued_at": "2026-10-22T17:46:47.634Z",
+  "key_id": "dev-micha-2",
+  "issued_at": "2026-10-23T23:12:22.280Z",
   "patches": {
     "0001_initial_schema_ai": "a2b325ad28646384bc736c18cc06fe1b3d9448e54159a9bc0b1a7568e987ed48",
     "0002_ai_chat_tables": "ce76245e065658e3a07274f6f703d8bd59eeb23db0690e8313443011b6c3fa96",
@@ -11,8 +11,9 @@
     "0005_create_ai_entity_tables": "3a9848a54083bf57f16a346acca45f0954bb80082e44d1ec6d13f9c530ae3453",
     "0006_seed_gateway_secret": "07d71948594860f386cf83b961d031605a3ab58c2e69913a482f4eeaa8f838d2",
     "0007_seed_service_client_shield_key": "babc0e0c3c346418627f48db41d2018f92cfd2f2727a105ce4179e1512bc2207",
+    "0008_ai_pages_module_ownership": "e4fba6ae52087403b39b9fd4b42c4dce5518ca634deb639f6cbc517942b5ea8a",
     "20261013210000_audit_columns_not_null": "21912748f9646b6afcec9420179964a40f9a455964e4b027b88398fa12383742",
     "20261015144424_drift_ai_docs_kb_ai_ai_models_ai_ai_cerebellum_ai_docs_ingest_log": "890851eee750aa22dd394f4767756ce0b76c3a1a47330e65eb7bded64fbd7e5f"
   },
-  "signature": "ewI/FQ2vsEQyuR2sRLWx1Pz+cfdjmZ/4z/lON+ekujWGF+T5ZD7pkXvE2cUQZnBrxq8+qf87EQesQuQtgx4aDQ=="
+  "signature": "IuUtfnUZiokQ86AG0PmL4LKDUazFETh4JNioNvMpVb0QhrYaAYLRON49/t/l+ruWBVVz2SMNH+VoBvkDwnq4BA=="
 }
