@@ -45,20 +45,23 @@ When closing ANY branch (`feature/*`, `release/*`, `hotfix/*`):
 
 ## CRITICAL: Package.json Version Management
 
-**This repository does not have automated version sync via script.**
-
-For releases and hotfixes, you must manually update the version in `package.json`:
+**This repository has automated version sync**: `scripts/version-sync.mjs`
+runs in every service's `prebuild` (also runnable as `pnpm version:auto`).
+On `release/X.Y.Z` / `hotfix/X.Y.Z` branches it rewrites every
+microservice's `package.json` version to the branch version — you do NOT
+bump versions manually. On `develop`, `main`, `feature/*`, and detached
+HEAD it is a no-op.
 
 **Correct flow for release:**
-1. Create release branch from develop
-2. Update package.json version on release branch to match the release version
-3. Commit package.json change
-4. Merge release to main (includes package.json change)
-5. Tag main
-6. Push main with tags
-7. Merge main back to develop
-8. Push develop
-9. Delete release branch
+1. Create release branch from develop (`release/X.Y.Z`)
+2. Run any service build — `version-sync.mjs` writes the release version
+   into every `package.json`; commit the change
+3. Merge release to main
+4. Tag main
+5. Push main with tags
+6. Merge main back to develop
+7. Push develop
+8. Delete release branch
 
 ## Version Tagging Rules
 

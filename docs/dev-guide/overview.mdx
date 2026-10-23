@@ -25,7 +25,14 @@ sub-folder with its own `src/`, `package.json`, `Dockerfile`, `db-meta/`, and
 | Service | Code | Port | Description |
 |---------|------|------|-------------|
 | [EmailSender](/dev/microservices/services/emailsender) | `emailsender` | 3003 | Email provider configuration, template rendering, and email dispatch via Brevo™ |
+| [AI](/dev/microservices/services/ai) | `ai` | 3004 | AI assistant — chat streaming (SSE), conversation lifecycle, docs knowledge-base search, embeddings, `ai_model`/`ai_cerebellum` entity catalog |
+| [Webhook](/dev/microservices/services/webhook) | `webhook` | 3005 | Inbound webhook ingress — forwards requests verbatim to the target microservice via JetStream, registry-driven routing |
 | [JobHandler](/dev/microservices/services/job-handler) | `job` | 3006 | Job scheduling, governance, and execution observability — NATS JetStream native scheduler, business `job_rules`, run history |
+| [CRM](/dev/microservices/services/crm) | `crm` | 3007 | CRM module — module-ownership case study: nav, route census and translations declared at service registration |
+
+> **Port source of truth**: ports are seeded in each service's own
+> `db-meta/patches/` (`config_entries` key `http_port`) — the table above
+> mirrors those seeds. There is no env var or config file for ports.
 
 New microservices are added as new top-level sub-folders. Each must contain
 a `package.json` with a `name` starting with `primebrick-` and a `src/index.ts`
@@ -42,17 +49,20 @@ entry point.
     MCP[MCP Server]
   end
   subgraph "Microservices (this repo)"
-    ES[EmailSender]
+    ES[EmailSender :3003]
+    AI[AI :3004]
+    WH[Webhook :3005]
+    JH[JobHandler :3006]
+    CRM[CRM :3007]
   end
   subgraph "Infrastructure"
     NATS[NATS Bus]
     PG[(PostgreSQL)]
   end
   FE -->|HTTP| BE
-  BE -->|/ws/emailsender/* proxy| ES
-  BE -->|NATS| ES
-  ES -->|NATS| NATS
-  ES -->|SQL| PG
+  BE -->|/ws/:code/* proxy| ES & AI & WH & JH & CRM
+  ES & AI & WH & JH & CRM -->|NATS| NATS
+  ES & AI & WH & JH & CRM -->|SQL| PG
   BE -->|SQL| PG
 `} />
 

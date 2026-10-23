@@ -107,7 +107,7 @@ pnpm run build
 pnpm run start
 ```
 
-The SDK exposes the public `/health` route and manages service registration, periodic heartbeats, NATS connection lifecycle, and graceful shutdown. The webhook service's health adapter has no database to check; NATS connectivity is monitored by the SDK.
+The SDK exposes the public `/health` route and manages service registration, periodic heartbeats, NATS connection lifecycle, and graceful shutdown. The service owns the `webhook` PG schema (migrations under `db-meta/patches/`), so the health adapter checks the database via the DAL; NATS connectivity is monitored by the SDK.
 
 The service does not currently define an `openapi-route.ts`, so the interactive API Catalog does not have a generated OpenAPI specification for this route yet.
 

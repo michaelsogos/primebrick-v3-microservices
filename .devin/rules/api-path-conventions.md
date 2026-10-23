@@ -144,12 +144,12 @@ Every microservice MUST export a complete OpenAPI 3.x spec at
 - ❌ Missing `operationId` in OpenAPI spec
 - ❌ Missing `summary`/`description` in OpenAPI spec
 
-## Migration: emailsender
+## Migration record: emailsender (completed)
 
-The `emailsender` microservice currently uses non-standard paths. It MUST be
-refactored:
+Historical record — the `emailsender` microservice was migrated from
+non-standard paths to the entity convention:
 
-| Current path | New path |
+| Old path | Current path |
 |---|---|
 | `GET /api/v1/providers` | `GET /api/v1/entities/provider/list` |
 | `GET /api/v1/providers/:uuid` | `GET /api/v1/entities/provider/:uuid` |
@@ -157,7 +157,7 @@ refactored:
 | `PUT /api/v1/providers/:uuid` | `PUT /api/v1/entities/provider/:uuid` |
 | `DELETE /api/v1/providers/:uuid` | `DELETE /api/v1/entities/provider/:uuid` |
 | `GET /api/v1/config` | `GET /api/v1/entities/config_entry/list` |
-| `POST /webhook` | `POST /webhook` (no change — Category 3) |
+| `POST /webhook` | **removed** — provider webhooks now arrive via the `webhook` ingress service → JetStream `webhook.emailsender.received` |
 
 The `sendEmail` function is called via NATS™ (not HTTP) — no path change needed.
 
@@ -171,8 +171,10 @@ The `sendEmail` function is called via NATS™ (not HTTP) — no path change nee
 - AI agent MUST NOT use camelCase in path segments (always snake_case).
 - AI agent MUST include `operationId`, `summary`, and `description` in every
   OpenAPI operation.
-- AI agent MUST update the OpenAPI spec (`openapi-route.ts`) when adding or
-  changing routes.
+- AI agent MUST update the OpenAPI spec when adding or changing routes.
+  Canonical spec file: `src/controllers/http/openapi-route.ts` — it builds
+  the spec (`buildOpenApiSpec` + `rpcSpec`/`entityCrudSpec`) and exports the
+  `makeOpenApiHandler` handler composed into `routeHandler` in `src/index.ts`.
 - When reviewing existing code, flag any entity route that does not follow
   the `/api/v1/entities/:entity/...` pattern as a violation.
 - When creating a new microservice, the entity CRUD pattern is the DEFAULT
