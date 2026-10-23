@@ -1,23 +1,19 @@
-# ─── Builder stage ─────────────────────────────────────────────────────
-FROM oven/bun:1.1.0-alpine AS builder
-
-WORKDIR /app
-
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-
-COPY . .
-RUN pnpm run build
-
-# ─── Production stage ──────────────────────────────────────────────────
+# Runtime image over a `pnpm deploy` artifact — build context is the
+# deployed dir, NOT this repo. Produce it first:
+#   node primebrick-us-v3/scripts/deploy-service.mjs webhook
+#   docker build -f primebrick-us-v3/webhook/Dockerfile <primebrick>/temp/deploy-out/webhook
+# The deployed package.json has workspace deps pinned to real versions and
+# node_modules vendored — no install/build inside the image.
 FROM oven/bun:1.1.0-alpine
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --prod --frozen-lockfile
-
-COPY --from=builder /app/dist ./dist
+COPY package.json ./
+COPY node_modules ./node_modules
+COPY dist ./dist
+COPY db-meta ./db-meta
+COPY scripts ./scripts
+COPY docs ./docs
 
 # NODE_ENV is a platform env var — supplied at image level (never in .env,
 # never in config_entries). production → release-trusted migration

@@ -29,6 +29,22 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 | **primebrick-v3-docs** | Cloudflare® Worker CI | Push to `main` — auto-deploys |
 | **primebrick-v3-website** | Cloudflare® Worker CI | Push to `main` — auto-deploys |
 
+### Docker image build (pnpm deploy)
+
+Each service deploys as a self-contained image built over a `pnpm deploy` artifact —
+the workspace is required to *produce* the artifact, not to *run* it:
+
+```bash
+pnpm --dir <service> deploy            # = node ../scripts/deploy-service.mjs <service>
+docker build -f primebrick-us-v3/<service>/Dockerfile <primebrick>/temp/deploy-out/<service>
+```
+
+`scripts/deploy-service.mjs` builds the service, runs `pnpm deploy --prod` with
+workspace-package injection, and rewrites `workspace:*` specifiers in the emitted
+`package.json` to the injected pinned versions. The Dockerfile copies only
+`package.json`, `node_modules` (vendored), `dist`, `db-meta`, `scripts`, `docs` —
+`.env`, `src`, and `test` never ship in the image.
+
 ## Microservices Stack & Architecture Rules
 1. **Tech Stack**: Bun (dev `--hot`, prod `bun dist/index.js`), TypeScript® (strict), and pnpm. Every service boots via `@primebrick/sdk`'s `createMicroservice` — the HTTP surface is the SDK's `createHttpServer` (Node http), NOT Fastify/Express.
 2. **Strict Typing**: Use strict TypeScript®. Avoid `any` at all costs. Define precise interfaces for DTOs, Requests, and Responses.
