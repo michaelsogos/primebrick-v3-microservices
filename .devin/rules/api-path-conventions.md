@@ -106,13 +106,15 @@ Rules:
 
 ```
 GET    /health                                     → health check (public, no auth)
-GET    /api/v1/openapi.json                        → OpenAPI spec (public, no auth)
+GET    /api/v1/openapi.json                        → OpenAPI spec (client-shielded; BE fetches via internalFetch)
 GET    /api/v1/system/info                         → service info (authenticated)
 ```
 
 Rules:
 - `/health` is always public and returns `{ ok: true, service: "<code>" }`.
-- `/api/v1/openapi.json` is always public and returns the OpenAPI 3.x spec.
+- `/api/v1/openapi.json` returns the OpenAPI 3.x spec. It is NOT in
+  `identityExemptPaths` — the client shield gates it; the BE's
+  `discoverEntitiesFromService` fetches it via `internalFetch`.
 - System endpoints are for infrastructure/monitoring, not entity operations.
 
 ## OpenAPI Spec Requirements
@@ -171,10 +173,13 @@ The `sendEmail` function is called via NATS™ (not HTTP) — no path change nee
 - AI agent MUST NOT use camelCase in path segments (always snake_case).
 - AI agent MUST include `operationId`, `summary`, and `description` in every
   OpenAPI operation.
-- AI agent MUST update the OpenAPI spec when adding or changing routes.
-  Canonical spec file: `src/controllers/http/openapi-route.ts` — it builds
-  the spec (`buildOpenApiSpec` + `rpcSpec`/`entityCrudSpec`) and exports the
-  `makeOpenApiHandler` handler composed into `routeHandler` in `src/index.ts`.
+- AI agent MUST wire the service's HTTP surface through
+  `makeServiceRoutes({ info, entities, rpc })` — ONE declaration produces
+  both the routers and `/api/v1/openapi.json`; the spec can never drift
+  from the registered routes. The handler's `.spec` is what
+  `scripts/build-docs-pack.ts` embeds. Never hand-compose
+  `buildOpenApiSpec`/`entityCrudSpec`/`makeOpenApiHandler` separately —
+  that reintroduces a second source of truth.
 - When reviewing existing code, flag any entity route that does not follow
   the `/api/v1/entities/:entity/...` pattern as a violation.
 - When creating a new microservice, the entity CRUD pattern is the DEFAULT

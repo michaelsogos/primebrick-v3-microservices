@@ -102,6 +102,7 @@ export const providerRoutes: RpcRoute[] = [
     path: "/api/v1/entities/provider/meta",
     auth: "user",
     permissions: [Permission.EMAILSENDER_PROVIDER_READ_ALL],
+    openapi: { summary: "Provider entity metadata", tags: ["providers"] },
     handler: async () => PROVIDERS_META,
   },
   {
@@ -109,6 +110,30 @@ export const providerRoutes: RpcRoute[] = [
     path: "/api/v1/entities/provider/list",
     auth: "user",
     permissions: [Permission.EMAILSENDER_PROVIDER_READ_ALL],
+    openapi: {
+      summary: "List email providers",
+      tags: ["providers"],
+      responseSchema: {
+        type: "object",
+        properties: {
+          providers: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                uuid: { type: "string", format: "uuid" },
+                provider: { type: "string" },
+                api_endpoint: { type: "string" },
+                from_email: { type: "string" },
+                from_name: { type: "string" },
+                reply_to: { type: "string" },
+                version: { type: "integer" },
+              },
+            },
+          },
+        },
+      },
+    },
     handler: async () => ({ providers: await getDal().findAll(ProviderEntity, providersProjection) }),
   },
   {
@@ -116,6 +141,7 @@ export const providerRoutes: RpcRoute[] = [
     path: "/api/v1/entities/provider/:uuid",
     auth: "user",
     permissions: [Permission.EMAILSENDER_PROVIDER_READ_SINGLE, Permission.EMAILSENDER_PROVIDER_READ_ALL],
+    openapi: { summary: "Get an email provider by UUID", tags: ["providers"] },
     handler: async ({ params, res }) => {
       const row = await getDal().find(ProviderEntity, providersDetailProjection, {
         filters: [Filter.fieldValue(field(ProviderEntity, "uuid"), "=", params.uuid)],
@@ -132,6 +158,11 @@ export const providerRoutes: RpcRoute[] = [
     path: "/api/v1/entities/provider",
     auth: "user",
     permissions: [Permission.EMAILSENDER_PROVIDER_CREATE_SINGLE],
+    openapi: {
+      summary: "Create an email provider",
+      tags: ["providers"],
+      requestSchema: { type: "object", required: ["entity"], properties: { entity: { type: "object" } } },
+    },
     body: unwrapEntityBody,
     handler: async ({ body, user, res }) => {
       const b = body as Record<string, unknown>;
@@ -152,6 +183,11 @@ export const providerRoutes: RpcRoute[] = [
     path: "/api/v1/entities/provider/:uuid",
     auth: "user",
     permissions: [Permission.EMAILSENDER_PROVIDER_UPDATE_SINGLE],
+    openapi: {
+      summary: "Update an email provider by UUID",
+      tags: ["providers"],
+      requestSchema: { type: "object", required: ["entity"], properties: { entity: { type: "object" } } },
+    },
     body: (raw) => {
       const entity = unwrapEntityBody(raw);
       if (entity.version === undefined || entity.version === null) {
@@ -182,6 +218,7 @@ export const providerRoutes: RpcRoute[] = [
     path: "/api/v1/entities/provider/:uuid",
     auth: "user",
     permissions: [Permission.EMAILSENDER_PROVIDER_DELETE_SINGLE],
+    openapi: { summary: "Soft-delete an email provider by UUID", tags: ["providers"] },
     handler: async ({ params, user, res }) => {
       const dal = getDal();
       const existing = await dal.find<ProviderEntity, { version: number }>(ProviderEntity, [Project.field(field(ProviderEntity, "version"))], {

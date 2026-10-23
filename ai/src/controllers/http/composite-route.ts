@@ -1,6 +1,6 @@
 import type { ServerResponse } from "node:http";
 import { join } from "node:path";
-import { createSseWriter, extJsonStringify, mapDalError, makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
+import { createSseWriter, extJsonStringify, mapDalError, Permission, type RpcRoute } from "@primebrick/sdk";
 import { aiConfig } from "../../config/ai-config.js";
 import { HealthCheckAdapter } from "../../adapters/health-check-adapter.js";
 import { getDal } from "../../db/dal.js";
@@ -32,9 +32,10 @@ import { checkRateLimit } from "../../services/rate-limiter.js";
 
 /**
  * AI routes — the ONLY shape allowed by createMicroservice: declared once as
- * RpcRoute[] and served exclusively through makeRpcRouter (auth → RBAC →
- * validation → handler → RFC 7807 baked in). The same table feeds rpcSpec()
- * in openapi.ts, so the published spec can never drift from what is served.
+ * RpcRoute[] and served through makeServiceRoutes (auth → RBAC →
+ * validation → handler → RFC 7807 baked in). The same table feeds the
+ * OpenAPI spec inside src/service-routes.ts, so the published spec can
+ * never drift from what is served.
  *
  *   GET  /api/v1/ai/health                          — AI-specific health (LLM connectivity + model info)
  *   POST /api/v1/ai/chat                             — chat endpoint (streaming via SSE)
@@ -475,4 +476,4 @@ export const AI_ROUTES: RpcRoute[] = [
   },
 ];
 
-export const compositeRouteHandler = makeRpcRouter(AI_ROUTES);
+

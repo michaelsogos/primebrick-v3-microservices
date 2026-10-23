@@ -73,6 +73,7 @@ export const configEntryRoutes: RpcRoute[] = [
     path: "/api/v1/entities/config_entry/meta",
     auth: "user",
     permissions: [Permission.MODULES_CONFIG_READ_SINGLE],
+    openapi: { summary: "Config entry entity metadata", tags: ["config_entries"] },
     handler: async () => CONFIG_ENTRIES_META,
   },
   {
@@ -80,6 +81,28 @@ export const configEntryRoutes: RpcRoute[] = [
     path: "/api/v1/entities/config_entry/list",
     auth: "user",
     permissions: [Permission.MODULES_CONFIG_READ_SINGLE],
+    openapi: {
+      summary: "List config entries",
+      tags: ["config_entries"],
+      responseSchema: {
+        type: "object",
+        properties: {
+          config_entries: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                uuid: { type: "string", format: "uuid" },
+                key: { type: "string" },
+                value: { type: "string" },
+                label_key: { type: "string" },
+                description_key: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
     handler: async () => ({ config_entries: await getDal().findAll(ConfigEntryEntity, configProjection) }),
   },
   {
@@ -87,6 +110,7 @@ export const configEntryRoutes: RpcRoute[] = [
     path: "/api/v1/entities/config_entry/:uuid",
     auth: "user",
     permissions: [Permission.MODULES_CONFIG_READ_SINGLE],
+    openapi: { summary: "Get a config entry by UUID", tags: ["config_entries"] },
     handler: async ({ params, res }) => {
       const row = await getDal().find(ConfigEntryEntity, configProjection, {
         filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
@@ -103,6 +127,11 @@ export const configEntryRoutes: RpcRoute[] = [
     path: "/api/v1/entities/config_entry/:uuid",
     auth: "user",
     permissions: [Permission.MODULES_CONFIG_UPDATE_SINGLE],
+    openapi: {
+      summary: "Update a config entry value by UUID",
+      tags: ["config_entries"],
+      requestSchema: { type: "object", required: ["entity"], properties: { entity: { type: "object" } } },
+    },
     body: (raw) => {
       // `{entity}` write-payload standard (same envelope as the BE);
       // `translations` is rejected — no translations table in this schema.

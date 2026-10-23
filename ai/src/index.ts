@@ -1,17 +1,15 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { join } from "node:path";
-import { createMicroservice, logger, composeRouteHandlers, pgServerBanner, assertDbEnv } from "@primebrick/sdk";
+import { createMicroservice, logger, pgServerBanner, assertDbEnv } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
 import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
-import { compositeRouteHandler } from "./controllers/http/composite-route.js";
-import { aiEntityRouteHandler } from "./controllers/http/entities-route.js";
-import { docsSearchRouteHandler } from "./controllers/http/docs-search-route.js";
+
 import { startDocsPackSubscriber } from "./controllers/nats-sub/docs-pack-subscriber.js";
 import { startPartitionMaintenanceJob } from "./controllers/nats-sub/partition-jobs.js";
-import { openapiRouteHandler } from "./openapi.js";
+import { aiRouteHandler } from "./service-routes.js";
 import {
   ConfigRepositoryAdapter,
   HealthCheckAdapter,
@@ -57,7 +55,7 @@ async function main(): Promise<void> {
     // Lazy: getDal() only works after initDal ran inside createMicroservice.
     healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
-    routeHandler: composeRouteHandlers(openapiRouteHandler, compositeRouteHandler, aiEntityRouteHandler, docsSearchRouteHandler),
+    routeHandler: aiRouteHandler,
 
     customHealthChecks: {
       llm: async () => new HealthCheckAdapter(getDal()).checkLlm(aiConfig("llm_base_url") ?? "http://localhost:8080/v1"),

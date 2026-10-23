@@ -62,25 +62,31 @@ Seed at minimum: `http_port`, `service_base_url`,
 `service_client_shield_secret` (type `secret` + `_header` companion),
 `nats_url`, plus the service's own config keys — all via a numbered patch.
 
-## 4. Routes — `src/controllers/http/`
+## 4. Routes + Spec — `src/service-routes.ts`
 
-Declare `RpcRoute[]` and serve them exclusively through `makeRpcRouter`
-(or `makeEntityRouter` / `docsPackRouteHandler` / `makeOpenApiHandler`,
-composed via `composeRouteHandlers`). Arbitrary handlers are rejected at
-boot — see the controller-boundary rule and SDK `rpc-router`/`entity-router`.
-
-## 5. Spec — `src/openapi.ts`
+Declare the service's whole HTTP surface ONCE via `makeServiceRoutes` —
+it derives BOTH the request routers and `/api/v1/openapi.json` from the
+same declaration, so the spec can never drift from the registered routes:
 
 ```ts
-export const MY_OPENAPI_SPEC = buildOpenApiSpec({
-  info: { title: "... Catalog", version: "1.0.0" },
+export const myServiceRouteHandler = makeServiceRoutes({
+  info: { title: "... Catalog", version: detectPackageIdentity().version ?? "0.0.0" },
   serverUrl: "http://localhost:30XX",
-  paths: { ...rpcSpec(MY_ROUTES), ...entityCrudSpec("my_entity", {...}) },
+  tags: [...],
+  entities: [ /* EntityRouteDecl — CRUD router + spec ops derived from
+    `permissions`/`meta`/`duplicate`; `spec:{tag,label,listResponse}` is
+    doc cosmetics only, never a second op list */ ],
+  rpc: [ MY_ROUTES /* RpcRoute[] — per-route `openapi` metadata feeds
+    the spec; `{ routes, deps }` form for router deps (e.g. apiKeyPort) */ ],
 });
 ```
 
-Same const feeds `makeOpenApiHandler` (live `/api/v1/openapi.json`) and
-the docs pack.
+Pass the result straight to `createMicroservice({ routeHandler })` — it
+is factory-branded. The handler carries `.spec` (the built OpenAPI doc):
+`scripts/build-docs-pack.ts` embeds `myServiceRouteHandler.spec`. A route
+that exists but isn't documented (or vice versa) is impossible by
+construction — never hand-compose `buildOpenApiSpec`/`entityCrudSpec`/
+`makeOpenApiHandler` separately.
 
 ## 6. Docs pack — `scripts/build-docs-pack.ts`
 

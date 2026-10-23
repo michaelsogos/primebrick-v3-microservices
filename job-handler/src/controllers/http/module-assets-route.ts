@@ -20,8 +20,8 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import {
   extJsonStringify,
-  makeRpcRouter,
   Permission,
+  type RpcRoute,
 } from "@primebrick/sdk";
 
 const ASSETS_ROOT = resolve(process.cwd(), "fe", "dist");
@@ -79,7 +79,7 @@ function sendNotFound(res: import("node:http").ServerResponse): void {
   );
 }
 
-export const moduleAssetsRouteHandler = makeRpcRouter([
+export const moduleAssetsRoutes: RpcRoute[] = [
   {
     method: "GET",
     path: "/api/v1/module-assets/:file*",
@@ -110,4 +110,4 @@ export const moduleAssetsRouteHandler = makeRpcRouter([
       await pipeline(createReadStream(abs), ctx.res);
     },
   },
-]);
+];
