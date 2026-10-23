@@ -50,4 +50,14 @@ export const JOB_NAV: ModuleNavDeclaration = {
       component_format: "esm-mount",
     },
   ],
+  // Remote sheet panels — engine is host-side, the mountSheet export of
+  // jobs-page.js owns the content. Keyspace `<module>.<name>` — validated
+  // at enrollment so services can never collide on an open-sheet address.
+  sheets: [
+    {
+      key: "job.runDetail",
+      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_format: "esm-mount",
+    },
+  ],
 };
