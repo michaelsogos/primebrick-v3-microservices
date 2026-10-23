@@ -71,7 +71,12 @@ function extractScriptFacts(scriptText) {
         facts.endpoints.push({ method: cm[2].toUpperCase(), path: `(via ${callee})` });
       }
       if (callee === 'goto' || callee === 'window.open') {
-        let target = n.arguments[0]?.getText(sf)?.slice(0,80);
+        let arg = n.arguments[0];
+        // typed-routes idiom: goto(resolve('/path')) — the literal lives
+        // inside the resolve() call
+        if (arg && ts.isCallExpression(arg) && arg.expression.getText(sf) === 'resolve')
+          arg = arg.arguments[0];
+        let target = arg?.getText(sf)?.slice(0,120);
         const idm = target?.match(/^['"`]?(\w+)['"`]?$/);
         if (idm && facts.constUrls[idm[1]]) target = facts.constUrls[idm[1]];
         if (target?.includes('${') || /^['"`]/.test(target ?? '')) target = target.replace(/[`'"]/g, '');
@@ -111,7 +116,7 @@ function walkTemplate(node, out) {
   if (Array.isArray(node)) { for (const c of node) walkTemplate(c, out); return; }
   if (node.type === 'Component' || node.type === 'RegularElement' || node.type === 'InlineComponent') {
     const tag = node.name;
-    if (['FormField','Checkbox','Button','ComboSelect','AsyncValidatedInput','TextInput','PasswordInput','DeleteDialog','EntityListTable'].includes(tag)) {
+    if (['FormField','Checkbox','Button','ComboSelect','AsyncValidatedInput','TextInput','PasswordInput','DeleteDialog','EntityListTable','EntityTablePage','EntityFormPage','RemotePageMount'].includes(tag)) {
       const attrs = {};
       for (const a of node.attributes ?? []) {
         if (a.type === 'Attribute') {
@@ -194,6 +199,31 @@ for (const file of files) {
       || new RegExp(`\\bid=['"]${fname}['"]`).test(markup);
     if (hasZod || !(bound || boundInMarkup)) delete sfacts.fields[fname];
   }
+  // ── shell-page contract — EntityTablePage/EntityFormPage declare their
+  // entity via `entity` or `basePath` props, never via apiFetch calls.
+  // `basePath` accepts a literal ('/api/v1/entities/<e>') or an
+  // entityApiBase('<e>') expression — both resolve to the entity name
+  // (mirroring the component's own $derived: entity ?? last basePath segment).
+  const shell = tfacts.widgets.find(w => w.tag === 'EntityTablePage' || w.tag === 'EntityFormPage');
+  if (shell) {
+    const bp = shell.attrs.basePath;
+    let entity = shell.attrs.entity;
+    if (!entity && typeof bp === 'string') {
+      const m = bp.match(/entities\/(\w+)/) ?? bp.match(/^\/([\w-]+)$/);
+      if (m) entity = m[1];
+    }
+    if (!entity) {
+      const m = raw.match(/entityApiBase\(['"](\w+)['"]\)/);
+      if (m) entity = m[1];
+    }
+    sfacts.entityDecl = { component: shell.tag, entity, basePath: typeof bp === 'string' ? bp : undefined,
+      createAction: 'onCreateAction' in shell.attrs || 'createPath' in shell.attrs,
+      editAction: 'onEditAction' in shell.attrs || 'editPath' in shell.attrs,
+      navStrategy: typeof shell.attrs.navStrategy === 'string' ? shell.attrs.navStrategy : undefined };
+  }
+  // remote-mounted pages (RemotePageMount) — the component is an ESM blob
+  // served by the owning microservice; FE extraction sees only the mount.
+  if (tfacts.widgets.some(w => w.tag === 'RemotePageMount')) sfacts.remoteMount = true;
   pages[route] = { route, ...sfacts, widgets: tfacts.widgets, i18nKeys: [...new Set(tfacts.i18nKeys)] };
 }
 process.stdout.write(JSON.stringify(pages, null, 1) + "\n");
