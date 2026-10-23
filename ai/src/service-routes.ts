@@ -16,6 +16,7 @@ import {
 import { AI_ROUTES } from "./controllers/http/composite-route.js";
 import { DOCS_SEARCH_ROUTES } from "./controllers/http/docs-search-route.js";
 import { aiEntityDecls } from "./controllers/http/entities-route.js";
+import { moduleAssetsRoutes } from "./controllers/http/module-assets-route.js";
 
 export const aiRouteHandler = makeServiceRoutes({
   info: {
@@ -36,5 +37,5 @@ export const aiRouteHandler = makeServiceRoutes({
     { name: "docs", description: "Docs knowledge-base search" },
   ],
   entities: aiEntityDecls,
-  rpc: [AI_ROUTES, DOCS_SEARCH_ROUTES],
+  rpc: [AI_ROUTES, DOCS_SEARCH_ROUTES, moduleAssetsRoutes],
 });

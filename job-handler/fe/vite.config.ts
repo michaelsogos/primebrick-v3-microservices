@@ -88,13 +88,31 @@ function stylesheetStub(): Plugin {
   };
 }
 
-/** Version of a package as resolved from the service's node_modules. */
-function pkgVersion(pkg: string): string {
-  const serviceRoot = fileURLToPath(new URL('..', import.meta.url));
-  const pj = join(serviceRoot, 'node_modules', pkg, 'package.json');
+/** Version of a package as resolved from a node_modules dir. */
+function pkgVersionAt(dir: string, pkg: string): string {
+  const pj = join(dir, 'node_modules', pkg, 'package.json');
   const parsed = JSON.parse(readFileSync(pj, 'utf8')) as { version?: string };
   if (!parsed.version) throw new Error(`deps-manifest: no version for ${pkg}`);
   return parsed.version;
+}
+
+/**
+ * Version truth per specifier — must equal the host manifest's rule.
+ * `@primebrick/ui/vendor/*` specifiers wrap a real package declared in
+ * ui's published `vendor-map.json`; the version that matters is the one
+ * inside ui's own node_modules (that's what the vendored bundle was
+ * compiled against — the service's graph may not even carry the package).
+ */
+const serviceRoot = fileURLToPath(new URL('..', import.meta.url));
+const uiRoot = join(serviceRoot, 'node_modules', '@primebrick/ui');
+const UI_VENDOR_MAP = JSON.parse(
+  readFileSync(join(uiRoot, 'vendor-map.json'), 'utf8'),
+) as Record<string, string>;
+
+function specifierVersion(specifier: string): string {
+  const wrapped = UI_VENDOR_MAP[specifier];
+  if (wrapped) return pkgVersionAt(uiRoot, wrapped);
+  return pkgVersionAt(serviceRoot, specifierTopPackage(specifier));
 }
 
 /** Emit the shared_deps manifest the host verifies before mounting. */
@@ -105,7 +123,7 @@ function depsManifest(): Plugin {
       const file = fileURLToPath(new URL('./dist/jobs-page.deps.json', import.meta.url));
       const manifest: RemoteDepsManifest = {
         vendor_requires: Object.fromEntries(
-          [...usedVendorDeps].sort().map((s) => [s, pkgVersion(specifierTopPackage(s))])
+          [...usedVendorDeps].sort().map((s) => [s, specifierVersion(s)])
         ),
       };
       writeFileSync(file, JSON.stringify(manifest, null, 2) + '\n');

@@ -16,6 +16,7 @@ import {
   AiAuthConfigPort,
 } from "./adapters/index.js";
 import { initAiConfig, aiConfig } from "./config/ai-config.js";
+import { AI_NAV } from "./nav-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -27,6 +28,11 @@ async function main(): Promise<void> {
 
     // Root level — system module: route prefix /system/ai.
     partOf: "system",
+
+    // Module self-declaration — persisted in service_registry.endpoints.nav.
+    // The ai module OWNS its sheet panels (`ai.*`): the host sheet engine
+    // mounts the content chunk at runtime, exactly like remote pages.
+    nav: AI_NAV,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
