@@ -3,10 +3,13 @@
  * service_registry.endpoints.nav at registration.
  *
  * `part_of === 'system'` ⇒ primary prefix `/system/ai`, access namespace
- * `access.system.ai` — `accessNamespace(code, partOf)` derives it, the
- * enrollment validator rejects keys outside it. The module-level `access`
- * is all-or-nothing for the whole subtree (admins inherit via
- * `access.system`).
+ * `access.system.ai` — `accessNamespace(code, partOf)` derives it and
+ * the enrollment validator requires the declaration to carry it. Every
+ * leaf's access key is DERIVED from its route (`/system/ai/console` ⇒
+ * `access.system.ai.console`; sheets `ai.<name>` ⇒
+ * `access.system.ai.<name>`). The bare prefix `/system/ai` is the
+ * namespace root — never a page (R4-rejected); GOTO(module) resolves the
+ * `default` leaf — the console.
  *
  * Sheet keys are module-namespaced (`ai.<name>`) — `validateNavDeclaration`
  * (enforced at enrollment AND by src/__tests__/nav-declaration.test.ts)
@@ -20,7 +23,7 @@ export const AI_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/ai"],
   access: "access.system.ai",
   nav: [
-    { id: "console", label_key: "ai.nav", href: "/system/ai", icon: "brain-circuit" },
+    { id: "console", label_key: "ai.nav", href: "/system/ai/console", icon: "brain-circuit", default: true },
     { id: "docs-index", label_key: "ai.nav.docs_index", href: "/system/ai/docs-index", icon: "book-search" },
   ],
   routes: [
@@ -28,7 +31,7 @@ export const AI_NAV: ModuleNavDeclaration = {
     // the routes census and mount the chunk via RemotePageMount; the chunk
     // dispatches on ctx.nav.route (job-handler precedent).
     {
-      route: "/system/ai",
+      route: "/system/ai/console",
       kind: "page",
       label_key: "ai.console.title",
       component_url: "/ws/ai/api/v1/module-assets/ai-pages.js",

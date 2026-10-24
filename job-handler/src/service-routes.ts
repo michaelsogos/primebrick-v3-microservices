@@ -16,6 +16,7 @@ import {
 } from "@primebrick/sdk";
 import { jobEntityDecls } from "./controllers/http/entities-route.js";
 import { jobActionsRoutes } from "./controllers/http/actions-route.js";
+import { configEntryRoutes } from "./controllers/http/config-route.js";
 import { moduleAssetsRoutes } from "./controllers/http/module-assets-route.js";
 
 export const jobServiceRouteHandler = makeServiceRoutes({
@@ -31,8 +32,9 @@ export const jobServiceRouteHandler = makeServiceRoutes({
     { name: "job_schedules", description: "Armed schedules" },
     { name: "job_runs", description: "Execution history" },
     { name: "jobs", description: "Job actions" },
+    { name: "config_entries", description: "Module config entries" },
     { name: "module-assets", description: "Module-owned frontend assets" },
   ],
   entities: jobEntityDecls,
-  rpc: [jobActionsRoutes, moduleAssetsRoutes],
+  rpc: [jobActionsRoutes, configEntryRoutes, moduleAssetsRoutes],
 });

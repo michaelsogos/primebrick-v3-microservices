@@ -30,9 +30,10 @@ describe("AI_NAV declaration", () => {
     }
   });
 
-  it("declares the two remote pages under /system/ai on the ai-pages chunk", () => {
+  it("declares the two remote pages under /system/ai on the ai-pages chunk — the bare prefix is never a page", () => {
     const routes = (AI_NAV.routes ?? []).map((r) => r.route).sort();
-    expect(routes).toEqual(["/system/ai", "/system/ai/docs-index"]);
+    expect(routes).toEqual(["/system/ai/console", "/system/ai/docs-index"]);
+    expect(routes).not.toContain("/system/ai");
     for (const route of AI_NAV.routes ?? []) {
       expect(route.kind).toBe("page");
       expect(route.component_url).toBe("/ws/ai/api/v1/module-assets/ai-pages.js");
@@ -51,5 +52,11 @@ describe("AI_NAV declaration", () => {
 
   it("module-level access is the derived access.system.ai namespace", () => {
     expect(AI_NAV.access).toBe("access.system.ai");
+  });
+
+  it("the console leaf is the module default — GOTO(module) lands there", () => {
+    const defaults = AI_NAV.nav.filter((l) => l.default === true);
+    expect(defaults.map((l) => l.id)).toEqual(["console"]);
+    expect(defaults[0].href).toBe("/system/ai/console");
   });
 });

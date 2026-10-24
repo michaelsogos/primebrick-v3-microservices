@@ -9,6 +9,7 @@ import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.
 import { EmailService } from "./services/email-service.js";
 import { subscribeToWebhooks, setWebhookApiKeyPort } from "./controllers/nats-sub/webhook-subscriber.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
+import { EMAILSENDER_NAV } from "./nav-declaration.js";
 import { EmailSenderAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import {
   ConfigRepositoryAdapter,
@@ -19,12 +20,18 @@ async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "emailsender",
     serviceDisplayName: "Email Sender",
+    labelKey: "emailsender.module.name",
     serviceDescription: "Email sending microservice",
     icon: "mail",
     iconType: "icon",
 
     // Root level — system module: route prefix /system/emailsender.
     partOf: "system",
+
+    // Module self-declaration — persisted in service_registry.endpoints.nav.
+    // The providers list is host-rendered; create/edit are remote chunks
+    // owned by this service (fe/ → emailsender-pages.js).
+    nav: EMAILSENDER_NAV,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has

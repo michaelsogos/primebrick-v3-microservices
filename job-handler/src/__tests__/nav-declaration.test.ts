@@ -13,6 +13,16 @@ describe("JOB_NAV declaration", () => {
     expect(validateNavDeclaration("job", JOB_NAV, "system")).toBeNull();
   });
 
+  it("declares the derived module access namespace", () => {
+    expect(JOB_NAV.access).toBe("access.system.job");
+  });
+
+  it("job-schedules is the module default leaf — GOTO(module) lands there", () => {
+    const defaults = JOB_NAV.nav.filter((l) => l.default === true);
+    expect(defaults.map((l) => l.id)).toEqual(["schedules"]);
+    expect(defaults[0].href).toBe("/system/job/job-schedules");
+  });
+
   it("schedules live at the plural leaf under the module prefix", () => {
     const routes = (JOB_NAV.routes ?? []).map((r) => r.route);
     expect(routes).toContain("/system/job/job-schedules");
