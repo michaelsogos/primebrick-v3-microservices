@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import {
@@ -91,6 +92,15 @@ function depsManifest(): Plugin {
           type: 'asset',
           fileName: chunk.fileName.replace(/\.js$/, '.deps.json'),
           source: JSON.stringify(manifest, null, 2) + '\n',
+        });
+        // Content-addressed sibling — the host loader keys its module
+        // cache on this hash and verifies bytes before the blob: import.
+        // Emitted alongside the chunk so a rebuild always ships hash and
+        // bytes together (a registry-pinned integrity could go stale).
+        this.emitFile({
+          type: 'asset',
+          fileName: chunk.fileName.replace(/\.js$/, '.sha256'),
+          source: createHash('sha256').update(chunk.code).digest('hex') + '\n',
         });
       }
     },

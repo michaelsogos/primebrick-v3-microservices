@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import {
@@ -127,6 +128,14 @@ function depsManifest(): Plugin {
         ),
       };
       writeFileSync(file, JSON.stringify(manifest, null, 2) + '\n');
+      // Content-addressed sibling — the host loader keys its module cache
+      // on this hash and verifies bytes before the blob: import. Emitted
+      // alongside the chunk so rebuilds ship hash and bytes together.
+      const chunk = fileURLToPath(new URL('./dist/jobs-page.js', import.meta.url));
+      writeFileSync(
+        chunk.replace(/\.js$/, '.sha256'),
+        createHash('sha256').update(readFileSync(chunk)).digest('hex') + '\n',
+      );
     },
   };
 }

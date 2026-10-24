@@ -61,8 +61,12 @@ export function moduleAssetContentType(absPath: string): string {
   return CONTENT_TYPES[extname(absPath).toLowerCase()] ?? "application/octet-stream";
 }
 
+/** Sibling manifests always revalidate — a rebuild rewrites them with new content. */
+const SIBLING_MANIFEST = /\.(sha256|deps\.json)$/;
+
 /** Immutable for vite-hashed names; `no-cache` for predictable entry names. */
 export function moduleAssetCacheControl(relPath: string): string {
+  if (SIBLING_MANIFEST.test(relPath)) return "no-cache";
   return HASHED_NAME.test(relPath) ? "public, max-age=31536000, immutable" : "no-cache";
 }
 
