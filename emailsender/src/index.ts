@@ -19,7 +19,7 @@ import {
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "emailsender",
-    serviceDisplayName: "Email Sender",
+    serviceDisplayName: "Email Manager",
     labelKey: "emailsender.module.name",
     serviceDescription: "Email sending microservice",
     icon: "mail",

@@ -23,7 +23,7 @@ import { JOB_NAV } from "./nav-declaration.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "job",
-    serviceDisplayName: "Job Handler",
+    serviceDisplayName: "Process Manager",
     serviceDescription:
       "Jobs orchestration — sole writer of jobs.schedule.*, rules engine over job_rules, run-history tap on jobs.result.>",
     icon: "list-clock",

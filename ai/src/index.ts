@@ -21,7 +21,7 @@ import { AI_NAV } from "./nav-declaration.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "ai",
-    serviceDisplayName: "AI Assistant",
+    serviceDisplayName: "AI Assistants Manager",
     labelKey: "ai.module.name",
     serviceDescription: "AI chat microservice with RAG knowledge base",
     icon: "sparkles",
