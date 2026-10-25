@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import {
   resolveVendorSpecifier,
+  rewriteLucideBarrelImports,
   specifierTopPackage,
-  VENDOR_SPECIFIERS,
   type RemoteDepsManifest,
 } from '@primebrick/sdk';
 
@@ -35,6 +35,27 @@ function vendorPlane(): Plugin {
   return {
     name: 'primebrick-vendor-plane',
     enforce: 'pre',
+    /**
+     * Decompose `@primebrick/ui/vendor/lucide` named imports into per-icon
+     * specifiers BEFORE resolution — a chunk pays for the icons it uses,
+     * never for the barrel catalog. Every emitted icon is validated
+     * against ui's @lucide/svelte dist: a typo is a build error, not a
+     * 404 at remote-load time.
+     */
+    transform(code) {
+      if (!code.includes('@primebrick/ui/vendor/lucide')) return null;
+      const { code: out, icon_specifiers } = rewriteLucideBarrelImports(code);
+      for (const specifier of icon_specifiers) {
+        const file = specifier.slice(specifier.lastIndexOf('/') + 1);
+        if (!existsSync(join(uiRoot, 'node_modules/@lucide/svelte/dist/icons', file))) {
+          throw new Error(
+            `[vendor-plane] lucide icon "${file}" has no dist file in ` +
+              `@lucide/svelte — typo or stale vendor-map version`
+          );
+        }
+      }
+      return { code: out, map: null };
+    },
     resolveId(source, importer) {
       if (source.startsWith('.') || source.startsWith('/') || source.includes(':')) {
         return null;
@@ -67,14 +88,13 @@ function depsManifest(): Plugin {
   return {
     name: 'primebrick-deps-manifest',
     generateBundle(_options, bundle) {
-      const allowed = new Set<string>(VENDOR_SPECIFIERS);
       for (const chunk of Object.values(bundle)) {
         if (chunk.type !== 'chunk') continue;
         const specs = new Set<string>();
         for (const m of chunk.code.matchAll(bare)) {
           const spec = m[1];
           if (spec.startsWith('node:')) continue;
-          if (!allowed.has(spec)) {
+          if (resolveVendorSpecifier(spec) !== 'external') {
             throw new Error(
               `[vendor-plane] emitted chunk contains non-allowlisted bare ` +
                 `specifier "${spec}" — the host import map cannot resolve it.`
@@ -148,8 +168,13 @@ const UI_VENDOR_MAP = JSON.parse(
 ) as Record<string, string>;
 
 function specifierVersion(specifier: string): string {
-  const wrapped = UI_VENDOR_MAP[specifier];
-  if (wrapped) return pkgVersionAt(uiRoot, wrapped);
+  // Longest-prefix match — per-icon specifiers
+  // (`@primebrick/ui/vendor/lucide/icons/cpu.js`) inherit the wrapped
+  // package version of their wrapper's specifier key.
+  const wrappedKey = Object.keys(UI_VENDOR_MAP)
+    .filter((k) => specifier === k || specifier.startsWith(k + '/'))
+    .sort((a, b) => b.length - a.length)[0];
+  if (wrappedKey) return pkgVersionAt(uiRoot, UI_VENDOR_MAP[wrappedKey]);
   return pkgVersionAt(serviceRoot, specifierTopPackage(specifier));
 }
 
