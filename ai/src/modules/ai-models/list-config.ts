@@ -31,11 +31,11 @@ const auditingKeySet = new Set<string>(AI_MODEL_AUDITING_COLUMN_KEYS);
 
 const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
   // uuid is the canonical first sticky column (order -1), hidden but selectable
-  { key: "uuid", label_key: "system.entities.ai_model.fields.uuid", type: "text", order: -1, sortable: true, default_visible: false },
-  { key: "model_id", label_key: "system.entities.ai_model.fields.model_id", type: "text", order: 0, sortable: true, hideable: false, filterable: true },
+  { key: "uuid", label_key: "ai.entities.ai_model.fields.uuid", type: "text", order: -1, sortable: true, default_visible: false },
+  { key: "model_id", label_key: "ai.entities.ai_model.fields.model_id", type: "text", order: 0, sortable: true, hideable: false, filterable: true },
   {
     key: "engine_type",
-    label_key: "system.entities.ai_model.fields.engine_type",
+    label_key: "ai.entities.ai_model.fields.engine_type",
     type: "badge",
     order: 1,
     sortable: true,
@@ -44,16 +44,16 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        webllm: { label_key: "system.entities.ai_model.engine_type.webllm", color: "zinc-300" },
-        onnx: { label_key: "system.entities.ai_model.engine_type.onnx", color: "violet-300" },
+        webllm: { label_key: "ai.entities.ai_model.engine_type.webllm", color: "zinc-300" },
+        onnx: { label_key: "ai.entities.ai_model.engine_type.onnx", color: "violet-300" },
       },
     },
   },
-  { key: "dtype", label_key: "system.entities.ai_model.fields.dtype", type: "text", order: 2, sortable: true, default_visible: true },
-  { key: "name", label_key: "system.entities.ai_model.fields.name", type: "text", order: 3, sortable: true, filterable: true },
+  { key: "dtype", label_key: "ai.entities.ai_model.fields.dtype", type: "text", order: 2, sortable: true, default_visible: true },
+  { key: "name", label_key: "ai.entities.ai_model.fields.name", type: "text", order: 3, sortable: true, filterable: true },
   {
     key: "power_level",
-    label_key: "system.entities.ai_model.fields.power_level",
+    label_key: "ai.entities.ai_model.fields.power_level",
     type: "badge",
     order: 4,
     sortable: true,
@@ -62,17 +62,17 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        "1": { label_key: "system.entities.ai_model.power_level.1", color: "zinc-300" },
-        "2": { label_key: "system.entities.ai_model.power_level.2", color: "blue-300" },
-        "3": { label_key: "system.entities.ai_model.power_level.3", color: "emerald-300" },
-        "4": { label_key: "system.entities.ai_model.power_level.4", color: "amber-300" },
-        "5": { label_key: "system.entities.ai_model.power_level.5", color: "rose-300" },
+        "1": { label_key: "ai.entities.ai_model.power_level.1", color: "zinc-300" },
+        "2": { label_key: "ai.entities.ai_model.power_level.2", color: "blue-300" },
+        "3": { label_key: "ai.entities.ai_model.power_level.3", color: "emerald-300" },
+        "4": { label_key: "ai.entities.ai_model.power_level.4", color: "amber-300" },
+        "5": { label_key: "ai.entities.ai_model.power_level.5", color: "rose-300" },
       },
     },
   },
   {
     key: "rank",
-    label_key: "system.entities.ai_model.fields.rank",
+    label_key: "ai.entities.ai_model.fields.rank",
     type: "text",
     order: 5,
     sortable: true,
@@ -81,7 +81,7 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
   },
   {
     key: "enable_thinking",
-    label_key: "system.entities.ai_model.fields.enable_thinking",
+    label_key: "ai.entities.ai_model.fields.enable_thinking",
     type: "badge",
     order: 6,
     sortable: true,
@@ -90,21 +90,21 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        true: { label_key: "system.entities.ai_model.thinking.true", color: "violet-300" },
-        false: { label_key: "system.entities.ai_model.thinking.false", color: "zinc-300" },
+        true: { label_key: "ai.entities.ai_model.thinking.true", color: "violet-300" },
+        false: { label_key: "ai.entities.ai_model.thinking.false", color: "zinc-300" },
       },
     },
   },
-  { key: "temperature", label_key: "system.entities.ai_model.fields.temperature", type: "text", order: 7, sortable: true, default_visible: true },
-  { key: "top_p", label_key: "system.entities.ai_model.fields.top_p", type: "text", order: 8, sortable: false, default_visible: true },
-  { key: "max_tokens", label_key: "system.entities.ai_model.fields.max_tokens", type: "text", order: 9, sortable: true, default_visible: true },
-  { key: "repetition_penalty", label_key: "system.entities.ai_model.fields.repetition_penalty", type: "text", order: 10, sortable: false, default_visible: false },
-  { key: "sort_order", label_key: "system.entities.ai_model.fields.sort_order", type: "text", order: 11, sortable: true, default_visible: false },
-  { key: "download_size_mb", label_key: "system.entities.ai_model.fields.download_size_mb", type: "text", order: 12, sortable: true, default_visible: true },
-  { key: "vram_mb", label_key: "system.entities.ai_model.fields.vram_mb", type: "text", order: 13, sortable: true, default_visible: true },
+  { key: "temperature", label_key: "ai.entities.ai_model.fields.temperature", type: "text", order: 7, sortable: true, default_visible: true },
+  { key: "top_p", label_key: "ai.entities.ai_model.fields.top_p", type: "text", order: 8, sortable: false, default_visible: true },
+  { key: "max_tokens", label_key: "ai.entities.ai_model.fields.max_tokens", type: "text", order: 9, sortable: true, default_visible: true },
+  { key: "repetition_penalty", label_key: "ai.entities.ai_model.fields.repetition_penalty", type: "text", order: 10, sortable: false, default_visible: false },
+  { key: "sort_order", label_key: "ai.entities.ai_model.fields.sort_order", type: "text", order: 11, sortable: true, default_visible: false },
+  { key: "download_size_mb", label_key: "ai.entities.ai_model.fields.download_size_mb", type: "text", order: 12, sortable: true, default_visible: true },
+  { key: "vram_mb", label_key: "ai.entities.ai_model.fields.vram_mb", type: "text", order: 13, sortable: true, default_visible: true },
   {
     key: "is_compatible",
-    label_key: "system.entities.ai_model.fields.is_compatible",
+    label_key: "ai.entities.ai_model.fields.is_compatible",
     type: "badge",
     order: 14,
     sortable: true,
@@ -113,22 +113,22 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        true: { label_key: "system.entities.ai_model.compatibility.COMPATIBLE", color: "emerald-300" },
-        false: { label_key: "system.entities.ai_model.compatibility.NOT_COMPATIBLE", color: "rose-300" },
+        true: { label_key: "ai.entities.ai_model.compatibility.COMPATIBLE", color: "emerald-300" },
+        false: { label_key: "ai.entities.ai_model.compatibility.NOT_COMPATIBLE", color: "rose-300" },
       },
     },
   },
-  { key: "label_key", label_key: "system.entities.ai_model.fields.label_key", type: "text", order: 15, sortable: false, default_visible: false },
-  { key: "description_key", label_key: "system.entities.ai_model.fields.description_key", type: "text", order: 16, sortable: false, default_visible: false },
+  { key: "label_key", label_key: "ai.entities.ai_model.fields.label_key", type: "text", order: 15, sortable: false, default_visible: false },
+  { key: "description_key", label_key: "ai.entities.ai_model.fields.description_key", type: "text", order: 16, sortable: false, default_visible: false },
 
   // Auditing columns (hidden by default)
-  { key: "created_at", label_key: "system.entities.ai_model.fields.created_at", type: "datetime", order: 17, sortable: true, searchable: false, default_visible: false },
-  { key: "updated_at", label_key: "system.entities.ai_model.fields.updated_at", type: "datetime", order: 18, sortable: true, searchable: false, default_visible: false },
-  { key: "created_by", label_key: "system.entities.ai_model.fields.created_by", type: "text", order: 19, sortable: false, default_visible: false, searchable: false },
-  { key: "updated_by", label_key: "system.entities.ai_model.fields.updated_by", type: "text", order: 20, sortable: false, default_visible: false, searchable: false },
-  { key: "version", label_key: "system.entities.ai_model.fields.version", type: "text", order: 21, sortable: false, default_visible: false, searchable: false },
-  { key: "deleted_at", label_key: "system.entities.ai_model.fields.deleted_at", type: "datetime", order: 22, sortable: true, searchable: false, default_visible: false },
-  { key: "deleted_by", label_key: "system.entities.ai_model.fields.deleted_by", type: "text", order: 23, sortable: false, default_visible: false, searchable: false },
+  { key: "created_at", label_key: "ai.entities.ai_model.fields.created_at", type: "datetime", order: 17, sortable: true, searchable: false, default_visible: false },
+  { key: "updated_at", label_key: "ai.entities.ai_model.fields.updated_at", type: "datetime", order: 18, sortable: true, searchable: false, default_visible: false },
+  { key: "created_by", label_key: "ai.entities.ai_model.fields.created_by", type: "text", order: 19, sortable: false, default_visible: false, searchable: false },
+  { key: "updated_by", label_key: "ai.entities.ai_model.fields.updated_by", type: "text", order: 20, sortable: false, default_visible: false, searchable: false },
+  { key: "version", label_key: "ai.entities.ai_model.fields.version", type: "text", order: 21, sortable: false, default_visible: false, searchable: false },
+  { key: "deleted_at", label_key: "ai.entities.ai_model.fields.deleted_at", type: "datetime", order: 22, sortable: true, searchable: false, default_visible: false },
+  { key: "deleted_by", label_key: "ai.entities.ai_model.fields.deleted_by", type: "text", order: 23, sortable: false, default_visible: false, searchable: false },
 ];
 
 const stickyKeySet = new Set<string>(AI_MODEL_STICKY_COLUMN_KEYS);

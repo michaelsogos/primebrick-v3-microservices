@@ -52,9 +52,11 @@ const stripIdp = (s) => s.replace(/^idp/i, '');
 
 // docs layout: generated page-manuals live under generated/ (the pipeline
 // owns them); hand-written docs live in manual/ or at user-guide root.
-// entities-crud is the one hand-written doc generated pages still link to.
+// entities-crud lives in the dev-guide (developer-tier) — generated pages
+// still cross-link to it.
 const HANDWRITTEN_SLUGS = new Set(['entities-crud']);
-const linkFor = (slug) => `/docs/user-guide/${HANDWRITTEN_SLUGS.has(slug) ? 'manual' : 'generated'}/${slug}`;
+const linkFor = (slug) =>
+  HANDWRITTEN_SLUGS.has(slug) ? `/docs/dev-guide/${slug}` : `/docs/user-guide/generated/${slug}`;
 
 function bestKey(name, keys, suffixRe) {
   const norm = name.toLowerCase().replace(/_/g, '');
@@ -171,7 +173,7 @@ for (const f of findRouterFiles(ROUTER_DIR)) {
   }
 }
 // map an extra-scanned route to a standard op / custom action name
-const routeOp = (r) => {
+const routeOp = (r, prefixes = []) => {
   const p = r.path;
   if (/\/purge\b/.test(p)) return 'purge.single';
   if (/\/restore\b/.test(p)) return 'restore.single';
@@ -181,6 +183,9 @@ const routeOp = (r) => {
   if (/\/bulk-restore\b/.test(p)) return 'restore.bulk';
   if (/\/duplicate\b/.test(p)) return 'duplicate.bulk';
   const last = p.split('/').pop();
+  // POST on the scanned collection root itself is the create op (e.g.
+  // POST /api/v1/auth/users), not a custom action
+  if (r.method === 'POST' && prefixes.includes(p)) return 'create.single';
   if (r.method === 'POST' && last !== ':uuid' && !/^:/.test(last)) return `custom:${last}`; // e.g. change-password
   if (r.method === 'POST') return 'create.single';
   if (r.method === 'PUT' || r.method === 'PATCH') return 'update.single';
@@ -299,7 +304,8 @@ for (const [r, p] of Object.entries(pages)) {
     if (!relSlug) continue;
     const relListRoute = Object.keys(pages).find(x => x === `/${relSlug}` || x.endsWith(`/${relSlug}`));
     const relPg = relListRoute && pages[relListRoute];
-    const relEntity = relPg?.endpoints.find(e => e.path.includes('/entities/'))?.path.match(/entities\/(\w+)/)?.[1];
+    const relEntity = relPg?.entityDecl?.entity
+      ?? relPg?.endpoints.find(e => e.path.includes('/entities/'))?.path.match(/entities\/(\w+)/)?.[1];
     FIELD_LINKS.push({ fromRoute: r, fname, relSlug, relListRoute, relEntity });
   }
 }
@@ -309,28 +315,59 @@ const adminFlagOf = (relEntity) =>
   metaByEntity[relEntity]?.columns?.find(c =>
     ['boolean', 'badge'].includes(c.type) && /admin/i.test(`${c.key} ${T(c.label_key) ?? ''}`));
 
+const emitted = new Set();
+const skipped = [];
+// documentability is deterministic per route — precompute it so Doc
+// references only link pages that will actually be emitted (route presence
+// ≠ doc existence: a skipped placeholder route must not produce phantom links)
+const documentable = {};
+const docSlugs = new Set();
+for (const [route, pg] of Object.entries(pages)) {
+  const kindNow = /\/create$/.test(route) ? 'create' : /\{[^}]+\}$/.test(route) ? 'edit' : 'list';
+  const fields = Object.entries(pg.fields).filter(([, f]) => !f.fromState || kindNow !== 'list');
+  const hasListEarly = pg.widgets.some(w => w.tag === 'EntityListTable' || w.tag === 'EntityTablePage');
+  const noFacts = !fields.length && !pg.endpoints.length && !pg.navigations.length && !hasListEarly;
+  const thinCustom = kindNow === 'list' && !hasListEarly && !fields.length && !pg.navigations.length;
+  // service ownership — a page that declares an entity this service does
+  // not own (no meta, no router config here) is rendered by the OWNING
+  // service's own pipeline, never into this pack (isolated docs packs)
+  const declEntity = pg.entityDecl?.entity;
+  const foreign = declEntity && !metaByEntity[declEntity] && !capsByEntity[declEntity];
+  documentable[route] = !(noFacts || thinCustom || foreign);
+  if (documentable[route]) {
+    const pl = route.replace(/\/(create|\{[^}]+\})$/, '');
+    const lf = pl.split('/').pop();
+    docSlugs.add(/\/create$/.test(route) ? lf + '-create' : /\{[^}]+\}$/.test(route) ? lf + '-edit' : lf);
+  }
+}
 for (const [route, pg] of Object.entries(pages)) {
   // $state-derived fields are real form state on create/edit pages but
   // UI-state noise on list-kind pages (selectedX, editingY, isCreating…)
   const kindNow = /\/create$/.test(route) ? 'create' : /\{[^}]+\}$/.test(route) ? 'edit' : 'list';
   const fields = Object.entries(pg.fields).filter(([, f]) => !f.fromState || kindNow !== 'list');
-  const hasListEarly = pg.widgets.some(w => w.tag === 'EntityListTable');
+  const hasListEarly = pg.widgets.some(w => w.tag === 'EntityListTable' || w.tag === 'EntityTablePage');
   const noFacts = !fields.length && !pg.endpoints.length && !pg.navigations.length && !hasListEarly;
   // a list-kind page with no entity table, no form fields and no links is a
   // custom/toolbar page — bare endpoints alone don't make it documentable
   const thinCustom = kindNow === 'list' && !hasListEarly && !fields.length && !pg.navigations.length;
-  if (noFacts || thinCustom) {
-    logger.debug(`skip ${route} (${noFacts ? "no extractable facts" : "custom page, no entity surface"})`, { tags: ["docs-render"] });
+  const declEntity = pg.entityDecl?.entity;
+  const foreign = declEntity && !metaByEntity[declEntity] && !capsByEntity[declEntity];
+  if (noFacts || thinCustom || foreign) {
+    const reason = foreign ? `entity '${declEntity}' owned by another service`
+      : noFacts ? "no extractable facts" : "custom page, no entity surface";
+    skipped.push({ route, reason });
+    logger.debug(`skip ${route} (${reason})`, { tags: ["docs-render"] });
     continue;
   }
   const out = [];
   const parentList = route.replace(/\/(create|\{uuid\}|\{[^}]+\})$/, '');
-  const entity = pg.endpoints.find(e => e.path.includes('/entities/'))?.path.match(/entities\/(\w+)/)?.[1]
+  const entity = pg.entityDecl?.entity
+              ?? pg.endpoints.find(e => e.path.includes('/entities/'))?.path.match(/entities\/(\w+)/)?.[1]
               ?? pg.endpoints.find(e => e.method === 'POST')?.path.match(/auth\/(\w+)/)?.[1];
   const meta = (entity && metaByEntity[entity])
     ?? Object.values(metaByEntity).find(m => m.translation_key?.startsWith(entSingular(undefined, parentList.split('/').pop())));
   const isCreate = /\/create$/.test(route);
-  const hasList = pg.widgets.some(w => w.tag === 'EntityListTable');
+  const hasList = pg.widgets.some(w => w.tag === 'EntityListTable' || w.tag === 'EntityTablePage');
   const post = pg.endpoints.find(e => e.method === 'POST' && !/restore/.test(e.path));
   const patch = pg.endpoints.find(e => ['PUT', 'PATCH', 'UPDATE'].includes(e.method));
 
@@ -583,28 +620,34 @@ for (const [route, pg] of Object.entries(pages)) {
   const overrides = meta?.actions_overrides ?? {};
   const eps = pg.endpoints.map(e => `${e.method} ${e.path}`);
   const has = (re) => eps.some(e => re.test(e));
-  const createNav = pg.navigations.find(n => /\/(create|new)$/.test(n.target ?? ''));
-  const editNav = pg.navigations.find(n => /uuid/i.test(n.target ?? ''));
+  const declNavKind = pg.entityDecl?.navStrategy === 'popup' ? 'new-tab' : 'same-tab';
+  const createNav = pg.navigations.find(n => /\/(create|new)$/.test(n.target ?? ''))
+    ?? (pg.entityDecl?.createAction ? { kind: declNavKind, target: `${parentList}/create` } : undefined);
+  const editNav = pg.navigations.find(n => /uuid/i.test(n.target ?? ''))
+    ?? (pg.entityDecl?.editAction ? { kind: declNavKind, target: `${parentList}/{uuid}` } : undefined);
   const scanHit = (re) => caps?.extraScans?.some(p => eps.some(e => e.includes(p) && re.test(e)));
-  // op registered if a config permission key exists OR an extra-scan endpoint matches
+  const scanned = scanRoutes(caps);
+  const scanRoute = (op) => scanned.find(r => routeOp(r, caps?.extraScans) === op);
+  // op registered if a config permission key exists, an extra-scan route
+  // (metaExtraScans → meta.actions) offers it, OR an extra-scan/page endpoint
+  // matches — EntityListTable renders row ops from meta.actions, so an
+  // extra-scanned route IS offered on shell pages with no page endpoints
   const registered = {
-    'create.single': 'create' in (caps?.perms ?? {}) || scanHit(/POST/) || has(/POST/) || !!createNav,
-    'update.single': 'update' in (caps?.perms ?? {}) || scanHit(/PUT|PATCH|UPDATE/) || has(/PUT|PATCH|UPDATE/) || !!editNav,
-    'delete.single': 'delete' in (caps?.perms ?? {}) || scanHit(/DELETE|REMOVE/) || has(/DELETE(?!.*purge)|REMOVE/),
-    'purge.single': 'purge' in (caps?.perms ?? {}) || scanHit(/purge/) || has(/purge/),
-    'restore.single': 'restore' in (caps?.perms ?? {}) || scanHit(/restore/) || has(/restore/),
-    'read.audit': 'audit' in (caps?.perms ?? {}) || scanHit(/audit/) || has(/audit/),
-    export: 'export' in (caps?.perms ?? {}) || has(/export/),
-    'delete.bulk': 'bulkDelete' in (caps?.perms ?? {}) || has(/bulk-delete/),
-    'restore.bulk': 'bulkRestore' in (caps?.perms ?? {}) || has(/bulk-restore/),
-    'duplicate.bulk': caps?.duplicate === false ? false : ('duplicate' in (caps?.perms ?? {}) || has(/duplicate/)),
+    'create.single': 'create' in (caps?.perms ?? {}) || !!scanRoute('create.single') || scanHit(/POST/) || has(/POST/) || !!createNav,
+    'update.single': 'update' in (caps?.perms ?? {}) || !!scanRoute('update.single') || scanHit(/PUT|PATCH|UPDATE/) || has(/PUT|PATCH|UPDATE/) || !!editNav,
+    'delete.single': 'delete' in (caps?.perms ?? {}) || !!scanRoute('delete.single') || scanHit(/DELETE|REMOVE/) || has(/DELETE(?!.*purge)|REMOVE/),
+    'purge.single': 'purge' in (caps?.perms ?? {}) || !!scanRoute('purge.single') || scanHit(/purge/) || has(/purge/),
+    'restore.single': 'restore' in (caps?.perms ?? {}) || !!scanRoute('restore.single') || scanHit(/restore/) || has(/restore/),
+    'read.audit': 'audit' in (caps?.perms ?? {}) || !!scanRoute('read.audit') || scanHit(/audit/) || has(/audit/),
+    export: 'export' in (caps?.perms ?? {}) || !!scanRoute('export') || has(/export/),
+    'delete.bulk': 'bulkDelete' in (caps?.perms ?? {}) || !!scanRoute('delete.bulk') || has(/bulk-delete/),
+    'restore.bulk': 'bulkRestore' in (caps?.perms ?? {}) || !!scanRoute('restore.bulk') || has(/bulk-restore/),
+    'duplicate.bulk': caps?.duplicate === false ? false : ('duplicate' in (caps?.perms ?? {}) || !!scanRoute('duplicate.bulk') || has(/duplicate/)),
   };
   // permissions: config map first, then extra-scanned routers (registerRoutes),
   // then the naming convention <entity>.<op> checked against the Permission enum
   const permValueSet = new Set(Object.values(permValues));
   const cfgKey = (op) => Object.keys(CFG_TO_OP).find(k => CFG_TO_OP[k] === op);
-  const scanned = scanRoutes(caps);
-  const scanRoute = (op) => scanned.find(r => routeOp(r) === op);
   const permList = (op) => {
     const v = caps?.perms?.[cfgKey(op)];
     if (v?.length) return v;
@@ -809,13 +852,9 @@ for (const [route, pg] of Object.entries(pages)) {
 
 
   // ── doc references ──
-  // only link slugs that actually exist in this pages set — no phantom
-  // refs to *-create/*-edit pages that were never generated
-  const knownSlugs = new Set(Object.keys(pages).map(r => {
-    const pl = r.replace(/\/(create|\{[^}]+\})$/, '');
-    const lf = pl.split('/').pop();
-    return /\/create$/.test(r) ? lf + '-create' : /\{[^}]+\}$/.test(r) ? lf + '-edit' : r.split('/').filter(Boolean).pop();
-  }));
+  // only link slugs that this run actually emits — no phantom refs to
+  // *-create/*-edit docs whose routes were skipped (placeholder pages)
+  const knownSlugs = docSlugs;
   const related = new Set([leaf, `${leaf}-create`, `${leaf}-edit`].filter(s => knownSlugs.has(s)));
   const self = isCreate ? leaf + '-create' : isEdit ? leaf + '-edit' : leaf;
   for (const [fname] of fields) if (RELATED[fname]) related.add(RELATED[fname]);
@@ -832,8 +871,31 @@ for (const [route, pg] of Object.entries(pages)) {
   if (OUT_DIR) {
     mkdirSync(OUT_DIR, { recursive: true });
     writeFileSync(join(OUT_DIR, slug + '.mdx'), out.join('\n') + '\n');
+    emitted.add(slug + '.mdx');
     logger.debug(`wrote ${slug}.mdx`, { tags: ["docs-render"] });
   } else {
     logger.debug(`\nFILE: manual/${slug}.mdx\n${out.join('\n')}`, { tags: ["docs-render"] });
   }
+}
+
+// ── coverage report — every skipped route is a silent documentation hole,
+// every .mdx in OUT_DIR not re-emitted this run is a stale ghost file.
+// Both must be visible: a shell-page migration that starves extraction
+// degrades generated docs silently otherwise (docs doctrine: no silent loss).
+if (skipped.length)
+  logger.warn(`coverage: ${skipped.length} route(s) produced no document:\n` +
+    skipped.map(s => `  - ${s.route} (${s.reason})`).join('\n'), { tags: ["docs-render"] });
+if (OUT_DIR) {
+  // expected slugs = every slug derivable from an extracted route — reference
+  // docs in the same dir (entity-api-catalog, filter-syntax-guide…) come from
+  // generate-reference-docs.ts and are never ghosts
+  const expectedSlugs = new Set(Object.keys(pages).map(r => {
+    const pl = r.replace(/\/(create|\{[^}]+\})$/, '');
+    const lf = pl.split('/').pop();
+    return /\/create$/.test(r) ? lf + '-create.mdx' : /\{[^}]+\}$/.test(r) ? lf + '-edit.mdx' : lf + '.mdx';
+  }));
+  const ghosts = readdirSync(OUT_DIR).filter(f => expectedSlugs.has(f) && !emitted.has(f));
+  if (ghosts.length)
+    logger.warn(`ghost: ${ghosts.length} stale file(s) in out dir not regenerated this run:\n` +
+      ghosts.map(f => `  - ${f}`).join('\n'), { tags: ["docs-render"] });
 }

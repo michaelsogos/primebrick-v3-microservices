@@ -19,10 +19,8 @@
  * remains AUTHENTICATED_ADMIN-gated.
  */
 import {
-  makeEntityRouter,
-  composeRouteHandlers,
   Permission,
-  type RouteHandler,
+  type EntityRouteDecl,
   type EntityServiceLike,
 } from "@primebrick/sdk";
 
@@ -60,9 +58,12 @@ function lazy<T extends object>(factory: () => T): T {
 const readPerms = [Permission.AUTHENTICATED_USER];
 const writePerms = [Permission.AUTHENTICATED_ADMIN];
 
-export const aiEntityRouteHandler: RouteHandler = composeRouteHandlers(
-  makeEntityRouter({
+/** Entity declarations — makeServiceRoutes derives BOTH the CRUD routers
+ *  and their OpenAPI path blocks from this single config set. */
+export const aiEntityDecls: EntityRouteDecl[] = [
+  {
     entityName: "ai_model",
+    spec: { tag: "ai_models" },
     service: lazy(() => new AiModelsService()) as unknown as EntityServiceLike,
     meta: aiModelMeta as unknown as Record<string, unknown>,
     auditable: true,
@@ -83,9 +84,10 @@ export const aiEntityRouteHandler: RouteHandler = composeRouteHandlers(
       updateBody: (b) => AiModelUpdateWrite.parse(b) as { entity: Record<string, unknown> },
       auditQuery: (q) => AiModelAuditQuerySchema.parse(q),
     },
-  }),
-  makeEntityRouter({
+  },
+  {
     entityName: "ai_cerebellum",
+    spec: { tag: "ai_cerebellum" },
     service: lazy(() => new AiCerebellumService()) as unknown as EntityServiceLike,
     meta: aiCerebellumMeta as unknown as Record<string, unknown>,
     auditable: true,
@@ -106,5 +108,5 @@ export const aiEntityRouteHandler: RouteHandler = composeRouteHandlers(
       updateBody: (b) => AiCerebellumUpdateWrite.parse(b) as { entity: Record<string, unknown> },
       auditQuery: (q) => AiCerebellumAuditQuerySchema.parse(q),
     },
-  }),
-);
+  },
+];

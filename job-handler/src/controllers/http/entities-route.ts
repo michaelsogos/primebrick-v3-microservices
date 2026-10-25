@@ -8,10 +8,8 @@
  */
 
 import {
-  makeEntityRouter,
-  composeRouteHandlers,
   Permission,
-  type RouteHandler,
+  type EntityRouteDecl,
   type EntityServiceLike,
 } from "@primebrick/sdk";
 
@@ -35,9 +33,12 @@ const writePerms = [Permission.AUTHENTICATED_ADMIN];
 /** Permissive body validators — entity write envelope { entity, ... }. */
 const entityBody = (b: unknown) => b as { entity: Record<string, unknown> };
 
-export const jobEntityRouteHandler: RouteHandler = composeRouteHandlers(
-  makeEntityRouter({
+/** Entity declarations — makeServiceRoutes derives BOTH the CRUD routers
+ *  and their OpenAPI path blocks from this single config set. */
+export const jobEntityDecls: EntityRouteDecl[] = [
+  {
     entityName: "job_rule",
+    spec: { tag: "job_rules", label: "job rule" },
     service: lazy(() => new JobRulesService()) as unknown as EntityServiceLike,
     meta: jobRuleMeta as unknown as Record<string, unknown>,
     auditable: true,
@@ -48,9 +49,10 @@ export const jobEntityRouteHandler: RouteHandler = composeRouteHandlers(
     },
     duplicate: false,
     schemas: { createBody: entityBody, updateBody: entityBody },
-  }),
-  makeEntityRouter({
+  },
+  {
     entityName: "job_schedule",
+    spec: { tag: "job_schedules", label: "job schedule" },
     service: lazy(() => new JobSchedulesService()) as unknown as EntityServiceLike,
     meta: jobScheduleMeta as unknown as Record<string, unknown>,
     auditable: true,
@@ -63,9 +65,10 @@ export const jobEntityRouteHandler: RouteHandler = composeRouteHandlers(
     },
     duplicate: false,
     schemas: { createBody: entityBody, updateBody: entityBody },
-  }),
-  makeEntityRouter({
+  },
+  {
     entityName: "job_run",
+    spec: { tag: "job_runs", label: "job run" },
     service: lazy(() => new JobRunsService()) as unknown as EntityServiceLike,
     meta: jobRunMeta as unknown as Record<string, unknown>,
     auditable: true,
@@ -74,5 +77,5 @@ export const jobEntityRouteHandler: RouteHandler = composeRouteHandlers(
       meta: readPerms, list: readPerms, get: readPerms, audit: writePerms,
     },
     duplicate: false,
-  }),
-);
+  },
+];

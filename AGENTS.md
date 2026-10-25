@@ -1,5 +1,23 @@
 # AI AGENT INSTRUCTIONS - Primebrick Microservices
 
+## Documentation is the contract — code is the proof
+
+- Docs (AGENTS.md, .devin/rules/, docs/ai/, docs/dev-guide/, docs/user-guide/)
+  are the source of truth for HOW things work. Source code is NEVER
+  documentation: pages are composed dynamically (mountPage, remote chunks,
+  layout.sections, runtime wiring) — reading a +page.svelte alone tells you
+  little about what actually renders.
+- Need to know how to do something (tests, auth, dev servers, conventions)?
+  Find it in the doc FIRST. Read code only as the "prova del 9" — to verify
+  the code behaves as the doc says. Never the reverse.
+- Doc and code disagree? Report the discrepancy — the doc is probably stale.
+  Do NOT fix docs silently and do NOT create new files in .devin/rules/,
+  docs/, or AGENTS.md on your own initiative: propose the text, write only
+  after approval.
+- Before claiming "a doc is missing", check the indexes:
+  docs/ai/README.md, .devin/rules/, docs/dev-guide/_order.json.
+  The missing doc is usually a doc you haven't read.
+
 ## ⚠️ CRITICAL: NEVER COMMIT AUTOMATICALLY
 **AI agents MUST NEVER commit changes without explicit user instruction.**
 - WAIT for the user to explicitly tell you to commit before running any `git commit` command.
@@ -21,7 +39,7 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 
 | Repo | CI/Deployment | Process to deploy |
 |------|--------------|-------------------|
-| **primebrick-v3-microservices** (this repo) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
+| **primebrick-us-v3** (this repo) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
 | **primebrick-v3-backend** (BE) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
 | **primebrick-v3-frontend** (FE) | No auto-deploy CI | GitFlow: create release branch → close → merge to `main` + tag |
 | **primebrick-v3-sdk** (SDK) | GitHub™ Actions | GitFlow: create release → close → merge to `main` + tag → CI publishes to npm |
@@ -29,8 +47,24 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 | **primebrick-v3-docs** | Cloudflare® Worker CI | Push to `main` — auto-deploys |
 | **primebrick-v3-website** | Cloudflare® Worker CI | Push to `main` — auto-deploys |
 
+### Docker image build (pnpm deploy)
+
+Each service deploys as a self-contained image built over a `pnpm deploy` artifact —
+the workspace is required to *produce* the artifact, not to *run* it:
+
+```bash
+pnpm --dir <service> deploy            # = node ../scripts/deploy-service.mjs <service>
+docker build -f primebrick-us-v3/<service>/Dockerfile <primebrick>/temp/deploy-out/<service>
+```
+
+`scripts/deploy-service.mjs` builds the service, runs `pnpm deploy --prod` with
+workspace-package injection, and rewrites `workspace:*` specifiers in the emitted
+`package.json` to the injected pinned versions. The Dockerfile copies only
+`package.json`, `node_modules` (vendored), `dist`, `db-meta`, `scripts`, `docs` —
+`.env`, `src`, and `test` never ship in the image.
+
 ## Microservices Stack & Architecture Rules
-1. **Tech Stack**: Node.js®, Fastify (or Express), TypeScript®, and pnpm.
+1. **Tech Stack**: Bun (dev `--hot`, prod `bun dist/index.js`), TypeScript® (strict), and pnpm. Every service boots via `@primebrick/sdk`'s `createMicroservice` — the HTTP surface is the SDK's `createHttpServer` (Node http), NOT Fastify/Express.
 2. **Strict Typing**: Use strict TypeScript®. Avoid `any` at all costs. Define precise interfaces for DTOs, Requests, and Responses.
 3. **Isolation & Autonomy**: Every microservice inside this repository must be 100% self-contained. Do not write hardcoded cross-service relative imports.
 4. **Shared Code**: If multiple microservices need to share common utilities, types, or SDKs, they must be isolated in a dedicated shared package within this repository (e.g., using pnpm workspaces if needed).
@@ -39,7 +73,7 @@ a version tag. There is no CI pipeline that auto-deploys on push.
 7. **Environment**: Never commit `.env` files. Provide a `.env.example` file specifying all required configuration variables.
 8. **API Path Conventions (MANDATORY)**: All HTTP routes MUST follow the standardized path conventions. Entity CRUD routes use `/api/v1/entities/:entity/...`, service actions use `/api/v1/actions/:action`, webhooks use `/webhook`. See [.devin/rules/api-path-conventions.md](./.devin/rules/api-path-conventions.md) for the full specification. This is required for the BE MCP Server generic tool dispatch to work.
 9. **MVC transport layout (MANDATORY)**: Transport adapters live under `src/controllers/` (`http/`, `nats-sub/`; NATS req/res is banned — `NatsClient.request`/`subscribeRequest` were removed, sync replies use governed `callNats`/`makeNatsRequestRoute` correlation) and contain NO business logic — auth, payload validation, ONE service call, transport response only. Business logic lives in `src/services/` and must be callable identically from any transport. See [.devin/rules/controller-boundary.md](./.devin/rules/controller-boundary.md).
-10. **Webhook ingress**: External S2S webhooks NEVER hit a business microservice directly — they go through the `webhook` service (`primebrick-webhook`), a DB-less registration-driven router: `POST /webhook/{service_code}/{intent...}` → API-key precheck (401 wall) → JetStream `webhook.<code>.received` → the target US consumes via a durable `nats-sub` controller and runs its own auth + RBAC. A new US becomes routable by registering normally — no `webhook` release needed.
+10. **Webhook ingress**: External S2S webhooks NEVER hit a business microservice directly — they go through the `webhook` service (`primebrick-webhook`), a registration-driven router (it owns the `webhook` PG schema — migrations under `webhook/db-meta/`): `POST /webhook/{service_code}/{intent...}` → API-key precheck (401 wall) → JetStream `webhook.<code>.received` → the target US consumes via a durable `nats-sub` controller and runs its own auth + RBAC. A new US becomes routable by registering normally — no `webhook` release needed.
 11. **Route handlers are factory-produced (MANDATORY)**: every HTTP route MUST be declared as `RpcRoute[]` and mounted via the SDK's `makeRpcRouter` (plus `makeOpenApiHandler` for `/api/v1/openapi.json`, `composeRouteHandlers` to chain). `createMicroservice` REJECTS the boot when `routeHandler` is not factory-produced (runtime brand check) — arbitrary `(req, res, url) => boolean` functions do not exist in this repo. Auth (`"user"` gateway-resolved / `"api_key"` / `"public"`), RBAC `permissions` (mandatory on non-public routes), body validation and RFC 7807 errors come from the factory — never hand-rolled.
 12. **NATS queue groups (MANDATORY)**: `NatsClient.subscribe`/`subscribeRequest` take `{ queue }` on every WORK subject (one replica processes each message — e.g. `emailsender.send` → `{ queue: "emailsender" }`). Broadcast subjects EVERY instance must receive (lifecycle events like `service.gateway_online`, `config.changed`, `client_shield_registry.changed`, registry-cache feeds) stay unqueued. JetStream consumers keep their durable identity — no queue needed.
 13. **Env policy (MANDATORY)**: the ONLY env-sourced settings are `DATABASE_URL` + `DATABASE_SCHEMA` (closed-set validated by `assertDbEnv()` — unknown `DB_*`/`DATABASE_*` keys crash boot). `DATABASE_SCHEMA` declares the service's owned PG schema: it drives the DAL `schemas` domain (entity guard rejects tables outside it), the `search_path`, and the `service.register` schema claim in `service_registry`. All runtime config lives in `{schema}.config_entries` (loaded via `ConfigLoader` / the service's config holder) — `service_code`, `http_port`, `service_base_url`, `nats_url`, provider keys, feature flags. Never read `process.env` for runtime settings.
@@ -92,6 +126,8 @@ into the end-user AI KB.
 - **Ordering**: `docs/dev-guide/_order.json` defines the sidebar page order
 - **Conventions**: see `.devin/rules/docs-dev-guide.md` for editorial rules
 - **Mermaid**: use `<Mermaid chart={...} />`, never ` ```Code ` or ` ```mermaid `
+- **DAL access**: `.devin/rules/dal-usage.md` — governed `DomainService`/`svc`
+  API; no consumer `*_dal.ts`/`*-repo.ts` layer
 - **Do NOT hand-edit** files in `docs/ai/` or `docs/skills/` — those are internal
 
 ## Logging & Telemetry

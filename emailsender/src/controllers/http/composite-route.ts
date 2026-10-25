@@ -1,17 +1,28 @@
 /**
- * Composite route handler — composes factory-produced handlers only:
- * the OpenAPI handler (makeOpenApiHandler) plus the RPC router
- * (makeRpcRouter) covering every entity route.
+ * Emailsender service route surface — `makeServiceRoutes` derives BOTH
+ * the request routers and `/api/v1/openapi.json` from ONE declaration:
+ * entity CRUD comes from `entities:` (makeEntityRouter), non-entity
+ * surfaces are `rpc:` tables; all carry `openapi` metadata so a route
+ * that exists but isn't documented (or vice versa) is impossible.
  */
 
-import { composeRouteHandlers, makeRpcRouter } from "@primebrick/sdk";
-import { openapiRouteHandler } from "./openapi-route.js";
-import { providerRoutes } from "./providers-route.js";
+import { makeServiceRoutes, detectPackageIdentity } from "@primebrick/sdk";
+import { emailsenderEntityDecls } from "./entities-route.js";
 import { configEntryRoutes } from "./config-route.js";
+import { moduleAssetsRoutes } from "./module-assets-route.js";
 
-export const compositeRouteHandler = composeRouteHandlers(
-  // openapi first (public, no auth)
-  openapiRouteHandler,
-  // then entity routes (auth + RBAC + validation via makeRpcRouter)
-  makeRpcRouter([...providerRoutes, ...configEntryRoutes]),
-);
+export const compositeRouteHandler = makeServiceRoutes({
+  info: {
+    title: "EmailSender Catalog",
+    version: detectPackageIdentity().version ?? "0.0.0",
+    description: "Email provider configuration and email sending microservice",
+  },
+  serverUrl: "http://localhost:3003",
+  tags: [
+    { name: "providers", description: "Email provider configuration entities" },
+    { name: "config_entries", description: "Module configuration key-value entries" },
+    { name: "module-assets", description: "Module-owned remote FE assets" },
+  ],
+  entities: emailsenderEntityDecls,
+  rpc: [configEntryRoutes, moduleAssetsRoutes],
+});

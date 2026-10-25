@@ -6,11 +6,12 @@ import {
   type UUID,
   EntityBase,
   Auditable,
+  Deletable,
 } from "@primebrick/dal-pg";
 
 @Entity("email_templates", "emailsender")
 export class EmailTemplateEntity
-  extends Auditable(EntityBase) {
+  extends Deletable(Auditable(EntityBase)) {
   @Key()
   id: bigint;
 

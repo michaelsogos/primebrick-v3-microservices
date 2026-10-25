@@ -20,8 +20,8 @@ import { extname, join, normalize, resolve, sep } from "node:path";
 import { pipeline } from "node:stream/promises";
 import {
   extJsonStringify,
-  makeRpcRouter,
   Permission,
+  type RpcRoute,
 } from "@primebrick/sdk";
 
 const ASSETS_ROOT = resolve(process.cwd(), "fe", "dist");
@@ -61,8 +61,12 @@ export function moduleAssetContentType(absPath: string): string {
   return CONTENT_TYPES[extname(absPath).toLowerCase()] ?? "application/octet-stream";
 }
 
+/** Sibling manifests always revalidate — a rebuild rewrites them with new content. */
+const SIBLING_MANIFEST = /\.(sha256|deps\.json)$/;
+
 /** Immutable for vite-hashed names; `no-cache` for predictable entry names. */
 export function moduleAssetCacheControl(relPath: string): string {
+  if (SIBLING_MANIFEST.test(relPath)) return "no-cache";
   return HASHED_NAME.test(relPath) ? "public, max-age=31536000, immutable" : "no-cache";
 }
 
@@ -79,7 +83,7 @@ function sendNotFound(res: import("node:http").ServerResponse): void {
   );
 }
 
-export const moduleAssetsRouteHandler = makeRpcRouter([
+export const moduleAssetsRoutes: RpcRoute[] = [
   {
     method: "GET",
     path: "/api/v1/module-assets/:file*",
@@ -110,4 +114,4 @@ export const moduleAssetsRouteHandler = makeRpcRouter([
       await pipeline(createReadStream(abs), ctx.res);
     },
   },
-]);
+];

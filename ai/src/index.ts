@@ -1,34 +1,39 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { join } from "node:path";
-import { createMicroservice, logger, composeRouteHandlers, pgServerBanner, assertDbEnv } from "@primebrick/sdk";
+import { createMicroservice, logger, pgServerBanner, assertDbEnv } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
 import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
-import { compositeRouteHandler } from "./controllers/http/composite-route.js";
-import { aiEntityRouteHandler } from "./controllers/http/entities-route.js";
-import { docsSearchRouteHandler } from "./controllers/http/docs-search-route.js";
+
 import { startDocsPackSubscriber } from "./controllers/nats-sub/docs-pack-subscriber.js";
 import { startPartitionMaintenanceJob } from "./controllers/nats-sub/partition-jobs.js";
-import { openapiRouteHandler } from "./openapi.js";
+import { aiRouteHandler } from "./service-routes.js";
 import {
   ConfigRepositoryAdapter,
   HealthCheckAdapter,
   AiAuthConfigPort,
 } from "./adapters/index.js";
 import { initAiConfig, aiConfig } from "./config/ai-config.js";
+import { AI_NAV } from "./nav-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "ai",
-    serviceDisplayName: "AI Assistant",
+    serviceDisplayName: "AI Assistants Manager",
+    labelKey: "ai.module.name",
     serviceDescription: "AI chat microservice with RAG knowledge base",
     icon: "sparkles",
     iconType: "icon",
 
     // Root level — system module: route prefix /system/ai.
     partOf: "system",
+
+    // Module self-declaration — persisted in service_registry.endpoints.nav.
+    // The ai module OWNS its sheet panels (`ai.*`): the host sheet engine
+    // mounts the content chunk at runtime, exactly like remote pages.
+    nav: AI_NAV,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
@@ -57,7 +62,7 @@ async function main(): Promise<void> {
     // Lazy: getDal() only works after initDal ran inside createMicroservice.
     healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
-    routeHandler: composeRouteHandlers(openapiRouteHandler, compositeRouteHandler, aiEntityRouteHandler, docsSearchRouteHandler),
+    routeHandler: aiRouteHandler,
 
     customHealthChecks: {
       llm: async () => new HealthCheckAdapter(getDal()).checkLlm(aiConfig("llm_base_url") ?? "http://localhost:8080/v1"),

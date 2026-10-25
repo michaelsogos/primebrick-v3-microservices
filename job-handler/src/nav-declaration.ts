@@ -8,6 +8,15 @@
  * at enrollment AND by src/__tests__/nav-declaration.test.ts) rejects
  * hand-written divergence — singular list leaves, `/new` creates, nav links
  * resolving to no declared route.
+ *
+ * `part_of === 'system'` ⇒ access namespace `access.system.job` —
+ * `accessNamespace(code, partOf)` derives it and the enrollment validator
+ * requires the declaration to carry it. Every leaf's access key is
+ * DERIVED from its route (`/system/job/rules` ⇒ `access.system.job.rules`;
+ * sheets `job.<name>` ⇒ `access.system.job.<name>`) — item `access` is
+ * not declarable. The module is visible iff at least one leaf key is
+ * covered by the user's grants (exact or `*` wildcard); `default: true`
+ * flags the leaf GOTO(module) lands on.
  */
 import { entityPaths, type ModuleNavDeclaration } from "@primebrick/sdk";
 
@@ -17,8 +26,9 @@ const runsPaths = entityPaths("/system/job", "runs");
 
 export const JOB_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/job"],
+  access: "access.system.job",
   nav: [
-    { id: "schedules", label_key: "job.jobs.nav", href: schedulesPaths.list, icon: "list-clock" },
+    { id: "schedules", label_key: "job.jobs.nav", href: schedulesPaths.list, icon: "list-clock", default: true },
     { id: "runs", label_key: "job.jobs.nav_runs", href: runsPaths.list, icon: "play" },
     { id: "rules", label_key: "job.jobs.nav_rules", href: rulesPaths.list, icon: "list-checks" },
   ],
@@ -46,6 +56,16 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_rule",
       label_key: "job.jobs.ruleForm.title",
+      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_format: "esm-mount",
+    },
+  ],
+  // Remote sheet panels — engine is host-side, the mountSheet export of
+  // jobs-page.js owns the content. Keyspace `<module>.<name>` — validated
+  // at enrollment so services can never collide on an open-sheet address.
+  sheets: [
+    {
+      key: "job.runDetail",
       component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
     },

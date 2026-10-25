@@ -10,10 +10,9 @@
  */
 
 import {
-  makeRpcRouter,
   Permission,
   logger,
-  type RouteHandler,
+  type RpcRoute,
   type RpcRouteContext,
 } from "@primebrick/sdk";
 import { field, Filter, GroupBy, Project, Sort } from "@primebrick/dal-pg";
@@ -103,11 +102,16 @@ async function runStats(body: RunStatsBody): Promise<unknown> {
   return { bucket_unit: unit, stats };
 }
 
-export const jobActionsRouteHandler: RouteHandler = makeRpcRouter([
+export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/schedule-job",
     permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Arm a manual schedule (admin)",
+      description: "Body: { schedule_subject, schedule, target, payload?, ttl? } — declares a manual schedule in the job namespace.",
+      tags: ["jobs", "actions"],
+    },
     body: (raw) => raw as ScheduleJobBody,
     handler: async (ctx: RpcRouteContext) => {
       const b = ctx.body as ScheduleJobBody;
@@ -135,6 +139,11 @@ export const jobActionsRouteHandler: RouteHandler = makeRpcRouter([
     method: "POST",
     path: "/api/v1/actions/disarm-job",
     permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Disarm a schedule (admin)",
+      description: "Body: { schedule_subject } — removes the armed schedule.",
+      tags: ["jobs", "actions"],
+    },
     body: (raw) => raw as { schedule_subject?: string },
     handler: async (ctx) => {
       const b = ctx.body as { schedule_subject?: string };
@@ -146,7 +155,12 @@ export const jobActionsRouteHandler: RouteHandler = makeRpcRouter([
     method: "POST",
     path: "/api/v1/actions/job-run-stats",
     permissions: [Permission.AUTHENTICATED_USER],
+    openapi: {
+      summary: "Per-schedule execution buckets",
+      description: "Bucketed run statistics for the sparkline cells of the jobs admin page.",
+      tags: ["jobs", "actions"],
+    },
     body: (raw) => raw as RunStatsBody,
     handler: async (ctx) => runStats(ctx.body as RunStatsBody),
   },
-]);
+];

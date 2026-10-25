@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha",
-  "issued_at": "2026-10-18T12:25:23.983Z",
+  "key_id": "dev-micha-2",
+  "issued_at": "2026-10-25T19:09:03.302Z",
   "patches": {
     "0001_initial_schema_ai": "a2b325ad28646384bc736c18cc06fe1b3d9448e54159a9bc0b1a7568e987ed48",
     "0002_ai_chat_tables": "ce76245e065658e3a07274f6f703d8bd59eeb23db0690e8313443011b6c3fa96",
@@ -10,8 +10,11 @@
     "0004_move_entity_tables_to_ai_schema": "184732c8365ab2ce2b91ab27c8cebdbfdd4153ab62787430603309545d6642af",
     "0005_create_ai_entity_tables": "3a9848a54083bf57f16a346acca45f0954bb80082e44d1ec6d13f9c530ae3453",
     "0006_seed_gateway_secret": "07d71948594860f386cf83b961d031605a3ab58c2e69913a482f4eeaa8f838d2",
+    "0007_seed_service_client_shield_key": "babc0e0c3c346418627f48db41d2018f92cfd2f2727a105ce4179e1512bc2207",
+    "0008_ai_pages_module_ownership": "e4fba6ae52087403b39b9fd4b42c4dce5518ca634deb639f6cbc517942b5ea8a",
     "20261013210000_audit_columns_not_null": "21912748f9646b6afcec9420179964a40f9a455964e4b027b88398fa12383742",
-    "20261015144424_drift_ai_docs_kb_ai_ai_models_ai_ai_cerebellum_ai_docs_ingest_log": "890851eee750aa22dd394f4767756ce0b76c3a1a47330e65eb7bded64fbd7e5f"
+    "20261015144424_drift_ai_docs_kb_ai_ai_models_ai_ai_cerebellum_ai_docs_ingest_log": "890851eee750aa22dd394f4767756ce0b76c3a1a47330e65eb7bded64fbd7e5f",
+    "20261025210000_enduser_display_names": "c9b2eb5de203dc6fba8d0730fe1365a1b6872f67b90d5849b754074139d5f12b"
   },
-  "signature": "3d76u/+BwC+hITlVTyh4J51IBDRbgIQI1PA+FTMYTrcFDN96dwgDsnD9EEfJ3SR0rONfiidoOywMbiMlO2yzCQ=="
+  "signature": "1EqfTnUbRige/vXe2rRXpeGdT7F2w6b9myVDz1M8/o22ga/o6jPwfnalaurnC33aVWLBgScnvsOEVCCv46yKAg=="
 }

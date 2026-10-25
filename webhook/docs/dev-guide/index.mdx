@@ -91,7 +91,7 @@ database bootstrap comes from env:
 | Variable | Required | Default | Purpose |
 |----------|----------|---------|---------|
 | `DATABASE_URL` | yes | — | PostgreSQL connection string (owns the `webhook.config_entries` table) |
-| `DB_SCHEMA` | no | `webhook` | Database schema name |
+| `DATABASE_SCHEMA` | yes | — | Declared schema domain (`webhook`; CSV/JSON array for multi-schema — `[0]` is owned) |
 
 Everything else lives in `webhook.config_entries` and is loaded by
 `ConfigLoader` at startup: `nats_url`, `service_code`, `http_port`,
@@ -107,9 +107,9 @@ pnpm run build
 pnpm run start
 ```
 
-The SDK exposes the public `/health` route and manages service registration, periodic heartbeats, NATS connection lifecycle, and graceful shutdown. The webhook service's health adapter has no database to check; NATS connectivity is monitored by the SDK.
+The SDK exposes the public `/health` route and manages service registration, periodic heartbeats, NATS connection lifecycle, and graceful shutdown. The service owns the `webhook` PG schema (migrations under `db-meta/patches/`), so the health adapter checks the database via the DAL; NATS connectivity is monitored by the SDK.
 
-The service does not currently define an `openapi-route.ts`, so the interactive API Catalog does not have a generated OpenAPI specification for this route yet.
+The service's HTTP surface is declared once in `src/controllers/http/router.ts` via `makeServiceRoutes` — the same `webhookRoutes` table drives both the ingress router and the OpenAPI spec served at `GET /api/v1/openapi.json` (client-shielded; the BE fetches it during service discovery).
 
 ## Next steps
 

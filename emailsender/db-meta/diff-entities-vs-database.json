@@ -1,7 +1,24 @@
 {
   "version": 2,
-  "generatedAt": "2026-10-15T15:15:33.687Z",
+  "generatedAt": "2026-10-24T23:59:35.577Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "emailsender.email_templates": {
+      "onlyInEntityColumns": [
+        "deleted_at",
+        "deleted_by"
+      ],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

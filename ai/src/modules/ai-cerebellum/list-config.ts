@@ -30,15 +30,15 @@ const auditingKeySet = new Set<string>(AI_CEREBELLUM_AUDITING_COLUMN_KEYS);
 
 const AI_CEREBELLUM_RAW_COLUMNS: AiCerebellumListColumn[] = [
   // uuid is the canonical first sticky column (order -1), hidden but selectable
-  { key: "uuid", label_key: "system.entities.ai_cerebellum.fields.uuid", type: "text", order: -1, sortable: true, default_visible: false },
-  { key: "assistant_key", label_key: "system.entities.ai_cerebellum.fields.assistant_key", type: "text", order: 0, sortable: true, hideable: false, filterable: true },
-  { key: "model_id", label_key: "system.entities.ai_cerebellum.fields.model_id", type: "text", order: 1, sortable: true, filterable: true },
-  { key: "dtype", label_key: "system.entities.ai_cerebellum.fields.dtype", type: "text", order: 1.5, sortable: true, filterable: true },
-  { key: "name", label_key: "system.entities.ai_cerebellum.fields.name", type: "text", order: 2, sortable: true, filterable: true },
-  { key: "description_key", label_key: "system.entities.ai_cerebellum.fields.description_key", type: "text", order: 3, sortable: false, default_visible: false },
+  { key: "uuid", label_key: "ai.entities.ai_cerebellum.fields.uuid", type: "text", order: -1, sortable: true, default_visible: false },
+  { key: "assistant_key", label_key: "ai.entities.ai_cerebellum.fields.assistant_key", type: "text", order: 0, sortable: true, hideable: false, filterable: true },
+  { key: "model_id", label_key: "ai.entities.ai_cerebellum.fields.model_id", type: "text", order: 1, sortable: true, filterable: true },
+  { key: "dtype", label_key: "ai.entities.ai_cerebellum.fields.dtype", type: "text", order: 1.5, sortable: true, filterable: true },
+  { key: "name", label_key: "ai.entities.ai_cerebellum.fields.name", type: "text", order: 2, sortable: true, filterable: true },
+  { key: "description_key", label_key: "ai.entities.ai_cerebellum.fields.description_key", type: "text", order: 3, sortable: false, default_visible: false },
   {
     key: "enable_thinking",
-    label_key: "system.entities.ai_cerebellum.fields.enable_thinking",
+    label_key: "ai.entities.ai_cerebellum.fields.enable_thinking",
     type: "badge",
     order: 4,
     sortable: true,
@@ -47,25 +47,25 @@ const AI_CEREBELLUM_RAW_COLUMNS: AiCerebellumListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        true: { label_key: "system.entities.ai_cerebellum.thinking.true", color: "violet-300" },
-        false: { label_key: "system.entities.ai_cerebellum.thinking.false", color: "zinc-300" },
+        true: { label_key: "ai.entities.ai_cerebellum.thinking.true", color: "violet-300" },
+        false: { label_key: "ai.entities.ai_cerebellum.thinking.false", color: "zinc-300" },
       },
     },
   },
-  { key: "temperature", label_key: "system.entities.ai_cerebellum.fields.temperature", type: "text", order: 5, sortable: true, default_visible: true },
-  { key: "top_p", label_key: "system.entities.ai_cerebellum.fields.top_p", type: "text", order: 6, sortable: false, default_visible: true },
-  { key: "max_tokens", label_key: "system.entities.ai_cerebellum.fields.max_tokens", type: "text", order: 7, sortable: true, default_visible: true },
-  { key: "repetition_penalty", label_key: "system.entities.ai_cerebellum.fields.repetition_penalty", type: "text", order: 8, sortable: false, default_visible: false },
+  { key: "temperature", label_key: "ai.entities.ai_cerebellum.fields.temperature", type: "text", order: 5, sortable: true, default_visible: true },
+  { key: "top_p", label_key: "ai.entities.ai_cerebellum.fields.top_p", type: "text", order: 6, sortable: false, default_visible: true },
+  { key: "max_tokens", label_key: "ai.entities.ai_cerebellum.fields.max_tokens", type: "text", order: 7, sortable: true, default_visible: true },
+  { key: "repetition_penalty", label_key: "ai.entities.ai_cerebellum.fields.repetition_penalty", type: "text", order: 8, sortable: false, default_visible: false },
 
 
   // Auditing columns (hidden by default)
-  { key: "created_at", label_key: "system.entities.ai_cerebellum.fields.created_at", type: "datetime", order: 9, sortable: true, searchable: false, default_visible: false },
-  { key: "updated_at", label_key: "system.entities.ai_cerebellum.fields.updated_at", type: "datetime", order: 10, sortable: true, searchable: false, default_visible: false },
-  { key: "created_by", label_key: "system.entities.ai_cerebellum.fields.created_by", type: "text", order: 11, sortable: false, default_visible: false, searchable: false },
-  { key: "updated_by", label_key: "system.entities.ai_cerebellum.fields.updated_by", type: "text", order: 12, sortable: false, default_visible: false, searchable: false },
-  { key: "version", label_key: "system.entities.ai_cerebellum.fields.version", type: "text", order: 13, sortable: false, default_visible: false, searchable: false },
-  { key: "deleted_at", label_key: "system.entities.ai_cerebellum.fields.deleted_at", type: "datetime", order: 14, sortable: true, searchable: false, default_visible: false },
-  { key: "deleted_by", label_key: "system.entities.ai_cerebellum.fields.deleted_by", type: "text", order: 15, sortable: false, default_visible: false, searchable: false },
+  { key: "created_at", label_key: "ai.entities.ai_cerebellum.fields.created_at", type: "datetime", order: 9, sortable: true, searchable: false, default_visible: false },
+  { key: "updated_at", label_key: "ai.entities.ai_cerebellum.fields.updated_at", type: "datetime", order: 10, sortable: true, searchable: false, default_visible: false },
+  { key: "created_by", label_key: "ai.entities.ai_cerebellum.fields.created_by", type: "text", order: 11, sortable: false, default_visible: false, searchable: false },
+  { key: "updated_by", label_key: "ai.entities.ai_cerebellum.fields.updated_by", type: "text", order: 12, sortable: false, default_visible: false, searchable: false },
+  { key: "version", label_key: "ai.entities.ai_cerebellum.fields.version", type: "text", order: 13, sortable: false, default_visible: false, searchable: false },
+  { key: "deleted_at", label_key: "ai.entities.ai_cerebellum.fields.deleted_at", type: "datetime", order: 14, sortable: true, searchable: false, default_visible: false },
+  { key: "deleted_by", label_key: "ai.entities.ai_cerebellum.fields.deleted_by", type: "text", order: 15, sortable: false, default_visible: false, searchable: false },
 ];
 
 const stickyKeySet = new Set<string>(AI_CEREBELLUM_STICKY_COLUMN_KEYS);
