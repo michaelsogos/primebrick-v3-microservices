@@ -262,7 +262,7 @@ source content, title, or heading path changed.
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `DB_SCHEMA` | No | `ai` | Database schema |
+| `DATABASE_SCHEMA` | Yes | — | Declared schema domain (`ai`; CSV/JSON array for multi-schema — `[0]` is owned) |
 
 These are the **only** env-sourced settings (env policy). All runtime
 configuration lives in `ai.config_entries` and is read through

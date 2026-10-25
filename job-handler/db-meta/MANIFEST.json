@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha",
-  "issued_at": "2026-10-21T10:57:53.254Z",
+  "key_id": "dev-micha-2",
+  "issued_at": "2026-10-25T19:09:03.499Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -16,7 +16,8 @@
     "0011_job_audit_partman": "543effbe76f5990f914135a9e713a902ff12abcfa1b4fcc25624fd4b3a12654f",
     "0012_job_rule_form": "21cda5cd13d0cbabc61d6a5498c8eca6182b27dbdb4a837334013baad15b4e5d",
     "0013_job_module_label": "f8ef421c97b1e91786422606f5a8def3673ff60cc3969613faf2bbc2d8cfa368",
-    "0014_job_schedules_page_label": "4940488141a736449c1cf5f32f26ddf6f88e5f37100e7928891dadf23636dfec"
+    "0014_job_schedules_page_label": "4940488141a736449c1cf5f32f26ddf6f88e5f37100e7928891dadf23636dfec",
+    "20261025210000_enduser_display_names": "8be7732834845db1183974be2800036ca68b077543d849d5ba304cbd3703d6d9"
   },
-  "signature": "WiA8pG3k5GeVgFQ3DOzOdslcc1W5q9nP8b2ZvMR8LzAHf07V5VuF0racnTOMDboWEGA8T/oKy0HUZnj+dfgVDg=="
+  "signature": "y9cHcekl+Jjg5PYjEVd8dLEQnjfZL9Qykd6JpafSdZjHeGtoZOvk2+1xGmA8zi6pcapq0384jUxkEk2QXT5lDQ=="
 }

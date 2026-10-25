@@ -24,7 +24,8 @@ management via HTTP entity CRUD routes proxied through the Backend.
   ES -->|HTTP| Brevo[Brevo API]
   BE -->|NATS emailsender.send| ES
   ES -->|NATS emailsender.response.*| BE
-  Brevo -->|Webhook POST /webhook| ES
+  Brevo -->|POST /webhook/emailsender/:intent| WH[Webhook svc :3005]
+  WH -->|JetStream webhook.emailsender.received| ES
   ES -->|DB| PG[(emailsender schema)]
 `} />
 
@@ -34,20 +35,26 @@ All HTTP routes follow the standardized API path conventions (see
 [Conventions](/dev/microservices/conventions)). The Backend proxies
 requests via `/ws/emailsender/*`.
 
-The EmailSender service exposes three route groups:
+The EmailSender service exposes two HTTP route groups:
 
 - **Providers** (entity CRUD) — manage email provider configurations (Brevo™
   API keys, sender settings). JWT auth + RBAC.
 - **Config entries** (entity CRUD) — module configuration key-value store.
   JWT auth + RBAC.
-- **Webhook** — inbound delivery status callbacks from email providers.
-  API key auth + RBAC.
+
+Inbound delivery-status webhooks do **not** arrive over HTTP on this
+service: providers POST to the `webhook` ingress service
+(`POST /webhook/emailsender/:intent`), which forwards the envelope over
+JetStream to `webhook.emailsender.received` — consumed here by a durable
+subscriber (see NATS™ Subjects below).
 
 Single-entity `POST`/`PUT` bodies use the `{entity}` envelope (flat bodies
 rejected with `400`; `translations` sibling not accepted — see
 [Conventions](../../conventions#entity-crud-apiv1entitiesentity)).
 
-System endpoints: `GET /health` (public), `GET /api/v1/openapi.json` (public).
+System endpoints: `GET /health` (public), `GET /api/v1/openapi.json`
+(inside the client-shield gate — internal callers authenticate with their
+client shield key; the BE discovery fetcher reaches it that way).
 
 See the [EmailSender API Catalog](/catalog/emailsender) for the full
 interactive API reference — every path, method, operationId, parameter,
@@ -182,9 +189,11 @@ Brevo™ REST API (`POST /smtp/emails`). The client is constructed per-request
 from the `providers` table config (API key + endpoint loaded from DB, not
 from env vars).
 
-Brevo™ delivery events are received via `POST /webhook?provider=brevo` and
-processed by `WebhookService`, which maps Brevo™ event names to internal
-statuses:
+Brevo™ delivery events are posted by Brevo™ to the `webhook` ingress
+service (`POST /webhook/emailsender/brevo`), which forwards the envelope
+over JetStream (`webhook.emailsender.received`). The durable consumer in
+`src/controllers/nats-sub/webhook-subscriber.ts` hands it to
+`WebhookService`, which maps Brevo™ event names to internal statuses:
 
 | Brevo event | Internal status |
 |-------------|-----------------|
@@ -212,7 +221,8 @@ Called by the NATS `emailsender.send` handler. Flow:
 
 ### `WebhookService.handleWebhook(provider, payload, actorId)`
 
-Called by the `POST /webhook` route. Flow:
+Called by the durable JetStream consumer for `webhook.emailsender.received`
+(see the Brevo™ section above). Flow:
 1. Validate provider is `brevo`
 2. Extract `message-id` and `event` from payload
 3. Map Brevo™ event to internal status via `BrevoClient.mapStatus()`
@@ -225,7 +235,7 @@ Called by the `POST /webhook` route. Flow:
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `DATABASE_URL` | yes | — | PostgreSQL® connection string |
-| `DB_SCHEMA` | no | `emailsender` | Database schema name |
+| `DATABASE_SCHEMA` | yes | — | Declared schema domain (`emailsender`; CSV/JSON array for multi-schema — `[0]` is owned) |
 
 These are the **only** env-sourced settings. Everything else — `nats_url`,
 `service_code`, `http_port`, `service_base_url` (exposed URL for BE proxy

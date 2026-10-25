@@ -22,7 +22,8 @@ import {
   HttpHeaderProvider,
   NatsClient,
   AuthError,
-  makeRpcRouter,
+  makeServiceRoutes,
+  detectPackageIdentity,
   Permission,
   type ApiKeyPort,
   type RpcRoute,
@@ -137,9 +138,18 @@ export const webhookRoutes: RpcRoute[] = [
   },
 ];
 
-/** Factory-produced webhook router — the only legal handler shape. */
-export const webhookRouteHandler = makeRpcRouter(webhookRoutes, {
-  apiKeyPort: () => apiKeyPort,
+/** Full service route surface: the ingress router AND its OpenAPI spec
+ *  derive from the same `webhookRoutes` table — the spec can never drift
+ *  from the registered routes. */
+export const webhookRouteHandler = makeServiceRoutes({
+  info: {
+    title: "Webhook Ingress",
+    version: detectPackageIdentity().version ?? "0.0.0",
+    description:
+      "Inbound webhook ingress — forwards requests verbatim to the target microservice via JetStream",
+  },
+  tags: [{ name: "webhook", description: "Inbound webhook ingress" }],
+  rpc: [{ routes: webhookRoutes, deps: { apiKeyPort: () => apiKeyPort } }],
 });
 
 /** Idempotent stream setup — called once at boot. */

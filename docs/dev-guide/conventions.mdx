@@ -11,13 +11,15 @@ All HTTP routes in microservices follow standardized path conventions so
 the BE's MCP Server can dispatch generic CRUD tools without per-entity
 configuration.
 
-**Route handlers are factory-produced (MANDATORY):** every route is declared
-as an `RpcRoute` and mounted via the SDK's `makeRpcRouter` (entity OpenAPI
-via `entityCrudSpec`, the spec endpoint via `makeOpenApiHandler`, composites
-via `composeRouteHandlers`). `createMicroservice` refuses to boot with a
-hand-rolled `(req, res, url) => boolean` handler — auth, RBAC, body
-validation and RFC 7807 errors are enforced by the factory, not by
-convention.
+**Route handlers are factory-produced (MANDATORY):** the service's whole
+HTTP surface is declared ONCE via the SDK's `makeServiceRoutes` — entity
+declarations become `makeEntityRouter` + `entityCrudSpec`, `RpcRoute[]`
+tables become `makeRpcRouter` + `rpcSpec`, and `/api/v1/openapi.json`
+via `makeOpenApiHandler` — all derived from that single declaration, so
+the published spec can never drift from the registered routes.
+`createMicroservice` refuses to boot with a hand-rolled
+`(req, res, url) => boolean` handler — auth, RBAC, body validation and
+RFC 7807 errors are enforced by the factory, not by convention.
 
 ### Entity CRUD (`/api/v1/entities/:entity/...`)
 
@@ -106,7 +108,7 @@ POST   /webhook/brevo                              → Brevo-specific webhook
 
 ```
 GET    /health                                     → health check (public, no auth)
-GET    /api/v1/openapi.json                        → OpenAPI spec (public, no auth)
+GET    /api/v1/openapi.json                        → OpenAPI spec (client-shielded — the BE fetches it via internalFetch during discovery)
 GET    /api/v1/system/info                         → service info (authenticated)
 ```
 

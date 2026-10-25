@@ -12,7 +12,8 @@ import {
 export const aiModelMeta: EntityMeta = {
   entity: "ai_model",
   translation_key: "ai_model",
-  title_key: "system.entities.ai_model.title",
+  entities_ns: "ai",
+  title_key: "ai.entities.ai_model.title",
   uid: "uuid",
   display_field: "model_id",
   columns: AI_MODEL_LIST_COLUMNS,

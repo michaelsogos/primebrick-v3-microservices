@@ -38,6 +38,12 @@ describe("resolveModuleAssetPath", () => {
     expect(resolveModuleAssetPath("")).toBeNull();
     expect(resolveModuleAssetPath(".")).toBeNull();
   });
+
+  it("resolves the chunk deps manifest (vendor handshake)", () => {
+    expect(resolveModuleAssetPath("jobs-page.deps.json")).toBe(
+      join(ASSETS_ROOT, "jobs-page.deps.json"),
+    );
+  });
 });
 
 describe("moduleAssetContentType", () => {
@@ -61,5 +67,14 @@ describe("moduleAssetCacheControl", () => {
   it("no-cache for predictable entry names", () => {
     expect(moduleAssetCacheControl("jobs-page.js")).toBe("no-cache");
     expect(moduleAssetCacheControl("jobs-page.css")).toBe("no-cache");
+    // deps manifests must always revalidate — a stale vendor_requires
+    // would let a rebuilt chunk mount against the wrong vendor versions.
+    expect(moduleAssetCacheControl("jobs-page.deps.json")).toBe("no-cache");
+  });
+
+  it("serves deps manifests as JSON", () => {
+    expect(moduleAssetContentType(join(ASSETS_ROOT, "jobs-page.deps.json"))).toContain(
+      "application/json",
+    );
   });
 });

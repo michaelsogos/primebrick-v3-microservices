@@ -11,7 +11,7 @@
  * gateway's OpenAPI dispatch.
  */
 import { z } from "zod";
-import { extJsonStringify, makeRpcRouter, Permission, type RpcRoute } from "@primebrick/sdk";
+import { extJsonStringify, Permission, type RpcRoute } from "@primebrick/sdk";
 
 import { DocsSearchService } from "../../services/docs-search-service.js";
 import { zBoundedInt, zBoundedNumber } from "../../modules/shared/validation.js";
@@ -78,4 +78,4 @@ const routes: RpcRoute[] = [
 
 export const DOCS_SEARCH_ROUTES = routes;
 
-export const docsSearchRouteHandler = makeRpcRouter(routes);
+

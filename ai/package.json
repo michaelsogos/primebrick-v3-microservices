@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "primebrick-ai",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "capabilities": [
     "llm_orchestrator",
     "chat_orchestrator",
@@ -14,9 +14,11 @@
   },
   "scripts": {
     "version:auto": "node ../scripts/version-sync.mjs",
-    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs",
+    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs && pnpm fe:build",
     "dev": "bun --hot src/index.ts",
     "build": "tsc",
+    "fe:build": "vite build fe",
+    "fe:check": "cd fe && svelte-check",
     "prestart": "pnpm run build",
     "start": "bun dist/index.js",
     "db:migrate": "bun scripts/database-patch-apply.ts",
@@ -32,7 +34,8 @@
     "generate:docs": "bun scripts/build-docs-pack.ts",
     "docs:reindex": "bun scripts/reindex-packs.ts",
     "check:standards": "bun ../../primebrick-v3-sdk/tools/check-standards.ts src",
-    "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json"
+    "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json",
+    "deploy": "node ../scripts/deploy-service.mjs ai"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "3.0.72",
@@ -49,8 +52,12 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@primebrick/ui": "workspace:*",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
     "@types/node": "24.13.3",
     "@types/pg": "8.23.1",
+    "svelte": "5.57.2",
+    "svelte-check": "4.3.4",
     "typescript": "6.0.3",
     "vite": "8.3.4",
     "vitest": "4.1.10"

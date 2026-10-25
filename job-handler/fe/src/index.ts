@@ -13,12 +13,21 @@
  * on navigation/teardown. The chunk is self-contained (bundles svelte +
  * @primebrick/ui).
  */
-import { mount } from 'svelte';
-import type { ModulePageHost } from '@primebrick/ui';
+import { mountModuleContent, type ModulePageHost, type ModuleSheetHost } from '@primebrick/ui';
 import SchedulePage from './SchedulePage.svelte';
 import RuleFormPage from './RuleFormPage.svelte';
+import RunDetailSheet from './RunDetailSheet.svelte';
 
 export function mountPage(el: HTMLElement, ctx: ModulePageHost) {
   const Page = ctx.nav.route === '/system/job/rules/create' ? RuleFormPage : SchedulePage;
-  return mount(Page, { target: el, props: { ctx } });
+  return mountModuleContent(el, ctx, Page);
+}
+
+/**
+ * Remote sheet entry — declared in `nav.sheets[]` (`job.runDetail`), mounted
+ * by the host's RemoteSheetMount inside its global sheet surface. The host
+ * owns the engine; the content is job-domain.
+ */
+export function mountSheet(el: HTMLElement, ctx: ModuleSheetHost) {
+  return mountModuleContent(el, ctx, RunDetailSheet);
 }

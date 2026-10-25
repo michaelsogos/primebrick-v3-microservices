@@ -1,12 +1,13 @@
 {
   "version": 1,
   "key_id": "dev-micha",
-  "issued_at": "2026-10-13T21:34:59.601Z",
+  "issued_at": "2026-10-22T17:46:47.829Z",
   "patches": {
     "0001_initial_schema_webhook": "bf4dd142785e3094ea4e3bdebcdb87b1a5d9f469fdf3395e188fd0f423ad1344",
     "0002_seed_webhook_config": "08d871ade3a47770fbaca39fab4954dd8a8082535f58956c1742158c3e857858",
     "0003_seed_gateway_secret": "242e383345f899d22388410546c7f2788439110d88678a5d1d9c8918596e708f",
+    "0004_seed_be_base_url": "fd05b69bd627390d648fbc31fd6cc1200844f176601cf32e2283bfd9e45588dd",
     "20261013210300_audit_columns_not_null": "e253ea9d51cfb359a16a636cb01391dd1e340c94a18492594155f3beed392ab4"
   },
-  "signature": "1Vz1QS2+mfmHSo5BA+SBXL5s7zKVLT3vdiTRv/TbUJL805l18veXhsSFnLRF5w8Jfen0mGrz11sbPOSd9UmICw=="
+  "signature": "ouqzgA2zWLK0K729XsJ4lZn+h9gtZ0HyJjE2BEqcvpYvhj8eGJcHq5aFY58/5JrroBu/V+R8NZJ80yK0Z1NHCg=="
 }

@@ -37,6 +37,9 @@ export interface MetaColumn {
 export interface EntityMeta {
   entity: string;
   translation_key: string;
+  /** Entity-label i18n namespace — FE composes `<entities_ns>.entities.*`
+   *  (module-owned entities declare their module code; absent = `system`). */
+  entities_ns?: string;
   title_key: string;
   uid: string;
   display_field: string;
