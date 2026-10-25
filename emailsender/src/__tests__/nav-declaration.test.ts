@@ -23,18 +23,20 @@ describe("EMAILSENDER_NAV declaration", () => {
     expect(defaults[0].href).toBe("/system/emailsender/providers");
   });
 
-  it("declares the list/create/detail triplet under the module prefix", () => {
+  it("declares the list/create/detail triplets under the module prefix", () => {
     const routes = (EMAILSENDER_NAV.routes ?? []).map((r) => r.route);
-    expect(routes).toContain("/system/emailsender/providers");
-    expect(routes).toContain("/system/emailsender/providers/create");
-    expect(routes).toContain("/system/emailsender/providers/[uuid]");
+    for (const leaf of ["providers", "templates"]) {
+      expect(routes).toContain(`/system/emailsender/${leaf}`);
+      expect(routes).toContain(`/system/emailsender/${leaf}/create`);
+      expect(routes).toContain(`/system/emailsender/${leaf}/[uuid]`);
+    }
     expect(routes).not.toContain("/system/emailsender");
     expect(routes).not.toContain("/system/emailsender/new");
   });
 
   it("remote routes point at the module-assets chunk", () => {
     const remote = (EMAILSENDER_NAV.routes ?? []).filter((r) => r.component_url);
-    expect(remote.map((r) => r.kind)).toEqual(["create", "detail"]);
+    expect(remote.map((r) => r.kind)).toEqual(["create", "detail", "create", "detail"]);
     for (const r of remote) {
       expect(r.component_url).toBe("/ws/emailsender/api/v1/module-assets/emailsender-pages.js");
       expect(r.component_format).toBe("esm-mount");

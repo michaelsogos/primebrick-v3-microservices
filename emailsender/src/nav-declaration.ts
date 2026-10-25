@@ -27,12 +27,14 @@
 import { entityPaths, type ModuleNavDeclaration } from "@primebrick/sdk";
 
 const providersPaths = entityPaths("/system/emailsender", "providers");
+const templatesPaths = entityPaths("/system/emailsender", "templates");
 
 export const EMAILSENDER_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/emailsender"],
   access: "access.system.emailsender",
   nav: [
     { id: "providers", label_key: "emailsender.nav.providers", href: providersPaths.list, icon: "mail", default: true },
+    { id: "templates", label_key: "emailsender.nav.templates", href: templatesPaths.list, icon: "layout-template" },
   ],
   routes: [
     // Host-rendered EntityTablePage list — the standard archetype,
@@ -55,6 +57,26 @@ export const EMAILSENDER_NAV: ModuleNavDeclaration = {
       kind: "detail",
       entity: "provider",
       label_key: "emailsender.providers.editProvider",
+      component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
+      component_format: "esm-mount",
+    },
+    // email_template surfaces — same split as providers: host-rendered
+    // list, module-owned remote create/edit forms on the same chunk.
+    { route: templatesPaths.list, kind: "list", entity: "email_template", label_key: "emailsender.nav.templates" },
+    {
+      route: templatesPaths.create,
+      kind: "create",
+      entity: "email_template",
+      label_key: "emailsender.templates.createTemplate",
+      icon: "plus",
+      component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
+      component_format: "esm-mount",
+    },
+    {
+      route: templatesPaths.detail,
+      kind: "detail",
+      entity: "email_template",
+      label_key: "emailsender.templates.editTemplate",
       component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
       component_format: "esm-mount",
     },

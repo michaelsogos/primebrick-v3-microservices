@@ -18,6 +18,8 @@ import {
 
 import { ProvidersService } from "../../modules/providers/providers.service.js";
 import { providerMeta } from "../../modules/providers/provider.meta.js";
+import { TemplatesService } from "../../modules/templates/templates.service.js";
+import { templateMeta } from "../../modules/templates/template.meta.js";
 
 /** Lazy service proxy — instantiated on first method call (post-initDal). */
 function lazy<T extends object>(factory: () => T): T {
@@ -32,7 +34,7 @@ function lazy<T extends object>(factory: () => T): T {
  * translation writes are gateway-owned; a US entity route must not accept
  * them — same contract as the BE's `entityOnlyWriteBody`).
  */
-function providerBody(raw: unknown): { entity: Record<string, unknown> } {
+function entityBody(raw: unknown): { entity: Record<string, unknown> } {
   const body = raw as Record<string, unknown>;
   if (
     body?.translations !== undefined ||
@@ -66,6 +68,25 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
       delete: [Permission.EMAILSENDER_PROVIDER_DELETE_SINGLE],
     },
     duplicate: false,
-    schemas: { createBody: providerBody, updateBody: providerBody },
+    schemas: { createBody: entityBody, updateBody: entityBody },
+  },
+  {
+    entityName: "email_template",
+    spec: { tag: "templates", label: "email template" },
+    service: lazy(() => new TemplatesService()) as unknown as EntityServiceLike,
+    meta: templateMeta as unknown as Record<string, unknown>,
+    // Same audit-columns-without-trail contract as provider — no
+    // email_templates_audit table exists BY REQUIREMENT.
+    auditable: false,
+    permissions: {
+      meta: [Permission.EMAILSENDER_TEMPLATE_READ_ALL],
+      list: [Permission.EMAILSENDER_TEMPLATE_READ_ALL],
+      get: [Permission.EMAILSENDER_TEMPLATE_READ_SINGLE, Permission.EMAILSENDER_TEMPLATE_READ_ALL],
+      create: [Permission.EMAILSENDER_TEMPLATE_CREATE_SINGLE],
+      update: [Permission.EMAILSENDER_TEMPLATE_UPDATE_SINGLE],
+      delete: [Permission.EMAILSENDER_TEMPLATE_DELETE_SINGLE],
+    },
+    duplicate: false,
+    schemas: { createBody: entityBody, updateBody: entityBody },
   },
 ];
