@@ -5,7 +5,7 @@
  * Built exclusively through the SDK `makeEntityRouter` factory — the same
  * mandatory chain (auth → RBAC → validation → ONE service call → RFC 7807)
  * the BE's Express router enforced. Paths are identical to the former BE
- * routes so the BE→US `/ws/ai` proxy is a pure transport hop:
+ * routes so the BE→US `/svc/ai` proxy is a pure transport hop:
  *
  *   /api/v1/entities/ai_model/meta|list|:uuid|restore|audit
  *   /api/v1/entities/ai_cerebellum/meta|list|:uuid|restore|audit
@@ -65,7 +65,7 @@ export const aiEntityDecls: EntityRouteDecl[] = [
     entityName: "ai_model",
     spec: { tag: "ai_models" },
     service: lazy(() => new AiModelsService()) as unknown as EntityServiceLike,
-    meta: aiModelMeta as unknown as Record<string, unknown>,
+    meta: aiModelMeta,
     auditable: true,
     permissions: {
       meta: readPerms,
@@ -89,7 +89,7 @@ export const aiEntityDecls: EntityRouteDecl[] = [
     entityName: "ai_cerebellum",
     spec: { tag: "ai_cerebellum" },
     service: lazy(() => new AiCerebellumService()) as unknown as EntityServiceLike,
-    meta: aiCerebellumMeta as unknown as Record<string, unknown>,
+    meta: aiCerebellumMeta,
     auditable: true,
     permissions: {
       meta: readPerms,

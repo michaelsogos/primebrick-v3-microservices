@@ -9,7 +9,7 @@
  *
  * `bindRemoteCtx(ctx, { service: 'crm' })` wires the shared-UI bridges
  * (i18n/notify/service-api/sheet/step-up) so composables resolve the crm
- * service API (`/ws/crm/api/v1`) and the `crm.*` translation namespace
+ * service API (`/svc/crm/api/v1`) and the `crm.*` translation namespace
  * instead of the host's.
  */
 import { bindRemoteCtx, mountModuleContent, type ModulePageHost } from '@primebrick/ui';

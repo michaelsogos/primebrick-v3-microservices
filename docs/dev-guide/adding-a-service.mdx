@@ -98,7 +98,7 @@ manifest.json` exists.
 ## 7. Registration — automatic
 
 On boot the service publishes `service.register`; the BE registry learns
-name, base_url, capabilities, endpoints — and the `/ws/<code>/*` proxy
+name, base_url, capabilities, endpoints — and the `/svc/<code>/*` proxy
 path becomes reachable. Nav/sidebar entries for its screens are declared
 by the service itself in the `endpoints.nav` block of the
 `service.register` payload (`route_prefixes` + `nav[]` + full `routes`
@@ -130,7 +130,7 @@ host sheet engine.
 Those chunks live in `<svc>/fe/` (a small vite app → `fe/dist/`), and are
 served by `src/controllers/http/module-assets-route.ts` at
 `GET /api/v1/module-assets/*` (reachable through the gateway as
-`/ws/<code>/api/v1/module-assets/<chunk>.js`). Content-hashed files are
+`/svc/<code>/api/v1/module-assets/<chunk>.js`). Content-hashed files are
 immutable; the stable entry names are `no-cache` so a redeploy always
 revalidates. The host never reads the service's `fe/` sources — it only
 resolves the declared `component_url`.

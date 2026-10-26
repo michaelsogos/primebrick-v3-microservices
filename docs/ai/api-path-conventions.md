@@ -9,7 +9,7 @@
 
 ## Purpose
 
-Primebrick microservices are proxied by the Backend (BE) via `/ws/:serviceCode/*`
+Primebrick microservices are proxied by the Backend (BE) via `/svc/:serviceCode/*`
 and are consumed by:
 1. The Frontend (FE) — direct UI interactions
 2. The MCP Server (inside the BE) — generic CRUD tools that dispatch based on

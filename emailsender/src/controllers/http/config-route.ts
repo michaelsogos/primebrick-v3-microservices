@@ -7,7 +7,7 @@
  *   PUT    /api/v1/entities/config_entry/:uuid   → update record by UUID
  *
  * Used by the FE module config page via the BE proxy:
- *   FE → BE /ws/emailsender/api/v1/entities/config_entry/list → emailsender
+ *   FE → BE /svc/emailsender/api/v1/entities/config_entry/list → emailsender
  */
 
 import type { ServerResponse } from "http";

@@ -38,7 +38,7 @@ describe("EMAILSENDER_NAV declaration", () => {
     const remote = (EMAILSENDER_NAV.routes ?? []).filter((r) => r.component_url);
     expect(remote.map((r) => r.kind)).toEqual(["create", "detail", "create", "detail"]);
     for (const r of remote) {
-      expect(r.component_url).toBe("/ws/emailsender/api/v1/module-assets/emailsender-pages.js");
+      expect(r.component_url).toBe("/svc/emailsender/api/v1/module-assets/emailsender-pages.js");
       expect(r.component_format).toBe("esm-mount");
     }
   });

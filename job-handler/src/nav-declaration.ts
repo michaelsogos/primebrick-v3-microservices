@@ -48,7 +48,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       entity: "job_schedule",
       label_key: "job.jobs.scheduleNew",
       icon: "calendar-plus",
-      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
     },
     {
@@ -56,7 +56,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_rule",
       label_key: "job.jobs.ruleForm.title",
-      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
     },
   ],
@@ -66,7 +66,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
   sheets: [
     {
       key: "job.runDetail",
-      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
     },
   ],

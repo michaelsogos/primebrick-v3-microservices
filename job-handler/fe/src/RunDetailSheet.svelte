@@ -6,7 +6,7 @@
    * its fields, its fetch, its labels (`job.entities.job_run.*` keys).
    *
    * Props contract: `ctx.sheet.props.run_uuid` — the job_run uuid to show.
-   * The fetch rides `ctx.api` (ws-bound → /ws/job/api/v1/entities/job_run).
+   * The fetch rides `ctx.api` (ws-bound → /svc/job/api/v1/entities/job_run).
    */
   import type { ModuleSheetHost } from '@primebrick/ui';
 

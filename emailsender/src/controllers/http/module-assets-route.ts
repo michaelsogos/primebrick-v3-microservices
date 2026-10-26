@@ -6,8 +6,8 @@
  * file under `fe/dist`, streams bytes with the right content-type and cache
  * policy. No domain logic.
  *
- *   /ws/emailsender/api/v1/module-assets/emailsender-pages.js   → fe/dist/emailsender-pages.js
- *   /ws/emailsender/api/v1/module-assets/emailsender-pages.css  → fe/dist/emailsender-pages.css
+ *   /svc/emailsender/api/v1/module-assets/emailsender-pages.js   → fe/dist/emailsender-pages.js
+ *   /svc/emailsender/api/v1/module-assets/emailsender-pages.css  → fe/dist/emailsender-pages.css
  *
  * Cache policy: vite content-hashed assets (`-[hash8].<ext>`) are immutable;
  * the predictable entry names (emailsender-pages.js/.css) are `no-cache` so a

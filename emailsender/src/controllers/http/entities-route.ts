@@ -1,7 +1,7 @@
 /**
  * entities-route — canonical entity CRUD for the `emailsender` schema
  * entities, behind the SDK `makeEntityRouter` factory (auth → RBAC →
- * validation → ONE service call → RFC 7807). The BE `/ws/emailsender`
+ * validation → ONE service call → RFC 7807). The BE `/svc/emailsender`
  * proxy makes it a pure transport hop.
  *
  *   /api/v1/entities/provider/meta|list|:uuid
@@ -54,7 +54,7 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
     entityName: "provider",
     spec: { tag: "providers", label: "email provider" },
     service: lazy(() => new ProvidersService()) as unknown as EntityServiceLike,
-    meta: providerMeta as unknown as Record<string, unknown>,
+    meta: providerMeta,
     // Auditable columns (created_by/updated_at/version) are stamped — the
     // entity intentionally has NO providers_audit trail table, so no
     // audit route/collaboration surface is exposed.
@@ -74,7 +74,7 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
     entityName: "email_template",
     spec: { tag: "templates", label: "email template" },
     service: lazy(() => new TemplatesService()) as unknown as EntityServiceLike,
-    meta: templateMeta as unknown as Record<string, unknown>,
+    meta: templateMeta,
     // Same audit-columns-without-trail contract as provider — no
     // email_templates_audit table exists BY REQUIREMENT.
     auditable: false,

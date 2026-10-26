@@ -38,7 +38,7 @@ into a standalone product.
 - `src/controllers/http/module-assets-route.ts` — serves `fe/dist` remote
   page chunks at `GET /api/v1/module-assets/*` (the `component_url` the
   nav declarations point at). Reached via the BE proxy as
-  `/ws/crm/api/v1/module-assets/...`.
+  `/svc/crm/api/v1/module-assets/...`.
 - MCP reaches `customer` as `module=crm`, `handler_type: "proxy"` — the
   OpenAPI-driven entity discovery auto-registers it on service enrollment.
 

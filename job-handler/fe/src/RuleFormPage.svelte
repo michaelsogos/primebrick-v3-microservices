@@ -11,7 +11,7 @@
    *
    * Submission is the canonical entity create route:
    *   POST /api/v1/entities/job_rule  { entity: {…} }
-   * resolved service-relative by ctx.api → /ws/job/api/v1/entities/job_rule.
+   * resolved service-relative by ctx.api → /svc/job/api/v1/entities/job_rule.
    *
    * Rendering boundaries: identical to SchedulePage — breadcrumb and the
    * submit Button are host components mounted via ctx.mount_host (separate

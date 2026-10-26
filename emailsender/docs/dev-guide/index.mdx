@@ -19,7 +19,7 @@ management via HTTP entity CRUD routes proxied through the Backend.
 ## Architecture
 
 <Mermaid chart={`flowchart LR
-  FE[Frontend] -->|HTTP via BE proxy| BE[Backend /ws/emailsender/*]
+  FE[Frontend] -->|HTTP via BE proxy| BE[Backend /svc/emailsender/*]
   BE -->|HTTP| ES[EmailSender]
   ES -->|HTTP| Brevo[Brevo API]
   BE -->|NATS emailsender.send| ES
@@ -33,7 +33,7 @@ management via HTTP entity CRUD routes proxied through the Backend.
 
 All HTTP routes follow the standardized API path conventions (see
 [Conventions](/dev/microservices/conventions)). The Backend proxies
-requests via `/ws/emailsender/*`.
+requests via `/svc/emailsender/*`.
 
 The EmailSender service exposes two HTTP route groups:
 
@@ -73,7 +73,7 @@ request body, and response schema with live try-it functionality.
   `RemotePageMount`.
 - **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` (vite build
   under `fe/`); the gateway path is
-  `/ws/emailsender/api/v1/module-assets/emailsender-pages.js`.
+  `/svc/emailsender/api/v1/module-assets/emailsender-pages.js`.
 
 ## NATS™ Subjects
 

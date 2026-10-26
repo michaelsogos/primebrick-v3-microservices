@@ -8,7 +8,7 @@
  * max_tokens, repetition_penalty, enable_thinking).
  *
  * This table is the single source of truth for model metadata — the FE reads
- * it via `/ws/ai/api/v1/entities/ai_model/list` (BE proxy → this service) and
+ * it via `/svc/ai/api/v1/entities/ai_model/list` (BE proxy → this service) and
  * the `ai_assistant_model` config row points its `type_config.api_url` at the
  * same endpoint. The table lives in the `ai` schema — owned exclusively by
  * this service.

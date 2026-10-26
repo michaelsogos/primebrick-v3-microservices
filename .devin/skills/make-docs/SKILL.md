@@ -178,7 +178,7 @@ For each missing shared page (from Step 2), create it:
 
 - **`overview.mdx`**: repo overview — what the microservices repo is, list of
   microservices (with links to their service pages), high-level architecture.
-- **`architecture.mdx`**: NATS™ message bus, BE `/ws/:serviceCode/*` proxy,
+- **`architecture.mdx`**: NATS™ message bus, BE `/svc/:serviceCode/*` proxy,
   SDK lifecycle (service registration, heartbeat, graceful shutdown), database
   per-service isolation.
 - **`conventions.mdx`**: API path conventions (from

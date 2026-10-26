@@ -1,7 +1,7 @@
 /**
  * entities-route — canonical entity CRUD for the `crm` schema entities,
  * behind the SDK `makeEntityRouter` factory (auth → RBAC → validation →
- * ONE service call → RFC 7807). The BE `/ws/crm` proxy makes it a pure
+ * ONE service call → RFC 7807). The BE `/svc/crm` proxy makes it a pure
  * transport hop.
  *
  *   /api/v1/entities/customer/meta|list|export|duplicate|:uuid[/audit|purge|restore]

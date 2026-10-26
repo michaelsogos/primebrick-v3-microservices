@@ -60,24 +60,24 @@ Example — list providers through the BE proxy:
 ```bash
 # List with search + pagination
 curl -H "Authorization: Bearer <jwt>" \
-  "http://localhost:3001/ws/emailsender/api/v1/entities/provider/list?search=brevo&page=1&page_size=20"
+  "http://localhost:3001/svc/emailsender/api/v1/entities/provider/list?search=brevo&page=1&page_size=20"
 
 # Get entity metadata (field schema for dynamic forms)
 curl -H "Authorization: Bearer <jwt>" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/provider/meta
+  http://localhost:3001/svc/emailsender/api/v1/entities/provider/meta
 
 # Create a provider ({entity} envelope)
 curl -X POST -H "Authorization: Bearer <jwt>" -H "Content-Type: application/json" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/provider \
+  http://localhost:3001/svc/emailsender/api/v1/entities/provider \
   -d '{"entity":{"provider":"brevo","api_key":"xkeysib-...","from_email":"noreply@example.com"}}'
 
 # Soft-delete by UUID
 curl -X DELETE -H "Authorization: Bearer <jwt>" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/provider/550e8400-e29b-41d4-a716-446655440000
+  http://localhost:3001/svc/emailsender/api/v1/entities/provider/550e8400-e29b-41d4-a716-446655440000
 
 # Restore a soft-deleted record
 curl -X POST -H "Authorization: Bearer <jwt>" \
-  http://localhost:3001/ws/emailsender/api/v1/entities/provider/550e8400-e29b-41d4-a716-446655440000/restore
+  http://localhost:3001/svc/emailsender/api/v1/entities/provider/550e8400-e29b-41d4-a716-446655440000/restore
 ```
 
 ### Service actions (`/api/v1/actions/:action`)

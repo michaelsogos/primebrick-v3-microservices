@@ -11,8 +11,8 @@
    *     authored in the source repos and ride the release, never live-edited
    *   - Search probes: canonical queries against the live index
    *
-   * Data: GET  /ws/ai/api/v1/ai/docs/index-status   (via the 'ai' slot)
-   *       POST /ws/ai/api/v1/ai/reindex {mode:'packs', repo?}
+   * Data: GET  /svc/ai/api/v1/ai/docs/index-status   (via the 'ai' slot)
+   *       POST /svc/ai/api/v1/ai/reindex {mode:'packs', repo?}
    */
   import { getT, getNotify } from '@primebrick/ui';
   import { onMount } from 'svelte';

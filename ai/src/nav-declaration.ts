@@ -34,14 +34,14 @@ export const AI_NAV: ModuleNavDeclaration = {
       route: "/system/ai/console",
       kind: "page",
       label_key: "ai.console.title",
-      component_url: "/ws/ai/api/v1/module-assets/ai-pages.js",
+      component_url: "/svc/ai/api/v1/module-assets/ai-pages.js",
       component_format: "esm-mount",
     },
     {
       route: "/system/ai/docs-index",
       kind: "page",
       label_key: "ai.docs.title",
-      component_url: "/ws/ai/api/v1/module-assets/ai-pages.js",
+      component_url: "/svc/ai/api/v1/module-assets/ai-pages.js",
       component_format: "esm-mount",
     },
   ],
@@ -51,22 +51,22 @@ export const AI_NAV: ModuleNavDeclaration = {
   sheets: [
     {
       key: "ai.modelTestReport",
-      component_url: "/ws/ai/api/v1/module-assets/ai-sheets.js",
+      component_url: "/svc/ai/api/v1/module-assets/ai-sheets.js",
       component_format: "esm-mount",
     },
     {
       key: "ai.modelCache",
-      component_url: "/ws/ai/api/v1/module-assets/ai-sheets.js",
+      component_url: "/svc/ai/api/v1/module-assets/ai-sheets.js",
       component_format: "esm-mount",
     },
     {
       key: "ai.cerebellum",
-      component_url: "/ws/ai/api/v1/module-assets/ai-sheets.js",
+      component_url: "/svc/ai/api/v1/module-assets/ai-sheets.js",
       component_format: "esm-mount",
     },
     {
       key: "ai.modelImport",
-      component_url: "/ws/ai/api/v1/module-assets/ai-sheets.js",
+      component_url: "/svc/ai/api/v1/module-assets/ai-sheets.js",
       component_format: "esm-mount",
     },
   ],

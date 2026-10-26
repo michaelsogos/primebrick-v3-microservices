@@ -4,7 +4,7 @@
    *
    * Stub surface pending the form archetype (metadata-driven-page-system):
    * breadcrumb + title + "coming soon" — the create API is live and covered
-   * by e2e through `/ws/crm/api/v1/entities/customer`.
+   * by e2e through `/svc/crm/api/v1/entities/customer`.
    *
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
    *   - AppPageBreadcrumb is a HOST component mounted via ctx.mount_host as

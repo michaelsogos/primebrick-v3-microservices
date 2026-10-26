@@ -49,7 +49,7 @@ export const EMAILSENDER_NAV: ModuleNavDeclaration = {
       entity: "provider",
       label_key: "emailsender.providers.createProvider",
       icon: "plus",
-      component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
+      component_url: "/svc/emailsender/api/v1/module-assets/emailsender-pages.js",
       component_format: "esm-mount",
     },
     {
@@ -57,7 +57,7 @@ export const EMAILSENDER_NAV: ModuleNavDeclaration = {
       kind: "detail",
       entity: "provider",
       label_key: "emailsender.providers.editProvider",
-      component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
+      component_url: "/svc/emailsender/api/v1/module-assets/emailsender-pages.js",
       component_format: "esm-mount",
     },
     // email_template surfaces — same split as providers: host-rendered
@@ -69,7 +69,7 @@ export const EMAILSENDER_NAV: ModuleNavDeclaration = {
       entity: "email_template",
       label_key: "emailsender.templates.createTemplate",
       icon: "plus",
-      component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
+      component_url: "/svc/emailsender/api/v1/module-assets/emailsender-pages.js",
       component_format: "esm-mount",
     },
     {
@@ -77,7 +77,7 @@ export const EMAILSENDER_NAV: ModuleNavDeclaration = {
       kind: "detail",
       entity: "email_template",
       label_key: "emailsender.templates.editTemplate",
-      component_url: "/ws/emailsender/api/v1/module-assets/emailsender-pages.js",
+      component_url: "/svc/emailsender/api/v1/module-assets/emailsender-pages.js",
       component_format: "esm-mount",
     },
   ],

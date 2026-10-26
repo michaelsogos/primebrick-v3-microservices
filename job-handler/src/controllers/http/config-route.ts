@@ -7,7 +7,7 @@
  *   PUT    /api/v1/entities/config_entry/:uuid   → update record by UUID
  *
  * Used by the FE module config page via the BE proxy:
- *   FE → BE /ws/job/api/v1/entities/config_entry/list → job-handler
+ *   FE → BE /svc/job/api/v1/entities/config_entry/list → job-handler
  *
  * Precedent: ai's config-route — same RpcRoute shape. `type === 'secret'`
  * rows mask `value` to null on reads (BE ConfigEntriesService semantics —

@@ -60,7 +60,7 @@ entry point.
     PG[(PostgreSQL)]
   end
   FE -->|HTTP| BE
-  BE -->|/ws/:code/* proxy| ES & AI & WH & JH & CRM
+  BE -->|/svc/:code/* proxy| ES & AI & WH & JH & CRM
   ES & AI & WH & JH & CRM -->|NATS| NATS
   ES & AI & WH & JH & CRM -->|SQL| PG
   BE -->|SQL| PG
@@ -68,7 +68,7 @@ entry point.
 
 The Backend (BE) acts as the API gateway. The Frontend (FE) never calls
 microservices directly — all HTTP traffic goes through the BE's
-`/ws/:serviceCode/*` proxy. Inter-service async communication uses NATS™
+`/svc/:serviceCode/*` proxy. Inter-service async communication uses NATS™
 subjects.
 
 ## Quick start
@@ -102,7 +102,7 @@ curl http://localhost:3003/api/v1/openapi.json | head -20
 From the Frontend, the same service is reached through the BE proxy:
 
 ```bash
-curl http://localhost:3001/ws/emailsender/api/v1/entities/provider/list
+curl http://localhost:3001/svc/emailsender/api/v1/entities/provider/list
 # → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
 ```
 

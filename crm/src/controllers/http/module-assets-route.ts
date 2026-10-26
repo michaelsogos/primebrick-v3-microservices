@@ -6,8 +6,8 @@
  * file under `fe/dist`, streams bytes with the right content-type and cache
  * policy. No domain logic.
  *
- *   /ws/crm/api/v1/module-assets/crm-pages.js   → fe/dist/crm-pages.js
- *   /ws/crm/api/v1/module-assets/crm-pages.css  → fe/dist/crm-pages.css
+ *   /svc/crm/api/v1/module-assets/crm-pages.js   → fe/dist/crm-pages.js
+ *   /svc/crm/api/v1/module-assets/crm-pages.css  → fe/dist/crm-pages.css
  *
  * Cache policy: vite content-hashed assets (`-[hash8].<ext>`) are immutable;
  * the predictable entry names (crm-pages.js/.css) are `no-cache` so a

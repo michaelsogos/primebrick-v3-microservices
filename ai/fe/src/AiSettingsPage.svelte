@@ -10,7 +10,7 @@
    *     a separate root; moduleBreadcrumbSegments is a host-state-bound
    *     function passed through ctx.components.
    *   - Config entries are AI-SCHEMA-owned (`ai.config_entries`) — fetched
-   *     and written through ctx.api (`/ws/ai`), never the host config API.
+   *     and written through ctx.api (`/svc/ai`), never the host config API.
    *   - Deletion goes through ctx.components.mfaStepUp — the step-up dialog
    *     is rendered host-side inside RemotePageMount's own markup.
    *   - Sheets (`ai.cerebellum`/`ai.modelImport`/`ai.modelTestReport`) open
