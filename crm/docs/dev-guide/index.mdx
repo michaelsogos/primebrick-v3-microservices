@@ -1,14 +1,15 @@
 ---
 title: CRM — module-ownership case study
-description: CRM playground service — proves a module can own navigation, route prefixes and translations via service registration; entity APIs migrate here in a later phase
+description: CRM playground service — proves a module can own navigation, route prefixes, translations, entity APIs and remote pages via service registration
 ---
 
 # CRM (`primebrick-crm`)
 
 CRM is a **playground/case-study service** for the module-ownership
 architecture — not a business product module. It proves that a microservice
-can own its own navigation, route prefixes and translations through service
-registration. It will eventually be split out into a standalone product.
+can own its own navigation, route prefixes, translations, entity APIs and
+remote pages through service registration. It will eventually be split out
+into a standalone product.
 
 ## What it does today
 
@@ -19,18 +20,43 @@ registration. It will eventually be split out into a standalone product.
 - Registers `CRM_NAV` (`nav-declaration.ts`) via `service_registry.endpoints.nav`.
 - Translates its own module label (`labelKey: "crm.module.name"`) in the
   `crm.translations` namespace.
+- **Owns the `customer` domain entity end-to-end** — entity class
+  (`domain/entities/customer_entity.ts` → `crm.customers` + `crm.customers_audit`),
+  `CustomersService extends DomainService`, meta, list config, zod schemas,
+  `crm.entities.customer.*` translations (`entities_ns: "crm"`), and the
+  meta-derived export pipeline (`templates/customer_export_template.*`).
 
-The customer entity pages stay BE-served for now — route declarations
-reference entity `customer` rendered by the FE metadata pipeline. Entity API
-ownership migrates to this service in a later phase.
+## HTTP surface
+
+- `src/controllers/http/entities-route.ts` — `EntityRouteDecl[]` for
+  `customer`: `/api/v1/entities/customer/meta|list|export|duplicate|
+  bulk-delete|bulk-restore|:uuid[/audit|/restore]` (no `purge` — customer
+  never declared it). Permission literals stay `Permission.CUSTOMER_*`.
+- `src/controllers/http/composite-route.ts` — `makeServiceRoutes` derives
+  BOTH the CRUD routers and `/api/v1/openapi.json` from ONE declaration;
+  the spec can never drift from registered routes.
+- `src/controllers/http/module-assets-route.ts` — serves `fe/dist` remote
+  page chunks at `GET /api/v1/module-assets/*` (the `component_url` the
+  nav declarations point at). Reached via the BE proxy as
+  `/ws/crm/api/v1/module-assets/...`.
+- MCP reaches `customer` as `module=crm`, `handler_type: "proxy"` — the
+  OpenAPI-driven entity discovery auto-registers it on service enrollment.
+
+## Remote pages
+
+`fe/` is a vite+svelte remote-chunk build (`fe:build` → `dist/crm-pages.js`):
+`/crm/customers/create` and `/system/crm/pipeline` are module-owned remote
+pages (`component_format: "esm-mount"`), mounted by the FE catch-all through
+`RemotePageMount`. The list page stays host-rendered (`kind: "list"`).
+`bindRemoteCtx(ctx, { service: 'crm' })` wires service-scoped i18n/API.
 
 ## Boundaries
 
-- **No HTTP controllers and no NATS subscribers** — the service registers
-  metadata only (nav, translations, route census).
+- **No NATS subscribers** — HTTP surface only (entity CRUD + openapi +
+  module assets).
 - **DB ownership**: owns its own `db-meta/` (signed `MANIFEST.json`,
-  `keys.json`, `patches/` — e.g. `0002_seed_config.sql` seeds `http_port`
-  and sibling config entries).
+  `keys.json`, `patches/` — `0005_customers_ownership.sql` moved
+  `customers`/`customers_audit` from `public` into `crm`).
 - **Root level `crm`** is distinct from `system`: `service_registry.part_of`
   separates the two domains (see `overview.mdx`).
 
@@ -40,6 +66,7 @@ ownership migrates to this service in a later phase.
 - Env policy: `DATABASE_URL` + `DATABASE_SCHEMA` only (see
   `docs/ai/env-policy.md`); everything else lives in `config_entries`.
 - Dev: `bun --hot src/index.ts` from `primebrick-us-v3/crm/`.
+- Docs pack: `pnpm generate:docs` → `dist/docs-pack` (openapi-only pack).
 
 ## Adapters
 

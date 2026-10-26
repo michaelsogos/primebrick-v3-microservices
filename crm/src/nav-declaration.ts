@@ -31,8 +31,26 @@ export const CRM_NAV: ModuleNavDeclaration = {
     { id: "pipeline", label_key: "crm.pipeline.nav", href: "/system/crm/pipeline", icon: "git-branch" },
   ],
   routes: [
+    // Host-rendered EntityTablePage list — the standard archetype,
+    // delivered statically by the FE; the service declares ownership.
     { route: customersPaths.list, kind: "list", entity: "customer", label_key: "crm.customers.nav" },
-    { route: customersPaths.create, kind: "create", entity: "customer", label_key: "app.common.new", icon: "plus" },
-    { route: "/system/crm/pipeline", kind: "page" },
+    // Module-owned remote surfaces on the crm-pages chunk — the create
+    // page is a stub pending the form archetype; pipeline is the static
+    // preview. Both dispatch on ctx.nav.route inside the chunk.
+    {
+      route: customersPaths.create,
+      kind: "create",
+      entity: "customer",
+      label_key: "app.common.new",
+      icon: "plus",
+      component_url: "/ws/crm/api/v1/module-assets/crm-pages.js",
+      component_format: "esm-mount",
+    },
+    {
+      route: "/system/crm/pipeline",
+      kind: "page",
+      component_url: "/ws/crm/api/v1/module-assets/crm-pages.js",
+      component_format: "esm-mount",
+    },
   ],
 };

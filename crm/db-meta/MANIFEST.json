@@ -1,12 +1,14 @@
 {
   "version": 1,
-  "key_id": "dev-micha",
-  "issued_at": "2026-10-21T00:45:28.542Z",
+  "key_id": "dev-micha-2",
+  "issued_at": "2026-10-26T19:25:19.291Z",
   "patches": {
     "0001_crm_schema": "736c58127fef0e2d01347ac6824c6383bf7b224ea594594aa5f68b5b5fcd67d7",
     "0002_seed_config": "342d2f213ce4ac396859d503e753d171c601980f8771a8d00e86490c105824b5",
     "0003_crm_translations": "868a43fc6f5af8fae758b07a81771b62394de7190abe2a377b6c8fcb84571493",
-    "0004_crm_module_label": "d6b1ef8e8d77af736208e7489ea858d36bab681d448eb1f8cefc3d8a71d7b250"
+    "0004_crm_module_label": "d6b1ef8e8d77af736208e7489ea858d36bab681d448eb1f8cefc3d8a71d7b250",
+    "0005_customers_ownership": "aa6c02de4841a9d9c7d7d3e8efc4fdf81112df4f77761f9e8693713d5d4c3eaa",
+    "0006_customers_audit_partitions": "a63a51722272c58d5085e9ef78e9db94a1bdefe65894626c7ee76484b1106f59"
   },
-  "signature": "eQ9Q3KekXCMn7/QhEWVRyjDbiZ9g/J0IY0MZ5/3bTqBuHaJaoHTl6lyiqhqXjpaGyT01E7aoeLEjr/roRV0VDA=="
+  "signature": "DsRlMUURsOEmhCswL4O1b6aKJgCks8ImKpJGMalyGtFui/pJ7lZdCTo4XNtvvEF8pJoLwjqC8QeFIlZI2QICBw=="
 }
