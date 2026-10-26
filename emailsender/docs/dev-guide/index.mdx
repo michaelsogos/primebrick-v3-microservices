@@ -60,6 +60,21 @@ See the [EmailSender API Catalog](/catalog/emailsender) for the full
 interactive API reference — every path, method, operationId, parameter,
 request body, and response schema with live try-it functionality.
 
+## Module-owned frontend
+
+`src/nav-declaration.ts` exports `EMAILSENDER_NAV`, registered into
+`service_registry.endpoints.nav` under `route_prefixes:
+["/system/emailsender"]` (access namespace `access.system.emailsender`).
+
+- **List pages** (`kind: "list"`) — providers and templates lists are
+  host-rendered entity-table archetypes; no module code ships for them.
+- **Create / edit pages** (`component_format: "esm-mount"`) — provider and
+  template forms mount `emailsender-pages.js` via the host
+  `RemotePageMount`.
+- **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` (vite build
+  under `fe/`); the gateway path is
+  `/ws/emailsender/api/v1/module-assets/emailsender-pages.js`.
+
 ## NATS™ Subjects
 
 Email sending is triggered via NATS™, not HTTP. The Backend publishes send

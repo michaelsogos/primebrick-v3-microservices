@@ -81,5 +81,17 @@ Config: `partition_maintenance_schedule` in the service's `config_entries`
 
 ## Admin UI
 
-`/(app)/system/job` — recurring / one-time / rules / run-history views with
-per-row Kestra-style stacked-bar execution sparklines.
+The job module owns its UI via `JOB_NAV` (`src/nav-declaration.ts` →
+`service_registry.endpoints.nav`, `route_prefixes: ["/system/job"]`,
+access namespace `access.system.job`).
+
+- **List pages** (`kind: "list"`) — schedules / runs / rules lists are
+  host-rendered entity-table archetypes with per-row Kestra-style
+  stacked-bar execution sparklines.
+- **Create pages** (`component_format: "esm-mount"`) — the schedule and
+  rule forms mount `jobs-page.js` via the host `RemotePageMount`.
+- **Remote sheet** (`nav.sheets[]`) — `job.runDetail` mounts the run
+  drill-down panel from the same chunk via the host sheet engine.
+- **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` (vite build
+  under `fe/`); the gateway path is
+  `/ws/job/api/v1/module-assets/jobs-page.js`.

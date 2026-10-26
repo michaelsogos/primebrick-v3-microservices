@@ -110,6 +110,7 @@ handled by the gateway (headers: `x-user-id`, `Authorization: Bearer <jwt>`).
 | POST | `/api/v1/ai/embed` | Server-side embedding of query text | `AUTHENTICATED_USER` |
 | POST | `/api/v1/system/docs/search` | Semantic search over `docs_kb` | `AUTHENTICATED_USER` |
 | POST | `/api/v1/system/docs/document` | Fetch a doc's chunks by path | `AUTHENTICATED_USER` |
+| GET | `/api/v1/module-assets/*` | Serve precompiled module FE chunks (`fe/dist`) | Gateway |
 
 ### Chat endpoint
 
@@ -153,6 +154,25 @@ The chat endpoint uses a token bucket algorithm per user (identified by
 If the shared `redis_url` config is set, rate limiting is distributed
 across instances. Otherwise, an in-memory token bucket is used
 (single-instance only).
+
+## Module-owned frontend
+
+The ai module owns its UI end to end — `src/nav-declaration.ts` exports
+`AI_NAV`, registered verbatim into `service_registry.endpoints.nav`
+(`nav: AI_NAV` in `src/index.ts`) and validated at enrollment.
+
+- **Route namespace**: `route_prefixes: ["/system/ai"]`, access namespace
+  `access.system.ai`; leaf keys are derived from routes.
+- **Remote pages** (`nav.routes[]`, `component_format: "esm-mount"`):
+  `/system/ai/console` (default leaf) and `/system/ai/docs-index` mount
+  `ai-pages.js` via the host `RemotePageMount`; the chunk dispatches on
+  `ctx.nav.route`.
+- **Remote sheets** (`nav.sheets[]`, keys `ai.*`): `ai.modelTestReport`,
+  `ai.modelCache`, `ai.cerebellum`, `ai.modelImport` mount `ai-sheets.js`
+  via the host sheet engine — chrome is host-owned, content is ai-domain.
+- **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` — a vite
+  build under `fe/` with two entries (`src/pages.ts` → `ai-pages.js`,
+  `src/index.ts` → `ai-sheets.js`) plus `.deps.json`/`.sha256` siblings.
 
 ## Database schema
 
