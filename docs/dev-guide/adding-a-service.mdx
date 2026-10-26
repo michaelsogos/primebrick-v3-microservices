@@ -119,6 +119,22 @@ service's OWN `*.translations` schema (seed it there, like `nav[].label_key`
 entries). Every UI surface (app launcher, breadcrumbs, module menus)
 renders it via `resolveModuleLabel` with the raw `name` as fallback.
 
+**Module-owned frontend**: the `routes` census declares how each page
+renders. `kind: "list"` routes are host-rendered archetypes (generic entity
+table — no module code ships); every other route carries
+`component_url` + `component_format: "esm-mount"` pointing at a chunk the
+service itself builds and serves. `sheets[]` does the same for sheet
+panels — keys are module-namespaced (`<code>.<name>`) and mounted by the
+host sheet engine.
+
+Those chunks live in `<svc>/fe/` (a small vite app → `fe/dist/`), and are
+served by `src/controllers/http/module-assets-route.ts` at
+`GET /api/v1/module-assets/*` (reachable through the gateway as
+`/ws/<code>/api/v1/module-assets/<chunk>.js`). Content-hashed files are
+immutable; the stable entry names are `no-cache` so a redeploy always
+revalidates. The host never reads the service's `fe/` sources — it only
+resolves the declared `component_url`.
+
 ## 8. Docs
 
 `<svc>/docs/dev-guide/index.mdx` — always. `<svc>/docs/user-guide/` only
