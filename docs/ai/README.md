@@ -27,6 +27,7 @@ These files help humans and agents collaborate consistently on the
 | [`internal-client.md`](./internal-client.md) | Internal HTTP Client (mandatory) |
 | [`logging-telemetry.md`](./logging-telemetry.md) | Logging & Telemetry |
 | [`package-versioning.md`](./package-versioning.md) | Fixed Package Versions (No Ranges) |
+| [`pre-implementation-anatomy.md`](./pre-implementation-anatomy.md) | ⚠️ MANDATORY before remote-page or form-metadata work — reference lock, contract read, allocation check, contract E2E, host-rendered evidence |
 | [`temp-files.md`](./temp-files.md) | Temporary Files Location |
 | [`verify-file-creation.md`](./verify-file-creation.md) | Verify File Creation (Prevent Truncated Filename Bug) |
 | [`workflow.md`](./workflow.md) | Devin Workflow Rule: Tic-Toc Planning |

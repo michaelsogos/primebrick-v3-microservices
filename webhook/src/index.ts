@@ -13,6 +13,7 @@ import {
   setWebhookAuthDependencies,
   ensureWebhookStream,
 } from "./controllers/http/router.js";
+import { WEBHOOK_EVENTS } from "./events-declaration.js";
 import { startRegistryCache } from "./registry/registry-cache.js";
 
 async function main(): Promise<void> {
@@ -26,6 +27,11 @@ async function main(): Promise<void> {
 
     // Root level — system module: route prefix /system/webhook.
     partOf: "system",
+
+    // Headless service — no nav, but it OWNS the inbound-webhook event
+    // vocabulary: webhook.<service>.received is the domain signal other
+    // modules (job rules, triggers) subscribe to.
+    events: WEBHOOK_EVENTS,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-10-25T19:09:03.499Z",
+  "issued_at": "2026-10-27T21:17:37.371Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -17,7 +17,10 @@
     "0012_job_rule_form": "21cda5cd13d0cbabc61d6a5498c8eca6182b27dbdb4a837334013baad15b4e5d",
     "0013_job_module_label": "f8ef421c97b1e91786422606f5a8def3673ff60cc3969613faf2bbc2d8cfa368",
     "0014_job_schedules_page_label": "4940488141a736449c1cf5f32f26ddf6f88e5f37100e7928891dadf23636dfec",
-    "20261025210000_enduser_display_names": "8be7732834845db1183974be2800036ca68b077543d849d5ba304cbd3703d6d9"
+    "20261025210000_enduser_display_names": "8be7732834845db1183974be2800036ca68b077543d849d5ba304cbd3703d6d9",
+    "20261027000000_job_rule_form_fields": "12e865f1d7fc920e7b318068d589412fff6095a3cb1c27f5b1f43755be6a7eba",
+    "20261027200000_job_rule_hints_and_event_desc": "c416572ba55deedee23b7c6674af70323a95074c1c99c65ccc882a94797b0abc",
+    "20261028140000_job_rule_semantic_labels": "1080657ae04f7c93743c318de72280abb40f3643da7e61beb6c540fadf9c9401"
   },
-  "signature": "y9cHcekl+Jjg5PYjEVd8dLEQnjfZL9Qykd6JpafSdZjHeGtoZOvk2+1xGmA8zi6pcapq0384jUxkEk2QXT5lDQ=="
+  "signature": "9FQLGV3iVroKda+CEbkXrrMbnUb8M2jilQjPLSY4G41v0Pu8Zl6AptJAnL2Vc76wn6LLRN7NbBhArgl2QUFjDA=="
 }

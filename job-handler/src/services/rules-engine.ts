@@ -97,13 +97,16 @@ async function onEvent(ruleUuid: string, payload: unknown, msg: { headers?: Para
       );
       return;
     }
+    // `rule.source_subject` is intentionally NOT forwarded — the
+    // Nats-Schedule-Source indirection reads a queue tail (last message)
+    // which is semantically wrong for state-at-fire; it stays declared
+    // (entity + form field, readonly) pending the workflow engine.
     await declareSchedule({
       schedule_subject: scheduleSubject,
       schedule: rule.schedule_spec,
       target: rule.target_subject,
       kind: "rule",
       payload,
-      source: rule.source_subject ?? undefined,
       forwardHeaders: fwd,
       initiator: `rule:${rule.name}`,
       rule_uuid: rule.uuid,

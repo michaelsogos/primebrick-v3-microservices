@@ -19,6 +19,7 @@ import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startRulesEngine } from "./services/rules-engine.js";
 import { JOB_NAV } from "./nav-declaration.js";
+import { JOB_EVENTS } from "./events-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -44,6 +45,7 @@ async function main(): Promise<void> {
     // the remote chunk URL are published by this service, never hardcoded
     // inside another module's nav registry.
     nav: JOB_NAV,
+    events: JOB_EVENTS,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has

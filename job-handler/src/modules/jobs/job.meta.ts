@@ -18,12 +18,35 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { withColumnConstraints } from "@primebrick/dal-pg";
+import { JobRuleEntity, JobScheduleEntity, JobRunEntity } from "../../domain/entities/registry.js";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
 const F = (e: string, c: string) => `job.entities.${e}.fields.${c}`;
 const V = (e: string, v: string) => `job.entities.${e}.status.${v}`;
+const H = (e: string, c: string) => `job.entities.${e}.hints.${c}`;
+const HT = (e: string, c: string) => `job.entities.${e}.hints.${c}_title`;
 
-export const jobRuleMeta: EntityMeta = {
+/**
+ * `job_rule.filter` JSON Schema — mirrors `matchFilter` in the rules engine:
+ * `RuleFilter[]` where each entry is `{ field, op?, value? }` — `field` is a
+ * dot-path on the event payload, `op` the closed operator enum. Served to the
+ * form archetype for BOTH editor lint/completion and submit validation.
+ */
+const RULE_FILTER_SCHEMA = {
+  type: "array",
+  items: {
+    type: "object",
+    required: ["field"],
+    properties: {
+      field: { type: "string" },
+      op: { enum: ["eq", "neq", "exists", "contains", "gt", "lt"] },
+      value: {},
+    },
+  },
+} as const;
+
+export const jobRuleMeta: EntityMeta = withColumnConstraints({
   entity: "job_rule",
   translation_key: "job_rule",
   entities_ns: "job",
@@ -32,24 +55,46 @@ export const jobRuleMeta: EntityMeta = {
   display_field: "name",
   columns: [
     { key: "name", label_key: F("job_rule", "name"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
-    { key: "event_subject", label_key: F("job_rule", "event_subject"), type: "text", order: 20, filterable: true },
-    { key: "schedule_spec", label_key: F("job_rule", "schedule_spec"), type: "text", order: 30 },
-    { key: "target_subject", label_key: F("job_rule", "target_subject"), type: "text", order: 40 },
     {
-      key: "execution_context", label_key: F("job_rule", "execution_context"), type: "badge", order: 50, filterable: true,
+      key: "event_subject", label_key: F("job_rule", "event_subject"), type: "text", format: "nats_subject", order: 20, filterable: true,
+      icon: "zap",
+      tooltip: H("job_rule", "event_subject"), tooltip_title: HT("job_rule", "event_subject"), tooltip_priority: "HINT",
+    },
+    {
+      key: "filter", label_key: F("job_rule", "filter"), type: "text", format: "json", order: 30,
+      default_visible: false,
+      json_schema: RULE_FILTER_SCHEMA,
+      tooltip: H("job_rule", "filter"), tooltip_title: HT("job_rule", "filter"), tooltip_priority: "HINT",
+    },
+    {
+      key: "schedule_spec", label_key: F("job_rule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40,
+      tooltip: H("job_rule", "schedule_spec"), tooltip_title: HT("job_rule", "schedule_spec"), tooltip_priority: "HINT",
+    },
+    {
+      key: "target_subject", label_key: F("job_rule", "target_subject"), type: "text", format: "nats_subject", order: 50,
+      icon: "zap",
+      tooltip: H("job_rule", "target_subject"), tooltip_title: HT("job_rule", "target_subject"), tooltip_priority: "HINT",
+    },
+    {
+      key: "execution_context", label_key: F("job_rule", "execution_context"), type: "badge", order: 60, filterable: true,
       badge: { values: {
         system: { label_key: V("job_rule", "system"), color: "blue" },
         user: { label_key: V("job_rule", "user"), color: "purple" },
       } },
+      tooltip: H("job_rule", "execution_context"), tooltip_title: HT("job_rule", "execution_context"), tooltip_priority: "HINT",
     },
-    { key: "enabled", label_key: F("job_rule", "enabled"), type: "boolean", order: 60, filterable: true },
-    { key: "updated_at", label_key: F("job_rule", "updated_at"), type: "datetime", order: 70, sortable: true },
-    { key: "created_at", label_key: F("job_rule", "created_at"), type: "datetime", order: 80, sortable: true, default_visible: false },
+    {
+      key: "source_subject", label_key: F("job_rule", "source_subject"), type: "text", format: "nats_subject", order: 70, default_visible: false,
+      tooltip: H("job_rule", "source_subject"), tooltip_title: HT("job_rule", "source_subject"), tooltip_priority: "HINT",
+    },
+    { key: "enabled", label_key: F("job_rule", "enabled"), type: "boolean", order: 80, filterable: true },
+    { key: "updated_at", label_key: F("job_rule", "updated_at"), type: "datetime", order: 90, sortable: true },
+    { key: "created_at", label_key: F("job_rule", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false },
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
-};
+}, JobRuleEntity);
 
-export const jobScheduleMeta: EntityMeta = {
+export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entity: "job_schedule",
   translation_key: "job_schedule",
   entities_ns: "job",
@@ -143,9 +188,9 @@ export const jobScheduleMeta: EntityMeta = {
       },
     ],
   },
-};
+}, JobScheduleEntity);
 
-export const jobRunMeta: EntityMeta = {
+export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entity: "job_run",
   translation_key: "job_run",
   entities_ns: "job",
@@ -172,4 +217,4 @@ export const jobRunMeta: EntityMeta = {
     { key: "redelivery_count", label_key: F("job_run", "redelivery"), type: "number", order: 90, default_visible: false },
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
-};
+}, JobRunEntity);
