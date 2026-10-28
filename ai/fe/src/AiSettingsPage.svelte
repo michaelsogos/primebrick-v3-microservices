@@ -6,9 +6,8 @@
    * cerebellum tunings, WebLLM model cache management, machine capabilities.
    *
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
-   *   - AppPageBreadcrumb is a HOST component mounted via ctx.mount_host as
-   *     a separate root; moduleBreadcrumbSegments is a host-state-bound
-   *     function passed through ctx.components.
+   *   - Page chrome (breadcrumb/star/title/description) is HOST-owned —
+   *     rendered by the shell PageHeader from the route decl.
    *   - Config entries are AI-SCHEMA-owned (`ai.config_entries`) — fetched
    *     and written through ctx.api (`/svc/ai`), never the host config API.
    *   - Deletion goes through ctx.components.mfaStepUp — the step-up dialog
@@ -43,10 +42,8 @@
   import { Toolbar } from '@primebrick/ui';
   import { cn } from '@primebrick/ui';
   import type { ModulePageHost } from '@primebrick/ui';
-  import type { AiPageComponents } from './host-contract';
 
   let { ctx }: { ctx: ModulePageHost } = $props();
-  const comps = $derived(ctx.components as AiPageComponents | undefined);
 
   const t = getT();
   const notify = getNotify();
@@ -55,17 +52,6 @@
 
   const aiModels = useAiModels();
   const machine = useMachineCapabilities();
-
-  // Breadcrumb — host-mounted once (module menu segment resolved host-side).
-  let breadcrumbEl = $state<HTMLDivElement>();
-  $effect(() => {
-    const el = breadcrumbEl;
-    const c = comps;
-    if (!el || !c || !ctx.mount_host) return;
-    const segments = c.moduleBreadcrumbSegments({ pathname: ctx.nav.route, t: (key) => $t(key) });
-    const h = ctx.mount_host(c.AppPageBreadcrumb, el, { segments });
-    return () => void h.destroy();
-  });
 
   // Default model = the `ai_assistant_model` row of `ai.config_entries` —
   // module-owned config served by the ai service (never the host table).
@@ -312,18 +298,6 @@
      (the host document's stylesheets apply to remote DOM). -->
 <div class="h-full p-2 sm:p-3 contain-layout">
   <div class="flex h-full w-full flex-col gap-4 min-h-0 overflow-hidden">
-    <header class="shrink-0">
-      <div class="min-w-0 space-y-1">
-        <div bind:this={breadcrumbEl}></div>
-        <h1 class="truncate text-xl font-semibold leading-tight">
-          {$t('ai.console.title')}
-        </h1>
-        <p class="text-sm text-muted-foreground">
-          {$t('ai.console.description')}
-        </p>
-      </div>
-    </header>
-
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border bg-background">
       <div class="flex-1 overflow-auto">
         <div class="space-y-6 p-4">

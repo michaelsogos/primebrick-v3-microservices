@@ -22,24 +22,11 @@
   import { Hourglass, TriangleAlert, RefreshCw, BookSearch, CheckCircle2, XCircle, Database } from '@primebrick/ui/vendor/lucide';
   import { cn } from '@primebrick/ui';
   import type { ModulePageHost } from '@primebrick/ui';
-  import type { AiPageComponents } from './host-contract';
 
   let { ctx }: { ctx: ModulePageHost } = $props();
-  const comps = $derived(ctx.components as AiPageComponents | undefined);
 
   const t = getT();
   const notify = getNotify();
-
-  // Breadcrumb — host-mounted once (module menu segment resolved host-side).
-  let breadcrumbEl = $state<HTMLDivElement>();
-  $effect(() => {
-    const el = breadcrumbEl;
-    const c = comps;
-    if (!el || !c || !ctx.mount_host) return;
-    const segments = c.moduleBreadcrumbSegments({ pathname: ctx.nav.route, t: (key) => $t(key) });
-    const h = ctx.mount_host(c.AppPageBreadcrumb, el, { segments });
-    return () => void h.destroy();
-  });
 
   let status = $state<DocsIndexStatus | null>(null);
   let loading = $state(true);
@@ -121,14 +108,6 @@
      (the host document's stylesheets apply to remote DOM). -->
 <div class="h-full p-2 sm:p-3 contain-layout">
   <div class="flex h-full w-full flex-col gap-4 min-h-0 overflow-hidden">
-    <header class="shrink-0">
-      <div class="min-w-0 space-y-1">
-        <div bind:this={breadcrumbEl}></div>
-        <h1 class="truncate text-xl font-semibold leading-tight">{$t('ai.docs.title')}</h1>
-        <p class="text-sm text-muted-foreground">{$t('ai.docs.description')}</p>
-      </div>
-    </header>
-
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border bg-background">
       <div class="flex-1 overflow-auto p-4">
         {#if loading}

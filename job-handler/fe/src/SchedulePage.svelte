@@ -11,30 +11,20 @@
    * declared kind:"list".
    *
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
-   *   - AppPageBreadcrumb / Button are HOST components mounted via
-   *     ctx.mount_host as separate roots (HostLeaf for leaf granularity).
-   *   - moduleBreadcrumbSegments is a host-state-bound function passed through
-   *     ctx.components — it reads the resolved module nav in the host.
+   *   - Page chrome (breadcrumb/star/title/description) is HOST-owned —
+   *     rendered by the shell PageHeader from the route decl; this chunk
+   *     mounts BODY content only.
+   *   - Button is a HOST component mounted via ctx.mount_host as a separate
+   *     root (HostLeaf for leaf granularity).
    *   - The form itself is remote-owned (this chunk's own Svelte + DOM).
    */
-  import { extJsonStringify, type ModulePageHost } from '@primebrick/ui';
+  import { extJsonStringify, notifyParentAndClose, type ModulePageHost } from '@primebrick/ui';
   import HostLeaf from './HostLeaf.svelte';
   import type { JobsComponents } from './host-contract';
 
   let { ctx }: { ctx: ModulePageHost } = $props();
   const comps = $derived(ctx.components as JobsComponents | undefined);
   const t = (key: string, params?: Record<string, unknown>) => ctx.i18n.t(key, params);
-
-  // Breadcrumb — host-mounted once (module menu segment resolved host-side).
-  let breadcrumbEl = $state<HTMLDivElement>();
-  $effect(() => {
-    const el = breadcrumbEl;
-    const c = comps;
-    if (!el || !c || !ctx.mount_host) return;
-    const segments = c.moduleBreadcrumbSegments({ pathname: ctx.nav.route, t });
-    const h = ctx.mount_host(c.AppPageBreadcrumb, el, { segments });
-    return () => void h.destroy();
-  });
 
   let name = $state('');
   let spec = $state('@every 1h');
@@ -59,7 +49,11 @@
       });
       if (!res.ok) throw new Error(`SCHEDULE_FAILED:${res.status}`);
       ctx.notify({ impact: 'LOW', message: t('job.jobs.scheduledOk'), scope: 'jobs.schedule' });
-      window.location.assign('/system/job/job-schedules');
+      // Child-tab contract: opened by EntityTablePage navStrategy="popup" —
+      // broadcast + self-close; same-tab keeps the classic navigation.
+      if (!notifyParentAndClose('primebrick_job_schedule_sync')) {
+        window.location.assign('/system/job/job-schedules');
+      }
     } catch (e) {
       ctx.notify({
         impact: 'MEDIUM',
@@ -78,16 +72,6 @@
      (the host document's stylesheets apply to remote DOM). -->
 <div class="h-full p-2 sm:p-3 contain-layout">
   <div class="flex h-full w-full flex-col gap-4 min-h-0 overflow-hidden">
-    <header class="shrink-0">
-      <div class="min-w-0 flex-1 space-y-1">
-        <div bind:this={breadcrumbEl}></div>
-        <h1 class="truncate text-xl font-semibold leading-tight">
-          {t('job.jobs.scheduleDialog.title')}
-        </h1>
-        <p class="text-sm text-muted-foreground">{t('job.jobs.scheduleDialog.desc')}</p>
-      </div>
-    </header>
-
     <div class="flex min-h-0 flex-col overflow-y-auto">
       <form
         class="grid w-full max-w-lg gap-4"

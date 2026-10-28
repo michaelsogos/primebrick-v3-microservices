@@ -47,6 +47,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_schedule",
       label_key: "job.jobs.scheduleNew",
+      description_key: "job.jobs.scheduleDialog.desc",
       icon: "calendar-plus",
       component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
@@ -56,8 +57,32 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_rule",
       label_key: "job.jobs.ruleForm.title",
-      component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
-      component_format: "esm-mount",
+      description_key: "job.jobs.ruleForm.desc",
+      // NO component_url — the host entity-form archetype renders it: the
+      // entity meta (GET …/entities/job_rule/meta) supplies field types and
+      // physical constraints; `page_props.form` supplies placement + policy.
+      page_props: {
+        form: {
+          fields: [
+            { key: "name", span: 2 },
+            // Sorgente + Destinazione Evento side by side — the trigger
+            // (what the rule LISTENS to) and the due lane (what it FIRES
+            // on) read as one pair.
+            { key: "event_subject", options_source: "census.emits" },
+            { key: "target_subject" },
+            { key: "schedule_spec", default_value: "@every 5m" },
+            { key: "execution_context", default_value: "user" },
+            { key: "filter", span: 2 },
+            // Fire-time source indirection is disabled pending the
+            // workflow engine (Nats-Schedule-Source reads a queue tail —
+            // semantically wrong for state-at-fire); the field stays
+            // visible-but-readonly to document the pending capability.
+            { key: "source_subject", options_source: "census.emits", readonly: true },
+            { key: "enabled", default_value: true },
+          ],
+          validators: ["target_matches_lane"],
+        },
+      },
     },
   ],
   // Remote sheet panels — engine is host-side, the mountSheet export of
