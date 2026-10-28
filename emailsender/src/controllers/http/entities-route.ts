@@ -79,12 +79,12 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
     // email_templates_audit table exists BY REQUIREMENT.
     auditable: false,
     permissions: {
-      meta: [Permission.EMAILSENDER_TEMPLATE_READ_ALL],
-      list: [Permission.EMAILSENDER_TEMPLATE_READ_ALL],
-      get: [Permission.EMAILSENDER_TEMPLATE_READ_SINGLE, Permission.EMAILSENDER_TEMPLATE_READ_ALL],
-      create: [Permission.EMAILSENDER_TEMPLATE_CREATE_SINGLE],
-      update: [Permission.EMAILSENDER_TEMPLATE_UPDATE_SINGLE],
-      delete: [Permission.EMAILSENDER_TEMPLATE_DELETE_SINGLE],
+      meta: [Permission.EMAILSENDER_EMAIL_TEMPLATE_READ_ALL],
+      list: [Permission.EMAILSENDER_EMAIL_TEMPLATE_READ_ALL],
+      get: [Permission.EMAILSENDER_EMAIL_TEMPLATE_READ_SINGLE, Permission.EMAILSENDER_EMAIL_TEMPLATE_READ_ALL],
+      create: [Permission.EMAILSENDER_EMAIL_TEMPLATE_CREATE_SINGLE],
+      update: [Permission.EMAILSENDER_EMAIL_TEMPLATE_UPDATE_SINGLE],
+      delete: [Permission.EMAILSENDER_EMAIL_TEMPLATE_DELETE_SINGLE],
     },
     duplicate: false,
     schemas: { createBody: entityBody, updateBody: entityBody },
