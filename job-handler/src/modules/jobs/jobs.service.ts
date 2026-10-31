@@ -5,7 +5,7 @@
  */
 
 import { type EntityService } from "@primebrick/dal-pg";
-import { NatsClient } from "@primebrick/sdk";
+import { NatsClient, makeMarkerAuditPort } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
 import { JobRuleEntity } from "../../domain/entities/job_rule_entity.js";
@@ -26,6 +26,9 @@ export class JobRulesService {
   private svc = getDal().entityService<JobRuleEntity & Record<string, unknown>>({
     entity: JobRuleEntity,
     actor: entityActor,
+    // Collaboration: audit write + entity-changed marker on NATS — the
+    // gateway persists markers to Redis (services own no Redis client).
+    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_rule"),
     list: {
       searchableKeys: new Set(["name", "event_subject", "target_subject"]),
       filterableKeys: RULE_FILTERABLE,
@@ -49,6 +52,7 @@ export class JobSchedulesService {
   private svc = getDal().entityService<JobScheduleEntity & Record<string, unknown>>({
     entity: JobScheduleEntity,
     actor: entityActor,
+    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_schedule"),
     list: {
       searchableKeys: new Set(["schedule_subject", "job_name", "service_code"]),
       filterableKeys: SCHEDULE_FILTERABLE,
@@ -69,6 +73,7 @@ export class JobRunsService {
   private svc = getDal().entityService<JobRunEntity & Record<string, unknown>>({
     entity: JobRunEntity,
     actor: entityActor,
+    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_run"),
     list: {
       searchableKeys: new Set(["job_name", "service_code", "error_code"]),
       filterableKeys: RUN_FILTERABLE,

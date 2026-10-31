@@ -18,11 +18,38 @@
  * covered by the user's grants (exact or `*` wildcard); `default: true`
  * flags the leaf GOTO(module) lands on.
  */
-import { entityPaths, type ModuleNavDeclaration } from "@primebrick/sdk";
+import { entityPaths, type ModuleNavDeclaration, type FormPageDecl } from "@primebrick/sdk";
 
 const schedulesPaths = entityPaths("/system/job", "job-schedules");
 const rulesPaths = entityPaths("/system/job", "rules");
 const runsPaths = entityPaths("/system/job", "runs");
+
+/**
+ * The job_rule form placement — shared verbatim by `create` and `detail`
+ * (the update mode of the same `entity_form` archetype): one declaration,
+ * two behaviors. Detail adds collaboration (the record exists) and the
+ * readonly policy stays in the placement flags.
+ */
+const RULE_FORM: FormPageDecl = {
+  fields: [
+    { key: "name", span: 2 },
+    // Sorgente + Destinazione Evento side by side — the trigger
+    // (what the rule LISTENS to) and the due lane (what it FIRES
+    // on) read as one pair.
+    { key: "event_subject", options_source: "census.emits" },
+    { key: "target_subject" },
+    { key: "schedule_spec", default_value: "@every 5m" },
+    { key: "execution_context", default_value: "user" },
+    { key: "filter", span: 2 },
+    // Fire-time source indirection is disabled pending the
+    // workflow engine (Nats-Schedule-Source reads a queue tail —
+    // semantically wrong for state-at-fire); the field stays
+    // visible-but-readonly to document the pending capability.
+    { key: "source_subject", options_source: "census.emits", readonly: true },
+    { key: "enabled", default_value: true },
+  ],
+  validators: ["target_matches_lane"],
+};
 
 export const JOB_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/job"],
@@ -61,28 +88,18 @@ export const JOB_NAV: ModuleNavDeclaration = {
       // NO component_url — the host entity-form archetype renders it: the
       // entity meta (GET …/entities/job_rule/meta) supplies field types and
       // physical constraints; `page_props.form` supplies placement + policy.
-      page_props: {
-        form: {
-          fields: [
-            { key: "name", span: 2 },
-            // Sorgente + Destinazione Evento side by side — the trigger
-            // (what the rule LISTENS to) and the due lane (what it FIRES
-            // on) read as one pair.
-            { key: "event_subject", options_source: "census.emits" },
-            { key: "target_subject" },
-            { key: "schedule_spec", default_value: "@every 5m" },
-            { key: "execution_context", default_value: "user" },
-            { key: "filter", span: 2 },
-            // Fire-time source indirection is disabled pending the
-            // workflow engine (Nats-Schedule-Source reads a queue tail —
-            // semantically wrong for state-at-fire); the field stays
-            // visible-but-readonly to document the pending capability.
-            { key: "source_subject", options_source: "census.emits", readonly: true },
-            { key: "enabled", default_value: true },
-          ],
-          validators: ["target_matches_lane"],
-        },
-      },
+      page_props: { form: RULE_FORM },
+    },
+    {
+      route: rulesPaths.detail,
+      kind: "detail",
+      entity: "job_rule",
+      label_key: "job.jobs.ruleForm.title",
+      description_key: "job.jobs.ruleForm.desc",
+      // SAME form declaration as create — detail is the update mode of the
+      // `entity_form` archetype (prefill + PUT + optimistic version), and
+      // the only mode where collaboration mounts (the record exists).
+      page_props: { form: RULE_FORM },
     },
   ],
   // Remote sheet panels — engine is host-side, the mountSheet export of
