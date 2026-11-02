@@ -40,35 +40,44 @@ function indexPayload(p: ServiceRegisterPayload): void {
   catalog.set(p.code, subjects);
 }
 
+/** Census fetch over `service.registry.get` — fills the catalog from the
+ * registry rows (the sanctioned source under schema sovereignty). */
+async function fetchCensus(): Promise<void> {
+  try {
+    const rows = await callNats<CensusRow[]>("service.registry.get", { census: "callables" }, { timeoutMs: 3000 });
+    for (const row of rows ?? []) {
+      if (typeof row?.service_code !== "string") continue;
+      const subjects = new Set<string>();
+      for (const c of row.callables ?? []) {
+        if (typeof c?.subject === "string" && c.subject.length > 0) subjects.add(c.subject);
+      }
+      catalog.set(row.service_code, subjects);
+    }
+  } catch (err) {
+    logger.warn(`callable-catalog: census fetch failed — catalog may be incomplete (${String(err)})`, {
+      tags: ["jobs"],
+    });
+  }
+}
+
 /**
- * Union of every callable subject declared by live services. Includes a
- * cold-start fetch when the lifecycle-fed map is still empty (first boot
- * race: services registered before this catalog subscribed).
+ * Union of every callable subject declared by live services. Lazy backstop
+ * for callers that race the boot-time `startCallableCatalog` census fetch.
  */
 export async function callableSubjects(): Promise<Set<string>> {
-  if (catalog.size === 0) {
-    try {
-      const rows = await callNats<CensusRow[]>("service.registry.get", { census: "callables" }, { timeoutMs: 3000 });
-      for (const row of rows ?? []) {
-        if (typeof row?.service_code !== "string") continue;
-        const subjects = new Set<string>();
-        for (const c of row.callables ?? []) {
-          if (typeof c?.subject === "string" && c.subject.length > 0) subjects.add(c.subject);
-        }
-        catalog.set(row.service_code, subjects);
-      }
-    } catch (err) {
-      logger.warn(`callable-catalog: cold-start fetch failed — catalog may be incomplete (${String(err)})`, {
-        tags: ["jobs"],
-      });
-    }
-  }
+  if (catalog.size === 0) await fetchCensus();
   const all = new Set<string>();
   for (const subjects of catalog.values()) for (const s of subjects) all.add(s);
   return all;
 }
 
-/** Subscribe to lifecycle events. Call once at boot, after NATS is up. */
+/** Subscribe to lifecycle events + cold census fetch. Call once at boot,
+ * after NATS is up. The census MUST run at boot — a lazy "catalog empty"
+ * guard would never backfill services that registered before the
+ * subscription (a partially populated catalog looks non-empty). Subscribe
+ * first so a register broadcast arriving during the fetch is not lost; a
+ * mid-fetch broadcast overwritten by the census self-heals on the next
+ * registration. */
 export async function startCallableCatalog(): Promise<void> {
   await subscribeShielded<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
     indexPayload(p);
@@ -76,5 +85,6 @@ export async function startCallableCatalog(): Promise<void> {
   await subscribeShielded<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
     catalog.delete(p.code);
   });
+  await fetchCensus();
   logger.done("callable-catalog: subscribed to service lifecycle events", { tags: ["jobs"] });
 }
