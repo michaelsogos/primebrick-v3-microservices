@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "generated/job-schedules",
+    "generated/job-schedules-create",
+    "generated/rules",
+    "generated/rules-create",
+    "generated/rules-edit",
+    "generated/run-detail",
+    "generated/runs"
+  ]
+}

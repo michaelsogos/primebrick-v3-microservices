@@ -1,0 +1,100 @@
+---
+title: Job Schedules
+description: List, search and manage all job schedules.
+entity: job_schedule
+---
+
+List, search and manage all job schedules.
+
+The page is visible with the `access.system.job.job-schedules` grant.
+
+## Pages routes
+
+- `/system/job/job-schedules` — List, search and manage all job schedules. *(this page)*
+- `/system/job/job-schedules/create` — Create a new job schedule.
+
+## What you can do here
+
+### How to create a new job schedule
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **Name**, **Schedule**, **Lane**, **Target service**, **Target action**.
+3. Click **Save** — the new job schedule is created.
+
+### How to delete a job schedule
+1. Open the row actions menu on the job schedule and click **Delete**.
+2. Confirm the deletion in the dialog — the job schedule is soft-deleted and can be restored.
+
+### How to restore a deleted job schedule
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the job schedule and click **Restore**.
+3. Confirm in the dialog — the job schedule is active again.
+
+### How to view the change history of a job schedule
+1. Open the row actions menu on the job schedule and click **Audit history**.
+2. The version history of the job schedule will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Job** | no | yes | yes |  |
+| **Service** | no | no | yes |  |
+| **Kind** | no | no | yes |  |
+| **Schedule** | no | no | no |  |
+| **Type** | no | no | no |  |
+| **Target Subject** | no | no | no |  |
+| **Status** | no | no | yes |  |
+| **Run Stats** | no | no | no |  |
+| **Armed at** | no | yes | no |  |
+| **Updated at** | no | yes | no |  |
+
+- The Job column is hidden by default and can be sorted and filtered.
+- The Service column is hidden by default and can be filtered but not sorted.
+- The Kind column is hidden by default and can be filtered but not sorted.
+- The Schedule column is hidden by default and cannot be sorted or filtered.
+- The Type column is hidden by default and cannot be sorted or filtered.
+- The Target Subject column is hidden by default and cannot be sorted or filtered.
+- The Status column is hidden by default and can be filtered but not sorted.
+- The Run Stats column is hidden by default and cannot be sorted or filtered.
+- The Armed at column is hidden by default and can be sorted but not filtered.
+- The Updated at column is hidden by default and can be sorted but not filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `_authenticated_admin` | Creates a new job schedule | no |
+| **update** | DISABLED | `_authenticated_admin` | Opens the job schedule for editing | no |
+| **delete** | ENABLED | `_authenticated_admin` | Marks the job schedule as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `_authenticated_admin` | Brings a soft-deleted job schedule back | no |
+| **purge** | DISABLED | — | Removes the job schedule forever | no |
+| **audit history** | ENABLED | `_authenticated_admin` | Shows the change history of the job schedule | no |
+
+- Creating a new job schedule is available on this page — the create action opens the create form in the same tab and it requires the `_authenticated_admin` permission.
+- Editing a job schedule is not available on this page — if enabled, it would require the `_authenticated_admin` permission.
+- Soft-deleting a job schedule is available on this page — marks the job schedule as deleted but keeps it so it can be restored and it requires the `_authenticated_admin` permission.
+- Restoring a soft-deleted job schedule is available on this page — brings a soft-deleted job schedule back and it requires the `_authenticated_admin` permission.
+- Permanently deleting a job schedule is not available on this page — no permission is declared for it on job schedules.
+- Viewing the change history of a job schedule is available on this page — every job schedule keeps a full version history and it requires the `_authenticated_admin` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | DISABLED | — | Marks the selected job schedules as deleted | no |
+| **restore** | DISABLED | — | Restores the selected job schedules | no |
+| **duplicate** | DISABLED | — | Duplicates the selected job schedules | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected job schedules is not available on this page — no permission is declared for it on job schedules.
+- Restoring the selected job schedules is not available on this page — no permission is declared for it on job schedules.
+- Duplicating the selected job schedules is not available on this page — no permission is declared for it on job schedules.
+- Exporting the list is not available on this page — no permission is declared for it on job schedules.
+
+## Doc references
+
+- [Job Schedules Create](/docs/user-guide/generated/job-schedules-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

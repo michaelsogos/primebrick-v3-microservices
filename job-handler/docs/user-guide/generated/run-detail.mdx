@@ -1,0 +1,25 @@
+---
+title: Run Detail
+description: Side panel — Run Detail.
+---
+
+The **Run Detail** panel opens in a side sheet. It is delivered by the owning module as a remote component mounted inside the host sheet surface.
+
+## Inputs
+
+| Input | Notes |
+|-------|-------|
+| `run_uuid` | passed by the caller when the panel opens |
+
+## What it reads
+
+- `GET /api/v1/entities/job_run/{param}`
+
+## Opened from
+
+No page currently opens this panel — it is a declared module surface and can be opened programmatically via `openSheet('job.runDetail')` by any page holding the matching access grant.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+
