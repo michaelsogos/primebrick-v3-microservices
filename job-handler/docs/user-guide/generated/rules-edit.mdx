@@ -48,9 +48,9 @@ The record opens in read mode first — click **Edit** to modify it. Concurrent 
 
 The **Listening Event** field offers these declared published event subjects:
 
-- `emailsender.response.*`
 - `jobs.ctl.rules.changed` — **Rules changed** — Fired when the job rule set changes — `jobs` domain, `ctl` control channel, `rules` resource, `changed` verb. The rules engine re-arms schedules on it
 - `webhook.*.received`
+- `emailsender.response.*`
 - `crm.customer_changed` — **Customer changed** — Fires when a customer row is created, updated or deleted — carries the row snapshot plus change metadata
 - `crm.customer_high_value` — **High-value customer** — Semantic event — sales logic decided this customer crossed the high-value threshold. Carries the customer, the account manager and the trigger details
 - `crm.customer_payout` — **Customer payout** — Fires when a payout is recorded for a customer — carries the customer, the account manager and the payout details

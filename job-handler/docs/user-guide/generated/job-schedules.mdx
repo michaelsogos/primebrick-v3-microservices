@@ -6,6 +6,8 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
+Each row shows the Job, the Service, the Kind, the Schedule, the Type, the Status, the Run Stats, the Armed at, the Updated at.
+
 The page is visible with the `access.system.job.job-schedules` grant.
 
 ## Pages routes
@@ -37,27 +39,27 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Job** | no | yes | yes |  |
-| **Service** | no | no | yes |  |
-| **Kind** | no | no | yes |  |
-| **Schedule** | no | no | no |  |
-| **Type** | no | no | no |  |
-| **Target Subject** | no | no | no |  |
-| **Status** | no | no | yes |  |
-| **Run Stats** | no | no | no |  |
-| **Armed at** | no | yes | no |  |
-| **Updated at** | no | yes | no |  |
+| **Job** | yes | yes | yes |  |
+| **Service** | yes | yes | yes |  |
+| **Kind** | yes | yes | yes |  |
+| **Schedule** | yes | yes | yes |  |
+| **Type** | yes | yes | yes |  |
+| **Target Subject** | no | yes | yes |  |
+| **Status** | yes | yes | yes |  |
+| **Run Stats** | yes | yes | yes |  |
+| **Armed at** | yes | yes | yes |  |
+| **Updated at** | yes | yes | yes |  |
 
-- The Job column is hidden by default and can be sorted and filtered.
-- The Service column is hidden by default and can be filtered but not sorted.
-- The Kind column is hidden by default and can be filtered but not sorted.
-- The Schedule column is hidden by default and cannot be sorted or filtered.
-- The Type column is hidden by default and cannot be sorted or filtered.
-- The Target Subject column is hidden by default and cannot be sorted or filtered.
-- The Status column is hidden by default and can be filtered but not sorted.
-- The Run Stats column is hidden by default and cannot be sorted or filtered.
-- The Armed at column is hidden by default and can be sorted but not filtered.
-- The Updated at column is hidden by default and can be sorted but not filtered.
+- The Job column is shown by default and can be sorted and filtered.
+- The Service column is shown by default and can be sorted and filtered.
+- The Kind column is shown by default and can be sorted and filtered.
+- The Schedule column is shown by default and can be sorted and filtered.
+- The Type column is shown by default and can be sorted and filtered.
+- The Target Subject column is hidden by default and can be sorted and filtered.
+- The Status column is shown by default and can be sorted and filtered.
+- The Run Stats column is shown by default and can be sorted and filtered.
+- The Armed at column is shown by default and can be sorted and filtered.
+- The Updated at column is shown by default and can be sorted and filtered.
 
 ## Actions
 

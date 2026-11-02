@@ -6,6 +6,8 @@ entity: job_run
 
 List, search and manage all job runs.
 
+Each row shows the Job, the Service, the Status, the Started at, the Finished at, the Duration.
+
 The page is visible with the `access.system.job.runs` grant.
 
 ## What you can do here
@@ -18,25 +20,25 @@ The page is visible with the `access.system.job.runs` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Job** | no | yes | yes |  |
-| **Service** | no | no | yes |  |
-| **Status** | no | no | yes |  |
-| **Started at** | no | yes | no |  |
-| **Finished at** | no | yes | no |  |
-| **Duration** | no | yes | no |  |
-| **Error Code** | no | no | no |  |
-| **Error Detail** | no | no | no |  |
-| **Redeliveries** | no | no | no |  |
+| **Job** | yes | yes | yes |  |
+| **Service** | yes | yes | yes |  |
+| **Status** | yes | yes | yes |  |
+| **Started at** | yes | yes | yes |  |
+| **Finished at** | yes | yes | yes |  |
+| **Duration** | yes | yes | yes |  |
+| **Error Code** | no | yes | yes |  |
+| **Error Detail** | no | yes | yes |  |
+| **Redeliveries** | no | yes | yes |  |
 
-- The Job column is hidden by default and can be sorted and filtered.
-- The Service column is hidden by default and can be filtered but not sorted.
-- The Status column is hidden by default and can be filtered but not sorted.
-- The Started at column is hidden by default and can be sorted but not filtered.
-- The Finished at column is hidden by default and can be sorted but not filtered.
-- The Duration column is hidden by default and can be sorted but not filtered.
-- The Error Code column is hidden by default and cannot be sorted or filtered.
-- The Error Detail column is hidden by default and cannot be sorted or filtered.
-- The Redeliveries column is hidden by default and cannot be sorted or filtered.
+- The Job column is shown by default and can be sorted and filtered.
+- The Service column is shown by default and can be sorted and filtered.
+- The Status column is shown by default and can be sorted and filtered.
+- The Started at column is shown by default and can be sorted and filtered.
+- The Finished at column is shown by default and can be sorted and filtered.
+- The Duration column is shown by default and can be sorted and filtered.
+- The Error Code column is hidden by default and can be sorted and filtered.
+- The Error Detail column is hidden by default and can be sorted and filtered.
+- The Redeliveries column is hidden by default and can be sorted and filtered.
 
 ## Actions
 

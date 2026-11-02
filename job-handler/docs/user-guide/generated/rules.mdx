@@ -6,6 +6,8 @@ entity: job_rule
 
 List, search and manage all job rules.
 
+Each row shows the Name, the Listening Event, the Schedule, the Destination Event, the Process Executor, the Updated at, plus the status flags Enabled.
+
 The page is visible with the `access.system.job.rules` grant.
 
 ## Pages routes
@@ -43,27 +45,27 @@ The page is visible with the `access.system.job.rules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Name** | no | yes | yes |  |
-| **Listening Event** | no | no | yes | The event that can trigger this rule: when something happens in the system (e.g. a customer crosses a threshold) the rule can run. Pick an available event or type an event name. |
-| **Filter** | no | no | no | JSON conditions that must all match the event payload for the rule to fire — an array of `{ field, op, value }` entries evaluated against the event. |
-| **Schedule** | no | no | no | When the rule fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you. |
-| **Destination Event** | no | no | no | What the rule does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services. |
-| **Payload mapping** | no | no | no | How to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a rule context value (actor, rule id, fire time). Leave empty to forward the event payload unchanged. |
-| **Process Executor** | no | no | yes | `user` runs the action as the triggering user (with their permissions); `system` runs with module privileges. Must match the lane in the destination subject. |
-| **Enabled** | no | no | yes | When on, the rule reacts to the event you chose. Turn it off to pause the rule without deleting it. |
-| **Updated at** | no | yes | no |  |
-| **Created at** | no | yes | no |  |
+| **Name** | yes | yes | yes |  |
+| **Listening Event** | yes | yes | yes | The event that can trigger this rule: when something happens in the system (e.g. a customer crosses a threshold) the rule can run. Pick an available event or type an event name. |
+| **Filter** | no | yes | yes | JSON conditions that must all match the event payload for the rule to fire — an array of `{ field, op, value }` entries evaluated against the event. |
+| **Schedule** | yes | yes | yes | When the rule fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you. |
+| **Destination Event** | yes | yes | yes | What the rule does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services. |
+| **Payload mapping** | no | yes | yes | How to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a rule context value (actor, rule id, fire time). Leave empty to forward the event payload unchanged. |
+| **Process Executor** | yes | yes | yes | `user` runs the action as the triggering user (with their permissions); `system` runs with module privileges. Must match the lane in the destination subject. |
+| **Enabled** | yes | yes | yes | When on, the rule reacts to the event you chose. Turn it off to pause the rule without deleting it. |
+| **Updated at** | yes | yes | yes |  |
+| **Created at** | no | yes | yes |  |
 
-- The Name column is hidden by default and can be sorted and filtered.
-- The Listening Event column is hidden by default and can be filtered but not sorted — the event that can trigger this rule: when something happens in the system (e.g. a customer crosses a threshold) the rule can run. Pick an available event or type an event name.
-- The Filter column is hidden by default and cannot be sorted or filtered — JSON conditions that must all match the event payload for the rule to fire — an array of `{ field, op, value }` entries evaluated against the event.
-- The Schedule column is hidden by default and cannot be sorted or filtered — when the rule fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you.
-- The Destination Event column is hidden by default and cannot be sorted or filtered — what the rule does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services.
-- The Payload mapping column is hidden by default and cannot be sorted or filtered — how to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a rule context value (actor, rule id, fire time). Leave empty to forward the event payload unchanged.
-- The Process Executor column is hidden by default and can be filtered but not sorted — `user` runs the action as the triggering user (with their permissions); `system` runs with module privileges. Must match the lane in the destination subject.
-- The Enabled column is hidden by default and can be filtered but not sorted — when on, the rule reacts to the event you chose. Turn it off to pause the rule without deleting it.
-- The Updated at column is hidden by default and can be sorted but not filtered.
-- The Created at column is hidden by default and can be sorted but not filtered.
+- The Name column is shown by default and can be sorted and filtered.
+- The Listening Event column is shown by default and can be sorted and filtered — the event that can trigger this rule: when something happens in the system (e.g. a customer crosses a threshold) the rule can run. Pick an available event or type an event name.
+- The Filter column is hidden by default and can be sorted and filtered — JSON conditions that must all match the event payload for the rule to fire — an array of `{ field, op, value }` entries evaluated against the event.
+- The Schedule column is shown by default and can be sorted and filtered — when the rule fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you.
+- The Destination Event column is shown by default and can be sorted and filtered — what the rule does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services.
+- The Payload mapping column is hidden by default and can be sorted and filtered — how to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a rule context value (actor, rule id, fire time). Leave empty to forward the event payload unchanged.
+- The Process Executor column is shown by default and can be sorted and filtered — `user` runs the action as the triggering user (with their permissions); `system` runs with module privileges. Must match the lane in the destination subject.
+- The Enabled column is shown by default and can be sorted and filtered — when on, the rule reacts to the event you chose. Turn it off to pause the rule without deleting it.
+- The Updated at column is shown by default and can be sorted and filtered.
+- The Created at column is hidden by default and can be sorted and filtered.
 
 ## Actions
 
