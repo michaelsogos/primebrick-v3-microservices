@@ -9,7 +9,7 @@ import { jobServiceRouteHandler } from "../src/service-routes.js";
 const manifest = await buildDocsPack({
   repo: "job-handler",
   outDir: "dist/docs-pack",
-  docsDir: "docs",
+  docsDir: "docs/user-guide",
   openapi: jobServiceRouteHandler.spec,
 });
 console.log(`docs pack built: ${manifest.files.length} files${manifest.has_openapi ? " + openapi" : ""} → dist/docs-pack`);

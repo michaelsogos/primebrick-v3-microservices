@@ -31,7 +31,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
-    "generate:docs": "bun scripts/build-docs-pack.ts",
+    "generate:docs": "bun scripts/generate-page-docs.ts && bun scripts/build-docs-pack.ts",
     "docs:reindex": "bun scripts/reindex-packs.ts",
     "check:standards": "bun ../../primebrick-v3-sdk/tools/check-standards.ts src",
     "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json",

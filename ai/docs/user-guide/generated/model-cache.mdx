@@ -1,0 +1,22 @@
+---
+title: Model Cache
+description: Side panel — Model Cache.
+---
+
+The **Model Cache** panel opens in a side sheet. It is delivered by the owning module as a remote component mounted inside the host sheet surface.
+
+## Inputs
+
+| Input | Notes |
+|-------|-------|
+| `active_model_id` | passed by the caller when the panel opens |
+| `model_ranks` | passed by the caller when the panel opens |
+
+## Opened from
+
+No page currently opens this panel — it is a declared module surface and can be opened programmatically via `openSheet('ai.modelCache')` by any page holding the matching access grant.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+
