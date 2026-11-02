@@ -5,13 +5,13 @@
  */
 
 import { type EntityService, ValidationError } from "@primebrick/dal-pg";
-import { NatsClient, makeMarkerAuditPort } from "@primebrick/sdk";
+import { NatsClient, makeMarkerAuditPort, payloadMapConformance } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
-import { callableSubjects } from "../../services/callable-catalog.js";
+import { callableSubjects, callablePayloadSchema } from "../../services/callable-catalog.js";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
@@ -69,6 +69,48 @@ export function assertTriggerShape(body: Record<string, unknown>, isCreate: bool
   }
 }
 
+function isEmptyMap(map: unknown): boolean {
+  return (
+    map === undefined ||
+    map === null ||
+    (typeof map === "object" && !Array.isArray(map) && Object.keys(map as object).length === 0)
+  );
+}
+
+/**
+ * `payload_map` must conform to the selected callable's emitted
+ * `payload_schema`: required destination fields must be covered (an entry,
+ * or an `x_inject`/`x_semantic` annotation on the schema prop), and every
+ * `const` value must satisfy the prop's portable JSON-Schema constraints.
+ * An absent/empty map is verbatim passthrough — fire-time data may carry
+ * the requireds, so nothing is checked. Runs after `assertCallableTarget`
+ * so the subject is a known catalog entry; a schema-less callable yields
+ * no contract and nothing to check against.
+ */
+export async function assertPayloadMapConformance(
+  body: Record<string, unknown>,
+  loadExisting?: () => Promise<Record<string, unknown> | undefined>,
+): Promise<void> {
+  const mapPresent = "payload_map" in body;
+  const targetPresent = "target_subject" in body;
+  if (!mapPresent && !targetPresent) return;
+  const existing = (!mapPresent || !targetPresent) && loadExisting ? await loadExisting() : undefined;
+  const subject =
+    (typeof body.target_subject === "string" && body.target_subject) ||
+    (typeof existing?.["target_subject"] === "string" ? (existing["target_subject"] as string) : "");
+  if (!subject) return; // absent target surfaces as a column error elsewhere
+  const map = mapPresent ? body["payload_map"] : existing?.["payload_map"];
+  if (isEmptyMap(map)) return; // verbatim passthrough — nothing mappable to check
+  const schema = await callablePayloadSchema(subject);
+  if (!schema) return;
+  const issues = payloadMapConformance(map as Record<string, unknown>, schema);
+  if (issues.length > 0) {
+    throw new ValidationError(
+      `payload_map does not conform to ${subject} — ${issues.map((i) => `${i.path}: ${i.message}`).join("; ")}`,
+    );
+  }
+}
+
 export class JobTriggersService {
   private svc = getDal().entityService<JobTriggerEntity & Record<string, unknown>>({
     entity: JobTriggerEntity,
@@ -85,11 +127,16 @@ export class JobTriggersService {
       beforeCreate: async (body: Record<string, unknown>) => {
         assertTriggerShape(body, true);
         await assertCallableTarget(body);
+        await assertPayloadMapConformance(body);
         return body;
       },
-      beforeUpdate: async (_uuid: string, body: Record<string, unknown>) => {
+      beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
         assertTriggerShape(body, false);
         await assertCallableTarget(body);
+        await assertPayloadMapConformance(body, async () => {
+          const row = await this.svc.get(uuid);
+          return row as Record<string, unknown> | undefined;
+        });
         return body;
       },
       afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },

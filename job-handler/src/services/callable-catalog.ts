@@ -26,16 +26,20 @@ import {
 /** `{service_code, callables}` rows returned by `service.registry.get {census:"callables"}`. */
 interface CensusRow {
   service_code?: string;
-  callables?: { subject?: string }[];
+  callables?: { subject?: string; payload_schema?: Record<string, unknown> }[];
 }
 
-const catalog = new Map<string, Set<string>>(); // service_code → callable subjects
+const catalog = new Map<string, Map<string, Record<string, unknown> | undefined>>(); // service_code → subject → payload_schema
 
 function indexPayload(p: ServiceRegisterPayload): void {
-  const decl = p.endpoints?.["callables"] as { callables?: { subject?: string }[] } | undefined;
-  const subjects = new Set<string>();
+  const decl = p.endpoints?.["callables"] as
+    | { callables?: { subject?: string; payload_schema?: Record<string, unknown> }[] }
+    | undefined;
+  const subjects = new Map<string, Record<string, unknown> | undefined>();
   for (const c of decl?.callables ?? []) {
-    if (typeof c?.subject === "string" && c.subject.length > 0) subjects.add(c.subject);
+    if (typeof c?.subject === "string" && c.subject.length > 0) {
+      subjects.set(c.subject, c.payload_schema);
+    }
   }
   catalog.set(p.code, subjects);
 }
@@ -47,9 +51,11 @@ async function fetchCensus(): Promise<void> {
     const rows = await callNats<CensusRow[]>("service.registry.get", { census: "callables" }, { timeoutMs: 3000 });
     for (const row of rows ?? []) {
       if (typeof row?.service_code !== "string") continue;
-      const subjects = new Set<string>();
+      const subjects = new Map<string, Record<string, unknown> | undefined>();
       for (const c of row.callables ?? []) {
-        if (typeof c?.subject === "string" && c.subject.length > 0) subjects.add(c.subject);
+        if (typeof c?.subject === "string" && c.subject.length > 0) {
+          subjects.set(c.subject, c.payload_schema);
+        }
       }
       catalog.set(row.service_code, subjects);
     }
@@ -60,15 +66,34 @@ async function fetchCensus(): Promise<void> {
   }
 }
 
+async function catalogEntries(): Promise<Map<string, Record<string, unknown> | undefined>> {
+  if (catalog.size === 0) await fetchCensus();
+  const all = new Map<string, Record<string, unknown> | undefined>();
+  for (const subjects of catalog.values()) {
+    for (const [s, schema] of subjects) if (!all.has(s)) all.set(s, schema);
+  }
+  return all;
+}
+
 /**
  * Union of every callable subject declared by live services. Lazy backstop
  * for callers that race the boot-time `startCallableCatalog` census fetch.
  */
 export async function callableSubjects(): Promise<Set<string>> {
-  if (catalog.size === 0) await fetchCensus();
-  const all = new Set<string>();
-  for (const subjects of catalog.values()) for (const s of subjects) all.add(s);
-  return all;
+  return new Set((await catalogEntries()).keys());
+}
+
+/**
+ * The callable's emitted `payload_schema` (transport JSON Schema), resolved
+ * against the live catalog. `undefined` when the subject is not served or
+ * the callable declares no schema — the caller decides whether unmapped
+ * checking is possible (a missing schema blocks required-field checks but
+ * never silently passes mapped consts).
+ */
+export async function callablePayloadSchema(
+  subject: string,
+): Promise<Record<string, unknown> | undefined> {
+  return (await catalogEntries()).get(subject);
 }
 
 /** Subscribe to lifecycle events + cold census fetch. Call once at boot,

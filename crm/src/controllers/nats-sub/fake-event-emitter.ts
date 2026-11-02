@@ -26,6 +26,7 @@ import {
   logger,
   forwardAuthHeaders,
 } from "@primebrick/sdk";
+import { z } from "zod";
 
 const EMIT_FAKE_SUBJECT = "crm.emit_fake_event";
 
@@ -37,29 +38,18 @@ const FAKEABLE_EVENTS = [
 ] as const;
 type FakeableEvent = (typeof FAKEABLE_EVENTS)[number];
 
-interface EmitFakeEventRequest {
-  event: FakeableEvent;
-  /** Top-level merge over the canned fake — e.g.
-   *  `{customer: {email: "x@y.z"}}` swaps just that field. */
-  overrides?: Record<string, unknown>;
-}
-
-const EMIT_FAKE_REQUEST_SCHEMA = {
-  type: "object",
-  required: ["event"],
-  properties: {
-    event: {
-      type: "string",
-      enum: [...FAKEABLE_EVENTS],
-      description: "Declared CRM event subject to publish.",
-    },
-    overrides: {
-      type: "object",
-      description:
-        "Shallow-merged over the canned fake payload, per top-level key — swap any field (e.g. customer.email) without rebuilding the whole document.",
-    },
-  },
-} as const;
+const EmitFakeEventSchema = z.object({
+  event: z
+    .enum(FAKEABLE_EVENTS)
+    .describe("Declared CRM event subject to publish."),
+  overrides: z
+    .record(z.string(), z.unknown())
+    .describe(
+      "Shallow-merged over the canned fake payload, per top-level key — swap any field (e.g. customer.email) without rebuilding the whole document.",
+    )
+    .optional(),
+});
+type EmitFakeEventRequest = z.infer<typeof EmitFakeEventSchema>;
 
 const FAKE_CUSTOMER = {
   uuid: "11111111-2222-3333-4444-555555555555",
@@ -157,18 +147,12 @@ export async function subscribeFakeEventEmitter(): Promise<void> {
         // PoC/dev harness — gated on customer-create: who may create a
         // customer may also fake a customer event.
         permissions: [Permission.CUSTOMER_CREATE_SINGLE],
-        payload_schema: EMIT_FAKE_REQUEST_SCHEMA,
+        payload_schema: {
+          schema: z.toJSONSchema(EmitFakeEventSchema),
+          parse: (raw) => EmitFakeEventSchema.parse(raw),
+        },
         label_key: "crm.callable.emit_fake_event.label",
         description_key: "crm.callable.emit_fake_event.desc",
-        validate: (raw): EmitFakeEventRequest => {
-          const req = raw as EmitFakeEventRequest;
-          if (!req || !FAKEABLE_EVENTS.includes(req.event)) {
-            throw new Error(
-              `event must be one of: ${FAKEABLE_EVENTS.join(", ")}`,
-            );
-          }
-          return req;
-        },
         handler: async ({ request, msg }) => {
           const payload = applyOverrides(cannedPayload(request.event), request.overrides);
           // Verbatim auth forwarding — user-lane rules arm on this event

@@ -30,9 +30,6 @@ function lazy<T extends object>(factory: () => T): T {
 const readPerms = [Permission.AUTHENTICATED_USER];
 const writePerms = [Permission.AUTHENTICATED_ADMIN];
 
-/** Permissive body validators — entity write envelope { entity, ... }. */
-const entityBody = (b: unknown) => b as { entity: Record<string, unknown> };
-
 /** Entity declarations — makeServiceRoutes derives BOTH the CRUD routers
  *  and their OpenAPI path blocks from this single config set. */
 export const jobEntityDecls: EntityRouteDecl[] = [
@@ -48,7 +45,6 @@ export const jobEntityDecls: EntityRouteDecl[] = [
       delete: writePerms, restore: writePerms, audit: writePerms,
     },
     duplicate: false,
-    schemas: { createBody: entityBody, updateBody: entityBody },
   },
   {
     entityName: "job_schedule",
@@ -64,7 +60,6 @@ export const jobEntityDecls: EntityRouteDecl[] = [
       delete: writePerms, restore: writePerms,
     },
     duplicate: false,
-    schemas: { createBody: entityBody, updateBody: entityBody },
   },
   {
     entityName: "job_run",

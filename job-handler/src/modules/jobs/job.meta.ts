@@ -80,7 +80,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
   uid: "uuid",
   display_field: "name",
   columns: [
-    { key: "name", label_key: F("job_trigger", "name"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
+    { key: "name", label_key: F("job_trigger", "name"), type: "text", format: "identifier", order: 10, sortable: true, filterable: true, searchable: true },
     {
       key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, filterable: true,
       icon: "zap",
@@ -120,8 +120,8 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       key: "enabled", label_key: F("job_trigger", "enabled"), type: "boolean", order: 80, filterable: true,
       tooltip: H("job_trigger", "enabled"), tooltip_title: HT("job_trigger", "enabled"), tooltip_priority: "HINT",
     },
-    { key: "updated_at", label_key: F("job_trigger", "updated_at"), type: "datetime", order: 90, sortable: true },
-    { key: "created_at", label_key: F("job_trigger", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false },
+    { key: "updated_at", label_key: F("job_trigger", "updated_at"), type: "datetime", order: 90, sortable: true, audited: true },
+    { key: "created_at", label_key: F("job_trigger", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false, audited: true },
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
 }, JobTriggerEntity);
@@ -178,7 +178,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       },
     },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80, sortable: true },
-    { key: "updated_at", label_key: F("job_schedule", "updated_at"), type: "datetime", order: 90, sortable: true },
+    { key: "updated_at", label_key: F("job_schedule", "updated_at"), type: "datetime", order: 90, sortable: true, audited: true },
   ],
   table: {
     default_view: "table",
@@ -242,7 +242,7 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       } },
     },
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, sortable: true },
-    { key: "updated_at", label_key: F("job_run", "finished_at"), type: "datetime", order: 50, sortable: true },
+    { key: "updated_at", label_key: F("job_run", "finished_at"), type: "datetime", order: 50, sortable: true, audited: true },
     { key: "duration_ms", label_key: F("job_run", "duration"), type: "number", order: 60, sortable: true },
     { key: "error_code", label_key: F("job_run", "error_code"), type: "text", order: 70, default_visible: false },
     { key: "error_detail", label_key: F("job_run", "error_detail"), type: "text", order: 80, default_visible: false },

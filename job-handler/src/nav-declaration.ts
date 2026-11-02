@@ -45,10 +45,13 @@ const TRIGGER_FORM: FormPageDecl = {
     { key: "enabled", default_value: true },
     { key: "payload_map", widget: "payload_map", col: 2, row: 1, row_span: 7 },
   ],
-  // Closed-vocab host rule: ≥1 of event_subject/schedule_spec; "user"
+  // Closed-vocab host rules: ≥1 of event_subject/schedule_spec; "user"
   // lane requires an event source (the host also disables that badge
   // option live and coerces the default to "me" when no source).
-  validators: ["job_trigger_shape"],
+  // `payload_map_conformance` checks map entries against the selected
+  // callable's emitted payload_schema — required destination fields
+  // covered, `const` values conforming.
+  validators: ["job_trigger_shape", "payload_map_conformance"],
 };
 
 export const JOB_NAV: ModuleNavDeclaration = {
