@@ -47,7 +47,7 @@ async function assertCallableTarget(body: Record<string, unknown>): Promise<void
  * "system". Partial-update bodies (PATCH) may omit a field entirely, so
  * only fields PRESENT in the body constrain the outcome.
  */
-function assertTriggerShape(body: Record<string, unknown>, isCreate: boolean): void {
+export function assertTriggerShape(body: Record<string, unknown>, isCreate: boolean): void {
   const eventOk = typeof body.event_subject === "string" && body.event_subject.length > 0;
   const scheduleOk = typeof body.schedule_spec === "string" && body.schedule_spec.length > 0;
   if (isCreate && !eventOk && !scheduleOk) {
