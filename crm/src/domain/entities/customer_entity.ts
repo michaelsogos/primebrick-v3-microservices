@@ -92,6 +92,12 @@ export class CustomerEntity
   @Column({ length: 100, nullable: true })
   onboarding_time_zone?: string;
 
+  /** Preferred communication locale — BCP-47 tag (e.g. `it-IT`, `en-US`).
+   *  User-configured; rides the CRM event customer snapshot so rule
+   *  payload maps can resolve `languageIso` for localizable callables. */
+  @Column({ length: 35, nullable: true })
+  preferred_locale?: string;
+
   @Column({ pgType: "uuid", nullable: true })
   @CloneField()
   cloned_from?: string;

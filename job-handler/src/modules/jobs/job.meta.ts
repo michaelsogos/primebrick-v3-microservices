@@ -46,6 +46,32 @@ const RULE_FILTER_SCHEMA = {
   },
 } as const;
 
+/**
+ * `job_rule.payload_map` JSON Schema — the authored DST the rules engine
+ * resolves at arm time (`applyPayloadMap` in @primebrick/core): each key
+ * is a field of the callable's request payload, each value a
+ * `{kind:"const"|"path"|"meta"}` entry. The form renders the structured
+ * `payload_map` control for it; this schema also drives editor
+ * lint/completion and submit validation.
+ */
+const PAYLOAD_MAP_SCHEMA = {
+  type: "object",
+  additionalProperties: {
+    type: "object",
+    required: ["kind"],
+    properties: {
+      kind: { enum: ["const", "path", "meta", "inject", "list", "map"] },
+      value: {},
+      path: { type: "string", pattern: "^\\$" },
+      meta: { enum: ["actor_uuid", "rule_id", "fired_at", "actor_locale"] },
+      inject: { enum: ["uuid", "now_iso", "now_ms", "session_actor"] },
+      items: { type: "array" },
+      entries: { type: "object" },
+      fallback: { type: "array" },
+    },
+  },
+} as const;
+
 export const jobRuleMeta: EntityMeta = withColumnConstraints({
   entity: "job_rule",
   translation_key: "job_rule",
@@ -72,22 +98,27 @@ export const jobRuleMeta: EntityMeta = withColumnConstraints({
     },
     {
       key: "target_subject", label_key: F("job_rule", "target_subject"), type: "text", format: "nats_subject", order: 50,
-      icon: "zap",
+      icon: "send",
       tooltip: H("job_rule", "target_subject"), tooltip_title: HT("job_rule", "target_subject"), tooltip_priority: "HINT",
+    },
+    {
+      key: "payload_map", label_key: F("job_rule", "payload_map"), type: "text", format: "json", order: 55,
+      default_visible: false,
+      json_schema: PAYLOAD_MAP_SCHEMA,
+      tooltip: H("job_rule", "payload_map"), tooltip_title: HT("job_rule", "payload_map"), tooltip_priority: "HINT",
     },
     {
       key: "execution_context", label_key: F("job_rule", "execution_context"), type: "badge", order: 60, filterable: true,
       badge: { values: {
-        system: { label_key: V("job_rule", "system"), color: "blue" },
-        user: { label_key: V("job_rule", "user"), color: "purple" },
+        system: { label_key: V("job_rule", "system"), color: "#000000" },
+        user: { label_key: V("job_rule", "user"), color: "primary" },
       } },
       tooltip: H("job_rule", "execution_context"), tooltip_title: HT("job_rule", "execution_context"), tooltip_priority: "HINT",
     },
     {
-      key: "source_subject", label_key: F("job_rule", "source_subject"), type: "text", format: "nats_subject", order: 70, default_visible: false,
-      tooltip: H("job_rule", "source_subject"), tooltip_title: HT("job_rule", "source_subject"), tooltip_priority: "HINT",
+      key: "enabled", label_key: F("job_rule", "enabled"), type: "boolean", order: 80, filterable: true,
+      tooltip: H("job_rule", "enabled"), tooltip_title: HT("job_rule", "enabled"), tooltip_priority: "HINT",
     },
-    { key: "enabled", label_key: F("job_rule", "enabled"), type: "boolean", order: 80, filterable: true },
     { key: "updated_at", label_key: F("job_rule", "updated_at"), type: "datetime", order: 90, sortable: true },
     { key: "created_at", label_key: F("job_rule", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false },
   ],

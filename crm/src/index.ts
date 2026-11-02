@@ -31,6 +31,8 @@ import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { CrmAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { assertDbEnv } from "@primebrick/sdk";
 import { CRM_NAV } from "./nav-declaration.js";
+import { CRM_EVENTS } from "./events-declaration.js";
+import { subscribeFakeEventEmitter } from "./controllers/nats-sub/fake-event-emitter.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 
 async function main(): Promise<void> {
@@ -58,6 +60,12 @@ async function main(): Promise<void> {
     // the URL's second segment in every prefix, so longest-prefix
     // ownership keeps resolving module=breadcrumb.
     nav: CRM_NAV,
+
+    // Emitted-event vocabulary — persisted in endpoints.events and served
+    // on /modules; job rules pick these subjects in `event_subject` and
+    // read their payload_schema for `$.` path suggestions. PoC: nothing
+    // emits them for real yet — the crm.emit_fake_event callable does.
+    events: CRM_EVENTS,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
@@ -88,6 +96,13 @@ async function main(): Promise<void> {
     // Service-owned HTTP surface — entity CRUD + /api/v1/openapi.json
     // derive from ONE declaration (makeServiceRoutes). No NATS streams.
     routeHandler: compositeRouteHandler,
+
+    onReady: async () => {
+      // PoC fake-event emitter — publishes canned/overridable payloads on
+      // the declared crm.* event subjects, forwarding caller auth so
+      // user-lane rules can arm. Removed when real sales logic emits them.
+      await subscribeFakeEventEmitter();
+    },
   });
 }
 

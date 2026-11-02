@@ -17,13 +17,17 @@ import {
   NatsClient,
   subscribeShielded,
   forwardAuthHeaders,
+  forwardedActor,
   dueLaneVerify,
+  applyPayloadMap,
+  type PayloadMap,
   logger,
 } from "@primebrick/sdk";
 import { Filter, field } from "@primebrick/dal-pg";
 import { getDal } from "../db/dal.js";
 import { JobRuleEntity } from "../domain/entities/job_rule_entity.js";
 import { declareSchedule, disarmSchedule } from "./schedule-service.js";
+import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
 import { JOBS_STREAM } from "./run-recorder.js";
 
 type RuleFilter = { field: string; op?: string; value?: unknown };
@@ -97,16 +101,39 @@ async function onEvent(ruleUuid: string, payload: unknown, msg: { headers?: Para
       );
       return;
     }
-    // `rule.source_subject` is intentionally NOT forwarded — the
-    // Nats-Schedule-Source indirection reads a queue tail (last message)
-    // which is semantically wrong for state-at-fire; it stays declared
-    // (entity + form field, readonly) pending the workflow engine.
+    // Build the callable's request payload from the rule's payload_map —
+    // resolved at ARM time against this event's snapshot, so every fire of
+    // the schedule replays the same mapped request. Empty/absent map =
+    // verbatim passthrough. `fired_at` stamps the arming instant (per-fire
+    // resolution would need scheduler-path plumbing — the payload is an
+    // event snapshot, so all of it is arm-time by design).
+    const mapped = applyPayloadMap(rule.payload_map as PayloadMap, payload, {
+      actor_uuid: rule.created_by,
+      rule_id: rule.uuid,
+      fired_at: Date.now(),
+      actor_locale: forwardedActor(msg).actor_locale,
+    });
+    // The NATS schedule target MUST live in the JOBS stream capture set —
+    // a service-owned callable subject (e.g. `emailsender.send`) does not.
+    // The schedule therefore fires on the JH-internal forward trampoline;
+    // the due-forwarder consumes it and republishes `payload` verbatim to
+    // `rule.target_subject`. The callable service only ever sees a normal
+    // domain call — it never knows a scheduler exists.
+    const lane = rule.execution_context === "system" ? "system" : "user";
+    const envelope: JobForwardEnvelope = {
+      [FORWARD_ENVELOPE_MARK]: true,
+      target: rule.target_subject,
+      payload: mapped,
+      schedule_subject: scheduleSubject,
+      initiator: `rule:${rule.name}`,
+    };
     await declareSchedule({
       schedule_subject: scheduleSubject,
       schedule: rule.schedule_spec,
-      target: rule.target_subject,
+      target: `jobs.due.${lane}.job.forward.${rule.uuid}`,
       kind: "rule",
-      payload,
+      payload: envelope,
+      mirror_target: rule.target_subject,
       forwardHeaders: fwd,
       initiator: `rule:${rule.name}`,
       rule_uuid: rule.uuid,

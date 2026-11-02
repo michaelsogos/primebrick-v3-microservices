@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-15T14:44:25.961Z",
+  "generatedAt": "2026-10-31T20:36:32.499Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -944,19 +944,6 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "source_subject": {
-          "name": "source_subject",
-          "ordinalPosition": 9,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
         "enabled": {
           "name": "enabled",
           "ordinalPosition": 10,
@@ -1056,6 +1043,19 @@
           "typeOid": 25,
           "typcategory": "S",
           "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "payload_map": {
+          "name": "payload_map",
+          "ordinalPosition": 18,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "typeOid": 3802,
+          "typcategory": "U",
+          "formatType": "jsonb",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": true,

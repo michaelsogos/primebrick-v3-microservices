@@ -4,13 +4,14 @@
  * rules engine without restart.
  */
 
-import { type EntityService } from "@primebrick/dal-pg";
+import { type EntityService, ValidationError } from "@primebrick/dal-pg";
 import { NatsClient, makeMarkerAuditPort } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
 import { JobRuleEntity } from "../../domain/entities/job_rule_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
+import { callableSubjects } from "../../services/callable-catalog.js";
 
 const RULE_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
@@ -20,6 +21,23 @@ const SCHEDULE_FILTERABLE = new Set(["service_code", "job_name", "kind", "lane",
 function publishRuleChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
   NatsClient.jetstreamPublish("jobs.ctl.rules.changed", { rule_uuid: uuid }).catch(() => {});
+}
+
+/**
+ * `target_subject` must be a declared callable — the same census.callables
+ * list the form's combo renders. Writes the form could not produce
+ * (hand-crafted API payloads, stale clients) are rejected here: a target
+ * nobody serves is a silent dead letter at fire time.
+ */
+async function assertCallableTarget(body: Record<string, unknown>): Promise<void> {
+  const target = body["target_subject"];
+  if (typeof target !== "string" || target.length === 0) return; // NOT NULL violations surface as column errors
+  const subjects = await callableSubjects();
+  if (!subjects.has(target)) {
+    throw new ValidationError(
+      `target_subject "${target}" is not a declared callable — pick a subject from census.callables`,
+    );
+  }
 }
 
 export class JobRulesService {
@@ -35,6 +53,8 @@ export class JobRulesService {
       defaultSort: RULE_DEFAULT_SORT,
     },
     hooks: {
+      beforeCreate: async (body: Record<string, unknown>) => { await assertCallableTarget(body); return body; },
+      beforeUpdate: async (_uuid: string, body: Record<string, unknown>) => { await assertCallableTarget(body); return body; },
       afterWrite: async (_op: string, row: Record<string, unknown>) => { publishRuleChanged(row.uuid as string); },
     },
   } as never);

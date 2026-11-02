@@ -39,6 +39,10 @@ export const templateMeta: EntityMeta = {
     { key: "code", label_key: F("code"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
     { key: "language_iso", label_key: F("language_iso"), type: "text", order: 20, sortable: true, filterable: true, searchable: true },
     { key: "subject", label_key: F("subject"), type: "text", order: 30, filterable: true, searchable: true },
+    // Declared so the list endpoint returns it — `x_options` consumers
+    // (payload_map `x_map_keys`) read the template's variable vocabulary
+    // off the selected row. Hidden from the default list view.
+    { key: "variables", label_key: F("variables"), type: "text", format: "json", order: 35, default_visible: false },
     { key: "updated_at", label_key: F("updated_at"), type: "datetime", order: 40, sortable: true, audited: true },
     { key: "created_at", label_key: F("created_at"), type: "datetime", order: 50, sortable: true, default_visible: false, audited: true },
   ],

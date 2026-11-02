@@ -47,6 +47,13 @@ const CustomerBaseSchema = z.object({
     },
     z.string().min(2).max(100).optional()
   ),
+  preferred_locale: z.preprocess(
+    (v) => {
+      if (v === "" || v === null || v === undefined) return undefined;
+      return typeof v === "string" ? v.trim() : v;
+    },
+    z.string().regex(/^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})+$/, "preferred_locale must be a BCP-47 tag (e.g. it-IT, en-US)").max(35).optional()
+  ),
 });
 
 // Refinement for create: both onboarding_at and onboarding_time_zone must be present together or absent together

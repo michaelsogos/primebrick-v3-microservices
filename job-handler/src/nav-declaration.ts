@@ -32,23 +32,19 @@ const runsPaths = entityPaths("/system/job", "runs");
  */
 const RULE_FORM: FormPageDecl = {
   fields: [
-    { key: "name", span: 2 },
-    // Sorgente + Destinazione Evento side by side — the trigger
-    // (what the rule LISTENS to) and the due lane (what it FIRES
-    // on) read as one pair.
-    { key: "event_subject", options_source: "census.emits" },
-    { key: "target_subject" },
+    // Config-entry anatomy: the static fields stack in column 1, the
+    // dynamic builder owns column 2 from row 1 across the full static
+    // block (its own JsonValueEditor closes at the bottom of the
+    // dynamic part — "static left / dynamic right / JSON preview last").
+    { key: "name" },
+    { key: "event_subject", options_source: "census.emits", allow_create: false },
+    { key: "target_subject", options_source: "census.callables", allow_create: false },
     { key: "schedule_spec", default_value: "@every 5m" },
     { key: "execution_context", default_value: "user" },
-    { key: "filter", span: 2 },
-    // Fire-time source indirection is disabled pending the
-    // workflow engine (Nats-Schedule-Source reads a queue tail —
-    // semantically wrong for state-at-fire); the field stays
-    // visible-but-readonly to document the pending capability.
-    { key: "source_subject", options_source: "census.emits", readonly: true },
+    { key: "filter" },
     { key: "enabled", default_value: true },
+    { key: "payload_map", widget: "payload_map", col: 2, row: 1, row_span: 7 },
   ],
-  validators: ["target_matches_lane"],
 };
 
 export const JOB_NAV: ModuleNavDeclaration = {
@@ -84,7 +80,6 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_rule",
       label_key: "job.jobs.ruleForm.title",
-      description_key: "job.jobs.ruleForm.desc",
       // NO component_url — the host entity-form archetype renders it: the
       // entity meta (GET …/entities/job_rule/meta) supplies field types and
       // physical constraints; `page_props.form` supplies placement + policy.
@@ -95,7 +90,6 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "detail",
       entity: "job_rule",
       label_key: "job.jobs.ruleForm.title",
-      description_key: "job.jobs.ruleForm.desc",
       // SAME form declaration as create — detail is the update mode of the
       // `entity_form` archetype (prefill + PUT + optimistic version), and
       // the only mode where collaboration mounts (the record exists).

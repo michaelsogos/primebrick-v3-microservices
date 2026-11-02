@@ -17,6 +17,8 @@ import { jobServiceRouteHandler } from "./service-routes.js";
 import { assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
+import { startDueForwarder } from "./services/due-forwarder.js";
+import { startCallableCatalog } from "./services/callable-catalog.js";
 import { startRulesEngine } from "./services/rules-engine.js";
 import { JOB_NAV } from "./nav-declaration.js";
 import { JOB_EVENTS } from "./events-declaration.js";
@@ -91,6 +93,8 @@ async function main(): Promise<void> {
 
       await registerScheduleRoutes();
       await startRunRecorder();
+      await startDueForwarder();
+      await startCallableCatalog();
       await startRulesEngine();
     },
   });
