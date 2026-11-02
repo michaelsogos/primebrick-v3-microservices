@@ -20,6 +20,7 @@ import {
   collectDocRoutes,
   collectCensusOptions,
   extractRemoteFacts,
+  foreignEntitiesFromRegistry,
   generatePageDocs,
   mergeTranslationScopes,
   normalizeEntityContext,
@@ -112,15 +113,16 @@ for (const s of sheets) {
     .map((r) => r.route);
 }
 
-const { metaByEntity, capsByEntity } = normalizeEntityContext(aiEntityDecls);
+const { meta_by_entity, caps_by_entity } = normalizeEntityContext(aiEntityDecls);
 const report = generatePageDocs({
   service_code: "ai",
   routes,
   sheets,
-  metaByEntity,
-  capsByEntity,
+  meta_by_entity,
+  caps_by_entity,
   translations,
   census_options: censusOptions,
+  foreign_entities: foreignEntitiesFromRegistry(registry, "ai"),
   idp_name: idpName,
   access_namespace: AI_NAV.access,
   out_dir: OUT_DIR,

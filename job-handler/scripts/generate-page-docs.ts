@@ -20,6 +20,7 @@ import {
   collectDocRoutes,
   collectCensusOptions,
   extractRemoteFacts,
+  foreignEntitiesFromRegistry,
   generatePageDocs,
   mergeTranslationScopes,
   normalizeEntityContext,
@@ -113,15 +114,16 @@ for (const s of sheets) {
     .map((r) => r.route);
 }
 
-const { metaByEntity, capsByEntity } = normalizeEntityContext(jobEntityDecls);
+const { meta_by_entity, caps_by_entity } = normalizeEntityContext(jobEntityDecls);
 const report = generatePageDocs({
   service_code: "job",
   routes,
   sheets,
-  metaByEntity,
-  capsByEntity,
+  meta_by_entity,
+  caps_by_entity,
   translations,
   census_options: censusOptions,
+  foreign_entities: foreignEntitiesFromRegistry(registry, "job"),
   idp_name: idpName,
   access_namespace: JOB_NAV.access,
   out_dir: OUT_DIR,
