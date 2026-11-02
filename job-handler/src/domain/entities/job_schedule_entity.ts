@@ -4,7 +4,7 @@
  * Written ONLY by primebrick-job (sole writer of `jobs.schedule.*`): each
  * row mirrors one rollup-subject declaration message. `kind` distinguishes
  * the derivation source — `infra_derived` rows come from entity metadata
- * (e.g. @PartitionField retention), `rule` rows from job_rules evaluation,
+ * (e.g. @PartitionField retention), `trigger` rows from job_triggers evaluation,
  * `manual` rows from admin action.
  */
 import {
@@ -63,13 +63,13 @@ export class JobScheduleEntity
   @Column({ length: 20, nullable: false })
   status!: string;
 
-  /** Who armed it — service code for infra_derived/rule, user for manual. */
+  /** Who armed it — service code for infra_derived/trigger, user for manual. */
   @Column({ nullable: true })
   initiator?: string;
 
-  /** The rule this schedule was materialized from (kind=rule). */
+  /** The trigger this schedule was materialized from (kind=trigger). */
   @Column({ nullable: true })
-  rule_uuid?: UUID;
+  trigger_uuid?: UUID;
 
   @Column({ nullable: true })
   armed_at?: Date;

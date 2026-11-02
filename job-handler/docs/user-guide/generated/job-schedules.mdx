@@ -10,17 +10,7 @@ Each row shows the Job, the Service, the Kind, the Schedule, the Type, the Statu
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
-## Pages routes
-
-- `/system/job/job-schedules` — List, search and manage all job schedules. *(this page)*
-- `/system/job/job-schedules/create` — Create a new job schedule.
-
 ## What you can do here
-
-### How to create a new job schedule
-1. Click **New** in the toolbar.
-2. Fill in the form — required: **Name**, **Schedule**, **Lane**, **Target service**, **Target action**.
-3. Click **Save** — the new job schedule is created.
 
 ### How to delete a job schedule
 1. Open the row actions menu on the job schedule and click **Delete**.
@@ -67,14 +57,14 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Action | Status | Permission | What it does | Require Step-Up Auth |
 |--------|--------|------------|--------------|----------------------|
-| **create** | ENABLED | `_authenticated_admin` | Creates a new job schedule | no |
+| **create** | DISABLED | `_authenticated_admin` | Creates a new job schedule | no |
 | **update** | DISABLED | `_authenticated_admin` | Opens the job schedule for editing | no |
 | **delete** | ENABLED | `_authenticated_admin` | Marks the job schedule as deleted but keeps it so it can be restored | no |
 | **restore** | ENABLED | `_authenticated_admin` | Brings a soft-deleted job schedule back | no |
 | **purge** | DISABLED | — | Removes the job schedule forever | no |
 | **audit history** | ENABLED | `_authenticated_admin` | Shows the change history of the job schedule | no |
 
-- Creating a new job schedule is available on this page — the create action opens the create form in the same tab and it requires the `_authenticated_admin` permission.
+- Creating a new job schedule is not available on this page — if enabled, it would require the `_authenticated_admin` permission.
 - Editing a job schedule is not available on this page — if enabled, it would require the `_authenticated_admin` permission.
 - Soft-deleting a job schedule is available on this page — marks the job schedule as deleted but keeps it so it can be restored and it requires the `_authenticated_admin` permission.
 - Restoring a soft-deleted job schedule is available on this page — brings a soft-deleted job schedule back and it requires the `_authenticated_admin` permission.
@@ -97,6 +87,5 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 ## Doc references
 
-- [Job Schedules Create](/docs/user-guide/generated/job-schedules-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

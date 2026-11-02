@@ -4,7 +4,7 @@
  * ONE service call → RFC 7807). The BE `/svc/job` proxy makes it a pure
  * transport hop.
  *
- *   /api/v1/entities/job_rule|job_schedule|job_run/…
+ *   /api/v1/entities/job_trigger|job_schedule|job_run/…
  */
 
 import {
@@ -14,11 +14,11 @@ import {
 } from "@primebrick/sdk";
 
 import {
-  JobRulesService,
+  JobTriggersService,
   JobSchedulesService,
   JobRunsService,
 } from "../../modules/jobs/jobs.service.js";
-import { jobRuleMeta, jobScheduleMeta, jobRunMeta } from "../../modules/jobs/job.meta.js";
+import { jobTriggerMeta, jobScheduleMeta, jobRunMeta } from "../../modules/jobs/job.meta.js";
 
 function lazy<T extends object>(factory: () => T): T {
   let inst: T | null = null;
@@ -37,10 +37,10 @@ const entityBody = (b: unknown) => b as { entity: Record<string, unknown> };
  *  and their OpenAPI path blocks from this single config set. */
 export const jobEntityDecls: EntityRouteDecl[] = [
   {
-    entityName: "job_rule",
-    spec: { tag: "job_rules", label: "job rule" },
-    service: lazy(() => new JobRulesService()) as unknown as EntityServiceLike,
-    meta: jobRuleMeta,
+    entityName: "job_trigger",
+    spec: { tag: "job_triggers", label: "job trigger" },
+    service: lazy(() => new JobTriggersService()) as unknown as EntityServiceLike,
+    meta: jobTriggerMeta,
     auditable: true,
     permissions: {
       meta: readPerms, list: readPerms, get: readPerms,

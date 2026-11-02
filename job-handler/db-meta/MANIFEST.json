@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-01T16:40:27.167Z",
+  "issued_at": "2026-11-02T20:39:01.131Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -24,7 +24,11 @@
     "20261101100000_drop_job_rule_source_subject": "f5ee13c1193c4ddb2f3684214a6c9caf7b679085f5d46b907684e468e3c508f6",
     "20261102120000_job_rule_payload_map": "df7d3c86b2798adeb9382513883d502c10e5c66240739d90ece67c7c102831d1",
     "20261106210000_job_rule_hint_tooltips_user_friendly": "1436373a9f9de6e574e63b59ef2527c9b96d9e32936c602e3a56e00bbe93f377",
-    "20261107000000_job_rule_enabled_hint": "f3e7e87345a5e7812d2c36d027bacf2f6ece6b8326ecf3a2b9328b8bdc92f172"
+    "20261107000000_job_rule_enabled_hint": "f3e7e87345a5e7812d2c36d027bacf2f6ece6b8326ecf3a2b9328b8bdc92f172",
+    "20261107120000_job_trigger_rename": "67f1a2c1542f7060363b4cb2424eec97d5cba549402957709aaadfdd2ace4c78",
+    "20261107130000_job_manual_schedule_cleanup": "8997567f7d0e73391346eb79b598e8e906f8e66fa189d44a91927d5f6810257c",
+    "20261107140000_job_trigger_label_values": "5fd00d36d72e1f85f01de0db5b664a2f45a726a35c2473f2d40968ed3096ce85",
+    "20261107150000_job_triggers_changed_desc_fix": "b87ab2f60c9fe22b521e7800bb4b29a4a7ab6ec2bfdb1f0bdf235296e723f86c"
   },
-  "signature": "yIsgZFNpQWYtmyYxHAKtWTe7xeYS2aRfqURldyB21Soc2DSM+RWlWtXPyVnZqh4vYDzxadnmOtahR6k7lOAOCw=="
+  "signature": "0Ly1zv8zF/IV2OlaOW6/hvjkJZ15ddZ7C5igxXti6IwWmtQFSMuqwIx49R/gZIY8nZdxVj8MbsY26GsO1O2cAw=="
 }

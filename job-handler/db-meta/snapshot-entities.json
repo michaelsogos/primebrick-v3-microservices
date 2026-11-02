@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-31T20:36:32.496Z",
+  "generatedAt": "2026-11-02T20:32:37.086Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -415,15 +415,15 @@
           "propertyKey": "initiator",
           "isNullable": true
         },
-        "rule_uuid": {
-          "name": "rule_uuid",
+        "trigger_uuid": {
+          "name": "trigger_uuid",
           "ordinalPosition": 18,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
-          "propertyKey": "rule_uuid",
+          "propertyKey": "trigger_uuid",
           "isNullable": true
         },
         "armed_at": {
@@ -687,11 +687,11 @@
         }
       ]
     },
-    "job.job_rules": {
+    "job.job_triggers": {
       "kind": "table",
       "schema": "job",
-      "name": "job_rules",
-      "entityClassName": "JobRuleEntity",
+      "name": "job_triggers",
+      "entityClassName": "JobTriggerEntity",
       "columns": {
         "created_at": {
           "name": "created_at",
@@ -815,7 +815,7 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "event_subject",
-          "isNullable": false
+          "isNullable": true
         },
         "filter": {
           "name": "filter",
@@ -837,7 +837,7 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "schedule_spec",
-          "isNullable": false
+          "isNullable": true
         },
         "target_subject": {
           "name": "target_subject",
@@ -886,7 +886,7 @@
       },
       "indexes": [
         {
-          "name": "job_rules_uuid_uq",
+          "name": "job_triggers_uuid_uq",
           "columns": [
             "uuid"
           ],
@@ -894,7 +894,7 @@
           "isUnique": true
         },
         {
-          "name": "job_rules_name_uq",
+          "name": "job_triggers_name_uq",
           "columns": [
             "name"
           ],

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-31T20:36:32.499Z",
+  "generatedAt": "2026-11-02T20:32:37.089Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -399,8 +399,8 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "rule_uuid": {
-          "name": "rule_uuid",
+        "trigger_uuid": {
+          "name": "trigger_uuid",
           "ordinalPosition": 12,
           "dataType": "uuid",
           "typname": "uuid",
@@ -835,10 +835,10 @@
         }
       ]
     },
-    "job.job_rules": {
+    "job.job_triggers": {
       "kind": "table",
       "schema": "job",
-      "name": "job_rules",
+      "name": "job_triggers",
       "columns": {
         "id": {
           "name": "id",
@@ -889,7 +889,7 @@
           "formatType": "text",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": false,
+          "isNullable": true,
           "isPrimaryKey": false
         },
         "filter": {
@@ -915,7 +915,7 @@
           "formatType": "text",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": false,
+          "isNullable": true,
           "isPrimaryKey": false
         },
         "target_subject": {
@@ -1064,22 +1064,22 @@
       },
       "indexes": [
         {
-          "name": "job_rules_uuid_uq",
+          "name": "job_triggers_uuid_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
             "uuid"
           ],
-          "definition": "CREATE UNIQUE INDEX job_rules_uuid_uq ON job.job_rules USING btree (uuid)"
+          "definition": "CREATE UNIQUE INDEX job_triggers_uuid_uq ON job.job_triggers USING btree (uuid)"
         },
         {
-          "name": "job_rules_name_uq",
+          "name": "job_triggers_name_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
             "name"
           ],
-          "definition": "CREATE UNIQUE INDEX job_rules_name_uq ON job.job_rules USING btree (name)"
+          "definition": "CREATE UNIQUE INDEX job_triggers_name_uq ON job.job_triggers USING btree (name)"
         }
       ]
     }

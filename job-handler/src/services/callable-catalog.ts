@@ -8,7 +8,7 @@
  * sanctioned replacement for reading `public.service_registry` directly
  * (schema sovereignty).
  *
- * Consumed by the job_rule write path: `target_subject` must resolve to a
+ * Consumed by the job_trigger write path: `target_subject` must resolve to a
  * declared callable — the form's `census.callables` combo is the same list
  * rendered for users, so a write the form could not produce is rejected
  * here too.

@@ -1,0 +1,79 @@
+---
+title: Edit Job Trigger
+description: View and edit an existing job trigger.
+entity: job_trigger
+---
+
+View and edit an existing job trigger.
+
+The page is visible with the `access.system.job.triggers` grant.
+
+## Pages routes
+
+- `/system/job/triggers` — List, search and manage all job triggers.
+- `/system/job/triggers/create` — Create a new job trigger.
+- `/system/job/triggers/{uuid}` — View and edit an existing job trigger. *(this page)*
+
+## What you can do here
+
+### How to edit a job trigger
+1. On the **Triggers** list page, open the row actions menu on the job trigger you want to edit and click **Edit**.
+2. Update the fields below — required: **Name**, **Destination Event**, **Process Executor**, **Enabled**.
+3. Click **Save** — the changes to the job trigger are saved.
+
+
+The record opens in read mode first — click **Edit** to modify it. Concurrent edits are protected by optimistic locking: if someone else saves the job trigger while you are editing it, the page tells you before overwriting their changes. The form warns before discarding unsaved changes.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Name** | required | max 200 |
+| **Listening Event** | optional | The event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event or type an event name; offers the event subjects published by the registered modules (7 declared); only declared values can be selected |
+| **Destination Event** | required | What the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (2 declared); only declared values can be selected |
+| **Schedule** | optional | When the trigger fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you |
+| **Process Executor** | required | `user` runs the action as the triggering user (with their permissions); `me` runs as the trigger's author — identity resolved fresh at dispatch time; `system` runs with module privileges. Must match the lane in the destination subject; max 10 |
+| **Filter** | optional | JSON conditions that must all match the event payload for the trigger to fire — an array of `{ field, op, value }` entries evaluated against the event; edited as structured JSON with schema assistance |
+| **Enabled** | required | When on, the trigger reacts to the event you chose. Turn it off to pause the trigger without deleting it |
+| **Payload mapping** | optional | interactive payload-map builder — How to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a trigger context value (actor, trigger id, fire time). Leave empty to forward the event payload unchanged |
+
+- The **Name** field is a required field that allows up to 200 characters.
+- The **Listening Event** field is an optional field — the event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event or type an event name; offers the event subjects published by the registered modules (7 declared); only declared values can be selected.
+- The **Destination Event** field is a required field — what the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (2 declared); only declared values can be selected.
+- The **Schedule** field is an optional field — when the trigger fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you.
+- The **Process Executor** field is a required field that allows up to 10 characters — `user` runs the action as the triggering user (with their permissions); `me` runs as the trigger's author — identity resolved fresh at dispatch time; `system` runs with module privileges. Must match the lane in the destination subject.
+- The **Filter** field is an optional field — JSON conditions that must all match the event payload for the trigger to fire — an array of `{ field, op, value }` entries evaluated against the event; edited as structured JSON with schema assistance.
+- The **Enabled** field is a required field — when on, the trigger reacts to the event you chose. Turn it off to pause the trigger without deleting it.
+- The **Payload mapping** field is an optional interactive payload-map builder — how to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a trigger context value (actor, trigger id, fire time). Leave empty to forward the event payload unchanged.
+
+The **Listening Event** field offers these declared published event subjects:
+
+- `webhook.*.received`
+- `emailsender.response.*`
+- `crm.customer_changed` — **Customer changed** — Fires when a customer row is created, updated or deleted — carries the row snapshot plus change metadata
+- `crm.customer_high_value` — **High-value customer** — Semantic event — sales logic decided this customer crossed the high-value threshold. Carries the customer, the account manager and the trigger details
+- `crm.customer_payout` — **Customer payout** — Fires when a payout is recorded for a customer — carries the customer, the account manager and the payout details
+- `jobs.result.ai.*`
+- `jobs.ctl.triggers.changed` — **Triggers changed** — Fired when the job trigger set changes — `jobs` domain, `ctl` control channel, `triggers` resource, `changed` verb. The triggers engine re-arms schedules on it
+
+The **Destination Event** field offers these declared callable work subjects:
+
+- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
+- `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `_authenticated_admin` | Validates the form and saves changes to the job trigger | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and saves changes to the job trigger and it requires the `_authenticated_admin` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Triggers](/docs/user-guide/generated/triggers)
+- [Triggers Create](/docs/user-guide/generated/triggers-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

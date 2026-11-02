@@ -24,11 +24,11 @@ export const jobServiceRouteHandler = makeServiceRoutes({
     title: "Job Handler",
     version: detectPackageIdentity().version ?? "0.0.0",
     description:
-      "Scheduled/manual job engine — job_rule, job_schedule, job_run entity catalog plus schedule-arm and run-stats actions and module FE assets",
+      "Scheduled/manual job engine — job_trigger, job_schedule, job_run entity catalog plus schedule-arm and run-stats actions and module FE assets",
   },
   serverUrl: "http://localhost:3006",
   tags: [
-    { name: "job_rules", description: "Job rule definitions" },
+    { name: "job_triggers", description: "Job trigger definitions" },
     { name: "job_schedules", description: "Armed schedules" },
     { name: "job_runs", description: "Execution history" },
     { name: "jobs", description: "Job actions" },

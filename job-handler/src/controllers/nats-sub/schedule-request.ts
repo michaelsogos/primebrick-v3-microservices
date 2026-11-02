@@ -74,9 +74,10 @@ export async function registerScheduleRoutes(): Promise<void> {
             schedule_subject: (request as ScheduleRequest).schedule_subject!,
             schedule: (request as ScheduleRequest).schedule!,
             target: (request as ScheduleRequest).target!,
-            kind: (request as ScheduleRequest).kind === "manual" || (request as ScheduleRequest).kind === "rule"
-              ? (request as ScheduleRequest).kind as "manual" | "rule"
-              : "infra_derived",
+            // External callers only ever declare infra_derived schedules —
+            // "trigger" is armed by the triggers engine, "manual" was
+            // absorbed into schedule-only triggers.
+            kind: "infra_derived",
             caller_service: caller,
             payload: (request as ScheduleRequest).payload,
             source: (request as ScheduleRequest).source,

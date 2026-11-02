@@ -1,6 +1,6 @@
 /**
  * Entity metadata for the `job` admin entities — returned by
- * `GET /api/v1/entities/job_rule|job_schedule|job_run/meta`.
+ * `GET /api/v1/entities/job_trigger|job_schedule|job_run/meta`.
  * Default sort `updated_at desc` comes from HERE (metadata), never
  * hardcoded in the FE.
  *
@@ -19,7 +19,7 @@
 
 import type { EntityMeta } from "@primebrick/sdk";
 import { withColumnConstraints } from "@primebrick/dal-pg";
-import { JobRuleEntity, JobScheduleEntity, JobRunEntity } from "../../domain/entities/registry.js";
+import { JobTriggerEntity, JobScheduleEntity, JobRunEntity } from "../../domain/entities/registry.js";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
 const F = (e: string, c: string) => `job.entities.${e}.fields.${c}`;
@@ -28,12 +28,12 @@ const H = (e: string, c: string) => `job.entities.${e}.hints.${c}`;
 const HT = (e: string, c: string) => `job.entities.${e}.hints.${c}_title`;
 
 /**
- * `job_rule.filter` JSON Schema — mirrors `matchFilter` in the rules engine:
+ * `job_trigger.filter` JSON Schema — mirrors `matchFilter` in the rules engine:
  * `RuleFilter[]` where each entry is `{ field, op?, value? }` — `field` is a
  * dot-path on the event payload, `op` the closed operator enum. Served to the
  * form archetype for BOTH editor lint/completion and submit validation.
  */
-const RULE_FILTER_SCHEMA = {
+const TRIGGER_FILTER_SCHEMA = {
   type: "array",
   items: {
     type: "object",
@@ -47,7 +47,7 @@ const RULE_FILTER_SCHEMA = {
 } as const;
 
 /**
- * `job_rule.payload_map` JSON Schema — the authored DST the rules engine
+ * `job_trigger.payload_map` JSON Schema — the authored DST the rules engine
  * resolves at arm time (`applyPayloadMap` in @primebrick/core): each key
  * is a field of the callable's request payload, each value a
  * `{kind:"const"|"path"|"meta"}` entry. The form renders the structured
@@ -63,7 +63,7 @@ const PAYLOAD_MAP_SCHEMA = {
       kind: { enum: ["const", "path", "meta", "inject", "list", "map"] },
       value: {},
       path: { type: "string", pattern: "^\\$" },
-      meta: { enum: ["actor_uuid", "rule_id", "fired_at", "actor_locale"] },
+      meta: { enum: ["actor_uuid", "trigger_id", "fired_at", "actor_locale"] },
       inject: { enum: ["uuid", "now_iso", "now_ms", "session_actor"] },
       items: { type: "array" },
       entries: { type: "object" },
@@ -72,58 +72,59 @@ const PAYLOAD_MAP_SCHEMA = {
   },
 } as const;
 
-export const jobRuleMeta: EntityMeta = withColumnConstraints({
-  entity: "job_rule",
-  translation_key: "job_rule",
+export const jobTriggerMeta: EntityMeta = withColumnConstraints({
+  entity: "job_trigger",
+  translation_key: "job_trigger",
   entities_ns: "job",
-  title_key: "job.entities.job_rule.title",
+  title_key: "job.entities.job_trigger.title",
   uid: "uuid",
   display_field: "name",
   columns: [
-    { key: "name", label_key: F("job_rule", "name"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
+    { key: "name", label_key: F("job_trigger", "name"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
     {
-      key: "event_subject", label_key: F("job_rule", "event_subject"), type: "text", format: "nats_subject", order: 20, filterable: true,
+      key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, filterable: true,
       icon: "zap",
-      tooltip: H("job_rule", "event_subject"), tooltip_title: HT("job_rule", "event_subject"), tooltip_priority: "HINT",
+      tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
     },
     {
-      key: "filter", label_key: F("job_rule", "filter"), type: "text", format: "json", order: 30,
+      key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 30,
       default_visible: false,
-      json_schema: RULE_FILTER_SCHEMA,
-      tooltip: H("job_rule", "filter"), tooltip_title: HT("job_rule", "filter"), tooltip_priority: "HINT",
+      json_schema: TRIGGER_FILTER_SCHEMA,
+      tooltip: H("job_trigger", "filter"), tooltip_title: HT("job_trigger", "filter"), tooltip_priority: "HINT",
     },
     {
-      key: "schedule_spec", label_key: F("job_rule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40,
-      tooltip: H("job_rule", "schedule_spec"), tooltip_title: HT("job_rule", "schedule_spec"), tooltip_priority: "HINT",
+      key: "schedule_spec", label_key: F("job_trigger", "schedule_spec"), type: "text", format: "schedule_spec", order: 40,
+      tooltip: H("job_trigger", "schedule_spec"), tooltip_title: HT("job_trigger", "schedule_spec"), tooltip_priority: "HINT",
     },
     {
-      key: "target_subject", label_key: F("job_rule", "target_subject"), type: "text", format: "nats_subject", order: 50,
+      key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 50,
       icon: "send",
-      tooltip: H("job_rule", "target_subject"), tooltip_title: HT("job_rule", "target_subject"), tooltip_priority: "HINT",
+      tooltip: H("job_trigger", "target_subject"), tooltip_title: HT("job_trigger", "target_subject"), tooltip_priority: "HINT",
     },
     {
-      key: "payload_map", label_key: F("job_rule", "payload_map"), type: "text", format: "json", order: 55,
+      key: "payload_map", label_key: F("job_trigger", "payload_map"), type: "text", format: "json", order: 55,
       default_visible: false,
       json_schema: PAYLOAD_MAP_SCHEMA,
-      tooltip: H("job_rule", "payload_map"), tooltip_title: HT("job_rule", "payload_map"), tooltip_priority: "HINT",
+      tooltip: H("job_trigger", "payload_map"), tooltip_title: HT("job_trigger", "payload_map"), tooltip_priority: "HINT",
     },
     {
-      key: "execution_context", label_key: F("job_rule", "execution_context"), type: "badge", order: 60, filterable: true,
+      key: "execution_context", label_key: F("job_trigger", "execution_context"), type: "badge", order: 60, filterable: true,
       badge: { values: {
-        system: { label_key: V("job_rule", "system"), color: "#000000" },
-        user: { label_key: V("job_rule", "user"), color: "primary" },
+        system: { label_key: V("job_trigger", "system"), color: "#000000" },
+        user: { label_key: V("job_trigger", "user"), color: "primary" },
+        me: { label_key: V("job_trigger", "me"), color: "info" },
       } },
-      tooltip: H("job_rule", "execution_context"), tooltip_title: HT("job_rule", "execution_context"), tooltip_priority: "HINT",
+      tooltip: H("job_trigger", "execution_context"), tooltip_title: HT("job_trigger", "execution_context"), tooltip_priority: "HINT",
     },
     {
-      key: "enabled", label_key: F("job_rule", "enabled"), type: "boolean", order: 80, filterable: true,
-      tooltip: H("job_rule", "enabled"), tooltip_title: HT("job_rule", "enabled"), tooltip_priority: "HINT",
+      key: "enabled", label_key: F("job_trigger", "enabled"), type: "boolean", order: 80, filterable: true,
+      tooltip: H("job_trigger", "enabled"), tooltip_title: HT("job_trigger", "enabled"), tooltip_priority: "HINT",
     },
-    { key: "updated_at", label_key: F("job_rule", "updated_at"), type: "datetime", order: 90, sortable: true },
-    { key: "created_at", label_key: F("job_rule", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false },
+    { key: "updated_at", label_key: F("job_trigger", "updated_at"), type: "datetime", order: 90, sortable: true },
+    { key: "created_at", label_key: F("job_trigger", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false },
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
-}, JobRuleEntity);
+}, JobTriggerEntity);
 
 export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entity: "job_schedule",
@@ -139,7 +140,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, filterable: true,
       badge: { values: {
         infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" },
-        rule: { label_key: V("job_schedule", "rule"), color: "blue" },
+        trigger: { label_key: V("job_schedule", "trigger"), color: "blue" },
         manual: { label_key: V("job_schedule", "manual"), color: "amber" },
       } },
     },
