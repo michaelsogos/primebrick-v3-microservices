@@ -6,8 +6,8 @@
  * file under `fe/dist`, streams bytes with the right content-type and cache
  * policy. No domain logic.
  *
- *   /ws/job/api/v1/module-assets/jobs-page.js   → fe/dist/jobs-page.js
- *   /ws/job/api/v1/module-assets/jobs-page.css  → fe/dist/jobs-page.css
+ *   /svc/job/api/v1/module-assets/jobs-page.js   → fe/dist/jobs-page.js
+ *   /svc/job/api/v1/module-assets/jobs-page.css  → fe/dist/jobs-page.css
  *
  * Cache policy: vite content-hashed assets (`-[hash8].<ext>`) are immutable;
  * the predictable entry names (jobs-page.js/.css) are `no-cache` so a new

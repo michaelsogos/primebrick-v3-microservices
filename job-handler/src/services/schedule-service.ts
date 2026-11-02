@@ -38,6 +38,13 @@ export interface DeclareScheduleInput {
   forwardHeaders?: Record<string, string>;
   initiator?: string;
   rule_uuid?: string;
+  /**
+   * What job_schedules.target_subject shows when the real destination
+   * differs from the NATS fire target — rules arm on the JH-internal
+   * `jobs.due.<lane>.job.forward.*` trampoline but the row mirrors the
+   * callable subject users configured (e.g. `emailsender.send`).
+   */
+  mirror_target?: string;
 }
 
 const SUBJECT_RE = /^jobs\.schedule\.([a-z0-9-]+)\.([a-z0-9-]+)(\..+)?$/;
@@ -122,7 +129,7 @@ export async function declareSchedule(input: DeclareScheduleInput): Promise<{ se
     lane,
     schedule_spec: input.schedule,
     schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",
-    target_subject: input.target,
+    target_subject: input.mirror_target ?? input.target,
     status: "armed",
     initiator: input.initiator ?? input.caller_service ?? "job",
     rule_uuid: input.rule_uuid === undefined ? undefined : toUUID(input.rule_uuid),

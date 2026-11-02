@@ -9,7 +9,7 @@
  * `bindRemoteCtx(ctx, { service: 'ai' })` wires the shared-UI bridges
  * (i18n/notify/service-api/sheet) so composables like `useAiModels` and
  * composites like `ModelCacheSection` resolve the ai service API
- * (`/ws/ai/api/v1`) instead of the host's.
+ * (`/svc/ai/api/v1`) instead of the host's.
  */
 import { bindRemoteCtx, mountModuleContent, type ModuleSheetHost } from '@primebrick/ui';
 import ModelCacheSheet from './ModelCacheSheet.svelte';

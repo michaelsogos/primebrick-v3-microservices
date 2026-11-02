@@ -15,7 +15,7 @@
   "scripts": {
     "version:auto": "node ../scripts/version-sync.mjs",
     "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs && pnpm fe:build",
-    "dev": "bun --hot src/index.ts",
+    "dev": "node ../scripts/dev-hot.mjs",
     "build": "tsc",
     "fe:build": "vite build fe",
     "fe:check": "cd fe && svelte-check",

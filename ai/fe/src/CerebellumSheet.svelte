@@ -14,7 +14,7 @@
    *
    * Props contract: `ctx.sheet.props` =
    *   `{ models, assistants, rows?, onCreated? }`.
-   * Writes ride `ctx.api` (ws-bound → /ws/ai/api/v1/entities/ai_cerebellum).
+   * Writes ride `ctx.api` (ws-bound → /svc/ai/api/v1/entities/ai_cerebellum).
    */
   import type { ModuleSheetHost } from '@primebrick/ui';
   import { modelVariantKey, type AiCerebellum, type AiModel } from '@primebrick/ui';

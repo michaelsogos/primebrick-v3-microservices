@@ -17,6 +17,7 @@ import {
 } from "./adapters/index.js";
 import { initAiConfig, aiConfig } from "./config/ai-config.js";
 import { AI_NAV } from "./nav-declaration.js";
+import { AI_EVENTS } from "./events-declaration.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -34,6 +35,7 @@ async function main(): Promise<void> {
     // The ai module OWNS its sheet panels (`ai.*`): the host sheet engine
     // mounts the content chunk at runtime, exactly like remote pages.
     nav: AI_NAV,
+    events: AI_EVENTS,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has

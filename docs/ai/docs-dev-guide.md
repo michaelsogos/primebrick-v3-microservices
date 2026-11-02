@@ -57,7 +57,7 @@ docs/dev-guide/                    # shared repo-level pages
   shallow-cloned repos for `openapi-route.ts` files and writes them to
   `apis/<service>.json` for Zudoku's interactive API Catalog.
 - **Shared pages** (`overview`, `architecture`, `conventions`) cover
-  cross-cutting topics: the NATS™ message bus, the BE `/ws/:serviceCode/*`
+  cross-cutting topics: the NATS™ message bus, the BE `/svc/:serviceCode/*`
   proxy, the SDK lifecycle, API path conventions, data-model rules.
 - **Per-service pages** (`<service>/docs/dev-guide/index.mdx`) cover
   everything specific to one microservice: its HTTP routes, NATS™ subjects,

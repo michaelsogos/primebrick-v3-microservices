@@ -4,11 +4,16 @@
  * Only BUSINESS rules live here: infrastructure jobs (partition
  * maintenance) are derived from entity metadata, never duplicated in this
  * table. When an event matching `event_subject` (+ `filter`) arrives, the
- * rules engine materializes a schedule on `target_subject`.
+ * rules engine materializes a schedule that fires on `target_subject`.
  *
- * `execution_context` decides the due lane: "user" (default — fires on
- * jobs.due.user.* with the originator's AuthUser) or "system" (opt-in,
- * declared super-partes business process on jobs.due.system.*).
+ * `target_subject` is a service-owned callable subject (e.g.
+ * `emailsender.send`) picked from `census.callables`; `payload_map`
+ * (PayloadMap DST) builds its request payload from the event.
+ *
+ * `execution_context` decides the identity the fire runs under: "user"
+ * (default — the originator's AuthUser rides the forwarded headers) or
+ * "system" (opt-in, declared super-partes business process with no user
+ * context — a permissioned callable will deny it).
  */
 import {
   Entity,
@@ -46,17 +51,20 @@ export class JobRuleEntity
   @Column({ nullable: false })
   schedule_spec!: string;
 
-  /** Due target — must match jobs.due.<lane>.* for the declared context. */
+  /** Due target — a callable subject from census.callables (e.g.
+   *  emailsender.send), or a legacy jobs.due.<lane>.* subject. */
   @Column({ nullable: false })
   target_subject!: string;
+
+  /** Rule-owned payload map — `PayloadMap` DST from @primebrick/core:
+   *  per target field, a {kind:"const"|"path"|"meta"} entry resolved
+   *  against the event payload at arm time. NULL/{} = verbatim forward. */
+  @Column({ nullable: true })
+  payload_map?: unknown;
 
   /** user (default) | system — explicit opt-in, never inferred. */
   @Column({ length: 10, nullable: false })
   execution_context!: string;
-
-  /** Optional Nats-Schedule-Source subject — fire-time state indirection. */
-  @Column({ nullable: true })
-  source_subject?: string;
 
   @Column({ nullable: false })
   enabled!: boolean;

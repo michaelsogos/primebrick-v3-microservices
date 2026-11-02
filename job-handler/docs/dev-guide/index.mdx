@@ -60,7 +60,7 @@ of admin-managed schedules.
 - `job_runs` — execution history: status, `duration_ms`, error fields, report (jsonb).
 - `config_entries` — mandatory per-service config (cadence, ports, shield refs).
 
-## HTTP surface (via BE `/ws/job/*` proxy)
+## HTTP surface (via BE `/svc/job/*` proxy)
 
 | Route | Description |
 |-------|-------------|
@@ -94,4 +94,4 @@ access namespace `access.system.job`).
   drill-down panel from the same chunk via the host sheet engine.
 - **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` (vite build
   under `fe/`); the gateway path is
-  `/ws/job/api/v1/module-assets/jobs-page.js`.
+  `/svc/job/api/v1/module-assets/jobs-page.js`.

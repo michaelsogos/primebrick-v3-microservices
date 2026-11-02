@@ -25,7 +25,7 @@ describe("AI_NAV declaration", () => {
 
   it("every sheet points at the ai-sheets esm-mount chunk", () => {
     for (const sheet of AI_NAV.sheets ?? []) {
-      expect(sheet.component_url).toBe("/ws/ai/api/v1/module-assets/ai-sheets.js");
+      expect(sheet.component_url).toBe("/svc/ai/api/v1/module-assets/ai-sheets.js");
       expect(sheet.component_format).toBe("esm-mount");
     }
   });
@@ -36,7 +36,7 @@ describe("AI_NAV declaration", () => {
     expect(routes).not.toContain("/system/ai");
     for (const route of AI_NAV.routes ?? []) {
       expect(route.kind).toBe("page");
-      expect(route.component_url).toBe("/ws/ai/api/v1/module-assets/ai-pages.js");
+      expect(route.component_url).toBe("/svc/ai/api/v1/module-assets/ai-pages.js");
       expect(route.component_format).toBe("esm-mount");
       expect(route.label_key).toMatch(/^ai\./);
     }

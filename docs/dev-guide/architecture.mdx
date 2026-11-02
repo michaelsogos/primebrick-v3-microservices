@@ -15,19 +15,19 @@ Frontend (FE) never calls microservices directly.
 
 <Mermaid chart={`flowchart LR
   FE[Frontend] -->|HTTP /api/v1/...| BE[Backend]
-  BE -->|HTTP /ws/emailsender/api/v1/...| ES[EmailSender]
+  BE -->|HTTP /svc/emailsender/api/v1/...| ES[EmailSender]
   BE -->|OpenAPI aggregation| ES
 `} />
 
-- **HTTP proxy:** The BE proxies requests via `/ws/:serviceCode/*`. A
-  request to `GET /ws/emailsender/api/v1/entities/provider/list` is
+- **HTTP proxy:** The BE proxies requests via `/svc/:serviceCode/*`. A
+  request to `GET /svc/emailsender/api/v1/entities/provider/list` is
   forwarded to the EmailSender microservice at
   `GET /api/v1/entities/provider/list`.
 
   ```bash
   # From the FE (or any JWT-authenticated client) through the BE proxy:
   curl -H "Authorization: Bearer <jwt>" \
-    http://localhost:3001/ws/emailsender/api/v1/entities/provider/list
+    http://localhost:3001/svc/emailsender/api/v1/entities/provider/list
   # → { "rows": [...], "total": 0, "page": 1, "page_size": 20 }
 
   # Direct to the microservice (bypassing the BE, for debugging):

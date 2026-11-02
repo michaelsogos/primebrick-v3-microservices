@@ -36,6 +36,9 @@ export class EmailTemplateEntity
   @Column({ nullable: true })
   mjml_source?: string;
 
+  /** Declared template placeholders as `{name: descriptor}` — the keys are
+   *  the interpolation vocabulary the `variables` payload feeds at send
+   *  time (the payload_map `x_map_keys` hint reads them for suggestions). */
   @Column({ nullable: true })
   variables?: Record<string, unknown>;
 
