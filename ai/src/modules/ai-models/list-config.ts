@@ -7,6 +7,7 @@
  * reference table (~3-10 rows).
  */
 import type { MetaColumn } from "../shared/entity-meta-types.js";
+import { isColumnFilterable, isColumnSearchable, isColumnSortable } from "@primebrick/sdk";
 
 /** Raw list column literal — canonical `MetaColumn` shape minus the
  *  flags injected by the normalize step (`sticky`, `audited`).
@@ -142,15 +143,15 @@ export const AI_MODEL_LIST_COLUMNS: MetaColumn[] = AI_MODEL_RAW_COLUMNS.map((c) 
 }));
 
 export const AI_MODEL_SEARCHABLE_KEYS = AI_MODEL_LIST_COLUMNS
-  .filter((c) => c.searchable !== false)
+  .filter(isColumnSearchable)
   .map((c) => c.key);
 
 export const AI_MODEL_SORT_KEYS = AI_MODEL_LIST_COLUMNS
-  .filter((c) => c.sortable)
+  .filter(isColumnSortable)
   .map((c) => c.key);
 
 export const AI_MODEL_FILTERABLE_KEYS = AI_MODEL_LIST_COLUMNS
-  .filter((c) => c.filterable !== false)
+  .filter(isColumnFilterable)
   .map((c) => c.key);
 
 export const AI_MODEL_DATA_COLUMNS: MetaColumn[] = AI_MODEL_LIST_COLUMNS.filter(

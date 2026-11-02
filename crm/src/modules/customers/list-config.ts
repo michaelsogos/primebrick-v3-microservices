@@ -1,4 +1,4 @@
-import type { MetaColumn } from "@primebrick/sdk";
+import { isColumnFilterable, isColumnSearchable, isColumnSortable, type MetaColumn } from "@primebrick/sdk";
 
 /** Raw list column literal — canonical `MetaColumn` shape minus the
  *  flags injected by the normalize step (`sticky`, `audited`).
@@ -123,6 +123,6 @@ export const CUSTOMER_LIST_COLUMNS: MetaColumn[] = CUSTOMER_RAW_COLUMNS.map((c) 
   ...(auditingKeySet.has(c.key) ? { audited: true } : {}),
 }));
 
-export const CUSTOMER_SEARCHABLE_KEYS = CUSTOMER_LIST_COLUMNS.filter((c) => c.searchable !== false).map((c) => c.key);
-export const CUSTOMER_SORT_KEYS = CUSTOMER_LIST_COLUMNS.filter((c) => c.sortable).map((c) => c.key);
-export const CUSTOMER_FILTERABLE_KEYS = CUSTOMER_LIST_COLUMNS.filter((c) => c.filterable !== false).map((c) => c.key);
+export const CUSTOMER_SEARCHABLE_KEYS = CUSTOMER_LIST_COLUMNS.filter(isColumnSearchable).map((c) => c.key);
+export const CUSTOMER_SORT_KEYS = CUSTOMER_LIST_COLUMNS.filter(isColumnSortable).map((c) => c.key);
+export const CUSTOMER_FILTERABLE_KEYS = CUSTOMER_LIST_COLUMNS.filter(isColumnFilterable).map((c) => c.key);
