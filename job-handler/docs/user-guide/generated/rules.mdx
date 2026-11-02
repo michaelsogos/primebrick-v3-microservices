@@ -56,7 +56,7 @@ The page is visible with the `access.system.job.rules` grant.
 
 - The Name column is hidden by default and can be sorted and filtered.
 - The Listening Event column is hidden by default and can be filtered but not sorted — the event that can trigger this rule: when something happens in the system (e.g. a customer crosses a threshold) the rule can run. Pick an available event or type an event name.
-- The Filter column is hidden by default and cannot be sorted or filtered — jSON conditions that must all match the event payload for the rule to fire — an array of `{ field, op, value }` entries evaluated against the event.
+- The Filter column is hidden by default and cannot be sorted or filtered — JSON conditions that must all match the event payload for the rule to fire — an array of `{ field, op, value }` entries evaluated against the event.
 - The Schedule column is hidden by default and cannot be sorted or filtered — when the rule fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you.
 - The Destination Event column is hidden by default and cannot be sorted or filtered — what the rule does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services.
 - The Payload mapping column is hidden by default and cannot be sorted or filtered — how to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a rule context value (actor, rule id, fire time). Leave empty to forward the event payload unchanged.
