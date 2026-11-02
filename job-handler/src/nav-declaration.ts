@@ -18,11 +18,34 @@
  * covered by the user's grants (exact or `*` wildcard); `default: true`
  * flags the leaf GOTO(module) lands on.
  */
-import { entityPaths, type ModuleNavDeclaration } from "@primebrick/sdk";
+import { entityPaths, type ModuleNavDeclaration, type FormPageDecl } from "@primebrick/sdk";
 
 const schedulesPaths = entityPaths("/system/job", "job-schedules");
 const rulesPaths = entityPaths("/system/job", "rules");
 const runsPaths = entityPaths("/system/job", "runs");
+
+/**
+ * The job_rule form placement — shared verbatim by `create` and `detail`
+ * (the update mode of the same `entity_form` archetype): one declaration,
+ * two behaviors. Detail adds collaboration (the record exists) and the
+ * readonly policy stays in the placement flags.
+ */
+const RULE_FORM: FormPageDecl = {
+  fields: [
+    // Config-entry anatomy: the static fields stack in column 1, the
+    // dynamic builder owns column 2 from row 1 across the full static
+    // block (its own JsonValueEditor closes at the bottom of the
+    // dynamic part — "static left / dynamic right / JSON preview last").
+    { key: "name" },
+    { key: "event_subject", options_source: "census.emits", allow_create: false },
+    { key: "target_subject", options_source: "census.callables", allow_create: false },
+    { key: "schedule_spec", default_value: "@every 5m" },
+    { key: "execution_context", default_value: "user" },
+    { key: "filter" },
+    { key: "enabled", default_value: true },
+    { key: "payload_map", widget: "payload_map", col: 2, row: 1, row_span: 7 },
+  ],
+};
 
 export const JOB_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/job"],
@@ -47,8 +70,9 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_schedule",
       label_key: "job.jobs.scheduleNew",
+      description_key: "job.jobs.scheduleDialog.desc",
       icon: "calendar-plus",
-      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
     },
     {
@@ -56,8 +80,20 @@ export const JOB_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "job_rule",
       label_key: "job.jobs.ruleForm.title",
-      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
-      component_format: "esm-mount",
+      // NO component_url — the host entity-form archetype renders it: the
+      // entity meta (GET …/entities/job_rule/meta) supplies field types and
+      // physical constraints; `page_props.form` supplies placement + policy.
+      page_props: { form: RULE_FORM },
+    },
+    {
+      route: rulesPaths.detail,
+      kind: "detail",
+      entity: "job_rule",
+      label_key: "job.jobs.ruleForm.title",
+      // SAME form declaration as create — detail is the update mode of the
+      // `entity_form` archetype (prefill + PUT + optimistic version), and
+      // the only mode where collaboration mounts (the record exists).
+      page_props: { form: RULE_FORM },
     },
   ],
   // Remote sheet panels — engine is host-side, the mountSheet export of
@@ -66,7 +102,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
   sheets: [
     {
       key: "job.runDetail",
-      component_url: "/ws/job/api/v1/module-assets/jobs-page.js",
+      component_url: "/svc/job/api/v1/module-assets/jobs-page.js",
       component_format: "esm-mount",
     },
   ],

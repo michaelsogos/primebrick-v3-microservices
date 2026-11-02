@@ -1,7 +1,7 @@
 /**
  * entities-route — canonical entity CRUD for the `job` schema entities,
  * behind the SDK `makeEntityRouter` factory (auth → RBAC → validation →
- * ONE service call → RFC 7807). The BE `/ws/job` proxy makes it a pure
+ * ONE service call → RFC 7807). The BE `/svc/job` proxy makes it a pure
  * transport hop.
  *
  *   /api/v1/entities/job_rule|job_schedule|job_run/…
@@ -40,7 +40,7 @@ export const jobEntityDecls: EntityRouteDecl[] = [
     entityName: "job_rule",
     spec: { tag: "job_rules", label: "job rule" },
     service: lazy(() => new JobRulesService()) as unknown as EntityServiceLike,
-    meta: jobRuleMeta as unknown as Record<string, unknown>,
+    meta: jobRuleMeta,
     auditable: true,
     permissions: {
       meta: readPerms, list: readPerms, get: readPerms,
@@ -54,7 +54,7 @@ export const jobEntityDecls: EntityRouteDecl[] = [
     entityName: "job_schedule",
     spec: { tag: "job_schedules", label: "job schedule" },
     service: lazy(() => new JobSchedulesService()) as unknown as EntityServiceLike,
-    meta: jobScheduleMeta as unknown as Record<string, unknown>,
+    meta: jobScheduleMeta,
     auditable: true,
     permissions: {
       meta: readPerms, list: readPerms, get: readPerms, audit: writePerms,
@@ -70,7 +70,7 @@ export const jobEntityDecls: EntityRouteDecl[] = [
     entityName: "job_run",
     spec: { tag: "job_runs", label: "job run" },
     service: lazy(() => new JobRunsService()) as unknown as EntityServiceLike,
-    meta: jobRunMeta as unknown as Record<string, unknown>,
+    meta: jobRunMeta,
     auditable: true,
     permissions: {
       // History is written by services, never edited by humans — read-only.

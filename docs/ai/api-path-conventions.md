@@ -9,7 +9,7 @@
 
 ## Purpose
 
-Primebrick microservices are proxied by the Backend (BE) via `/ws/:serviceCode/*`
+Primebrick microservices are proxied by the Backend (BE) via `/svc/:serviceCode/*`
 and are consumed by:
 1. The Frontend (FE) — direct UI interactions
 2. The MCP Server (inside the BE) — generic CRUD tools that dispatch based on
@@ -60,8 +60,8 @@ Rules:
   `enabled` may be toggled via `actions_overrides`).
 - The `list` endpoint MUST accept the standard query parameters:
   `search`, `search_in`, `sort_key`, `sort_dir`, `page`, `page_size`,
-  `filters`, `deleted_records`. See the BE's customer/organization list
-  endpoints for the reference implementation.
+  `filters`, `deleted_records`. See the BE's organization list endpoint or
+  the crm service's customer list for the reference implementation.
 - **Write-payload standard (`{entity}` envelope):** single-entity
   `POST`/`PUT` bodies MUST be `{ entity: {...} }` — flat entity fields at the
   body root are rejected (hard break, same contract as the BE). A

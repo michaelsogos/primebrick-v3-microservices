@@ -8,7 +8,7 @@
  *
  * Used by the FE module config page AND the AI console remote page via the
  * BE proxy:
- *   FE → BE /ws/ai/api/v1/entities/config_entry/list → ai
+ *   FE → BE /svc/ai/api/v1/entities/config_entry/list → ai
  *
  * Precedent: emailsender's config-route — same RpcRoute shape. Addition:
  * `type === 'secret'` rows mask `value` to null on reads (BE

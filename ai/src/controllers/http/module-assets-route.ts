@@ -6,8 +6,8 @@
  * file under `fe/dist`, streams bytes with the right content-type and cache
  * policy. No domain logic.
  *
- *   /ws/ai/api/v1/module-assets/ai-sheets.js   → fe/dist/ai-sheets.js
- *   /ws/ai/api/v1/module-assets/ai-sheets.css  → fe/dist/ai-sheets.css
+ *   /svc/ai/api/v1/module-assets/ai-sheets.js   → fe/dist/ai-sheets.js
+ *   /svc/ai/api/v1/module-assets/ai-sheets.css  → fe/dist/ai-sheets.css
  *
  * Cache policy: vite content-hashed assets (`-[hash8].<ext>`) are immutable;
  * the predictable entry names (ai-sheets.js/.css) are `no-cache` so a new

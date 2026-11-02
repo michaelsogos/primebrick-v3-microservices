@@ -10,6 +10,7 @@ import { EmailService } from "./services/email-service.js";
 import { subscribeToWebhooks, setWebhookApiKeyPort } from "./controllers/nats-sub/webhook-subscriber.js";
 import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 import { EMAILSENDER_NAV } from "./nav-declaration.js";
+import { EMAILSENDER_EVENTS } from "./events-declaration.js";
 import { EmailSenderAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import {
   ConfigRepositoryAdapter,
@@ -32,6 +33,7 @@ async function main(): Promise<void> {
     // The providers list is host-rendered; create/edit are remote chunks
     // owned by this service (fe/ → emailsender-pages.js).
     nav: EMAILSENDER_NAV,
+    events: EMAILSENDER_EVENTS,
 
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has

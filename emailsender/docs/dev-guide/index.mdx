@@ -19,7 +19,7 @@ management via HTTP entity CRUD routes proxied through the Backend.
 ## Architecture
 
 <Mermaid chart={`flowchart LR
-  FE[Frontend] -->|HTTP via BE proxy| BE[Backend /ws/emailsender/*]
+  FE[Frontend] -->|HTTP via BE proxy| BE[Backend /svc/emailsender/*]
   BE -->|HTTP| ES[EmailSender]
   ES -->|HTTP| Brevo[Brevo API]
   BE -->|NATS emailsender.send| ES
@@ -33,7 +33,7 @@ management via HTTP entity CRUD routes proxied through the Backend.
 
 All HTTP routes follow the standardized API path conventions (see
 [Conventions](/dev/microservices/conventions)). The Backend proxies
-requests via `/ws/emailsender/*`.
+requests via `/svc/emailsender/*`.
 
 The EmailSender service exposes two HTTP route groups:
 
@@ -59,6 +59,21 @@ client shield key; the BE discovery fetcher reaches it that way).
 See the [EmailSender API Catalog](/catalog/emailsender) for the full
 interactive API reference — every path, method, operationId, parameter,
 request body, and response schema with live try-it functionality.
+
+## Module-owned frontend
+
+`src/nav-declaration.ts` exports `EMAILSENDER_NAV`, registered into
+`service_registry.endpoints.nav` under `route_prefixes:
+["/system/emailsender"]` (access namespace `access.system.emailsender`).
+
+- **List pages** (`kind: "list"`) — providers and templates lists are
+  host-rendered entity-table archetypes; no module code ships for them.
+- **Create / edit pages** (`component_format: "esm-mount"`) — provider and
+  template forms mount `emailsender-pages.js` via the host
+  `RemotePageMount`.
+- **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` (vite build
+  under `fe/`); the gateway path is
+  `/svc/emailsender/api/v1/module-assets/emailsender-pages.js`.
 
 ## NATS™ Subjects
 

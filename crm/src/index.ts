@@ -8,10 +8,10 @@
  *
  * What it does today: declares the crm module (nav + route census) so the
  * module switcher and route ownership resolve `/crm/customers` and
- * `/crm/pipeline` to `crm` instead of being borrowed from another module's static
- * registry. The customer entity pages themselves stay BE-served for now
- * (route decls reference entity `customer` rendered by the FE pipeline);
- * entity API ownership migrates to this service in a later phase.
+ * `/system/crm/pipeline` to `crm` instead of being borrowed from another module's static
+ * registry — AND owns the `customer` domain entity end-to-end (entity class,
+ * `crm.customers` table, `/api/v1/entities/customer/*` routes, meta, export
+ * pipeline, `crm.entities.customer.*` translations).
  *
  * Run from a terminal: `pnpm dev` inside primebrick-us-v3/crm.
  */
@@ -31,6 +31,9 @@ import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { CrmAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { assertDbEnv } from "@primebrick/sdk";
 import { CRM_NAV } from "./nav-declaration.js";
+import { CRM_EVENTS } from "./events-declaration.js";
+import { subscribeFakeEventEmitter } from "./controllers/nats-sub/fake-event-emitter.js";
+import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 
 async function main(): Promise<void> {
   await createMicroservice({
@@ -58,6 +61,12 @@ async function main(): Promise<void> {
     // ownership keeps resolving module=breadcrumb.
     nav: CRM_NAV,
 
+    // Emitted-event vocabulary — persisted in endpoints.events and served
+    // on /modules; job rules pick these subjects in `event_subject` and
+    // read their payload_schema for `$.` path suggestions. PoC: nothing
+    // emits them for real yet — the crm.emit_fake_event callable does.
+    events: CRM_EVENTS,
+
     // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
@@ -84,9 +93,16 @@ async function main(): Promise<void> {
     authConfigPort: (configLoader) => new CrmAuthConfigPort(configLoader),
     healthCheckPort: () => new HealthCheckAdapter(getDal()),
 
-    // No custom routes, no NATS streams — the playground only serves
-    // /health plus the built-in microservice surface. Its real job is
-    // declaring the module at registration time.
+    // Service-owned HTTP surface — entity CRUD + /api/v1/openapi.json
+    // derive from ONE declaration (makeServiceRoutes). No NATS streams.
+    routeHandler: compositeRouteHandler,
+
+    onReady: async () => {
+      // PoC fake-event emitter — publishes canned/overridable payloads on
+      // the declared crm.* event subjects, forwarding caller auth so
+      // user-lane rules can arm. Removed when real sales logic emits them.
+      await subscribeFakeEventEmitter();
+    },
   });
 }
 

@@ -9,15 +9,15 @@
    * pre-migration semantics).
    *
    * Rendering boundaries (cross-bundle rules — snippets NEVER cross):
-   *   - AppPageBreadcrumb / Button are HOST components mounted via
-   *     ctx.mount_host as separate roots (HostLeaf for leaf granularity).
-   *   - moduleBreadcrumbSegments is a host-state-bound function passed
-   *     through ctx.components — it reads the resolved module nav.
+   *   - Page chrome (breadcrumb/star/title) is HOST-owned — rendered by
+   *     the shell PageHeader from the route decl.
+   *   - Button is a HOST component mounted via ctx.mount_host as a
+   *     separate root (HostLeaf for leaf granularity).
    *   - The record uuid on the detail route arrives via
    *     ctx.components.params (injected by the host shim).
    */
   import { onMount, untrack } from 'svelte';
-  import { extJsonStringify, type ModulePageHost } from '@primebrick/ui';
+  import { extJsonStringify, notifyParentAndClose, type ModulePageHost } from '@primebrick/ui';
   import HostLeaf from './HostLeaf.svelte';
   import type { EmailsenderComponents } from './host-contract';
 
@@ -29,17 +29,6 @@
   // host-injected params never change for a mounted page.
   const isCreate = $derived(ctx.nav.kind === 'create');
   const uuid = $derived((ctx.components as EmailsenderComponents | undefined)?.params?.uuid);
-
-  // Breadcrumb — host-mounted once (module menu segment resolved host-side).
-  let breadcrumbEl = $state<HTMLDivElement>();
-  $effect(() => {
-    const el = breadcrumbEl;
-    const c = comps;
-    if (!el || !c || !ctx.mount_host) return;
-    const segments = c.moduleBreadcrumbSegments({ pathname: ctx.nav.route, t });
-    const h = ctx.mount_host(c.AppPageBreadcrumb, el, { segments });
-    return () => void h.destroy();
-  });
 
   let provider = $state('');
   let apiKey = $state('');
@@ -126,7 +115,11 @@
         ),
         scope: 'providers',
       });
-      window.location.assign('/system/emailsender/providers');
+      // Child-tab contract (EntityTablePage navStrategy="popup"): broadcast
+      // + self-close; same-tab keeps the classic navigation.
+      if (!notifyParentAndClose('primebrick_email_provider_sync')) {
+        window.location.assign('/system/emailsender/providers');
+      }
     } catch (e) {
       ctx.notify({
         impact: 'MEDIUM',
@@ -143,19 +136,6 @@
      (the host document's stylesheets apply to remote DOM). -->
 <div class="h-full p-2 sm:p-3 contain-layout">
   <div class="flex h-full w-full flex-col gap-4 min-h-0 overflow-hidden">
-    <header class="shrink-0">
-      <div class="min-w-0 flex-1 space-y-1">
-        <div bind:this={breadcrumbEl}></div>
-        <h1 class="truncate text-xl font-semibold leading-tight">
-          {t(
-            isCreate
-              ? 'emailsender.providers.createProvider'
-              : 'emailsender.providers.editProvider',
-          )}
-        </h1>
-      </div>
-    </header>
-
     <div class="flex min-h-0 flex-col overflow-y-auto">
       {#if loading}
         <p class="text-muted-foreground text-sm">{t('app.remote_page.loading')}</p>
