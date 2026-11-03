@@ -53,8 +53,6 @@ The page is visible with the `access.system.job.triggers` grant.
 | **Payload mapping** | no | yes | yes | How to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a trigger context value (actor, trigger id, fire time). Leave empty to forward the event payload unchanged. |
 | **Process Executor** | yes | yes | yes | `user` runs the action as the triggering user (with their permissions); `me` runs as the trigger's author — identity resolved fresh at dispatch time; `system` runs with module privileges. Must match the lane in the destination subject. |
 | **Enabled** | yes | yes | yes | When on, the trigger reacts to the event you chose. Turn it off to pause the trigger without deleting it. |
-| **Updated at** | yes | yes | yes |  |
-| **Created at** | no | yes | yes |  |
 
 - The Name column is shown by default and can be sorted and filtered.
 - The Listening Event column is shown by default and can be sorted and filtered — the event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event or type an event name.
@@ -64,8 +62,6 @@ The page is visible with the `access.system.job.triggers` grant.
 - The Payload mapping column is hidden by default and can be sorted and filtered — how to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a trigger context value (actor, trigger id, fire time). Leave empty to forward the event payload unchanged.
 - The Process Executor column is shown by default and can be sorted and filtered — `user` runs the action as the triggering user (with their permissions); `me` runs as the trigger's author — identity resolved fresh at dispatch time; `system` runs with module privileges. Must match the lane in the destination subject.
 - The Enabled column is shown by default and can be sorted and filtered — when on, the trigger reacts to the event you chose. Turn it off to pause the trigger without deleting it.
-- The Updated at column is shown by default and can be sorted and filtered.
-- The Created at column is hidden by default and can be sorted and filtered.
 
 ## Actions
 

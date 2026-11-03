@@ -46,17 +46,17 @@ The page is visible with the `access.system.job.triggers.create` grant.
 The **Listening Event** field offers these declared published event subjects:
 
 - `webhook.*.received`
-- `emailsender.response.*`
 - `crm.customer_changed` — **Customer changed** — Fires when a customer row is created, updated or deleted — carries the row snapshot plus change metadata
 - `crm.customer_high_value` — **High-value customer** — Semantic event — sales logic decided this customer crossed the high-value threshold. Carries the customer, the account manager and the trigger details
 - `crm.customer_payout` — **Customer payout** — Fires when a payout is recorded for a customer — carries the customer, the account manager and the payout details
+- `emailsender.response.*`
 - `jobs.result.ai.*`
 - `jobs.ctl.triggers.changed` — **Triggers changed** — Fired when the job trigger set changes — `jobs` domain, `ctl` control channel, `triggers` resource, `changed` verb. The triggers engine re-arms schedules on it
 
 The **Destination Event** field offers these declared callable work subjects:
 
-- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 - `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
+- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 
 ## Actions
 
