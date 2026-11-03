@@ -23,13 +23,16 @@ import {
   type ServiceUnregisterPayload,
 } from "@primebrick/sdk";
 
-/** `{service_code, callables}` rows returned by `service.registry.get {census:"callables"}`. */
+/** `{service_code, callables}` rows returned by `service.registry.get {census:"callables"}`;
+ *  `{service_code, emits}` rows for `{census:"events"}` — the source side. */
 interface CensusRow {
   service_code?: string;
   callables?: { subject?: string; payload_schema?: Record<string, unknown> }[];
+  emits?: { subject?: string; payload_schema?: Record<string, unknown> }[];
 }
 
 const catalog = new Map<string, Map<string, Record<string, unknown> | undefined>>(); // service_code → subject → payload_schema
+const emitCatalog = new Map<string, Map<string, Record<string, unknown> | undefined>>(); // same, for endpoints.events.emits
 
 function indexPayload(p: ServiceRegisterPayload): void {
   const decl = p.endpoints?.["callables"] as
@@ -42,6 +45,16 @@ function indexPayload(p: ServiceRegisterPayload): void {
     }
   }
   catalog.set(p.code, subjects);
+  const ev = p.endpoints?.["events"] as
+    | { emits?: { subject?: string; payload_schema?: Record<string, unknown> }[] }
+    | undefined;
+  const emitSubjects = new Map<string, Record<string, unknown> | undefined>();
+  for (const e of ev?.emits ?? []) {
+    if (typeof e?.subject === "string" && e.subject.length > 0) {
+      emitSubjects.set(e.subject, e.payload_schema);
+    }
+  }
+  emitCatalog.set(p.code, emitSubjects);
 }
 
 /** Census fetch over `service.registry.get` — fills the catalog from the
@@ -58,6 +71,17 @@ async function fetchCensus(): Promise<void> {
         }
       }
       catalog.set(row.service_code, subjects);
+    }
+    const evRows = await callNats<CensusRow[]>("service.registry.get", { census: "events" }, { timeoutMs: 3000 });
+    for (const row of evRows ?? []) {
+      if (typeof row?.service_code !== "string") continue;
+      const subjects = new Map<string, Record<string, unknown> | undefined>();
+      for (const e of row.emits ?? []) {
+        if (typeof e?.subject === "string" && e.subject.length > 0) {
+          subjects.set(e.subject, e.payload_schema);
+        }
+      }
+      emitCatalog.set(row.service_code, subjects);
     }
   } catch (err) {
     logger.warn(`callable-catalog: census fetch failed — catalog may be incomplete (${String(err)})`, {
@@ -96,6 +120,28 @@ export async function callablePayloadSchema(
   return (await catalogEntries()).get(subject);
 }
 
+async function emitCatalogEntries(): Promise<Map<string, Record<string, unknown> | undefined>> {
+  if (emitCatalog.size === 0) await fetchCensus();
+  const all = new Map<string, Record<string, unknown> | undefined>();
+  for (const subjects of emitCatalog.values()) {
+    for (const [s, schema] of subjects) if (!all.has(s)) all.set(s, schema);
+  }
+  return all;
+}
+
+/**
+ * An event emit's declared `payload_schema`, resolved against the live
+ * catalog — the SOURCE contract a `payload_map` `kind:"path"` clause reads.
+ * `undefined` when the subject is not served or the emit declares no
+ * schema (path entries then stay structurally unverifiable, fail-open as
+ * before — the emit simply had nothing declared to check against).
+ */
+export async function emitPayloadSchema(
+  subject: string,
+): Promise<Record<string, unknown> | undefined> {
+  return (await emitCatalogEntries()).get(subject);
+}
+
 /** Subscribe to lifecycle events + cold census fetch. Call once at boot,
  * after NATS is up. The census MUST run at boot — a lazy "catalog empty"
  * guard would never backfill services that registered before the
@@ -109,6 +155,7 @@ export async function startCallableCatalog(): Promise<void> {
   });
   await subscribeShielded<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
     catalog.delete(p.code);
+    emitCatalog.delete(p.code);
   });
   await fetchCensus();
   logger.done("callable-catalog: subscribed to service lifecycle events", { tags: ["jobs"] });

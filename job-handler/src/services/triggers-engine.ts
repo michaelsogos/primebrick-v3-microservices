@@ -44,10 +44,12 @@ import {
   getAuthConfig,
   callNats,
   type PayloadMap,
+  type PayloadMapContext,
   type AuthUser,
   logger,
 } from "@primebrick/sdk";
 import { Filter, field } from "@primebrick/dal-pg";
+import { callablePayloadSchema } from "./callable-catalog.js";
 import { getDal } from "../db/dal.js";
 import { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
 import { declareSchedule, disarmSchedule } from "./schedule-service.js";
@@ -97,10 +99,11 @@ function trampolineSubject(lane: Lane, trigger: JobTriggerEntity): string {
 const liveTriggers = new Map<string, JobTriggerEntity>(); // uuid → trigger
 
 /**
- * Resolved author headers for "me"-lane triggers — resolved once per live
- * trigger, dropped on reload. Fire-time freshness beyond this snapshot is
- * the due-forwarder auth checkpoint's job, not the engine's.
+ * Resolved author identity for "me"-lane headers AND `creator_email` —
+ * resolved once per live trigger, dropped on reload. Fire-time freshness
+ * beyond this snapshot is the due-forwarder auth checkpoint's job.
  */
+const meLaneUsers = new Map<string, AuthUser>(); // uuid → AuthUser
 const meLaneHeaders = new Map<string, Record<string, string>>(); // uuid → headers
 
 async function loadTrigger(uuid: string): Promise<JobTriggerEntity | undefined> {
@@ -111,11 +114,13 @@ async function loadTrigger(uuid: string): Promise<JobTriggerEntity | undefined> 
 }
 
 /**
- * Resolve the trigger author's current AuthUser into forward headers.
- * `created_by` holds the author's internal uuid (auditable convention).
+ * Resolve the trigger author's current AuthUser — shared by the me-lane
+ * forward headers AND the `creator_email` payload-map meta (one
+ * `auth.ctl.resolve_user` call per trigger, cached). `created_by` holds
+ * the author's internal uuid (auditable convention).
  */
-async function resolveMeHeaders(trigger: JobTriggerEntity): Promise<Record<string, string> | undefined> {
-  const cached = meLaneHeaders.get(trigger.uuid);
+async function resolveCreator(trigger: JobTriggerEntity): Promise<AuthUser | undefined> {
+  const cached = meLaneUsers.get(trigger.uuid);
   if (cached) return cached;
   if (!trigger.created_by) return undefined;
   let user: AuthUser | null;
@@ -123,18 +128,28 @@ async function resolveMeHeaders(trigger: JobTriggerEntity): Promise<Record<strin
     user = await callNats<AuthUser | null>(AUTH_RESOLVE_USER_SUBJECT, { user_uuid: trigger.created_by });
   } catch (err) {
     logger.warn(
-      `trigger "${trigger.name}": auth.ctl.resolve_user unreachable (${String(err)}) — me-lane dispatch refused`,
+      `trigger "${trigger.name}": auth.ctl.resolve_user unreachable (${String(err)}) — creator resolution refused`,
       { tags: ["jobs"] },
     );
     return undefined;
   }
   if (!user) {
     logger.warn(
-      `trigger "${trigger.name}": author ${trigger.created_by} no longer resolves — me-lane dispatch refused`,
+      `trigger "${trigger.name}": author ${trigger.created_by} no longer resolves`,
       { tags: ["jobs"] },
     );
     return undefined;
   }
+  meLaneUsers.set(trigger.uuid, user);
+  return user;
+}
+
+/** Serialize the creator's AuthUser into me-lane forward headers. */
+async function resolveMeHeaders(trigger: JobTriggerEntity): Promise<Record<string, string> | undefined> {
+  const cached = meLaneHeaders.get(trigger.uuid);
+  if (cached) return cached;
+  const user = await resolveCreator(trigger);
+  if (!user) return undefined;
   const headers = serializeAuthUserToHeaders(user, getAuthConfig());
   meLaneHeaders.set(trigger.uuid, headers);
   return headers;
@@ -192,13 +207,26 @@ async function dispatch(
   if (!auth) return;
 
   // Payload map resolves against THIS event's snapshot — every schedule
-  // fire replays the arm-time mapped request by design.
-  const mapped = applyPayloadMap(trigger.payload_map as PayloadMap, eventPayload, {
-    actor_uuid: msg ? (forwardedActor(msg).actor_uuid ?? trigger.created_by) : trigger.created_by,
+  // fire replays the arm-time mapped request by design. `creator_email`
+  // resolves lazily (one cached resolve_user call, shared with the
+  // me-lane) only when the map actually references it.
+  const actor = msg ? forwardedActor(msg) : {};
+  const ctx: PayloadMapContext = {
+    actor_uuid: actor.actor_uuid ?? trigger.created_by,
+    actor_email: actor.actor_email,
     trigger_id: trigger.uuid,
     fired_at: Date.now(),
-    actor_locale: msg ? forwardedActor(msg).actor_locale : undefined,
-  });
+    actor_locale: actor.actor_locale,
+  };
+  const usesCreatorEmail = (v: unknown): boolean =>
+    typeof v === "object" && v !== null &&
+    (((v as Record<string, unknown>).kind === "meta" && (v as Record<string, unknown>).meta === "creator_email") ||
+      Object.values(v as Record<string, unknown>).some(usesCreatorEmail));
+  const map = trigger.payload_map as PayloadMap;
+  if (map && Object.values(map).some(usesCreatorEmail)) {
+    ctx.creator_email = (await resolveCreator(trigger))?.email ?? undefined;
+  }
+  const mapped = applyPayloadMap(map, eventPayload, ctx, await callablePayloadSchema(trigger.target_subject));
 
   const envelope: JobForwardEnvelope = {
     [FORWARD_ENVELOPE_MARK]: true,
@@ -258,6 +286,7 @@ async function refreshTrigger(uuid: string): Promise<void> {
   const prev = liveTriggers.get(uuid);
   liveTriggers.delete(uuid);
   meLaneHeaders.delete(uuid);
+  meLaneUsers.delete(uuid);
   // Any prior timer disarms first — covers disable, delete, and
   // source/schedule shape changes in one step.
   if (prev?.schedule_spec) {

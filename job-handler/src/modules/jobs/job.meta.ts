@@ -18,6 +18,7 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { PAYLOAD_MAP_ENTRY_KINDS, PAYLOAD_MAP_META_KINDS, PAYLOAD_INJECTORS } from "@primebrick/sdk";
 import { withColumnConstraints } from "@primebrick/dal-pg";
 import { JobTriggerEntity, JobScheduleEntity, JobRunEntity } from "../../domain/entities/registry.js";
 
@@ -60,11 +61,11 @@ const PAYLOAD_MAP_SCHEMA = {
     type: "object",
     required: ["kind"],
     properties: {
-      kind: { enum: ["const", "path", "meta", "inject", "list", "map"] },
+      kind: { enum: [...PAYLOAD_MAP_ENTRY_KINDS] },
       value: {},
       path: { type: "string", pattern: "^\\$" },
-      meta: { enum: ["actor_uuid", "trigger_id", "fired_at", "actor_locale"] },
-      inject: { enum: ["uuid", "now_iso", "now_ms", "session_actor"] },
+      meta: { enum: [...PAYLOAD_MAP_META_KINDS] },
+      inject: { enum: [...PAYLOAD_INJECTORS] },
       items: { type: "array" },
       entries: { type: "object" },
       fallback: { type: "array" },

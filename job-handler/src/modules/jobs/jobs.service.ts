@@ -11,7 +11,7 @@ import { getDal } from "../../db/dal.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
-import { callableSubjects, callablePayloadSchema } from "../../services/callable-catalog.js";
+import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
@@ -103,7 +103,11 @@ export async function assertPayloadMapConformance(
   if (isEmptyMap(map)) return; // verbatim passthrough — nothing mappable to check
   const schema = await callablePayloadSchema(subject);
   if (!schema) return;
-  const issues = payloadMapConformance(map as Record<string, unknown>, schema);
+  const eventSubject =
+    (typeof body.event_subject === "string" && body.event_subject) ||
+    (typeof existing?.["event_subject"] === "string" ? (existing["event_subject"] as string) : "");
+  const sourceSchema = eventSubject ? await emitPayloadSchema(eventSubject) : undefined;
+  const issues = payloadMapConformance(map as Record<string, unknown>, schema, sourceSchema);
   if (issues.length > 0) {
     throw new ValidationError(
       `payload_map does not conform to ${subject} — ${issues.map((i) => `${i.path}: ${i.message}`).join("; ")}`,
