@@ -6,6 +6,7 @@
  * Mirrors `ai-models/list-config.ts` — small reference table.
  */
 import type { MetaColumn } from "../shared/entity-meta-types.js";
+import { isColumnFilterable, isColumnSearchable, isColumnSortable } from "@primebrick/sdk";
 
 /** Raw list column literal — canonical `MetaColumn` shape minus the
  *  flags injected by the normalize step (`sticky`, `audited`).
@@ -79,15 +80,15 @@ export const AI_CEREBELLUM_LIST_COLUMNS: MetaColumn[] = AI_CEREBELLUM_RAW_COLUMN
 }));
 
 export const AI_CEREBELLUM_SEARCHABLE_KEYS = AI_CEREBELLUM_LIST_COLUMNS
-  .filter((c) => c.searchable !== false)
+  .filter(isColumnSearchable)
   .map((c) => c.key);
 
 export const AI_CEREBELLUM_SORT_KEYS = AI_CEREBELLUM_LIST_COLUMNS
-  .filter((c) => c.sortable)
+  .filter(isColumnSortable)
   .map((c) => c.key);
 
 export const AI_CEREBELLUM_FILTERABLE_KEYS = AI_CEREBELLUM_LIST_COLUMNS
-  .filter((c) => c.filterable !== false)
+  .filter(isColumnFilterable)
   .map((c) => c.key);
 
 export const AI_CEREBELLUM_DATA_COLUMNS: MetaColumn[] = AI_CEREBELLUM_LIST_COLUMNS.filter(

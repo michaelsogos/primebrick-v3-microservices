@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "generated/cerebellum",
+    "generated/console",
+    "generated/model-cache",
+    "generated/model-import",
+    "generated/model-test-report",
+    "generated/docs-index"
+  ]
+}

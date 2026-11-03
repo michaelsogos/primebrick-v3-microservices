@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-26T19:25:38.193Z",
+  "generatedAt": "2026-11-02T17:33:56.958Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -576,6 +576,19 @@
           "typeOid": 2950,
           "typcategory": "U",
           "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "preferred_locale": {
+          "name": "preferred_locale",
+          "ordinalPosition": 26,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(35)",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": true,

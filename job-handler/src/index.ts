@@ -19,7 +19,7 @@ import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startDueForwarder } from "./services/due-forwarder.js";
 import { startCallableCatalog } from "./services/callable-catalog.js";
-import { startRulesEngine } from "./services/rules-engine.js";
+import { startTriggersEngine } from "./services/triggers-engine.js";
 import { JOB_NAV } from "./nav-declaration.js";
 import { JOB_EVENTS } from "./events-declaration.js";
 
@@ -28,7 +28,7 @@ async function main(): Promise<void> {
     serviceName: "job",
     serviceDisplayName: "Process Manager",
     serviceDescription:
-      "Jobs orchestration — sole writer of jobs.schedule.*, rules engine over job_rules, run-history tap on jobs.result.>",
+      "Jobs orchestration — sole writer of jobs.schedule.*, triggers engine over job_triggers, run-history tap on jobs.result.>",
     icon: "list-clock",
     iconType: "icon",
 
@@ -88,14 +88,14 @@ async function main(): Promise<void> {
         "jobs.due.>",
         "jobs.result.>",
         "jobs.cancel.>",
-        "jobs.ctl.rules.changed",
+        "jobs.ctl.triggers.changed",
       ], { allowMsgSchedules: true, syncSubjects: true });
 
       await registerScheduleRoutes();
       await startRunRecorder();
       await startDueForwarder();
       await startCallableCatalog();
-      await startRulesEngine();
+      await startTriggersEngine();
     },
   });
 }

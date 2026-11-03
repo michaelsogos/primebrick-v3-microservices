@@ -1,6 +1,6 @@
 ---
 title: JobHandler — job scheduling & governance
-description: Job scheduling via NATS JetStream native scheduler, business rules engine, execution observability
+description: Job scheduling via NATS JetStream native scheduler, trigger engine (event/immediate/timer), execution observability
 ---
 
 # JobHandler (`primebrick-job`)
@@ -29,7 +29,8 @@ entity registry has
 - **Scheduler** = the NATS server (`allow_msg_schedules` on the `JOBS` stream).
 - **Sole writer of `jobs.schedule.*`** = job-handler via `jobs.ctl.schedule.request`.
 - **Executor** = a durable JetStream consumer inside the domain service.
-- **Rules** = `job.job_rules` domain data (NOT config) — armed by the rules engine.
+- **Triggers** = `job.job_triggers` domain data (NOT config) — the triggers engine
+  dispatches them: event+schedule gate, event-only immediate, schedule-only timer.
 - **Infrastructure jobs** = metadata-derived (`@PartitionField` on an entity →
   the owning service self-declares its own schedule at boot).
 
@@ -48,14 +49,15 @@ entity registry has
 
 A remote caller may only declare inside its own `jobs.schedule.<svc>.*`
 namespace **and** the due target must land back on its own service
-(`jobs.due.<lane>.<same-svc>.*`). Internal callers (rules engine, admin HTTP
+(`jobs.due.<lane>.<same-svc>.*`). Internal callers (triggers engine, admin HTTP
 action) own the `job` namespace and may target any service — that's the point
 of admin-managed schedules.
 
 ## Domain data (schema `job`)
 
-- `job_rules` — business rules: `event_subject` → `schedule_spec` + `target_subject`.
-- `job_schedules` — mirror of every armed schedule (`kind`: `infra_derived` | `rule` | `manual`,
+- `job_triggers` — business triggers: `event_subject` and/or `schedule_spec`
+  (at least one) → `target_subject`; `execution_context`: `user`|`me`|`system`.
+- `job_schedules` — mirror of every armed schedule (`kind`: `infra_derived` | `trigger` (`manual` absorbed into schedule-only triggers),
   `schedule_type`: `recurring` | `once`, `status`: `armed` | `disarmed`).
 - `job_runs` — execution history: status, `duration_ms`, error fields, report (jsonb).
 - `config_entries` — mandatory per-service config (cadence, ports, shield refs).
@@ -64,8 +66,7 @@ of admin-managed schedules.
 
 | Route | Description |
 |-------|-------------|
-| `GET /api/v1/entities/job_rule|job_schedule|job_run/…` | Canonical entity CRUD (meta/list/get/…) |
-| `POST /api/v1/actions/schedule-job` | Arm a manual schedule (admin) |
+| `GET /api/v1/entities/job_trigger|job_schedule|job_run/…` | Canonical entity CRUD (meta/list/get/…) |
 | `POST /api/v1/actions/disarm-job` | Disarm a schedule (admin) |
 | `POST /api/v1/actions/job-run-stats` | Per-schedule execution buckets for sparklines — adaptive `bucket_unit` (hour/day/week/month chosen so the span lands in ~8–30 buckets) |
 
@@ -79,17 +80,31 @@ job-handler only sees subjects, never tables.
 Config: `partition_maintenance_schedule` in the service's `config_entries`
 (default `@daily`).
 
+## Fire-time auth freshness
+
+Every scheduled/immediate user-lane dispatch crosses the due-forwarder
+(`jobs.due.user.job.forward.>`), which runs a mechanical auth checkpoint
+before republishing: the actor's resolved AuthUser is cached under
+`auth:snap:<uuid>` and reused only while it postdates the BE-stamped
+epochs (`auth:epoch` global on role writes, `auth:user_epoch:<uuid>` on
+user writes). Miss/expired/epoch-stale → re-resolve via
+`auth.ctl.resolve_user`; `null` (deleted/disabled actor) → the fire is
+refused and the run recorded `failed`; an unreachable backend falls back
+to the due message's own headers with a warn. System lane bypasses it.
+
 ## Admin UI
 
 The job module owns its UI via `JOB_NAV` (`src/nav-declaration.ts` →
 `service_registry.endpoints.nav`, `route_prefixes: ["/system/job"]`,
 access namespace `access.system.job`).
 
-- **List pages** (`kind: "list"`) — schedules / runs / rules lists are
+- **List pages** (`kind: "list"`) — schedules / runs / triggers lists are
   host-rendered entity-table archetypes with per-row Kestra-style
   stacked-bar execution sparklines.
-- **Create pages** (`component_format: "esm-mount"`) — the schedule and
-  rule forms mount `jobs-page.js` via the host `RemotePageMount`.
+- **Trigger create/detail** (`kind: "create"/"detail"` + `page_props.form`)
+  — the host entity-form archetype renders them; the mutually-mandatory
+  source/schedule pair and the lane policy ride the closed-vocab
+  `job_trigger_shape` validator.
 - **Remote sheet** (`nav.sheets[]`) — `job.runDetail` mounts the run
   drill-down panel from the same chunk via the host sheet engine.
 - **Serving**: `GET /api/v1/module-assets/*` streams `fe/dist` (vite build

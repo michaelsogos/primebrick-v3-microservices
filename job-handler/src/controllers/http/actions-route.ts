@@ -1,7 +1,7 @@
 /**
- * actions-route — the two non-entity endpoints the jobs admin page needs:
+ * actions-route — the non-entity endpoints the jobs admin page needs:
  *
- *   POST /api/v1/actions/schedule-job   — manual schedule arming (admin)
+ *   POST /api/v1/actions/disarm-job     — disarm an armed schedule (admin)
  *   POST /api/v1/actions/job-run-stats  — per-schedule execution buckets
  *                                        for the `sparkline` cells
  *
@@ -13,20 +13,11 @@ import {
   Permission,
   logger,
   type RpcRoute,
-  type RpcRouteContext,
 } from "@primebrick/sdk";
 import { field, Filter, GroupBy, Project, Sort } from "@primebrick/dal-pg";
 import { getDal } from "../../db/dal.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
-import { declareSchedule, disarmSchedule, ScheduleDeclarationError } from "../../services/schedule-service.js";
-
-interface ScheduleJobBody {
-  schedule_subject?: string;
-  schedule?: string;
-  target?: string;
-  payload?: unknown;
-  ttl?: string;
-}
+import { disarmSchedule } from "../../services/schedule-service.js";
 
 interface RunStatsBody {
   schedule_subjects?: string[];
@@ -103,38 +94,6 @@ async function runStats(body: RunStatsBody): Promise<unknown> {
 }
 
 export const jobActionsRoutes: RpcRoute[] = [
-  {
-    method: "POST",
-    path: "/api/v1/actions/schedule-job",
-    permissions: [Permission.AUTHENTICATED_ADMIN],
-    openapi: {
-      summary: "Arm a manual schedule (admin)",
-      description: "Body: { schedule_subject, schedule, target, payload?, ttl? } — declares a manual schedule in the job namespace.",
-      tags: ["jobs", "actions"],
-    },
-    body: (raw) => raw as ScheduleJobBody,
-    handler: async (ctx: RpcRouteContext) => {
-      const b = ctx.body as ScheduleJobBody;
-      const result = await declareSchedule({
-        schedule_subject: b.schedule_subject!,
-        schedule: b.schedule!,
-        target: b.target!,
-        kind: "manual",
-        // manual arms are INTERNAL — no caller_service: the admin actor is
-        // audited, the schedule lives in the "job" namespace and may target
-        // any service's due subject.
-        payload: b.payload,
-        ttl: b.ttl,
-        initiator: `user:${ctx.user?.id ?? ctx.user?.email ?? "unknown"}`,
-      }).catch((err: unknown) => {
-        if (err instanceof ScheduleDeclarationError) {
-          logger.warn(`schedule-job rejected: ${err.internal_code} ${err.message}`, { tags: ["jobs"] });
-        }
-        throw err;
-      });
-      return result;
-    },
-  },
   {
     method: "POST",
     path: "/api/v1/actions/disarm-job",

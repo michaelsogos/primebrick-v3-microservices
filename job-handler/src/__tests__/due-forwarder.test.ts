@@ -1,0 +1,195 @@
+/**
+ * due-forwarder — the fire-time auth-freshness checkpoint. Every
+ * scheduled/immediate dispatch funnels through `forward()`, so this is
+ * the single mechanical point where stale arm-time authorization is
+ * caught. The tests drive the durable handlers captured off
+ * `NatsClient.jetstreamSubscribe` and observe republish/run-record
+ * effects.
+ *
+ * Policies under test (header comment in due-forwarder.ts is the
+ * contract):
+ *   cache hit & fresh   → serialized snapshot headers, no re-resolve
+ *   miss / stale epoch  → re-resolve via auth.ctl.resolve_user
+ *   resolve null        → REFUSE the fire (deleted/disabled actor)
+ *   resolve unreachable → fall back to the message's own headers
+ *   system lane         → checkpoint skipped entirely
+ */
+import "reflect-metadata";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const h = vi.hoisted(() => {
+  const cache = new Map<string, unknown>();
+  return {
+    cache,
+    publish: vi.fn(async (_subject?: unknown, _payload?: unknown, _headers?: unknown) => {}),
+    jetstreamSubscribe: vi.fn(async (_opts?: unknown) => {}),
+    callNats: vi.fn(async (_subject?: unknown, _data?: unknown) => null as unknown),
+    addRun: vi.fn(async (_entity?: unknown, _body?: unknown, _opts?: unknown) => ({})),
+    reset() {
+      this.cache.clear();
+      this.publish.mockClear();
+      this.jetstreamSubscribe.mockClear();
+      this.callNats.mockReset();
+      this.callNats.mockResolvedValue(null);
+      this.addRun.mockClear();
+    },
+  };
+});
+
+vi.mock("@primebrick/sdk", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@primebrick/sdk")>();
+  const pickAuth = (headers?: Record<string, string>) =>
+    Object.fromEntries(Object.entries(headers ?? {}).filter(([k]) => k.startsWith("x-user-")));
+  return {
+    ...real,
+    NatsClient: { publish: h.publish, jetstreamSubscribe: h.jetstreamSubscribe },
+    callNats: h.callNats,
+    getSdkCachePort: () => ({
+      get: async (key: string) => (h.cache.has(key) ? h.cache.get(key) : null),
+      set: async (key: string, value: unknown) => void h.cache.set(key, value),
+    }),
+    getAuthConfig: () => ({}),
+    // Deterministic serializer — "x-resolved" marks headers produced from a
+    // resolved AuthUser, distinguishing them from verbatim arm-time headers.
+    serializeAuthUserToHeaders: (user: { user_uuid?: string }) => ({
+      "x-user-id": String(user.user_uuid ?? ""),
+      "x-resolved": "yes",
+    }),
+    forwardAuthHeaders: (msg: { headers?: Record<string, string> }) => pickAuth(msg.headers),
+    forwardedActor: (msg: { headers?: Record<string, string> }) => ({
+      actor_uuid: msg.headers?.["x-user-id"],
+      actor_locale: msg.headers?.["x-user-locale"],
+    }),
+    dueLaneVerify: () => async () => ({}),
+    logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
+  };
+});
+vi.mock("../db/dal.js", () => ({ getDal: () => ({ add: h.addRun }) }));
+
+const { startDueForwarder, FORWARD_ENVELOPE_MARK } = await import("../services/due-forwarder.js");
+
+type Lane = "user" | "system";
+type SubOpts = {
+  durable: string;
+  handler: (data: unknown, msg: { headers?: Record<string, string> }) => Promise<void>;
+};
+
+const envelope = (over: Record<string, unknown> = {}) => ({
+  [FORWARD_ENVELOPE_MARK]: true,
+  target: "emailsender.send",
+  payload: { to: "a@b.c" },
+  schedule_subject: "jobs.schedule.job.trig",
+  initiator: "trigger:trig",
+  ...over,
+});
+
+async function handlerFor(lane: Lane): Promise<SubOpts["handler"]> {
+  h.jetstreamSubscribe.mockClear();
+  await startDueForwarder();
+  const opts = h.jetstreamSubscribe.mock.calls.map((c) => c[0] as SubOpts);
+  const sub = opts.find((o) => o.durable === `job-due-forwarder-${lane}`);
+  if (!sub) throw new Error(`no ${lane}-lane durable bound`);
+  return sub.handler;
+}
+
+const userMsg = (uuid: string) => ({ headers: { "x-user-id": uuid, "x-user-locale": "en-GB" } });
+
+const published = () =>
+  h.publish.mock.calls.map((c) => ({ subject: c[0], payload: c[1], headers: c[2] }));
+
+const recorded = () => h.addRun.mock.calls.map((c) => c[1] as Record<string, unknown>);
+
+beforeEach(() => h.reset());
+
+describe("due-forwarder — user lane auth checkpoint", () => {
+  it("fresh snapshot hit → republishes with serialized headers, no re-resolve", async () => {
+    const handler = await handlerFor("user");
+    h.cache.set("auth:snap:actor-1", { user: { user_uuid: "actor-1" }, taken_at: 1000 });
+    h.cache.set("auth:epoch", 500);
+    h.cache.set("auth:user_epoch:actor-1", 400);
+
+    await handler(envelope(), userMsg("actor-1"));
+
+    expect(h.callNats).not.toHaveBeenCalled();
+    expect(published()).toEqual([
+      {
+        subject: "emailsender.send",
+        payload: { to: "a@b.c" },
+        headers: { "x-user-id": "actor-1", "x-resolved": "yes" },
+      },
+    ]);
+    expect(recorded().some((r) => r.status === "dispatched")).toBe(true);
+  });
+
+  it("cache miss → resolves via auth.ctl.resolve_user, publishes fresh, stores snapshot", async () => {
+    const handler = await handlerFor("user");
+    h.callNats.mockResolvedValue({ user_uuid: "actor-2" });
+
+    await handler(envelope(), userMsg("actor-2"));
+
+    expect(h.callNats).toHaveBeenCalledWith("auth.ctl.resolve_user", { user_uuid: "actor-2" });
+    expect(published()[0].headers).toEqual({ "x-user-id": "actor-2", "x-resolved": "yes" });
+    const snap = h.cache.get("auth:snap:actor-2") as { user: { user_uuid: string }; taken_at: number };
+    expect(snap.user.user_uuid).toBe("actor-2");
+    expect(snap.taken_at).toBeGreaterThan(0);
+  });
+
+  it("stale snapshot (epoch bumped after resolve) → re-resolves", async () => {
+    const handler = await handlerFor("user");
+    h.cache.set("auth:snap:actor-3", { user: { user_uuid: "actor-3" }, taken_at: 100 });
+    h.cache.set("auth:epoch", 200); // role/permission write happened after the snapshot
+    h.callNats.mockResolvedValue({ user_uuid: "actor-3" });
+
+    await handler(envelope(), userMsg("actor-3"));
+
+    expect(h.callNats).toHaveBeenCalledWith("auth.ctl.resolve_user", { user_uuid: "actor-3" });
+    expect(published()[0].headers).toEqual({ "x-user-id": "actor-3", "x-resolved": "yes" });
+  });
+
+  it("resolve returns null (actor deleted/disabled) → fire refused, run recorded failed", async () => {
+    const handler = await handlerFor("user");
+    h.callNats.mockResolvedValue(null);
+
+    await handler(envelope(), userMsg("actor-4"));
+
+    expect(h.publish).not.toHaveBeenCalled();
+    expect(recorded()).toEqual([
+      expect.objectContaining({ status: "failed", error_code: "DISPATCH_ERROR" }),
+    ]);
+  });
+
+  it("resolve unreachable → falls back to the arm-time headers on the message", async () => {
+    const handler = await handlerFor("user");
+    h.callNats.mockRejectedValue(new Error("nats timeout"));
+
+    await handler(envelope(), userMsg("actor-5"));
+
+    expect(published()[0].headers).toEqual({ "x-user-id": "actor-5", "x-user-locale": "en-GB" });
+    expect(recorded().some((r) => r.status === "dispatched")).toBe(true);
+  });
+});
+
+describe("due-forwarder — envelope handling", () => {
+  it("system lane skips the checkpoint entirely", async () => {
+    const handler = await handlerFor("system");
+    h.cache.set("auth:epoch", 999);
+
+    await handler(envelope(), { headers: {} });
+
+    expect(h.callNats).not.toHaveBeenCalled();
+    expect(published()[0]).toMatchObject({ subject: "emailsender.send", headers: {} });
+  });
+
+  it("malformed envelope is dropped", async () => {
+    const handler = await handlerFor("user");
+    await handler({ no_mark: true }, userMsg("actor-6"));
+    expect(h.publish).not.toHaveBeenCalled();
+  });
+
+  it("non-callable target is refused before any auth work", async () => {
+    const handler = await handlerFor("user");
+    await handler(envelope({ target: "no.dot.here!!" }), userMsg("actor-7"));
+    expect(h.publish).not.toHaveBeenCalled();
+    expect(h.callNats).not.toHaveBeenCalled();
+  });
+});

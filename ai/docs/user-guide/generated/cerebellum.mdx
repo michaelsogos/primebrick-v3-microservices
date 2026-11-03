@@ -1,0 +1,29 @@
+---
+title: Cerebellum
+description: Side panel — Cerebellum.
+---
+
+The **Cerebellum** panel opens in a side sheet. It is delivered by the owning module as a remote component mounted inside the host sheet surface.
+
+## Inputs
+
+| Input | Notes |
+|-------|-------|
+| `models` | passed by the caller when the panel opens |
+| `assistants` | passed by the caller when the panel opens |
+| `rows` | passed by the caller when the panel opens |
+| `onCreated` | passed by the caller when the panel opens |
+
+## What it reads
+
+- `PUT /api/v1/entities/ai_cerebellum/{param}`
+- `POST /api/v1/entities/ai_cerebellum`
+
+## Opened from
+
+- [Console](/docs/user-guide/generated/console) — `/system/ai/console`
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

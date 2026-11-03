@@ -26,7 +26,11 @@ describe("JOB_NAV declaration", () => {
   it("schedules live at the plural leaf under the module prefix", () => {
     const routes = (JOB_NAV.routes ?? []).map((r) => r.route);
     expect(routes).toContain("/system/job/job-schedules");
-    expect(routes).toContain("/system/job/job-schedules/create");
+    // Manual schedule arming was absorbed into schedule-only triggers —
+    // job_schedules is a read+disarm registry now, no create route.
+    expect(routes).not.toContain("/system/job/job-schedules/create");
+    expect(routes).toContain("/system/job/triggers");
+    expect(routes).toContain("/system/job/triggers/create");
     expect(routes).not.toContain("/system/job");
     expect(routes).not.toContain("/system/job/new");
   });

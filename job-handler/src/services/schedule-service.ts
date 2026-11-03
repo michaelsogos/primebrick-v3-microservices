@@ -29,7 +29,7 @@ export interface DeclareScheduleInput {
   schedule_subject: string;
   schedule: string;
   target: string;
-  kind: "infra_derived" | "rule" | "manual";
+  kind: "infra_derived" | "trigger";
   /** Caller's verified service code — undefined for internal (rules engine). */
   caller_service?: string;
   payload?: unknown;
@@ -37,7 +37,7 @@ export interface DeclareScheduleInput {
   ttl?: string;
   forwardHeaders?: Record<string, string>;
   initiator?: string;
-  rule_uuid?: string;
+  trigger_uuid?: string;
   /**
    * What job_schedules.target_subject shows when the real destination
    * differs from the NATS fire target — rules arm on the JH-internal
@@ -132,7 +132,7 @@ export async function declareSchedule(input: DeclareScheduleInput): Promise<{ se
     target_subject: input.mirror_target ?? input.target,
     status: "armed",
     initiator: input.initiator ?? input.caller_service ?? "job",
-    rule_uuid: input.rule_uuid === undefined ? undefined : toUUID(input.rule_uuid),
+    trigger_uuid: input.trigger_uuid === undefined ? undefined : toUUID(input.trigger_uuid),
     armed_at: new Date(),
     disarmed_at: undefined,
   };
