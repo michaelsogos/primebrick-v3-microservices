@@ -1,0 +1,78 @@
+---
+title: Runs
+description: List, search and manage all job runs.
+entity: job_run
+---
+
+List, search and manage all job runs.
+
+Each row shows the Job, the Service, the Status, the Started at, the Finished at, the Duration.
+
+The page is visible with the `access.system.job.runs` grant.
+
+## What you can do here
+
+### How to view the change history of a job run
+1. Open the row actions menu on the job run and click **Audit history**.
+2. The version history of the job run will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Job** | yes | yes | yes |  |
+| **Service** | yes | yes | yes |  |
+| **Status** | yes | yes | yes |  |
+| **Started at** | yes | yes | yes |  |
+| **Duration** | yes | yes | yes |  |
+| **Error Code** | no | yes | yes |  |
+| **Error Detail** | no | yes | yes |  |
+| **Redeliveries** | no | yes | yes |  |
+
+- The Job column is shown by default and can be sorted and filtered.
+- The Service column is shown by default and can be sorted and filtered.
+- The Status column is shown by default and can be sorted and filtered.
+- The Started at column is shown by default and can be sorted and filtered.
+- The Duration column is shown by default and can be sorted and filtered.
+- The Error Code column is hidden by default and can be sorted and filtered.
+- The Error Detail column is hidden by default and can be sorted and filtered.
+- The Redeliveries column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | DISABLED | — | Creates a new job run | no |
+| **update** | DISABLED | — | Opens the job run for editing | no |
+| **delete** | DISABLED | — | Marks the job run as deleted but keeps it so it can be restored | no |
+| **restore** | DISABLED | — | Brings a soft-deleted job run back | no |
+| **purge** | DISABLED | — | Removes the job run forever | no |
+| **audit history** | ENABLED | `_authenticated_admin` | Shows the change history of the job run | no |
+
+- Creating a new job run is not available on this page — no permission is declared for it on job runs.
+- Editing a job run is not available on this page — no permission is declared for it on job runs.
+- Soft-deleting a job run is not available on this page — no permission is declared for it on job runs.
+- Restoring a soft-deleted job run is not available on this page — no permission is declared for it on job runs.
+- Permanently deleting a job run is not available on this page — no permission is declared for it on job runs.
+- Viewing the change history of a job run is available on this page — every job run keeps a full version history and it requires the `_authenticated_admin` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | DISABLED | — | Marks the selected job runs as deleted | no |
+| **restore** | DISABLED | — | Restores the selected job runs | no |
+| **duplicate** | DISABLED | — | Duplicates the selected job runs | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected job runs is not available on this page — no permission is declared for it on job runs.
+- Restoring the selected job runs is not available on this page — no permission is declared for it on job runs.
+- Duplicating the selected job runs is not available on this page — no permission is declared for it on job runs.
+- Exporting the list is not available on this page — no permission is declared for it on job runs.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

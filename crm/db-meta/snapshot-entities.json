@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-26T19:25:38.190Z",
+  "generatedAt": "2026-11-02T17:33:56.949Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -493,9 +493,20 @@
           "propertyKey": "onboarding_time_zone",
           "isNullable": true
         },
+        "preferred_locale": {
+          "name": "preferred_locale",
+          "ordinalPosition": 25,
+          "dataType": "varchar(35)",
+          "typname": "varchar(35)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "preferred_locale",
+          "isNullable": true
+        },
         "cloned_from": {
           "name": "cloned_from",
-          "ordinalPosition": 25,
+          "ordinalPosition": 26,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,

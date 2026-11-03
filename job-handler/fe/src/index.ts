@@ -1,25 +1,21 @@
 /**
- * jobs-page chunk — `esm-mount` entry for the job module's remote pages.
+ * jobs-page chunk — `esm-mount` entry for the job module's remote sheets.
  *
- * The list pages (/system/job/job-schedules, /system/job/runs,
- * /system/job/rules) are host-rendered standard EntityTablePage
- * archetypes (kind:"list"); the rule-creation form (/system/job/rules/create)
- * rides the host EntityFormPage archetype (kind:"create" + page_props.form).
- * The remote chunk carries the ONE genuinely custom surface: the manual-
- * schedule form (/system/job/job-schedules/create).
+ * Every page is host-rendered: the lists (/system/job/job-schedules,
+ * /system/job/runs, /system/job/triggers) ride the standard
+ * EntityTablePage archetype (kind:"list") and trigger create/detail ride
+ * the EntityFormPage archetype (kind:"create"/"detail" + page_props.form).
+ * The former manual-schedule page was absorbed — schedule-only triggers
+ * are the declaration surface now, so no remote page mounts remain; the
+ * chunk carries only the run-detail sheet.
  *
- * The host (`RemotePageMount`) imports this module and calls mountPage(el,
- * ctx); the returned mount instance is disposed via svelte's `unmount()`
- * on navigation/teardown. The chunk is self-contained (bundles svelte +
- * @primebrick/ui).
+ * The host (`RemoteSheetMount`) imports this module and calls
+ * mountSheet(el, ctx); the returned mount instance is disposed via
+ * svelte's `unmount()` on teardown. The chunk is self-contained (bundles
+ * svelte + @primebrick/ui).
  */
-import { mountModuleContent, type ModulePageHost, type ModuleSheetHost } from '@primebrick/ui';
-import SchedulePage from './SchedulePage.svelte';
+import { mountModuleContent, type ModuleSheetHost } from '@primebrick/ui';
 import RunDetailSheet from './RunDetailSheet.svelte';
-
-export function mountPage(el: HTMLElement, ctx: ModulePageHost) {
-  return mountModuleContent(el, ctx, SchedulePage);
-}
 
 /**
  * Remote sheet entry — declared in `nav.sheets[]` (`job.runDetail`), mounted

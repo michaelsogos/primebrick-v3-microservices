@@ -24,146 +24,110 @@
  * `account_manager` block so a rule can map the notification recipient
  * (`to`) straight from the event.
  *
+ * Authoring: schemas are ZOD-derived (`z.toJSONSchema`) — the same path
+ * callable payload contracts take, so `format`/`x_semantic` annotations are
+ * generated from real validators instead of hand-written literals (the
+ * `changed_at: type:"string"` drift this closes). `payload_schema` is a
+ * DESCRIPTIVE contract — event payloads are not parsed against it.
+ *
  * PoC note: there is no real sales pipeline emitting these yet — the
  * `crm.emit_fake_event` callable (controllers/nats-sub/fake-event-emitter.ts)
  * publishes canned/overridable payloads on these exact subjects so the
  * rule pipeline can be exercised end-to-end.
  */
-import type { ModuleEventsDecl } from "@primebrick/sdk";
+import { z } from "zod";
+import { LANG_RE, type ModuleEventsDecl } from "@primebrick/sdk";
 
 /** The customer row projection every CRM event embeds — mirrors
  *  `CustomerEntity`'s public fields (snake_case, no DTO renaming). */
-const CUSTOMER_SNAPSHOT_SCHEMA = {
-  type: "object",
-  required: ["uuid", "code"],
-  properties: {
-    uuid: { type: "string", description: "Customer row uuid." },
-    code: { type: "string", description: "Human customer code (unique)." },
-    first_name: { type: "string" },
-    last_name: { type: "string" },
-    company_name: { type: "string" },
-    email: { type: "string", description: "Customer contact address." },
-    phone: { type: "string" },
-    status: {
-      type: "string",
-      enum: ["ACTIVE", "INACTIVE"],
-      description: "Customer lifecycle status (CustomerEntity.status).",
-    },
-    local_address: { type: "string" },
-    local_city: { type: "string" },
-    local_state: { type: "string" },
-    local_country: { type: "string" },
-    local_zip: { type: "string" },
-    preferred_locale: {
-      type: "string",
-      description: "Customer's preferred locale — BCP-47 (e.g. it-IT). Map `languageIso` from here.",
-    },
-  },
-} as const;
+const CUSTOMER_SNAPSHOT = z.object({
+  uuid: z.string().uuid().meta({ description: "Customer row uuid." }),
+  code: z.string().min(1).meta({ description: "Human customer code (unique)." }),
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  company_name: z.string().optional(),
+  email: z.string().email().optional().meta({ description: "Customer contact address." }),
+  phone: z.string().meta({ format: "phone" }).optional(),
+  status: z
+    .enum(["ACTIVE", "INACTIVE"])
+    .meta({ description: "Customer lifecycle status (CustomerEntity.status)." })
+    .optional(),
+  local_address: z.string().optional(),
+  local_city: z.string().optional(),
+  local_state: z.string().optional(),
+  local_country: z.string().optional(),
+  local_zip: z.string().optional(),
+  preferred_locale: z.string().regex(LANG_RE).meta({
+    format: "lang",
+    description: "Customer's preferred locale — BCP-47 (e.g. it-IT). Map `languageIso` from here.",
+  }).optional(),
+});
+const CUSTOMER_SNAPSHOT_SCHEMA = z.toJSONSchema(CUSTOMER_SNAPSHOT);
 
-const CUSTOMER_CHANGED_SCHEMA = {
-  type: "object",
-  required: ["customer", "change"],
-  properties: {
-    customer: CUSTOMER_SNAPSHOT_SCHEMA,
-    change: {
-      type: "object",
-      required: ["kind"],
-      properties: {
-        kind: {
-          type: "string",
-          enum: ["created", "updated", "deleted"],
-          description: "What happened to the row.",
-        },
-        changed_fields: {
-          type: "array",
-          items: { type: "string" },
-          description: "Column names that changed (updates only).",
-        },
-        changed_by: {
-          type: "string",
-          description: "Actor uuid that performed the write.",
-        },
-        changed_at: {
-          type: "string",
-          description: "ISO 8601 instant of the write.",
-        },
-      },
-    },
-  },
-} as const;
+const CUSTOMER_CHANGED = z.object({
+  customer: CUSTOMER_SNAPSHOT,
+  change: z.object({
+    kind: z
+      .enum(["created", "updated", "deleted"])
+      .meta({ description: "What happened to the row." }),
+    changed_fields: z
+      .array(z.string())
+      .meta({ description: "Column names that changed (updates only)." })
+      .optional(),
+    changed_by: z
+      .string()
+      .uuid()
+      .meta({
+        x_semantic: "actor.uuid",
+        description: "Actor uuid that performed the write.",
+      })
+      .optional(),
+    changed_at: z
+      .iso.datetime()
+      .meta({ description: "ISO 8601 instant of the write." })
+      .optional(),
+  }),
+});
+const CUSTOMER_CHANGED_SCHEMA = z.toJSONSchema(CUSTOMER_CHANGED);
 
-const ACCOUNT_MANAGER_SCHEMA = {
-  type: "object",
-  properties: {
-    uuid: { type: "string" },
-    email: {
-      type: "string",
-      description:
-        "Notification recipient for rule targets — map `to` from here.",
-    },
-    display_name: { type: "string" },
-  },
-} as const;
+const ACCOUNT_MANAGER = z.object({
+  uuid: z.string().uuid(),
+  email: z.string().email().meta({
+    description: "Notification recipient for rule targets — map `to` from here.",
+  }),
+  display_name: z.string().optional(),
+});
+const ACCOUNT_MANAGER_SCHEMA = z.toJSONSchema(ACCOUNT_MANAGER);
 
-const CUSTOMER_HIGH_VALUE_SCHEMA = {
-  type: "object",
-  required: ["customer", "trigger"],
-  properties: {
-    customer: CUSTOMER_SNAPSHOT_SCHEMA,
-    account_manager: ACCOUNT_MANAGER_SCHEMA,
-    trigger: {
-      type: "object",
-      required: ["metric", "amount", "threshold"],
-      properties: {
-        metric: {
-          type: "string",
-          enum: ["annual_revenue", "deal_amount", "orders_count"],
-          description: "Which measure crossed the threshold.",
-        },
-        amount: {
-          type: "number",
-          description: "Observed value that crossed.",
-        },
-        currency: { type: "string", description: "ISO 4217 (EUR, USD…)." },
-        threshold: {
-          type: "number",
-          description: "Configured high-value threshold that was crossed.",
-        },
-      },
-    },
-  },
-} as const;
+const CUSTOMER_HIGH_VALUE = z.object({
+  customer: CUSTOMER_SNAPSHOT,
+  account_manager: ACCOUNT_MANAGER.optional(),
+  trigger: z.object({
+    metric: z
+      .enum(["annual_revenue", "deal_amount", "orders_count"])
+      .meta({ description: "Which measure crossed the threshold." }),
+    amount: z.number().meta({ description: "Observed value that crossed." }),
+    currency: z.string().meta({ description: "ISO 4217 (EUR, USD…)." }).optional(),
+    threshold: z.number().meta({ description: "Configured high-value threshold that was crossed." }),
+  }),
+});
+const CUSTOMER_HIGH_VALUE_SCHEMA = z.toJSONSchema(CUSTOMER_HIGH_VALUE);
 
-const CUSTOMER_PAYOUT_SCHEMA = {
-  type: "object",
-  required: ["customer", "payout"],
-  properties: {
-    customer: CUSTOMER_SNAPSHOT_SCHEMA,
-    account_manager: ACCOUNT_MANAGER_SCHEMA,
-    payout: {
-      type: "object",
-      required: ["amount", "currency"],
-      properties: {
-        amount: { type: "number", description: "Payout amount." },
-        currency: {
-          type: "string",
-          enum: ["EUR", "USD", "GBP"],
-          description: "ISO 4217 payout currency.",
-        },
-        period: {
-          type: "string",
-          description: "Settlement period (e.g. 2026-Q1).",
-        },
-        due_at: {
-          type: "string",
-          description: "ISO 8601 payment due date.",
-        },
-        reference: { type: "string", description: "External payout reference." },
-      },
-    },
-  },
-} as const;
+const CUSTOMER_PAYOUT = z.object({
+  customer: CUSTOMER_SNAPSHOT,
+  account_manager: ACCOUNT_MANAGER.optional(),
+  payout: z.object({
+    amount: z.number().meta({ description: "Payout amount." }),
+    currency: z.enum(["EUR", "USD", "GBP"]).meta({ description: "ISO 4217 payout currency." }),
+    period: z.string().meta({ description: "Settlement period (e.g. 2026-Q1)." }).optional(),
+    due_at: z
+      .iso.datetime()
+      .meta({ description: "ISO 8601 payment due date." })
+      .optional(),
+    reference: z.string().meta({ description: "External payout reference." }).optional(),
+  }),
+});
+const CUSTOMER_PAYOUT_SCHEMA = z.toJSONSchema(CUSTOMER_PAYOUT);
 
 export const CRM_EVENTS: ModuleEventsDecl = {
   emits: [

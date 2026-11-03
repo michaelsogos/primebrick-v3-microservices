@@ -1,0 +1,117 @@
+---
+title: Model Import
+description: Side panel — Model Import.
+---
+
+The **Model Import** panel opens in a side sheet. It is delivered by the owning module as a remote component mounted inside the host sheet surface.
+
+## Inputs
+
+| Input | Notes |
+|-------|-------|
+| `existing_model_ids` | passed by the caller when the panel opens |
+| `on_added` | passed by the caller when the panel opens |
+
+## What it reads
+
+- `DELETE (via enabledDtypes.delete)`
+- `RPC (via runSearch)`
+- `DELETE (via enrichQueued.delete)`
+- `RPC (via fetchHfDtypeVariants(id)
+        .then((v) => {
+          repoVariants.set(id, v);
+          const best = v.find((x) => x.dtype === 'q4f16') ?? v[0];
+          if (best) {
+            const ws = Math.round(best.download_mb * KV_CTX_FACTOR);
+            measured.set(id, {
+              download_mb: best.download_mb,
+              ws_mb: ws,
+              power: powerLevelFromWorkingSet(ws),
+            });
+            options = withMeasured(options);
+          }
+        })
+        .catch(() => {})
+        .finally)`
+- `RPC (via fetchHfDtypeVariants(id)
+        .then((v) => {
+          repoVariants.set(id, v);
+          const best = v.find((x) => x.dtype === 'q4f16') ?? v[0];
+          if (best) {
+            const ws = Math.round(best.download_mb * KV_CTX_FACTOR);
+            measured.set(id, {
+              download_mb: best.download_mb,
+              ws_mb: ws,
+              power: powerLevelFromWorkingSet(ws),
+            });
+            options = withMeasured(options);
+          }
+        })
+        .catch)`
+- `RPC (via fetchHfDtypeVariants(id)
+        .then)`
+- `RPC (via fetchHfDtypeVariants)`
+- `RPC (via fetchHfDtypeVariants(id, { signal: variantController.signal })
+      .then((v) => {
+        variants = v;
+        repoVariants.set(id, v);
+        // Prefer q4f16 (catalog default) else smallest download.
+        selectedDtype = v.find((x) => x.dtype === 'q4f16')?.dtype ?? v[0]?.dtype ?? '';
+        // Cache the real preferred-dtype size so the dropdown row shows
+        // measured values even before the background enricher reaches it.
+        const best = v.find((x) => x.dtype === 'q4f16') ?? v[0];
+        if (best) {
+          const ws = Math.round(best.download_mb * KV_CTX_FACTOR);
+          measured.set(id, {
+            download_mb: best.download_mb,
+            ws_mb: ws,
+            power: powerLevelFromWorkingSet(ws),
+          });
+          options = withMeasured(options);
+        }
+      })
+      .catch((err) => {
+        if ((err as Error).name !== 'AbortError') variants = [];
+      })
+      .finally)`
+- `RPC (via fetchHfDtypeVariants(id, { signal: variantController.signal })
+      .then((v) => {
+        variants = v;
+        repoVariants.set(id, v);
+        // Prefer q4f16 (catalog default) else smallest download.
+        selectedDtype = v.find((x) => x.dtype === 'q4f16')?.dtype ?? v[0]?.dtype ?? '';
+        // Cache the real preferred-dtype size so the dropdown row shows
+        // measured values even before the background enricher reaches it.
+        const best = v.find((x) => x.dtype === 'q4f16') ?? v[0];
+        if (best) {
+          const ws = Math.round(best.download_mb * KV_CTX_FACTOR);
+          measured.set(id, {
+            download_mb: best.download_mb,
+            ws_mb: ws,
+            power: powerLevelFromWorkingSet(ws),
+          });
+          options = withMeasured(options);
+        }
+      })
+      .catch)`
+- `RPC (via fetchHfDtypeVariants(id, { signal: variantController.signal })
+      .then)`
+- `RPC (via fetchHfGenerationConfig(id, { signal: variantController.signal })
+      .then((cfg) => {
+        if (typeof cfg?.top_p === 'number') hfTopP = cfg.top_p;
+        if (typeof cfg?.repetition_penalty === 'number') hfRepPenalty = cfg.repetition_penalty;
+      })
+      .catch)`
+- `RPC (via fetchHfGenerationConfig(id, { signal: variantController.signal })
+      .then)`
+- `RPC (via fetchHfGenerationConfig)`
+- `POST /api/v1/entities/ai_model`
+
+## Opened from
+
+- [Console](/docs/user-guide/generated/console) — `/system/ai/console`
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

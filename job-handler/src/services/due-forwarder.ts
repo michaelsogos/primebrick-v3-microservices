@@ -4,10 +4,10 @@
  *
  * NATS message scheduling only fires on subjects captured by the JOBS
  * stream, and stream-captured messages never fan out to core queue
- * subscribers — a rule's callable target (`emailsender.send`, …) is a
+ * subscribers — a trigger's callable target (`emailsender.send`, …) is a
  * plain queue route, so the scheduler cannot publish to it directly.
- * The rules engine therefore arms schedules on
- * `jobs.due.<lane>.job.forward.<rule_uuid>` carrying a
+ * The triggers engine therefore arms schedules on
+ * `jobs.due.<lane>.job.forward.<trigger_uuid>` carrying a
  * `JobForwardEnvelope`; this consumer unwraps it and republishes the
  * already-mapped payload verbatim to the real callable subject, with
  * the same forwarded auth headers the due message carries.
@@ -20,7 +20,7 @@
  * callable will then deny it — that IS the governance).
  */
 
-import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, logger } from "@primebrick/sdk";
+import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, type AuthUser, logger } from "@primebrick/sdk";
 import { getDal } from "../db/dal.js";
 import { JobRunEntity } from "../domain/entities/job_run_entity.js";
 import { JOBS_STREAM } from "./run-recorder.js";
@@ -36,7 +36,7 @@ export interface JobForwardEnvelope {
   payload: unknown;
   /** Rule's schedule subject — links job_runs → job_schedules. */
   schedule_subject?: string;
-  /** `rule:<name>` — who armed this dispatch. */
+  /** `trigger:<name>` — who armed this dispatch. */
   initiator?: string;
 }
 
@@ -87,6 +87,85 @@ async function recordRun(
   }
 }
 
+// ─── Fire-time auth-freshness checkpoint ────────────────────────────────────
+//
+// Every scheduled/immediate user-lane fire passes through here, so this is
+// the single mechanical point where stale arm-time authorization is caught.
+// The BE stamps `auth:epoch` (role/permission writes) and
+// `auth:user_epoch:<uuid>` (direct user writes) in Redis; the snapshot under
+// `auth:snap:<uuid>` is the last resolved AuthUser with its resolve time.
+// A snapshot is fresh only when `taken_at` postdates both epochs — anything
+// else (missing, TTL-expired, epoch-bumped) re-resolves through
+// `auth.ctl.resolve_user`.
+//
+// Policy:
+//   resolve returns a user     → fresh headers, snapshot refreshed
+//   resolve returns null       → user deleted/disabled — REFUSE the fire
+//                                (fail-closed governance)
+//   resolve unreachable/errors → transient backend failure — fall back to
+//                                the message's own headers (their provenance
+//                                already passed dueLaneVerify) + warn. Stale
+//                                authorization is bounded by retry, never
+//                                silently trusted.
+//
+// The cache is a performance optimization, never the authority.
+
+const AUTH_RESOLVE_USER_SUBJECT = "auth.ctl.resolve_user";
+const AUTH_EPOCH_KEY = "auth:epoch";
+const userEpochKey = (uuid: string) => `auth:user_epoch:${uuid}`;
+const authSnapKey = (uuid: string) => `auth:snap:${uuid}`;
+/** Safety-net TTL — real invalidation is epoch-driven. */
+const AUTH_SNAP_TTL_MS = 6 * 60 * 60 * 1000;
+
+type CachedAuthSnap = { user: AuthUser; taken_at: number };
+
+async function freshAuthHeaders(
+  actorUuid: string,
+  msg: { headers?: Parameters<typeof forwardAuthHeaders>[0]["headers"] },
+): Promise<Record<string, string> | null> {
+  const port = getSdkCachePort();
+  if (port) {
+    try {
+      const snap = await port.get<CachedAuthSnap>(authSnapKey(actorUuid));
+      if (snap) {
+        const gEpoch = (await port.get<number>(AUTH_EPOCH_KEY)) ?? 0;
+        const uEpoch = (await port.get<number>(userEpochKey(actorUuid))) ?? 0;
+        if (snap.taken_at > Math.max(gEpoch, uEpoch)) {
+          return serializeAuthUserToHeaders(snap.user, getAuthConfig());
+        }
+      }
+    } catch (err) {
+      logger.warn(`auth checkpoint: cache read failed (${String(err)}) — resolving fresh`, { tags: ["jobs"] });
+    }
+  }
+
+  let user: AuthUser | null;
+  try {
+    user = await callNats<AuthUser | null>(AUTH_RESOLVE_USER_SUBJECT, { user_uuid: actorUuid });
+  } catch (err) {
+    logger.warn(
+      `auth checkpoint: auth.ctl.resolve_user unreachable (${String(err)}) — forwarding arm-time headers`,
+      { tags: ["jobs"] },
+    );
+    return forwardAuthHeaders(msg);
+  }
+  if (!user) {
+    logger.warn(
+      `auth checkpoint: actor ${actorUuid} no longer resolves (deleted/disabled) — fire refused`,
+      { tags: ["jobs"] },
+    );
+    return null;
+  }
+  if (port) {
+    try {
+      await port.set<CachedAuthSnap>(authSnapKey(actorUuid), { user, taken_at: Date.now() }, AUTH_SNAP_TTL_MS);
+    } catch (err) {
+      logger.warn(`auth checkpoint: snapshot set failed (${String(err)})`, { tags: ["jobs"] });
+    }
+  }
+  return serializeAuthUserToHeaders(user, getAuthConfig());
+}
+
 async function forward(
   envelope: JobForwardEnvelope,
   lane: "user" | "system",
@@ -96,14 +175,29 @@ async function forward(
     logger.warn(`due-forwarder: refusing invalid callable target "${envelope.target}"`, { tags: ["jobs"] });
     return;
   }
+  // Fire-time auth checkpoint — user lane only. A refused return (null)
+  // is authoritative: the actor no longer resolves, the fire must not
+  // execute and the run is recorded as failed.
+  let headers: Record<string, string>;
+  const actorUuid = lane === "user" ? forwardedActor(msg).actor_uuid : undefined;
+  if (lane === "user" && actorUuid) {
+    const fresh = await freshAuthHeaders(actorUuid, msg);
+    if (fresh === null) {
+      await recordRun(envelope, lane, "failed", "auth actor unresolvable (deleted/disabled)");
+      return;
+    }
+    headers = fresh;
+  } else {
+    headers = forwardAuthHeaders(msg);
+  }
   try {
     // Fire-time injectors — `{$inject:name}` markers the arm-time resolver
     // left in the payload resolve HERE, once per dispatch (uuid per send,
     // session actor off the due message's forwarded auth headers).
     const payload = applyPayloadInjectors(envelope.payload ?? null, {
-      session_actor: forwardedActor(msg).actor_uuid,
+      session_actor: actorUuid,
     });
-    await NatsClient.publish(envelope.target, payload, forwardAuthHeaders(msg));
+    await NatsClient.publish(envelope.target, payload, headers);
   } catch (err) {
     await recordRun(envelope, lane, "failed", err instanceof Error ? err.message : String(err));
     logger.warn(`due-forwarder: publish to ${envelope.target} failed (${String(err)})`, { tags: ["jobs"] });
