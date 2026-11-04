@@ -38,7 +38,6 @@ import {
   subscribeShielded,
   forwardAuthHeaders,
   forwardedActor,
-  dueLaneVerify,
   applyPayloadMap,
   serializeAuthUserToHeaders,
   getAuthConfig,
@@ -54,7 +53,6 @@ import { getDal } from "../db/dal.js";
 import { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
 import { declareSchedule, disarmSchedule } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
-import { JOBS_STREAM } from "./run-recorder.js";
 
 type RuleFilter = { field: string; op?: string; value?: unknown };
 type Lane = "user" | "system";
@@ -327,16 +325,14 @@ export async function startTriggersEngine(): Promise<void> {
   }
 
   // Reload tap: trigger CRUD publishes here so a running instance picks up
-  // changes without restart.
-  await NatsClient.jetstreamSubscribe<{ trigger_uuid?: string }>({
-    stream: JOBS_STREAM,
-    durable: "job-triggers-reloader",
-    filterSubject: "jobs.ctl.triggers.changed",
-    verify: dueLaneVerify("system"),
-    handler: async (data) => {
-      if (data.trigger_uuid) await refreshTrigger(data.trigger_uuid);
+  // changes without restart. Core pub/sub — `jobs.ctl.*` is the control
+  // plane, never stream-captured; a missed event self-heals on restart.
+  await subscribeShielded<{ trigger_uuid?: string }>(
+    "jobs.ctl.triggers.changed",
+    async (data) => {
+      if (data?.trigger_uuid) await refreshTrigger(data.trigger_uuid);
     },
-  });
+  );
 
   logger.done(`triggers-engine: ${liveTriggers.size} trigger(s) on ${bySubject.size} subject(s)`, { tags: ["jobs"] });
 }

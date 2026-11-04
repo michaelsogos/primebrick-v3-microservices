@@ -5,7 +5,7 @@
  */
 
 import { type EntityService, ValidationError } from "@primebrick/dal-pg";
-import { NatsClient, makeMarkerAuditPort, payloadMapConformance } from "@primebrick/sdk";
+import { NatsClient, makeMarkerAuditPort, payloadMapConformance, logger } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
@@ -20,7 +20,14 @@ const SCHEDULE_FILTERABLE = new Set(["service_code", "job_name", "kind", "lane",
 
 function publishTriggerChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
-  NatsClient.jetstreamPublish("jobs.ctl.triggers.changed", { trigger_uuid: uuid }).catch(() => {});
+  // Core pub/sub, not JetStream: `jobs.ctl.*` is the control plane and must
+  // stay OUTSIDE the stream capture set (a stored subject would swallow
+  // req/reply AND any syncSubjects re-ensure by another service strips it —
+  // the publish then fails silently and the reload tap dies). A missed
+  // event is harmless: boot reloads every enabled trigger anyway.
+  NatsClient.publish("jobs.ctl.triggers.changed", { trigger_uuid: uuid }).catch((err) => {
+    logger.warn(`trigger changed publish failed (${String(err)})`, { tags: ["jobs"] });
+  });
 }
 
 /**
