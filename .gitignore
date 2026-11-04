@@ -4,3 +4,6 @@
 # Ignore build output
 **/dist/
 
+
+# dev-hot logs + deploy artifacts
+temp/

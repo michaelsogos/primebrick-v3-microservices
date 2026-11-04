@@ -88,7 +88,6 @@ async function main(): Promise<void> {
         "jobs.due.>",
         "jobs.result.>",
         "jobs.cancel.>",
-        "jobs.ctl.triggers.changed",
       ], { allowMsgSchedules: true, syncSubjects: true });
 
       await registerScheduleRoutes();
