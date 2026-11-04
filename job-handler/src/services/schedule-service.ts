@@ -19,6 +19,8 @@
 import {
   ensureJobSchedule,
   cancelJobSchedule,
+  getJobSchedule,
+  listJobScheduleSubjects,
   logger,
 } from "@primebrick/sdk";
 import { Filter, field, toUUID } from "@primebrick/dal-pg";
@@ -182,4 +184,105 @@ export async function disarmSchedule(
     );
   }
   logger.done(`schedule disarmed: ${scheduleSubject}`, { tags: ["jobs"] });
+}
+
+/**
+ * Reconcile the `job_schedules` registry mirror against the live JetStream
+ * schedule declarations. Runs once at boot, AFTER `startTriggersEngine`
+ * (the engine re-arms schedule-only triggers — reconciling first would
+ * flag them as missing while it is still arming them).
+ *
+ * The DB rows are a MIRROR, not the truth — a direct SQL write flips the
+ * mirror without touching NATS. This pass makes the mismatch self-healing:
+ *
+ *   row disarmed + declaration live  → PURGE the declaration (the direct-
+ *     SQL-bypass drift: mirror says off, scheduler still fires). The row
+ *     is already `disarmed` — no flip needed.
+ *   row armed + declaration missing  → REPORT only. The declaration's
+ *     payload/forwarded auth headers live inside the NATS message, not in
+ *     the row — re-arming would fabricate an empty schedule. Trigger-kind
+ *     rows are already re-armed by the engine; infra/manual rows heal
+ *     when the owning service re-declares.
+ *   declaration live + no row        → REPORT only (orphan). Purging is
+ *     deliberately NOT automatic: a service that declared directly while
+ *     JH was unreachable produces a legitimate orphan — surface it, let
+ *     an operator decide. Strict orphan purging requires every producer
+ *     to go through the governed route first.
+ *
+ * Every per-subject failure is collected — reconcile never aborts the
+ * boot and never claims success it didn't achieve.
+ */
+export interface ReconcileReport {
+  /** disarmed row + live declaration → declaration was purged. */
+  purged_stale: string[];
+  /** live declaration with no registry row → surfaced, NOT purged. */
+  orphan_live: string[];
+  /** armed row with no live declaration → surfaced (engine/owner re-arms). */
+  armed_missing: string[];
+  errors: { subject: string; error: string }[];
+}
+
+let lastReconcileReport: ReconcileReport | null = null;
+
+/** The most recent boot reconcile outcome — for drift surfacing/health. */
+export function getLastReconcileReport(): ReconcileReport | null {
+  return lastReconcileReport;
+}
+
+export async function reconcileSchedules(): Promise<ReconcileReport> {
+  const report: ReconcileReport = { purged_stale: [], orphan_live: [], armed_missing: [], errors: [] };
+  const dal = getDal();
+  const rows = (await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {})) as JobScheduleEntity[];
+  const knownSubjects = new Set<string>();
+
+  // Direction 1: registry → NATS (authoritative per-row direct-get).
+  for (const row of rows) {
+    const subject = row.schedule_subject;
+    knownSubjects.add(subject);
+    let live = false;
+    try {
+      live = (await getJobSchedule(subject)) !== null;
+    } catch (error) {
+      report.errors.push({ subject, error: `lookup failed: ${String(error)}` });
+      continue;
+    }
+    if (row.status === "disarmed" && live) {
+      try {
+        const rest = subject.replace(/^jobs\.schedule\./, "");
+        await cancelJobSchedule(subject, `jobs.cancel.${rest}`);
+        report.purged_stale.push(subject);
+        logger.warn(`reconcile: purged stale declaration ${subject} (row already disarmed)`, { tags: ["jobs"] });
+      } catch (error) {
+        report.errors.push({ subject, error: `purge failed: ${String(error)}` });
+      }
+    } else if (row.status === "armed" && !live) {
+      report.armed_missing.push(subject);
+      logger.warn(
+        `reconcile: row armed but declaration missing: ${subject} (kind=${row.kind}) — owner/engine must re-declare`,
+        { tags: ["jobs"] },
+      );
+    }
+  }
+
+  // Direction 2: NATS → registry (orphans). Enumeration failure degrades
+  // this direction only — the registry checks above already ran.
+  let liveSubjects: string[] = [];
+  try {
+    liveSubjects = await listJobScheduleSubjects();
+  } catch (error) {
+    report.errors.push({ subject: "jobs.schedule.>", error: `enumeration failed: ${String(error)}` });
+  }
+  for (const subject of liveSubjects) {
+    if (knownSubjects.has(subject)) continue;
+    report.orphan_live.push(subject);
+    logger.warn(`reconcile: orphan declaration ${subject} has no registry row — surfaced, not purged`, { tags: ["jobs"] });
+  }
+
+  lastReconcileReport = report;
+  logger.done(
+    `schedule reconcile: ${report.purged_stale.length} purged, ${report.orphan_live.length} orphan, ` +
+      `${report.armed_missing.length} armed-missing, ${report.errors.length} errors`,
+    { tags: ["jobs"] },
+  );
+  return report;
 }

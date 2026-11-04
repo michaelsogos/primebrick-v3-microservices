@@ -16,6 +16,7 @@ import { JobAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { jobServiceRouteHandler } from "./service-routes.js";
 import { assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
+import { reconcileSchedules } from "./services/schedule-service.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startDueForwarder } from "./services/due-forwarder.js";
 import { startCallableCatalog } from "./services/callable-catalog.js";
@@ -95,6 +96,11 @@ async function main(): Promise<void> {
       await startDueForwarder();
       await startCallableCatalog();
       await startTriggersEngine();
+      // Mirror-vs-NATS reconcile LAST — the engine has just re-armed
+      // schedule-only triggers, so the live-declaration comparison is
+      // stable. Purges stale declarations left by out-of-band writes;
+      // surfaces orphans/armed-missing as drift, never fatal to boot.
+      await reconcileSchedules();
     },
   });
 }
