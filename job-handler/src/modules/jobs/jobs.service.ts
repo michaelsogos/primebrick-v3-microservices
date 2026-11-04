@@ -163,6 +163,11 @@ export class JobTriggersService {
   get audit() { return this.svc.audit.bind(this.svc); }
 }
 
+/**
+ * Read-only service over the `job_schedules` mirror — schedule state is
+ * written ONLY by `schedule-service.ts` (declare/disarm), never through
+ * entity CRUD. The entity route exposes list/get/audit only.
+ */
 export class JobSchedulesService {
   private svc = getDal().entityService<JobScheduleEntity & Record<string, unknown>>({
     entity: JobScheduleEntity,
@@ -177,10 +182,6 @@ export class JobSchedulesService {
 
   get list() { return this.svc.list.bind(this.svc); }
   get get() { return this.svc.get.bind(this.svc); }
-  get create() { return this.svc.create.bind(this.svc); }
-  get update() { return this.svc.update.bind(this.svc); }
-  get delete() { return this.svc.delete.bind(this.svc); }
-  get restore() { return this.svc.restore.bind(this.svc); }
   get audit() { return this.svc.audit.bind(this.svc); }
 }
 

@@ -90,15 +90,19 @@ const mkTrigger = (over: Record<string, unknown>): JobTriggerEntity =>
   }) as unknown as JobTriggerEntity;
 
 /** Run the engine with the given triggers live, returning the captured
- *  subject → event-handler map and the reload-tap handler. */
+ *  subject → event-handler map and the reload-tap handler. The reload tap
+ *  rides core pub/sub (`subscribeShielded` on `jobs.ctl.triggers.changed`)
+ *  — `jobs.ctl.*` is the control plane, never stream-captured. */
 async function boot(triggers: JobTriggerEntity[]) {
   h.findAll.mockResolvedValue(triggers);
   await startTriggersEngine();
   const events = new Map<string, (payload: unknown, msg: { headers?: Record<string, string> }) => Promise<unknown>>();
-  for (const c of h.subscribeShielded.mock.calls) events.set(c[0] as string, c[1] as never);
-  const reload = h.jetstreamSubscribe.mock.calls
-    .map((c) => c[0] as { durable: string; handler: (d: { trigger_uuid?: string }) => Promise<void> })
-    .find((o) => o.durable === "job-triggers-reloader")?.handler;
+  let reload: ((data: { trigger_uuid?: string }) => Promise<unknown>) | undefined;
+  for (const c of h.subscribeShielded.mock.calls) {
+    const subject = c[0] as string;
+    if (subject === "jobs.ctl.triggers.changed") reload = c[1] as never;
+    else events.set(subject, c[1] as never);
+  }
   return { events, reload };
 }
 
@@ -180,7 +184,7 @@ describe("triggers-engine — event only (immediate dispatch)", () => {
 
 describe("triggers-engine — schedule only (pure timer)", () => {
   it("system lane arms at boot on the system trampoline", async () => {
-    await boot([
+    const { events } = await boot([
       mkTrigger({
         uuid: "trig-3",
         name: "timer",
@@ -190,7 +194,9 @@ describe("triggers-engine — schedule only (pure timer)", () => {
       }),
     ]);
 
-    expect(h.subscribeShielded).not.toHaveBeenCalled();
+    // No event subject → the only shielded subscription is the reload tap.
+    expect(events.size).toBe(0);
+    expect(h.subscribeShielded).toHaveBeenCalledTimes(1);
     expect(h.declareSchedule).toHaveBeenCalledWith(
       expect.objectContaining({ target: "jobs.due.system.job.forward.trig-3", kind: "trigger" }),
     );

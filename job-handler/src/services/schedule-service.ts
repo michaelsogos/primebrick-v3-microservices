@@ -161,10 +161,13 @@ export async function disarmSchedule(
   scheduleSubject: string,
   actor: string,
 ): Promise<void> {
-  const rest = scheduleSubject.replace(/^jobs\.schedule\./, "");
-  if (rest === scheduleSubject) {
-    throw new ScheduleDeclarationError("INVALID_SCHEDULE_SUBJECT", `not a jobs.schedule.* subject: ${scheduleSubject}`);
+  if (!SUBJECT_RE.test(scheduleSubject)) {
+    throw new ScheduleDeclarationError(
+      "INVALID_SCHEDULE_SUBJECT",
+      `schedule_subject must be jobs.schedule.<owner>.<name>[.<id>], got "${scheduleSubject}"`,
+    );
   }
+  const rest = scheduleSubject.replace(/^jobs\.schedule\./, "");
   await cancelJobSchedule(scheduleSubject, `jobs.cancel.${rest}`);
 
   const dal = getDal();

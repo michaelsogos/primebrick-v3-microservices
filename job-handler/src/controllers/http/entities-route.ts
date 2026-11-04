@@ -53,11 +53,12 @@ export const jobEntityDecls: EntityRouteDecl[] = [
     meta: jobScheduleMeta,
     auditable: true,
     permissions: {
+      // READ-ONLY MIRROR — job_schedules mirrors live NATS declarations.
+      // CRUD writes would flip the mirror without touching JetStream (the
+      // direct-SQL bypass, but through the canonical API). Arm via
+      // jobs.ctl.schedule.request / schedule-only triggers; disarm via
+      // /api/v1/actions/disarm-job. No create/update/delete/restore.
       meta: readPerms, list: readPerms, get: readPerms, audit: writePerms,
-      // Schedules are armed/disarmed by the services — admin write ops
-      // exist for manual jobs & cleanup, gated to admin.
-      create: writePerms, update: writePerms,
-      delete: writePerms, restore: writePerms,
     },
     duplicate: false,
   },
