@@ -12,6 +12,7 @@
 import {
   Permission,
   logger,
+  ValidationError,
   type RpcRoute,
 } from "@primebrick/sdk";
 import { field, Filter, GroupBy, Project, Sort } from "@primebrick/dal-pg";
@@ -103,10 +104,16 @@ export const jobActionsRoutes: RpcRoute[] = [
       description: "Body: { schedule_subject } — removes the armed schedule.",
       tags: ["jobs", "actions"],
     },
-    body: (raw) => raw as { schedule_subject?: string },
+    body: (raw) => {
+      const b = raw as { schedule_subject?: string };
+      if (typeof b?.schedule_subject !== "string" || !b.schedule_subject.startsWith("jobs.schedule.")) {
+        throw new ValidationError("body.schedule_subject must be a jobs.schedule.* subject");
+      }
+      return b as { schedule_subject: string };
+    },
     handler: async (ctx) => {
-      const b = ctx.body as { schedule_subject?: string };
-      await disarmSchedule(b.schedule_subject!, `user:${ctx.user?.email ?? "unknown"}`);
+      const b = ctx.body as { schedule_subject: string };
+      await disarmSchedule(b.schedule_subject, `user:${ctx.user?.email ?? "unknown"}`);
       return { disarmed: true };
     },
   },
