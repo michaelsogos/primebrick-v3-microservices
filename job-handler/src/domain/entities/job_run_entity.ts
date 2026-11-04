@@ -26,9 +26,9 @@ export class JobRunEntity
   @Unique()
   uuid!: UUID;
 
-  /** Schedule subject that fired this run (links to job_schedules). */
-  @Column({ nullable: false })
-  schedule_subject!: string;
+  /** Schedule subject that fired this run — null for immediate dispatches. */
+  @Column({ nullable: true })
+  schedule_subject?: string;
 
   @Column({ nullable: false })
   service_code!: string;
@@ -40,9 +40,13 @@ export class JobRunEntity
   @Column({ length: 10, nullable: false })
   lane!: string;
 
-  /** running | succeeded | failed | skipped */
+  /** dispatched | executed | failed | lost (dispatch never reported) */
   @Column({ length: 20, nullable: false })
   status!: string;
+
+  /** Stream sequence of the due fire — dedupes result reports per fire. */
+  @Column({ nullable: true })
+  fire_seq?: bigint;
 
   /** RFC-style error code on failure (e.g. "401", "RBAC_PERMISSION_DENIED"). */
   @Column({ nullable: true })

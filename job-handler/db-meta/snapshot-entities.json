@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-02T20:32:37.086Z",
+  "generatedAt": "2026-11-04T23:54:20.228Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -447,6 +447,28 @@
           "isPostgresIdentity": false,
           "propertyKey": "disarmed_at",
           "isNullable": true
+        },
+        "fired_at": {
+          "name": "fired_at",
+          "ordinalPosition": 21,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "fired_at",
+          "isNullable": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "expires_at",
+          "isNullable": true
         }
       },
       "indexes": [
@@ -563,7 +585,7 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "schedule_subject",
-          "isNullable": false
+          "isNullable": true
         },
         "service_code": {
           "name": "service_code",
@@ -609,9 +631,20 @@
           "propertyKey": "status",
           "isNullable": false
         },
+        "fire_seq": {
+          "name": "fire_seq",
+          "ordinalPosition": 13,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "fire_seq",
+          "isNullable": true
+        },
         "error_code": {
           "name": "error_code",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -622,7 +655,7 @@
         },
         "error_detail": {
           "name": "error_detail",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -633,7 +666,7 @@
         },
         "duration_ms": {
           "name": "duration_ms",
-          "ordinalPosition": 15,
+          "ordinalPosition": 16,
           "dataType": "int8",
           "typname": "int8",
           "isPrimaryKey": false,
@@ -644,7 +677,7 @@
         },
         "redelivery_count": {
           "name": "redelivery_count",
-          "ordinalPosition": 16,
+          "ordinalPosition": 17,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
@@ -655,7 +688,7 @@
         },
         "initiator": {
           "name": "initiator",
-          "ordinalPosition": 17,
+          "ordinalPosition": 18,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -666,7 +699,7 @@
         },
         "report": {
           "name": "report",
-          "ordinalPosition": 18,
+          "ordinalPosition": 19,
           "dataType": "jsonb",
           "typname": "jsonb",
           "isPrimaryKey": false,

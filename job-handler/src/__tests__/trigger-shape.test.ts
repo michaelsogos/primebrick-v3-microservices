@@ -1,8 +1,8 @@
 /**
- * `assertTriggerShape` — the write-path contract that mirrors the form's
- * `job_trigger_shape` validator: `event_subject` and `schedule_spec` are
- * mutually mandatory (at least one), and `execution_context "user"` needs
- * an event source to forward auth headers from.
+ * `assertTriggerShape` — delegates to the SAME core predicate the superform
+ * applies (`jobTriggerShapeIssues`): one rule, two surfaces. Asserts the
+ * i18n keys the shared predicate emits (never duplicated literals) and the
+ * merge-with-existing semantics the write hook relies on for PATCH bodies.
  */
 import "reflect-metadata";
 import { describe, expect, it, vi } from "vitest";
@@ -23,69 +23,100 @@ vi.mock("../../services/callable-catalog.js", () => ({
 
 const { assertTriggerShape } = await import("../modules/jobs/jobs.service.js");
 
+const atFuture = `@at ${new Date(Date.now() + 3_600_000).toISOString()}`;
+const atPast = `@at ${new Date(Date.now() - 3_600_000).toISOString()}`;
+
 describe("assertTriggerShape — create", () => {
-  it("rejects a body with neither event_subject nor schedule_spec", () => {
-    expect(() => assertTriggerShape({}, true)).toThrow(/at least one of/);
+  it("rejects a body with neither event_subject nor schedule_spec", async () => {
+    await expect(assertTriggerShape({}, true)).rejects.toThrow(/trigger_source_or_schedule/);
   });
 
-  it("accepts schedule-only (pure timer)", () => {
-    expect(() =>
+  it("accepts schedule-only (pure timer)", async () => {
+    await expect(
       assertTriggerShape({ schedule_spec: "@every 1d", execution_context: "me" }, true),
-    ).not.toThrow();
+    ).resolves.toBeUndefined();
   });
 
-  it("accepts event-only (immediate dispatch)", () => {
-    expect(() =>
+  it("accepts event-only (immediate dispatch)", async () => {
+    await expect(
       assertTriggerShape({ event_subject: "customer.updated", execution_context: "user" }, true),
-    ).not.toThrow();
+    ).resolves.toBeUndefined();
   });
 
-  it("accepts event + schedule (gated timer)", () => {
-    expect(() =>
+  it("accepts event + schedule (gated timer)", async () => {
+    await expect(
       assertTriggerShape(
         { event_subject: "customer.updated", schedule_spec: "@every 1d", execution_context: "user" },
         true,
       ),
-    ).not.toThrow();
+    ).resolves.toBeUndefined();
   });
 
-  it("rejects execution_context user without an event source", () => {
-    expect(() =>
+  it("rejects execution_context user without an event source", async () => {
+    await expect(
       assertTriggerShape({ schedule_spec: "@every 1d", execution_context: "user" }, true),
-    ).toThrow(/requires an event source/);
+    ).rejects.toThrow(/user_context_requires_source/);
   });
 
-  it("accepts execution_context me/system schedule-only", () => {
+  it("accepts execution_context me/system schedule-only", async () => {
     for (const ctx of ["me", "system"]) {
-      expect(() =>
+      await expect(
         assertTriggerShape({ schedule_spec: "@every 1d", execution_context: ctx }, true),
-      ).not.toThrow();
+      ).resolves.toBeUndefined();
     }
+  });
+
+  it("rejects a one-shot @at lying in the past — it could never fire", async () => {
+    await expect(
+      assertTriggerShape({ schedule_spec: atPast, execution_context: "system" }, true),
+    ).rejects.toThrow(/schedule_spec_past/);
+  });
+
+  it("accepts a one-shot @at in the future", async () => {
+    await expect(
+      assertTriggerShape({ schedule_spec: atFuture, execution_context: "system" }, true),
+    ).resolves.toBeUndefined();
   });
 });
 
 describe("assertTriggerShape — update (partial bodies)", () => {
-  it("allows clearing one field while the other survives", () => {
-    expect(() => assertTriggerShape({ event_subject: null }, false)).not.toThrow();
-    expect(() => assertTriggerShape({ schedule_spec: null }, false)).not.toThrow();
+  const existing = { event_subject: "customer.updated", schedule_spec: "@every 1d", execution_context: "system" };
+  const loadExisting = async () => existing;
+
+  it("allows clearing one field while the other survives in the stored row", async () => {
+    await expect(assertTriggerShape({ event_subject: null }, false, loadExisting)).resolves.toBeUndefined();
+    await expect(assertTriggerShape({ schedule_spec: null }, false, loadExisting)).resolves.toBeUndefined();
   });
 
-  it("rejects clearing both in one write", () => {
-    expect(() => assertTriggerShape({ event_subject: null, schedule_spec: null }, false)).toThrow(
-      /clearing both/,
-    );
-    expect(() => assertTriggerShape({ event_subject: "", schedule_spec: "" }, false)).toThrow(
-      /clearing both/,
-    );
+  it("rejects clearing the event source while execution_context stays user", async () => {
+    const userExisting = { event_subject: "customer.updated", execution_context: "user" };
+    await expect(
+      assertTriggerShape({ event_subject: null }, false, async () => userExisting),
+    ).rejects.toThrow(/user_context_requires_source/);
   });
 
-  it("rejects switching to execution_context user while clearing the source", () => {
-    expect(() =>
-      assertTriggerShape({ event_subject: null, execution_context: "user" }, false),
-    ).toThrow(/requires an event source/);
+  it("rejects clearing both in one write", async () => {
+    await expect(
+      assertTriggerShape({ event_subject: null, schedule_spec: null }, false, loadExisting),
+    ).rejects.toThrow(/trigger_source_or_schedule/);
+    await expect(
+      assertTriggerShape({ event_subject: "", schedule_spec: "" }, false, loadExisting),
+    ).rejects.toThrow(/trigger_source_or_schedule/);
   });
 
-  it("allows execution_context user when the source is untouched", () => {
-    expect(() => assertTriggerShape({ execution_context: "user" }, false)).not.toThrow();
+  it("rejects switching to execution_context user while clearing the source", async () => {
+    await expect(
+      assertTriggerShape({ event_subject: null, execution_context: "user" }, false, loadExisting),
+    ).rejects.toThrow(/user_context_requires_source/);
+  });
+
+  it("allows execution_context user when the source is untouched", async () => {
+    await expect(assertTriggerShape({ execution_context: "user" }, false, loadExisting)).resolves.toBeUndefined();
+  });
+
+  it("rejects an update whose merged row lands @at in the past", async () => {
+    await expect(
+      assertTriggerShape({ schedule_spec: atPast }, false, loadExisting),
+    ).rejects.toThrow(/schedule_spec_past/);
   });
 });

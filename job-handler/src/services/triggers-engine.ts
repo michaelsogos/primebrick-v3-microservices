@@ -51,7 +51,7 @@ import { Filter, field } from "@primebrick/dal-pg";
 import { callablePayloadSchema } from "./callable-catalog.js";
 import { getDal } from "../db/dal.js";
 import { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
-import { declareSchedule, disarmSchedule } from "./schedule-service.js";
+import { declareSchedule, disarmSchedule, dropScheduleMirror } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
 
 type RuleFilter = { field: string; op?: string; value?: unknown };
@@ -86,7 +86,9 @@ function matchFilter(filters: unknown, payload: unknown): boolean {
 }
 
 function triggerScheduleSubject(trigger: JobTriggerEntity): string {
-  return `jobs.schedule.job.${trigger.name.replace(/[^a-z0-9-]+/g, "-")}`;
+  // UUID-keyed — stable across renames: a name change must never orphan
+  // the old declaration subject or tombstone the mirror.
+  return `jobs.schedule.job.${trigger.uuid}`;
 }
 
 function trampolineSubject(lane: Lane, trigger: JobTriggerEntity): string {
@@ -252,8 +254,10 @@ async function dispatch(
     });
   } else {
     // Immediate — the envelope lands on the same trampoline the due-
-    // forwarder already consumes; stream capture makes it durable.
-    await NatsClient.publish(trampolineSubject(auth.lane, trigger), envelope, auth.headers);
+    // forwarder already consumes. jetstreamPublish, not core publish:
+    // the trampoline subject is stream-captured — only a PubAck proves
+    // the fire was durably stored; a core publish can silently drop.
+    await NatsClient.jetstreamPublish(trampolineSubject(auth.lane, trigger), envelope, auth.headers);
   }
 }
 
@@ -265,7 +269,14 @@ async function onEvent(triggerUuid: string, payload: unknown, msg: { headers?: P
     await dispatch(trigger, payload, msg);
   } else if (trigger.schedule_spec) {
     // Event-gated timer: world stopped matching → disarm (fail-closed).
-    await disarmSchedule(triggerScheduleSubject(trigger), `system:trigger:${trigger.name}`).catch(() => {});
+    // A failed disarm leaves the timer firing on a non-matching world —
+    // never swallowed: the failure is loud and retryable on the next event.
+    await disarmSchedule(triggerScheduleSubject(trigger), `system:trigger:${trigger.name}`).catch((err) => {
+      logger.error(
+        `trigger "${trigger.name}": gated disarm failed (${String(err)}) — schedule still armed`,
+        { tags: ["jobs"] },
+      );
+    });
   }
 }
 
@@ -286,9 +297,24 @@ async function refreshTrigger(uuid: string): Promise<void> {
   meLaneHeaders.delete(uuid);
   meLaneUsers.delete(uuid);
   // Any prior timer disarms first — covers disable, delete, and
-  // source/schedule shape changes in one step.
+  // source/schedule shape changes in one step. The failure is loud:
+  // a failed disarm leaves a timer firing for a trigger that no longer
+  // wants it.
   if (prev?.schedule_spec) {
-    await disarmSchedule(triggerScheduleSubject(prev), `system:trigger:${prev.name}`).catch(() => {});
+    const subject = triggerScheduleSubject(prev);
+    await disarmSchedule(subject, `system:trigger:${prev.name}`).catch((err) => {
+      logger.error(
+        `trigger "${prev.name}": refresh disarm failed (${String(err)}) — schedule may still be armed`,
+        { tags: ["jobs"] },
+      );
+    });
+    // Trigger deleted → the mirror row goes too: a disarmed tombstone
+    // would list a schedule nobody can ever re-arm.
+    if (!trigger) {
+      await dropScheduleMirror(subject, "system:triggers-engine").catch((err) => {
+        logger.warn(`trigger "${prev.name}": mirror row drop failed (${String(err)})`, { tags: ["jobs"] });
+      });
+    }
   }
   if (!trigger || !trigger.enabled) return;
   liveTriggers.set(uuid, trigger);
@@ -313,10 +339,18 @@ export async function startTriggersEngine(): Promise<void> {
     }
   }
   for (const [subject, uuids] of bySubject) {
+    // Queue "job" — WORK subject: when multiple JH replicas run, NATS
+    // delivers each event to exactly ONE member (verified empirically:
+    // queued subscribers split deliveries; unqueued ones all receive a
+    // copy — that would double-dispatch every matching trigger).
+    // `jobs.ctl.triggers.changed` below stays unqueued on purpose: the
+    // reload is a broadcast every replica must see to keep liveTriggers
+    // consistent.
     await subscribeShielded(subject, (payload, msg) =>
       Promise.all(uuids.map((id) => onEvent(id, payload, msg))).then(() => {}),
+      { queue: "job" },
     );
-    logger.done(`trigger subscription bound on ${subject} (${uuids.length} trigger(s))`, { tags: ["jobs"] });
+    logger.done(`trigger subscription bound on ${subject} (${uuids.length} trigger(s), queue=job)`, { tags: ["jobs"] });
   }
 
   // Schedule-only triggers arm at boot — there is no event to gate them.
