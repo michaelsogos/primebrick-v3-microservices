@@ -148,7 +148,9 @@ function expectedDeclarationGone(row: JobScheduleEntity, now = new Date()): "fir
 
 // ─── Arm / disarm — atomic protocol ─────────────────────────────────────────
 
-export async function declareSchedule(input: DeclareScheduleInput): Promise<{ seq: bigint }> {
+export async function declareSchedule(
+  input: DeclareScheduleInput,
+): Promise<{ seq?: bigint; skipped?: "terminal-once" }> {
   const sm = SUBJECT_RE.exec(input.schedule_subject);
   if (!sm) {
     throw new ScheduleDeclarationError(
@@ -188,6 +190,29 @@ export async function declareSchedule(input: DeclareScheduleInput): Promise<{ se
   // target any service's due subject — that's the point of triggers.
 
   return withSubjectLock(input.schedule_subject, async () => {
+    // Terminal-once gate — a `once` mirror row that already reached
+    // `fired`/`expired` for the SAME spec must never re-declare: a past
+    // `@at` FIRES IMMEDIATELY at declare time (verified live: a JH
+    // restart re-armed a fired trigger and the job ran a second time
+    // ~250ms later). A changed spec is a new lifecycle and arms normally.
+    const dal = getDal();
+    const existingRows = await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+      filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", input.schedule_subject)],
+    });
+    const existing = Array.isArray(existingRows) ? existingRows[0] : undefined;
+    if (
+      input.schedule.startsWith("@at") &&
+      existing !== undefined &&
+      (existing.status === "fired" || existing.status === "expired") &&
+      existing.schedule_spec === input.schedule
+    ) {
+      logger.done(
+        `schedule arm skipped — once already ${existing.status} for the same spec on ${input.schedule_subject}`,
+        { tags: ["jobs"] },
+      );
+      return { skipped: "terminal-once" as const };
+    }
+
     // Step 1 — declare. The declaration stamps its own schedule subject so
     // every fired message self-correlates (SDK middleware → jobs.result.*).
     const seq = await ensureJobSchedule({
@@ -220,10 +245,6 @@ export async function declareSchedule(input: DeclareScheduleInput): Promise<{ se
     // are now impossible to produce through code.
     const ttlMs = input.ttl ? ttlToMs(input.ttl) : undefined;
     try {
-      const dal = getDal();
-      const existing = await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
-        filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", input.schedule_subject)],
-      });
       const armedAt = new Date();
       const row: Partial<JobScheduleEntity> = {
         schedule_subject: input.schedule_subject,
@@ -243,10 +264,10 @@ export async function declareSchedule(input: DeclareScheduleInput): Promise<{ se
         expires_at: ttlMs === undefined ? undefined : new Date(armedAt.getTime() + ttlMs),
       };
       const actor = input.caller_service ?? input.initiator ?? "system:primebrick-job";
-      if (Array.isArray(existing) && existing.length > 0) {
+      if (existing !== undefined) {
         await dal.update(
           JobScheduleEntity,
-          { ...row, uuid: existing[0]!.uuid, version: existing[0]!.version } as never,
+          { ...row, uuid: existing.uuid, version: existing.version } as never,
           { actor, matchBy: "uuid" } as never,
         );
       } else {

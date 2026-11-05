@@ -20,7 +20,7 @@ const h = vi.hoisted(() => ({
   get: vi.fn(async (_subject?: unknown) => null as unknown),
   list: vi.fn(async () => [] as string[]),
   findAll: vi.fn(async () => [] as unknown[]),
-  add: vi.fn(async () => ({ uuid: "sched-row-1" })),
+  add: vi.fn(async (_entity?: unknown, _row?: unknown) => ({ uuid: "sched-row-1" })),
   update: vi.fn(async () => ({})),
   reset() {
     // mockReset (not mockClear) — a sticky rejected impl must not leak
@@ -147,6 +147,49 @@ describe("declareSchedule — arm protocol", () => {
     await svc.declareSchedule(armInput({ ttl: "1h" }));
     const row = h.add.mock.calls[0]![1] as unknown as Record<string, unknown>;
     expect((row.expires_at as Date).getTime()).toBeGreaterThan(Date.now() + 3_500_000);
+  });
+
+  it("a fired once row + same spec → skipped, NOTHING re-declared (a past @at fires immediately)", async () => {
+    const spec = "@at 2026-01-01T00:00:00Z";
+    h.findAll.mockResolvedValue([
+      mirrorRow({ status: "fired", schedule_type: "once", schedule_spec: spec }),
+    ]);
+
+    const r = await svc.declareSchedule(armInput({ schedule: spec }));
+
+    expect(r).toEqual({ skipped: "terminal-once" });
+    expect(h.ensure).not.toHaveBeenCalled();
+    expect(h.add).not.toHaveBeenCalled();
+    expect(h.update).not.toHaveBeenCalled();
+  });
+
+  it("an expired once row + same spec → skipped", async () => {
+    const spec = "@at 2026-01-01T00:00:00Z";
+    h.findAll.mockResolvedValue([
+      mirrorRow({ status: "expired", schedule_type: "once", schedule_spec: spec }),
+    ]);
+
+    const r = await svc.declareSchedule(armInput({ schedule: spec }));
+    expect(r).toEqual({ skipped: "terminal-once" });
+    expect(h.ensure).not.toHaveBeenCalled();
+  });
+
+  it("a fired once row + CHANGED spec → new lifecycle, arms normally", async () => {
+    h.findAll.mockResolvedValue([
+      mirrorRow({ status: "fired", schedule_type: "once", schedule_spec: "@at 2026-01-01T00:00:00Z" }),
+    ]);
+    h.get.mockResolvedValue(decl({ schedule: "@every 6h" }));
+
+    const r = await svc.declareSchedule(armInput());
+
+    expect(r.skipped).toBeUndefined();
+    expect(h.ensure).toHaveBeenCalledOnce();
+    // mirror row resets to armed — a new lifecycle, not a re-fire.
+    expect(h.update).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: "armed", fired_at: undefined }),
+      expect.anything(),
+    );
   });
 });
 
