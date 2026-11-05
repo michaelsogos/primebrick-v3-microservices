@@ -35,6 +35,15 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 
+/**
+ * The schedule-mirror rollup subject for a trigger — `jobs.schedule.job.<uuid>`.
+ * The triggers engine materializes its JetStream declaration on this subject
+ * and `job_run.schedule_subject` records it, so the `runs` reverse_ref on
+ * the trigger meta filters runs by `<prefix>{uuid}`. Single source for the
+ * convention: engine + meta share it.
+ */
+export const TRIGGER_SCHEDULE_SUBJECT_PREFIX = "jobs.schedule.job.";
+
 @Entity("job_triggers", "job")
 export class JobTriggerEntity
   extends Deletable(Auditable(EntityBase)) {

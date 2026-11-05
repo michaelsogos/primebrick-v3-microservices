@@ -4,11 +4,11 @@
  * triggers engine without restart.
  */
 
-import { type EntityService, ValidationError } from "@primebrick/dal-pg";
-import { NatsClient, makeMarkerAuditPort, payloadMapConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
+import { type EntityService, field, Filter, GroupBy, Project, ValidationError } from "@primebrick/dal-pg";
+import { NatsClient, makeMarkerAuditPort, nextScheduleFire, payloadMapConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
-import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
+import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
@@ -152,8 +152,63 @@ export class JobTriggersService {
     },
   } as never);
 
-  get list() { return this.svc.list.bind(this.svc); }
-  get get() { return this.svc.get.bind(this.svc); }
+  /**
+   * Decorate rows with `last_run` (latest `job_runs.created_at` for the
+   * trigger's mirror subject — ONE grouped query per page) and `next_run`
+   * (the armed mirror's next fire; null when disarmed, event-only, or a
+   * cron spec NATS evaluates but we don't).
+   */
+  private async decorate(rows: (JobTriggerEntity & Record<string, unknown>)[]): Promise<void> {
+    if (rows.length === 0) return;
+    const subjectOf = (r: JobTriggerEntity) => `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}${r.uuid}`;
+    const subjects = rows.map(subjectOf);
+    interface LastRow { schedule_subject: string; last_run: Date }
+    const [lastRows, mirrors] = await Promise.all([
+      getDal().findAll<JobRunEntity, LastRow>(
+        JobRunEntity,
+        [
+          Project.field(field(JobRunEntity, "schedule_subject")),
+          Project.expr("max(created_at)", "last_run"),
+        ],
+        {
+          filters: [
+            Filter.expr({ sql: "schedule_subject" }, "=", { sql: "ANY(?)", params: [subjects] }),
+          ],
+          groupBy: [field(JobRunEntity, "schedule_subject")],
+        },
+      ) as Promise<LastRow[]>,
+      getDal().findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+        filters: [
+          Filter.expr({ sql: "schedule_subject" }, "=", { sql: "ANY(?)", params: [subjects] }),
+        ],
+      }) as Promise<JobScheduleEntity[]>,
+    ]);
+    const lastBySubject = new Map(lastRows.map((r) => [r.schedule_subject, r.last_run]));
+    const mirrorBySubject = new Map(mirrors.map((m) => [m.schedule_subject, m]));
+    const now = new Date();
+    for (const row of rows) {
+      const subject = subjectOf(row);
+      row.last_run = lastBySubject.get(subject) ?? null;
+      const mirror = mirrorBySubject.get(subject);
+      row.next_run =
+        row.enabled && mirror?.status === "armed"
+          ? nextScheduleFire(mirror.schedule_spec, { now, since: mirror.armed_at ?? undefined })
+          : null;
+    }
+  }
+
+  list = async (query: Parameters<EntityService<JobTriggerEntity & Record<string, unknown>>["list"]>[0]) => {
+    const result = await this.svc.list(query);
+    await this.decorate(result.rows as (JobTriggerEntity & Record<string, unknown>)[]);
+    return result;
+  };
+
+  get = async (uuid: string) => {
+    const row = await this.svc.get(uuid);
+    await this.decorate([row as JobTriggerEntity & Record<string, unknown>]);
+    return row;
+  };
+
   get create() { return this.svc.create.bind(this.svc); }
   get update() { return this.svc.update.bind(this.svc); }
   get delete() { return this.svc.delete.bind(this.svc); }

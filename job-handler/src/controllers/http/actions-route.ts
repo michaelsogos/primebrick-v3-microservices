@@ -34,7 +34,7 @@ import { field, Filter, GroupBy, Project, Sort } from "@primebrick/dal-pg";
 import { getDal } from "../../db/dal.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
-import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
+import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../../domain/entities/job_trigger_entity.js";
 import {
   disarmSchedule,
   dropScheduleMirror,
@@ -49,6 +49,10 @@ import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 
 interface RunStatsBody {
   schedule_subjects?: string[];
+  /** Trigger-keyed variant — each uuid resolves to its schedule-mirror
+   *  subject (`jobs.schedule.job.<uuid>`); stats come back keyed by the
+   *  submitted uuid so a `row_key:"uuid"` sparkline column binds directly. */
+  trigger_uuids?: string[];
   span_ms?: number;
 }
 
@@ -63,8 +67,12 @@ function pickBucketUnit(spanMs: number): { unit: BucketUnit; ms: number } {
   return { unit: "month", ms: 30 * DAY };
 }
 
-async function runStats(body: RunStatsBody): Promise<unknown> {
-  const subjects = Array.isArray(body.schedule_subjects) ? body.schedule_subjects : [];
+export async function runStats(body: RunStatsBody): Promise<unknown> {
+  const triggerUuids = Array.isArray(body.trigger_uuids) ? body.trigger_uuids : [];
+  const subjects = [
+    ...(Array.isArray(body.schedule_subjects) ? body.schedule_subjects : []),
+    ...triggerUuids.map((u) => `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}${u}`),
+  ];
   if (subjects.length === 0) return { bucket_unit: "day", stats: {} };
 
   const spanMs = typeof body.span_ms === "number" && body.span_ms > 0
@@ -118,6 +126,15 @@ async function runStats(body: RunStatsBody): Promise<unknown> {
       skipped: Number(r.skipped),
     });
   }
+  // Trigger-keyed requests bind the sparkline by the row's `uuid`, not the
+  // resolved mirror subject — remap those keys back before responding.
+  for (const u of triggerUuids) {
+    const subject = `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}${u}`;
+    if (stats[subject]) {
+      stats[u] = stats[subject];
+      delete stats[subject];
+    }
+  }
   return { bucket_unit: unit, stats };
 }
 
@@ -129,6 +146,16 @@ function scheduleSubjectBody(raw: unknown): ScheduleSubjectBody {
     throw new ValidationError("body.schedule_subject must be a jobs.schedule.* subject");
   }
   return b as ScheduleSubjectBody;
+}
+
+type TriggerUuidBody = { uuid: string };
+
+function triggerUuidBody(raw: unknown): TriggerUuidBody {
+  const b = raw as { uuid?: string };
+  if (typeof b?.uuid !== "string" || !b.uuid) {
+    throw new ValidationError("body.uuid is required");
+  }
+  return b as TriggerUuidBody;
 }
 
 function actorOf(ctx: { user?: { email?: string | null } | null }): string {
@@ -240,7 +267,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/stop-job",
-    entity_op: { entity: "job_schedule", op: "stop" },
+    entity_op: { entity: "job_schedule", op: "stop", cta: { icon: "square", row_key: "schedule_subject", translation_key: "job.jobs.actions.stop", visible_on: { field: "status", values: ["armed"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Stop a schedule instance (admin)",
@@ -260,7 +287,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/disable-schedule",
-    entity_op: { entity: "job_schedule", op: "disable" },
+    entity_op: { entity: "job_schedule", op: "disable", cta: { icon: "power", text_color: "text-red-600", row_key: "schedule_subject", translation_key: "job.jobs.actions.disable", visible_on: { field: "status", values: ["armed", "stopped", "paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Disable a schedule — owner-level off (admin)",
@@ -275,7 +302,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/enable-schedule",
-    entity_op: { entity: "job_schedule", op: "enable" },
+    entity_op: { entity: "job_schedule", op: "enable", cta: { icon: "power", text_color: "text-emerald-600", row_key: "schedule_subject", translation_key: "job.jobs.actions.enable", visible_on: { field: "status", values: ["disarmed", "stopped", "paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Enable a schedule — owner-level re-arm (admin)",
@@ -290,7 +317,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/pause-schedule",
-    entity_op: { entity: "job_schedule", op: "pause" },
+    entity_op: { entity: "job_schedule", op: "pause", cta: { icon: "pause", row_key: "schedule_subject", translation_key: "job.jobs.actions.pause", visible_on: { field: "status", values: ["armed"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Pause a schedule — suppressed until resume (admin)",
@@ -308,7 +335,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/resume-schedule",
-    entity_op: { entity: "job_schedule", op: "resume" },
+    entity_op: { entity: "job_schedule", op: "resume", cta: { icon: "play", row_key: "schedule_subject", translation_key: "job.jobs.actions.resume", visible_on: { field: "status", values: ["paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Resume a paused schedule (admin)",
@@ -320,8 +347,42 @@ export const jobActionsRoutes: RpcRoute[] = [
   },
   {
     method: "POST",
+    path: "/api/v1/actions/enable-trigger",
+    entity_op: { entity: "job_trigger", op: "enable", cta: { icon: "power", text_color: "text-emerald-600", translation_key: "job.jobs.actions.enable", visible_on: { field: "enabled", values: [false] } } },
+    permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Enable a trigger — arm it (admin)",
+      description:
+        "Body: { uuid } — sets `enabled=true` and re-derives the trigger's schedule through the engine.",
+      tags: ["jobs", "actions"],
+    },
+    body: triggerUuidBody,
+    handler: async (ctx) => {
+      await setTriggerEnabled((ctx.body as TriggerUuidBody).uuid, true, actorOf(ctx));
+      return { enabled: true };
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/actions/disable-trigger",
+    entity_op: { entity: "job_trigger", op: "disable", cta: { icon: "power", text_color: "text-red-600", translation_key: "job.jobs.actions.disable", visible_on: { field: "enabled", values: [true] } } },
+    permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Disable a trigger — disarm it (admin)",
+      description:
+        "Body: { uuid } — sets `enabled=false`; the engine drops the trigger's schedule declaration.",
+      tags: ["jobs", "actions"],
+    },
+    body: triggerUuidBody,
+    handler: async (ctx) => {
+      await setTriggerEnabled((ctx.body as TriggerUuidBody).uuid, false, actorOf(ctx));
+      return { disabled: true };
+    },
+  },
+  {
+    method: "POST",
     path: "/api/v1/actions/disarm-all",
-    entity_op: { entity: "job_schedule", op: "disarm_all" },
+    entity_op: { entity: "job_schedule", op: "disarm_all", cta: { icon: "power", text_color: "text-red-600", translation_key: "job.jobs.actions.disarm_all", confirm_key: "job.jobs.actions.disarm_all_confirm" } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Disable every armed schedule (admin, bulk)",
@@ -349,7 +410,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/pause-all",
-    entity_op: { entity: "job_schedule", op: "pause_all" },
+    entity_op: { entity: "job_schedule", op: "pause_all", cta: { icon: "pause", translation_key: "job.jobs.actions.pause_all", confirm_key: "job.jobs.actions.pause_all_confirm" } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Pause every armed schedule (admin, bulk)",
@@ -373,7 +434,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/resume-all",
-    entity_op: { entity: "job_schedule", op: "resume_all" },
+    entity_op: { entity: "job_schedule", op: "resume_all", cta: { icon: "play", translation_key: "job.jobs.actions.resume_all", confirm_key: "job.jobs.actions.resume_all_confirm" } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Resume every paused schedule (admin, bulk)",

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-05T13:08:08.110Z",
+  "issued_at": "2026-11-05T19:14:01.949Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -31,7 +31,8 @@
     "20261107150000_job_triggers_changed_desc_fix": "b87ab2f60c9fe22b521e7800bb4b29a4a7ab6ec2bfdb1f0bdf235296e723f86c",
     "20261111000000_job_run_correlation_schedule_lifecycle": "ca93dbe2b37d6dab39c84bf4849f15452a98928d8e9bda2e4fd4558b8f6d4d84",
     "20261112000000_job_schedule_drift_labels": "0785897eb0706e6b584b9393fd31d6ea4ad86fe8d26ff29d20d9aa91b3f5e94d",
-    "20261113000000_job_schedule_lifecycle_actions": "eea5eada5e9e31f5582399487986f69e8f698bce798376f58fc283b9a9feb3a8"
+    "20261113000000_job_schedule_lifecycle_actions": "eea5eada5e9e31f5582399487986f69e8f698bce798376f58fc283b9a9feb3a8",
+    "20261114000000_job_trigger_run_columns": "10f268f32e9ff34d0d3a9515caf2fd2bceb5b7f08375627365c1cd7397b130da"
   },
-  "signature": "9HEE8YVb+08SNOa4o/+9aaMH9NiaJ26Mm6FGBieviGoY9UEqvdx5XoMbibkNz+qzY3Ck0op/b8EyyIuiFqSqCg=="
+  "signature": "k0y/86NI0bTGYPC4qIO0s3SkPwZuxyLL7CuCH1Wz7rXuYfS/G36bdoh54AWUG2zIdX57onwzi449nOJ6un+dBQ=="
 }
