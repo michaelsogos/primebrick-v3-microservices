@@ -47,7 +47,7 @@ import {
   getJobSchedule,
   listJobScheduleSubjects,
 } from "../nats/schedule-mechanism.js";
-import { JOB_SCHEDULE_SUBJECT_HEADER, logger } from "@primebrick/sdk";
+import { JOB_SCHEDULE_SUBJECT_HEADER, logger, NatsClient } from "@primebrick/sdk";
 import { Filter, field, toUUID } from "@primebrick/dal-pg";
 import { getDal } from "../db/dal.js";
 import { JobScheduleEntity } from "../domain/entities/job_schedule_entity.js";
@@ -150,7 +150,7 @@ function expectedDeclarationGone(row: JobScheduleEntity, now = new Date()): "fir
 
 export async function declareSchedule(
   input: DeclareScheduleInput,
-): Promise<{ seq?: bigint; skipped?: "terminal-once" }> {
+): Promise<{ seq?: bigint; skipped?: "terminal-once" | `suppressed:${string}` }> {
   const sm = SUBJECT_RE.exec(input.schedule_subject);
   if (!sm) {
     throw new ScheduleDeclarationError(
@@ -211,6 +211,26 @@ export async function declareSchedule(
         { tags: ["jobs"] },
       );
       return { skipped: "terminal-once" as const };
+    }
+
+    // Admin-suppression gate — infra_derived only. An owner re-declare on
+    // a `disarmed`/`paused` row is REFUSED: the admin deliberately stopped
+    // the job and only an explicit arm/resume action clears it (otherwise
+    // every service restart would resurrect disabled schedules). Trigger
+    // rows are exempt — the engine owns their lifecycle and its
+    // disarm-then-rearm refresh would deadlock against this gate; trigger
+    // suppression lives on `job_triggers.enabled` + the paused row check
+    // in dispatch/refreshTrigger.
+    if (
+      input.kind === "infra_derived" &&
+      existing !== undefined &&
+      SUPPRESSED_STATUSES.has(existing.status)
+    ) {
+      logger.warn(
+        `schedule arm suppressed — ${existing.status} on ${input.schedule_subject} (admin hold; only arm-schedule/resume-schedule clears it)`,
+        { tags: ["jobs"] },
+      );
+      return { skipped: `suppressed:${existing.status}` as const };
     }
 
     // Step 1 — declare. The declaration stamps its own schedule subject so
@@ -295,10 +315,24 @@ export async function declareSchedule(
   });
 }
 
-/** Disarm — cancel + read-back-absent verify + registry flip. Idempotent. */
+/**
+ * Mirror statuses that SUPPRESS re-arm — an admin deliberately stopped
+ * this schedule; only an explicit arm/resume action may clear them.
+ * `disarmed` = permanent off; `paused` = suspended until resume.
+ */
+export const SUPPRESSED_STATUSES = new Set(["disarmed", "paused"]);
+
+/**
+ * Disarm — cancel + read-back-absent verify + registry flip. Idempotent.
+ * `to` is the status the mirror lands on:
+ *   "disarmed" = admin disable (sticky suppressor — owner re-declares refused)
+ *   "paused"   = suspended until resume (suppressor, enabled intent kept)
+ *   "stopped"  = instance kill (temporary — owner/engine may re-arm)
+ */
 export async function disarmSchedule(
   scheduleSubject: string,
   actor: string,
+  to: "disarmed" | "stopped" | "paused" = "disarmed",
 ): Promise<void> {
   if (!SUBJECT_RE.test(scheduleSubject)) {
     throw new ScheduleDeclarationError(
@@ -329,14 +363,14 @@ export async function disarmSchedule(
         JobScheduleEntity,
         {
           uuid: rows[0]!.uuid,
-          status: "disarmed",
+          status: to,
           disarmed_at: new Date(),
           version: rows[0]!.version,
         } as never,
         { actor, matchBy: "uuid" } as never,
       );
     }
-    logger.done(`schedule disarmed: ${scheduleSubject}`, { tags: ["jobs"] });
+    logger.done(`schedule ${to}: ${scheduleSubject}`, { tags: ["jobs"] });
   });
 }
 
@@ -346,12 +380,57 @@ export async function disarmSchedule(
  * schedule nobody can ever re-arm. The declaration must already be gone
  * (call disarmSchedule first); the row is a mirror, not a document.
  */
+/** Read the mirror row for a schedule subject (null when absent). */
+export async function getScheduleRow(scheduleSubject: string): Promise<JobScheduleEntity | undefined> {
+  const rows = await getDal().findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+    filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject)],
+  });
+  return Array.isArray(rows) && rows.length > 0 ? (rows[0] as JobScheduleEntity) : undefined;
+}
+
+/**
+ * Clear an admin suppression — `disarmed`/`paused` → `stopped` (the
+ * unsuppressed not-armed state). The caller then re-arms through the
+ * owning path: engine `refreshTrigger` for kind=trigger, or the
+ * `jobs.ctl.schedule.rearm.<svc>` ping for infra_derived (the owner
+ * re-declares with fresh payload/headers — JH cannot fabricate them).
+ * Returns the updated row's kind/service for the caller's re-arm path.
+ */
+export async function unsuppressSchedule(
+  scheduleSubject: string,
+  actor: string,
+): Promise<JobScheduleEntity | undefined> {
+  const row = await getScheduleRow(scheduleSubject);
+  if (!row || !SUPPRESSED_STATUSES.has(row.status)) return row;
+  await getDal().update(
+    JobScheduleEntity,
+    { uuid: row.uuid, status: "stopped", version: row.version } as never,
+    { actor, matchBy: "uuid" } as never,
+  );
+  logger.done(`schedule unsuppressed (stopped → awaiting re-arm): ${scheduleSubject}`, { tags: ["jobs"] });
+  return { ...row, status: "stopped" } as JobScheduleEntity;
+}
+
+/** Publish the owner re-arm request — `jobs.ctl.schedule.rearm.<svc>`;
+ *  the owning service re-executes its own `jobs.ctl.schedule.request`
+ *  arm with fresh payload/headers. Services without a rearm handler leave
+ *  the row `armed`-missing — visible drift until natural re-declare. */
+export async function requestOwnerRearm(scheduleSubject: string, serviceCode: string): Promise<void> {
+  await NatsClient.publish(`jobs.ctl.schedule.rearm.${serviceCode}`, { schedule_subject: scheduleSubject });
+  logger.done(`rearm requested to ${serviceCode} for ${scheduleSubject}`, { tags: ["jobs"] });
+}
+
 export async function dropScheduleMirror(scheduleSubject: string, actor: string): Promise<void> {
   const dal = getDal();
-  await dal.delete(
+  const row = await getScheduleRow(scheduleSubject);
+  if (!row) return;
+  // job_schedules has no deleted_at — the mirror is a derived artifact,
+  // not auditable state: the drop is physical (job_runs keep the
+  // schedule_subject text, so history stays resolvable).
+  await dal.hardDelete(
     JobScheduleEntity,
-    { schedule_subject: scheduleSubject } as never,
-    { actor, matchBy: "schedule_subject" } as never,
+    { uuid: row.uuid, version: row.version } as never,
+    { actor, matchBy: "uuid" } as never,
   );
 }
 
@@ -423,7 +502,12 @@ export function getLastReconcileReport(): ReconcileReport | null {
   return lastReconcileReport;
 }
 
-const TERMINAL_STATUSES = new Set(["disarmed", "fired", "expired"]);
+/**
+ * Expected-gone statuses — a live declaration on one of these is `stale`
+ * drift (dangerous); absent is healthy. `stopped`/`paused`/`disarmed` are
+ * deliberate absences; `fired`/`expired` are terminal lifecycle ends.
+ */
+const TERMINAL_STATUSES = new Set(["disarmed", "stopped", "paused", "fired", "expired"]);
 
 export async function reconcileSchedules(opts?: {
   /** kind=trigger rescue — the engine re-derives the schedule from its

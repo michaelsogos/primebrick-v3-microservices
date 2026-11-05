@@ -160,6 +160,8 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "status", label_key: F("job_schedule", "status"), type: "badge", order: 60, filterable: true,
       badge: { values: {
         armed: { label_key: V("job_schedule", "armed"), color: "green" },
+        stopped: { label_key: V("job_schedule", "stopped"), color: "amber" },
+        paused: { label_key: V("job_schedule", "paused"), color: "amber" },
         disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" },
         fired: { label_key: V("job_schedule", "fired"), color: "gray" },
         expired: { label_key: V("job_schedule", "expired"), color: "gray" },
@@ -168,10 +170,10 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     // Virtual columns — decorated per-row by JobSchedulesService from the
     // live JetStream enumeration (not DB columns).
     {
-      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 62,
+      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 62, virtual: true,
     },
     {
-      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 64, filterable: false,
+      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 64, filterable: false, virtual: true,
       badge: { values: {
         stale: { label_key: V("job_schedule", "stale"), color: "red" },
         missing: { label_key: V("job_schedule", "missing"), color: "amber" },
@@ -200,6 +202,20 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     default_sort: UPDATED_DESC,
     default_page_size: 25,
     page_size_options: [10, 25, 50],
+    // Lifecycle row CTAs — each binds `schedule_subject` into the op's
+    // declared endpoint (meta.actions); visible_on gates per row status.
+    row_custom_actions: [
+      { action_name: "stop", translation_key: "job.jobs.actions.stop", icon: "square", row_key: "schedule_subject", required_permission: "AUTHENTICATED_ADMIN", visible_on: { field: "status", values: ["armed"] } },
+      { action_name: "pause", translation_key: "job.jobs.actions.pause", icon: "pause", row_key: "schedule_subject", required_permission: "AUTHENTICATED_ADMIN", visible_on: { field: "status", values: ["armed"] } },
+      { action_name: "resume", translation_key: "job.jobs.actions.resume", icon: "play", row_key: "schedule_subject", required_permission: "AUTHENTICATED_ADMIN", visible_on: { field: "status", values: ["paused"] } },
+      { action_name: "disable", translation_key: "job.jobs.actions.disable", icon: "power", text_color: "text-red-600", row_key: "schedule_subject", required_permission: "AUTHENTICATED_ADMIN", visible_on: { field: "status", values: ["armed", "stopped", "paused"] } },
+      { action_name: "enable", translation_key: "job.jobs.actions.enable", icon: "power", text_color: "text-emerald-600", row_key: "schedule_subject", required_permission: "AUTHENTICATED_ADMIN", visible_on: { field: "status", values: ["disarmed", "stopped", "paused"] } },
+    ],
+    bulk_custom_actions: [
+      { action_name: "pause_all", translation_key: "job.jobs.actions.pause_all", icon: "pause", requires_selection: false, confirm_key: "job.jobs.actions.pause_all_confirm", required_permission: "AUTHENTICATED_ADMIN" },
+      { action_name: "resume_all", translation_key: "job.jobs.actions.resume_all", icon: "play", requires_selection: false, confirm_key: "job.jobs.actions.resume_all_confirm", required_permission: "AUTHENTICATED_ADMIN" },
+      { action_name: "disarm_all", translation_key: "job.jobs.actions.disarm_all", icon: "power", text_color: "text-red-600", requires_selection: false, confirm_key: "job.jobs.actions.disarm_all_confirm", required_permission: "AUTHENTICATED_ADMIN" },
+    ],
     // Mutually-exclusive scope selector in the toolbar (tandem with the
     // soft-delete group): one option always active, AND-ed into every list
     // call. `schedule_kind` owns the `schedule_type` field (not filterable).
