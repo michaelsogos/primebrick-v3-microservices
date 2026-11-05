@@ -290,7 +290,7 @@ async function armTimer(trigger: JobTriggerEntity): Promise<void> {
   }
 }
 
-async function refreshTrigger(uuid: string): Promise<void> {
+export async function refreshTrigger(uuid: string): Promise<void> {
   const trigger = await loadTrigger(uuid);
   const prev = liveTriggers.get(uuid);
   liveTriggers.delete(uuid);

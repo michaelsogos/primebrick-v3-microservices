@@ -409,6 +409,8 @@ export interface ReconcileReport {
   purged_orphan: string[];
   /** armed row + missing declaration → row self-healed to fired/expired. */
   self_healed: { subject: string; to: "fired" | "expired" }[];
+  /** kind=trigger armed-missing → re-derived via the engine's refreshTrigger. */
+  trigger_rescued: string[];
   /** armed row with no live declaration → surfaced (owner re-declares). */
   armed_missing: string[];
   errors: { subject: string; error: string }[];
@@ -423,9 +425,14 @@ export function getLastReconcileReport(): ReconcileReport | null {
 
 const TERMINAL_STATUSES = new Set(["disarmed", "fired", "expired"]);
 
-export async function reconcileSchedules(): Promise<ReconcileReport> {
+export async function reconcileSchedules(opts?: {
+  /** kind=trigger rescue — the engine re-derives the schedule from its
+   * trigger record (`refreshTrigger`). Injected by index.ts to keep
+   * schedule-service free of the engine dependency. */
+  rescueTrigger?: (uuid: string) => Promise<void>;
+}): Promise<ReconcileReport> {
   const report: ReconcileReport = {
-    purged_stale: [], purged_orphan: [], self_healed: [], armed_missing: [], errors: [],
+    purged_stale: [], purged_orphan: [], self_healed: [], trigger_rescued: [], armed_missing: [], errors: [],
   };
   const dal = getDal();
   const rows = (await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {})) as JobScheduleEntity[];
@@ -470,6 +477,14 @@ export async function reconcileSchedules(): Promise<ReconcileReport> {
         } catch (error) {
           report.errors.push({ subject, error: `self-heal to ${heal} failed: ${String(error)}` });
         }
+      } else if (row.kind === "trigger" && row.trigger_uuid && opts?.rescueTrigger) {
+        try {
+          await opts.rescueTrigger(row.trigger_uuid);
+          report.trigger_rescued.push(subject);
+          logger.warn(`reconcile: re-derived trigger schedule ${subject}`, { tags: ["jobs"] });
+        } catch (error) {
+          report.errors.push({ subject, error: `trigger rescue failed: ${String(error)}` });
+        }
       } else {
         report.armed_missing.push(subject);
         logger.warn(
@@ -503,7 +518,8 @@ export async function reconcileSchedules(): Promise<ReconcileReport> {
   lastReconcileReport = report;
   logger.done(
     `schedule reconcile: ${report.purged_stale.length} stale-purged, ${report.purged_orphan.length} orphan-purged, ` +
-      `${report.self_healed.length} self-healed, ${report.armed_missing.length} armed-missing, ${report.errors.length} errors`,
+      `${report.self_healed.length} self-healed, ${report.trigger_rescued.length} trigger-rescued, ` +
+      `${report.armed_missing.length} armed-missing, ${report.errors.length} errors`,
     { tags: ["jobs"] },
   );
   return report;

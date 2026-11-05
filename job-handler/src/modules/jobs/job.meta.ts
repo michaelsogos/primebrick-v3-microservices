@@ -161,6 +161,20 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       badge: { values: {
         armed: { label_key: V("job_schedule", "armed"), color: "green" },
         disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" },
+        fired: { label_key: V("job_schedule", "fired"), color: "gray" },
+        expired: { label_key: V("job_schedule", "expired"), color: "gray" },
+      } },
+    },
+    // Virtual columns — decorated per-row by JobSchedulesService from the
+    // live JetStream enumeration (not DB columns).
+    {
+      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 62,
+    },
+    {
+      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 64, filterable: false,
+      badge: { values: {
+        stale: { label_key: V("job_schedule", "stale"), color: "red" },
+        missing: { label_key: V("job_schedule", "missing"), color: "amber" },
       } },
     },
     // Mini execution histogram — builtin `sparkline` cell fed by ONE batch

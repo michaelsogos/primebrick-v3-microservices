@@ -135,11 +135,14 @@ async function failRun(runUuid: string | undefined, detail: string): Promise<voi
 //   resolve returns a user     → fresh headers, snapshot refreshed
 //   resolve returns null       → user deleted/disabled — REFUSE the fire
 //                                (fail-closed governance)
-//   resolve unreachable/errors → transient backend failure — fall back to
-//                                the message's own headers (their provenance
-//                                already passed dueLaneVerify) + warn. Stale
-//                                authorization is bounded by retry, never
-//                                silently trusted.
+//   resolve unreachable/errors → transient backend failure — THROW: the
+//                                handler naks, the message redelivers and
+//                                auth is re-resolved on the next attempt.
+//                                Forwarding arm-time headers here would let
+//                                the callable accept STALE claims (roles/
+//                                permissions frozen at arm time) — a bypass
+//                                of this very checkpoint. Unverifiable
+//                                authorization is never forwarded.
 //
 // The cache is a performance optimization, never the authority.
 
@@ -151,6 +154,11 @@ const authSnapKey = (uuid: string) => `auth:snap:${uuid}`;
 const AUTH_SNAP_TTL_MS = 6 * 60 * 60 * 1000;
 
 type CachedAuthSnap = { user: AuthUser; taken_at: number };
+
+/** Auth checkpoint unreachable — the fire defers to redelivery (handler nak). */
+export class AuthCheckpointUnreachable extends Error {
+  override name = "AuthCheckpointUnreachable";
+}
 
 async function freshAuthHeaders(
   actorUuid: string,
@@ -176,11 +184,9 @@ async function freshAuthHeaders(
   try {
     user = await callNats<AuthUser | null>(AUTH_RESOLVE_USER_SUBJECT, { user_uuid: actorUuid });
   } catch (err) {
-    logger.warn(
-      `auth checkpoint: auth.ctl.resolve_user unreachable (${String(err)}) — forwarding arm-time headers`,
-      { tags: ["jobs"] },
+    throw new AuthCheckpointUnreachable(
+      `auth checkpoint: auth.ctl.resolve_user unreachable (${String(err)}) — fire deferred to redelivery`,
     );
-    return forwardAuthHeaders(msg);
   }
   if (!user) {
     logger.warn(
@@ -269,6 +275,11 @@ export async function startDueForwarder(): Promise<void> {
     stream: JOBS_STREAM,
     durable: "job-due-forwarder-user",
     filterSubject: "jobs.due.user.job.forward.>",
+    // Bound redelivery: poisoned messages (malformed, permanently
+    // unauthorized, unresolvable targets) used to nak-loop forever.
+    // 5 attempts is enough for transient outages — the run row then
+    // ages to `lost` via the dispatch sweeper.
+    consumer: { maxDeliver: 5 },
     verify: dueLaneVerify("user"),
     handler: async (envelope, msg) => {
       if (!isEnvelope(envelope)) {
@@ -282,6 +293,7 @@ export async function startDueForwarder(): Promise<void> {
     stream: JOBS_STREAM,
     durable: "job-due-forwarder-system",
     filterSubject: "jobs.due.system.job.forward.>",
+    consumer: { maxDeliver: 5 },
     verify: dueLaneVerify("system"),
     handler: async (envelope, msg) => {
       if (!isEnvelope(envelope)) {

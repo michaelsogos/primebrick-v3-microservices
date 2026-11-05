@@ -18,7 +18,13 @@ import {
 import { field, Filter, GroupBy, Project, Sort } from "@primebrick/dal-pg";
 import { getDal } from "../../db/dal.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
-import { disarmSchedule } from "../../services/schedule-service.js";
+import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
+import {
+  disarmSchedule,
+  getLastReconcileReport,
+  scheduleDrift,
+} from "../../services/schedule-service.js";
+import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 
 interface RunStatsBody {
   schedule_subjects?: string[];
@@ -128,5 +134,32 @@ export const jobActionsRoutes: RpcRoute[] = [
     },
     body: (raw) => raw as RunStatsBody,
     handler: async (ctx) => runStats(ctx.body as RunStatsBody),
+  },
+  {
+    method: "POST",
+    path: "/api/v1/actions/schedule-drift",
+    permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Schedule drift diagnostic (admin)",
+      description:
+        "Read-only: last boot reconcile report + live declaration enumeration " +
+        "and the rows currently drifting (mirror vs NATS). Never mutates.",
+      tags: ["jobs", "actions"],
+    },
+    handler: async () => {
+      const rows = (await getDal().findAll<JobScheduleEntity>(JobScheduleEntity, null, {})) as JobScheduleEntity[];
+      const liveSubjects = await listJobScheduleSubjects().catch(() => undefined);
+      const drifted = rows
+        .map((r) => {
+          const d = scheduleDrift(r, liveSubjects === undefined ? undefined : liveSubjects.includes(r.schedule_subject));
+          return { schedule_subject: r.schedule_subject, status: r.status, kind: r.kind, live: d.live, drift: d.drift };
+        })
+        .filter((r) => r.drift !== null || r.live === false);
+      return {
+        enumeration_ok: liveSubjects !== undefined,
+        reconcile_report: getLastReconcileReport(),
+        drifted,
+      };
+    },
   },
 ];

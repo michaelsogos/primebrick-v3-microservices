@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-04T23:53:54.315Z",
+  "issued_at": "2026-11-05T10:55:33.750Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -29,7 +29,8 @@
     "20261107130000_job_manual_schedule_cleanup": "8997567f7d0e73391346eb79b598e8e906f8e66fa189d44a91927d5f6810257c",
     "20261107140000_job_trigger_label_values": "5fd00d36d72e1f85f01de0db5b664a2f45a726a35c2473f2d40968ed3096ce85",
     "20261107150000_job_triggers_changed_desc_fix": "b87ab2f60c9fe22b521e7800bb4b29a4a7ab6ec2bfdb1f0bdf235296e723f86c",
-    "20261111000000_job_run_correlation_schedule_lifecycle": "ca93dbe2b37d6dab39c84bf4849f15452a98928d8e9bda2e4fd4558b8f6d4d84"
+    "20261111000000_job_run_correlation_schedule_lifecycle": "ca93dbe2b37d6dab39c84bf4849f15452a98928d8e9bda2e4fd4558b8f6d4d84",
+    "20261112000000_job_schedule_drift_labels": "0785897eb0706e6b584b9393fd31d6ea4ad86fe8d26ff29d20d9aa91b3f5e94d"
   },
-  "signature": "SvIaXHHwiaoBG+PRqQgsiwBB5nXTD47IW+NNaF7wnA7d8iSVNCH4KXVV+mVrNSQ6Fq9nwdbrCxpOn6ifHqw2Dg=="
+  "signature": "ooH+fhfLxPwqmpjY9N1RiRHxGKWIxBuoYKj7rrKXyJZa0YMuLOiIj9Ir/65T5VFLKie/N20UcNScPYFGbN8cAA=="
 }
