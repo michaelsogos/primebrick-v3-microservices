@@ -51,7 +51,7 @@ import { Filter, field } from "@primebrick/dal-pg";
 import { callablePayloadSchema } from "./callable-catalog.js";
 import { getDal } from "../db/dal.js";
 import { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
-import { declareSchedule, disarmSchedule, dropScheduleMirror } from "./schedule-service.js";
+import { declareSchedule, disarmSchedule, dropScheduleMirror, getScheduleRow } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
 
 type RuleFilter = { field: string; op?: string; value?: unknown };
@@ -97,6 +97,7 @@ function trampolineSubject(lane: Lane, trigger: JobTriggerEntity): string {
 
 /** Live trigger state — the subscription is permanent, the map is the switch. */
 const liveTriggers = new Map<string, JobTriggerEntity>(); // uuid → trigger
+const boundSubjects = new Set<string>(); // event subjects with a live subscription
 
 /**
  * Resolved author identity for "me"-lane headers AND `creator_email` —
@@ -237,6 +238,14 @@ async function dispatch(
   };
 
   if (trigger.schedule_spec) {
+    // Admin pause gate — a paused trigger schedule stays suppressed on
+    // BOTH arm paths (timer re-derive AND event-match re-arm); without
+    // this a matching event would resurrect the schedule under the hold.
+    const row = await getScheduleRow(triggerScheduleSubject(trigger));
+    if (row?.status === "paused") {
+      logger.debug(`trigger "${trigger.name}": arm suppressed — schedule paused`, { tags: ["jobs"] });
+      return;
+    }
     // The NATS schedule target MUST live in the JOBS stream capture set —
     // a service-owned callable subject does not. The schedule fires on the
     // JH-internal forward trampoline; the due-forwarder republishes
@@ -268,6 +277,10 @@ async function onEvent(triggerUuid: string, payload: unknown, msg: { headers?: P
   if (matchFilter(trigger.filter, payload)) {
     await dispatch(trigger, payload, msg);
   } else if (trigger.schedule_spec) {
+    // Paused schedules are immune to system disarms — the admin's hold
+    // outranks the event's world-state verdict (nothing live to drop
+    // anyway; flipping paused→disarmed would silently erase the hold).
+    if ((await getScheduleRow(triggerScheduleSubject(trigger)))?.status === "paused") return;
     // Event-gated timer: world stopped matching → disarm (fail-closed).
     // A failed disarm leaves the timer firing on a non-matching world —
     // never swallowed: the failure is loud and retryable on the next event.
@@ -290,6 +303,33 @@ async function armTimer(trigger: JobTriggerEntity): Promise<void> {
   }
 }
 
+/**
+ * One shielded subscription per event subject. The fan-out resolves
+ * `liveTriggers` AT DELIVERY TIME — never a snapshot: a trigger enabled
+ * after boot (or moved onto an already-bound subject) must receive
+ * events without a restart, and a disabled one must stop receiving them.
+ */
+async function bindSubject(subject: string): Promise<void> {
+  if (boundSubjects.has(subject)) return;
+  boundSubjects.add(subject);
+  // Queue "job" — WORK subject: when multiple JH replicas run, NATS
+  // delivers each event to exactly ONE member (verified empirically:
+  // queued subscribers split deliveries; unqueued ones all receive a
+  // copy — that would double-dispatch every matching trigger).
+  // `jobs.ctl.triggers.changed` below stays unqueued on purpose: the
+  // reload is a broadcast every replica must see to keep liveTriggers
+  // consistent.
+  await subscribeShielded(subject, (payload, msg) =>
+    Promise.all(
+      [...liveTriggers.values()]
+        .filter((t) => t.event_subject === subject)
+        .map((t) => onEvent(t.uuid, payload, msg)),
+    ).then(() => {}),
+    { queue: "job" },
+  );
+  logger.done(`trigger subscription bound on ${subject} (queue=job)`, { tags: ["jobs"] });
+}
+
 export async function refreshTrigger(uuid: string): Promise<void> {
   const trigger = await loadTrigger(uuid);
   const prev = liveTriggers.get(uuid);
@@ -302,14 +342,22 @@ export async function refreshTrigger(uuid: string): Promise<void> {
   // wants it.
   if (prev?.schedule_spec) {
     const subject = triggerScheduleSubject(prev);
-    await disarmSchedule(subject, `system:trigger:${prev.name}`).catch((err) => {
-      logger.error(
-        `trigger "${prev.name}": refresh disarm failed (${String(err)}) — schedule may still be armed`,
-        { tags: ["jobs"] },
-      );
-    });
+    // Paused schedules keep their hold through a refresh: skip disarm
+    // (nothing live anyway — the flip would erase the paused marker)
+    // and skip the re-arm below (the dispatch paused-gate covers it, but
+    // we also leave the mirror untouched so the hold stays readable).
+    const paused = (await getScheduleRow(subject))?.status === "paused";
+    if (!paused) {
+      await disarmSchedule(subject, `system:trigger:${prev.name}`).catch((err) => {
+        logger.error(
+          `trigger "${prev.name}": refresh disarm failed (${String(err)}) — schedule may still be armed`,
+          { tags: ["jobs"] },
+        );
+      });
+    }
     // Trigger deleted → the mirror row goes too: a disarmed tombstone
-    // would list a schedule nobody can ever re-arm.
+    // would list a schedule nobody can ever re-arm. Runs even on paused
+    // rows — a deleted owner drops its tombstone regardless of holds.
     if (!trigger) {
       await dropScheduleMirror(subject, "system:triggers-engine").catch((err) => {
         logger.warn(`trigger "${prev.name}": mirror row drop failed (${String(err)})`, { tags: ["jobs"] });
@@ -318,7 +366,10 @@ export async function refreshTrigger(uuid: string): Promise<void> {
   }
   if (!trigger || !trigger.enabled) return;
   liveTriggers.set(uuid, trigger);
-  if (!trigger.event_subject && trigger.schedule_spec) await armTimer(trigger);
+  // A trigger enabled at runtime can carry an event_subject nobody was
+  // subscribed to at boot — bind it now or its events never arrive.
+  if (trigger.event_subject) await bindSubject(trigger.event_subject);
+  else if (trigger.schedule_spec) await armTimer(trigger);
 }
 
 export async function startTriggersEngine(): Promise<void> {
@@ -327,30 +378,16 @@ export async function startTriggersEngine(): Promise<void> {
     filters: [Filter.fieldValue(field(JobTriggerEntity, "enabled"), "=", true)],
   })) as JobTriggerEntity[];
 
-  // One shielded subscription per event subject (dedup) — the handler
-  // fans out to every live trigger bound to that subject.
-  const bySubject = new Map<string, string[]>();
+  // One shielded subscription per event subject (dedup) — `bindSubject`
+  // fans out to `liveTriggers` at delivery time, so late-enabling a
+  // trigger needs no re-subscribe when the subject is already bound.
+  const bySubject = new Set<string>();
   for (const trigger of Array.isArray(triggers) ? triggers : []) {
     liveTriggers.set(trigger.uuid, trigger);
-    if (trigger.event_subject) {
-      const list = bySubject.get(trigger.event_subject) ?? [];
-      list.push(trigger.uuid);
-      bySubject.set(trigger.event_subject, list);
-    }
+    if (trigger.event_subject) bySubject.add(trigger.event_subject);
   }
-  for (const [subject, uuids] of bySubject) {
-    // Queue "job" — WORK subject: when multiple JH replicas run, NATS
-    // delivers each event to exactly ONE member (verified empirically:
-    // queued subscribers split deliveries; unqueued ones all receive a
-    // copy — that would double-dispatch every matching trigger).
-    // `jobs.ctl.triggers.changed` below stays unqueued on purpose: the
-    // reload is a broadcast every replica must see to keep liveTriggers
-    // consistent.
-    await subscribeShielded(subject, (payload, msg) =>
-      Promise.all(uuids.map((id) => onEvent(id, payload, msg))).then(() => {}),
-      { queue: "job" },
-    );
-    logger.done(`trigger subscription bound on ${subject} (${uuids.length} trigger(s), queue=job)`, { tags: ["jobs"] });
+  for (const subject of bySubject) {
+    await bindSubject(subject);
   }
 
   // Schedule-only triggers arm at boot — there is no event to gate them.
@@ -368,5 +405,5 @@ export async function startTriggersEngine(): Promise<void> {
     },
   );
 
-  logger.done(`triggers-engine: ${liveTriggers.size} trigger(s) on ${bySubject.size} subject(s)`, { tags: ["jobs"] });
+  logger.done(`triggers-engine: ${liveTriggers.size} trigger(s) on ${boundSubjects.size} subject(s)`, { tags: ["jobs"] });
 }

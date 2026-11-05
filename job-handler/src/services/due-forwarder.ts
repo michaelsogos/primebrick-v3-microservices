@@ -25,7 +25,7 @@ import { getDal } from "../db/dal.js";
 import { Filter, field } from "@primebrick/dal-pg";
 import { JobRunEntity } from "../domain/entities/job_run_entity.js";
 import { JOBS_STREAM } from "./run-recorder.js";
-import { markScheduleFired } from "./schedule-service.js";
+import { getScheduleRow, markScheduleFired } from "./schedule-service.js";
 
 export const FORWARD_ENVELOPE_MARK = "__pb_job_forward";
 
@@ -68,7 +68,7 @@ const CALLABLE_SUBJECT_RE = /^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
 async function insertRun(
   envelope: JobForwardEnvelope,
   lane: "user" | "system",
-  status: "dispatched" | "failed",
+  status: "dispatched" | "failed" | "skipped",
   errorCode?: string,
   errorDetail?: string,
 ): Promise<string | undefined> {
@@ -213,6 +213,18 @@ async function forward(
   if (!CALLABLE_SUBJECT_RE.test(envelope.target)) {
     logger.warn(`due-forwarder: refusing invalid callable target "${envelope.target}"`, { tags: ["jobs"] });
     return;
+  }
+  // Armed-only gate — a queued due is honored ONLY while its schedule is
+  // still armed. pause/disarm/stop purge the declaration but queued dues
+  // keep flowing to this consumer: honoring them would let suppressed
+  // schedules keep executing. `skipped` runs are the audit trail — no
+  // dead-letter queue needed (this IS the conservation layer).
+  if (envelope.schedule_subject) {
+    const row = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
+    if (row !== undefined && row.status !== "armed") {
+      await insertRun(envelope, lane, "skipped", `schedule ${row.status}`, `suppressed: schedule status is ${row.status}`);
+      return;
+    }
   }
   // Fire-time auth checkpoint — user lane only. A refused return (null)
   // is authoritative: the actor no longer resolves, the fire must not

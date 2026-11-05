@@ -65,7 +65,11 @@ of admin-managed schedules.
 - `job_triggers` — business triggers: `event_subject` and/or `schedule_spec`
   (at least one) → `target_subject`; `execution_context`: `user`|`me`|`system`.
 - `job_schedules` — **read-only mirror** of NATS declarations (`kind`: `infra_derived` | `trigger` (`manual` absorbed into schedule-only triggers),
-  `schedule_type`: `recurring` | `once`, `status`: `armed` | `disarmed` | `fired` | `expired`).
+  `schedule_type`: `recurring` | `once`, `status`: `armed` | `stopped` | `paused` | `disarmed` | `fired` | `expired`).
+  Lifecycle semantics: `stopped` = instance stop (temporary — the owner may
+  re-arm); `paused` = suppressed re-arm until resume (`enabled` untouched);
+  `disarmed` = owner-level off (trigger `enabled=false` / infra sticky
+  suppression — re-declares refused until explicit enable).
 - `job_runs` — execution history: `status` (`dispatched` | `succeeded` | `failed` | `lost`),
   `duration_ms`, `fire_seq`, error fields, report (jsonb). The SDK transport
   middleware publishes `jobs.result.<svc>.<name>` for every correlated
@@ -95,7 +99,14 @@ fires — dangerous; `missing` = armed but no declaration).
 | Route | Description |
 |-------|-------------|
 | `GET /api/v1/entities/job_trigger|job_schedule|job_run/…` | Canonical entity CRUD (meta/list/get/…) |
-| `POST /api/v1/actions/disarm-job` | Disarm a schedule (admin) |
+| `POST /api/v1/actions/stop-job` | STOP — purge the schedule instance (temporary; owner may re-arm) |
+| `POST /api/v1/actions/disable-schedule` | DISABLE — owner-level off: trigger → `enabled=false`; infra → sticky `disarmed` suppression |
+| `POST /api/v1/actions/enable-schedule` | ENABLE — owner-level re-arm: trigger → `enabled=true` + re-derive; infra → unsuppress + `jobs.ctl.schedule.rearm.<svc>` ping |
+| `POST /api/v1/actions/pause-schedule` | PAUSE — suppress every re-arm path until resume (`enabled` untouched) |
+| `POST /api/v1/actions/resume-schedule` | RESUME — clear pause + re-arm (trigger re-derive / infra rearm ping) |
+| `POST /api/v1/actions/disarm-all` | DISABLE ALL (bulk) — every armed/stopped owner off |
+| `POST /api/v1/actions/pause-all` | PAUSE ALL (bulk) — freeze every armed schedule |
+| `POST /api/v1/actions/resume-all` | RESUME ALL (bulk) — thaw every paused schedule |
 | `POST /api/v1/actions/job-run-stats` | Per-schedule execution buckets for sparklines — adaptive `bucket_unit` (hour/day/week/month chosen so the span lands in ~8–30 buckets) |
 | `POST /api/v1/actions/schedule-drift` | Drift diagnostic (admin, read-only): last reconcile report + live NATS enumeration and the rows currently drifting |
 

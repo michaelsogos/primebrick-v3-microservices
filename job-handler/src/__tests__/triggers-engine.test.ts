@@ -30,6 +30,9 @@ const h = vi.hoisted(() => ({
   declareSchedule: vi.fn(async (_opts?: unknown) => ({ seq: BigInt(1) })),
   disarmSchedule: vi.fn(async (_subject?: unknown, _actor?: unknown) => {}),
   dropScheduleMirror: vi.fn(async (_subject?: unknown, _actor?: unknown) => {}),
+  // `armed` row by default — the paused gates in the engine consult it;
+  // paused/suppression behaviour is covered by schedule-service tests.
+  getScheduleRow: vi.fn(async () => ({ status: "armed" })),
   reset() {
     this.publish.mockClear();
     this.jetstreamPublish.mockClear();
@@ -77,6 +80,7 @@ vi.mock("../services/schedule-service.js", () => ({
   declareSchedule: h.declareSchedule,
   disarmSchedule: h.disarmSchedule,
   dropScheduleMirror: h.dropScheduleMirror,
+  getScheduleRow: h.getScheduleRow,
 }));
 vi.mock("../services/run-recorder.js", () => ({ JOBS_STREAM: "JOBS" }));
 

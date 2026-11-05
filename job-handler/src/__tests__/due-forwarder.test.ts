@@ -30,6 +30,9 @@ const h = vi.hoisted(() => {
     findRuns: vi.fn(async () => []),
     updateRun: vi.fn(async () => ({})),
     markFired: vi.fn(async (_subject?: unknown) => {}),
+    // `armed` by default — the due-lane suppression gate consults it;
+    // suppressed statuses are covered by dedicated cases.
+    getScheduleRow: vi.fn(async () => ({ status: "armed" })),
     reset() {
       this.cache.clear();
       this.publish.mockClear();
@@ -41,6 +44,8 @@ const h = vi.hoisted(() => {
       this.findRuns.mockClear();
       this.updateRun.mockClear();
       this.markFired.mockClear();
+      this.getScheduleRow.mockClear();
+      this.getScheduleRow.mockResolvedValue({ status: "armed" });
     },
   };
 });
@@ -76,7 +81,10 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
 vi.mock("../db/dal.js", () => ({
   getDal: () => ({ add: h.addRun, findAll: h.findRuns, update: h.updateRun }),
 }));
-vi.mock("../services/schedule-service.js", () => ({ markScheduleFired: h.markFired }));
+vi.mock("../services/schedule-service.js", () => ({
+  markScheduleFired: h.markFired,
+  getScheduleRow: h.getScheduleRow,
+}));
 
 const { startDueForwarder, FORWARD_ENVELOPE_MARK } = await import("../services/due-forwarder.js");
 
