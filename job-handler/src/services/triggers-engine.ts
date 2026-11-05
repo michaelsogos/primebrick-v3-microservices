@@ -50,7 +50,7 @@ import {
 import { Filter, field } from "@primebrick/dal-pg";
 import { callablePayloadSchema } from "./callable-catalog.js";
 import { getDal } from "../db/dal.js";
-import { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
+import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../domain/entities/job_trigger_entity.js";
 import { declareSchedule, disarmSchedule, dropScheduleMirror, getScheduleRow } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
 
@@ -88,7 +88,7 @@ function matchFilter(filters: unknown, payload: unknown): boolean {
 function triggerScheduleSubject(trigger: JobTriggerEntity): string {
   // UUID-keyed — stable across renames: a name change must never orphan
   // the old declaration subject or tombstone the mirror.
-  return `jobs.schedule.job.${trigger.uuid}`;
+  return `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}${trigger.uuid}`;
 }
 
 function trampolineSubject(lane: Lane, trigger: JobTriggerEntity): string {
