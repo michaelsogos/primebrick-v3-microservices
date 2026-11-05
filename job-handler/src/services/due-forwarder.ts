@@ -59,7 +59,7 @@ const CALLABLE_SUBJECT_RE = /^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
  * The run row is inserted BEFORE the republish so its uuid becomes the
  * `x-job-run-id` stamped on the callable's message: the transport
  * middleware's `jobs.result.*` report then correlates the ACTUAL
- * execution outcome back to this row (dispatched → executed/failed; a
+ * execution outcome back to this row (dispatched → succeeded/failed; a
  * dispatched row that never hears back → the sweeper marks `lost`).
  * Every dispatch records — immediate envelopes (no schedule link) too.
  * A record failure must never block the dispatch: observability is a
