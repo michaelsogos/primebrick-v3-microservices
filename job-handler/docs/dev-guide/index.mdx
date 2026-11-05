@@ -72,6 +72,23 @@ of admin-managed schedules.
   handler (`x-job-run-id` / `x-job-schedule-subject` headers); a `dispatched`
   run that never gets a result is flipped to `lost` by the sweeper.
 - `config_entries` — mandatory per-service config (cadence, ports, shield refs).
+  `reconcile_interval_ms` (default `300000`, `0` disables) drives the
+  periodic mirror-vs-NATS reconcile; the boot-time pass always runs.
+
+### Mirror semantics — `job_schedules`/`job_triggers` are NOT the truth
+
+The live schedule truth is the set of JetStream declarations on
+`jobs.schedule.<svc>.<name>`; `job_schedules` (and `job_triggers`) are
+**mirrors** for admin/history. Writes must go through the canonical paths
+(`disarmSchedule`, trigger disable, `jobs.ctl.*`) — a direct SQL
+`UPDATE status='disarmed'` leaves the NATS declaration **firing** until a
+reconcile pass purges it. Boot reconcile + the periodic interval
+(`reconcile_interval_ms`) converge mirror↔NATS: stale declarations are
+purged, orphan declarations are purged strictly, `kind=trigger` armed-missing
+rows are re-derived via the engine, and `infra_derived` armed-missing rows
+surface as drift for the owner to re-declare. The list endpoint decorates
+each row with `live`/`drift` (`stale` = mirror terminal but NATS still
+fires — dangerous; `missing` = armed but no declaration).
 
 ## HTTP surface (via BE `/svc/job/*` proxy)
 
@@ -80,6 +97,7 @@ of admin-managed schedules.
 | `GET /api/v1/entities/job_trigger|job_schedule|job_run/…` | Canonical entity CRUD (meta/list/get/…) |
 | `POST /api/v1/actions/disarm-job` | Disarm a schedule (admin) |
 | `POST /api/v1/actions/job-run-stats` | Per-schedule execution buckets for sparklines — adaptive `bucket_unit` (hour/day/week/month chosen so the span lands in ~8–30 buckets) |
+| `POST /api/v1/actions/schedule-drift` | Drift diagnostic (admin, read-only): last reconcile report + live NATS enumeration and the rows currently drifting |
 
 ## Partition maintenance (first real consumer)
 
@@ -100,8 +118,12 @@ before republishing: the actor's resolved AuthUser is cached under
 epochs (`auth:epoch` global on role writes, `auth:user_epoch:<uuid>` on
 user writes). Miss/expired/epoch-stale → re-resolve via
 `auth.ctl.resolve_user`; `null` (deleted/disabled actor) → the fire is
-refused and the run recorded `failed`; an unreachable backend falls back
-to the due message's own headers with a warn. System lane bypasses it.
+refused and the run recorded `failed`; an unreachable backend **throws**
+(`AuthCheckpointUnreachable`) — the handler naks and the fire defers to
+the next redelivery, because forwarding arm-time headers would let the
+callable accept stale claims (roles frozen at arm time). Unverifiable
+authorization is never forwarded; both due-lane durable consumers bound
+redelivery with `maxDeliver: 5`. System lane bypasses it.
 
 ## Admin UI
 

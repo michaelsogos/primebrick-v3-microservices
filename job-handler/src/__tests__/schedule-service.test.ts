@@ -309,6 +309,33 @@ describe("reconcileSchedules — strict enforcement", () => {
     expect(report.armed_missing).toEqual(["jobs.schedule.job.trig-1"]);
   });
 
+  it("kind=trigger armed-missing + rescueTrigger → re-derived via the engine, not surfaced", async () => {
+    h.findAll.mockResolvedValue([
+      mirrorRow({ status: "armed", trigger_uuid: "trig-uuid-9" }),
+    ]);
+    h.get.mockResolvedValue(null);
+    const rescue = vi.fn(async () => {});
+
+    const report = await svc.reconcileSchedules({ rescueTrigger: rescue });
+
+    expect(rescue).toHaveBeenCalledWith("trig-uuid-9");
+    expect(report.trigger_rescued).toEqual(["jobs.schedule.job.trig-1"]);
+    expect(report.armed_missing).toEqual([]);
+  });
+
+  it("kind=infra_derived armed-missing → surfaced even with rescueTrigger", async () => {
+    h.findAll.mockResolvedValue([
+      mirrorRow({ status: "armed", kind: "infra_derived", trigger_uuid: undefined }),
+    ]);
+    h.get.mockResolvedValue(null);
+    const rescue = vi.fn(async () => {});
+
+    const report = await svc.reconcileSchedules({ rescueTrigger: rescue });
+
+    expect(rescue).not.toHaveBeenCalled();
+    expect(report.armed_missing).toEqual(["jobs.schedule.job.trig-1"]);
+  });
+
   it("once + past @at + missing declaration → self-heals to fired", async () => {
     h.findAll.mockResolvedValue([
       mirrorRow({ status: "armed", schedule_type: "once", schedule_spec: "@at 2020-01-01T00:00:00Z" }),

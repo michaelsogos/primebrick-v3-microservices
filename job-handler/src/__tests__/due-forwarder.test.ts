@@ -176,14 +176,17 @@ describe("due-forwarder — user lane auth checkpoint", () => {
     ]);
   });
 
-  it("resolve unreachable → falls back to the arm-time headers on the message", async () => {
+  it("resolve unreachable → throws (handler naks), nothing published, no run", async () => {
     const handler = await handlerFor("user");
     h.callNats.mockRejectedValue(new Error("nats timeout"));
 
-    await handler(envelope(), userMsg("actor-5"));
-
-    expect(published()[0].headers).toEqual({ "x-user-id": "actor-5", "x-user-locale": "en-GB", ...corr });
-    expect(recorded().some((r) => r.status === "dispatched")).toBe(true);
+    // Throwing defers the fire to the next redelivery — forwarding arm-time
+    // headers would let the callable accept STALE claims (roles frozen at
+    // arm time), bypassing this very checkpoint. Unverifiable authorization
+    // is never forwarded.
+    await expect(handler(envelope(), userMsg("actor-5"))).rejects.toThrow(/unreachable/);
+    expect(h.publish).not.toHaveBeenCalled();
+    expect(recorded()).toEqual([]);
   });
 });
 
