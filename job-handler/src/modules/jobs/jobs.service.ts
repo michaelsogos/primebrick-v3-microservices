@@ -5,13 +5,15 @@
  */
 
 import { type EntityService, ValidationError } from "@primebrick/dal-pg";
-import { NatsClient, makeMarkerAuditPort, payloadMapConformance, logger } from "@primebrick/sdk";
+import { NatsClient, makeMarkerAuditPort, payloadMapConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
+import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
+import { scheduleDrift } from "../../services/schedule-service.js";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
@@ -48,30 +50,25 @@ async function assertCallableTarget(body: Record<string, unknown>): Promise<void
 }
 
 /**
- * Trigger shape contract: `event_subject` and `schedule_spec` are mutually
- * mandatory (at least one); `execution_context "user"` needs an event to
- * forward auth headers from — schedule-only triggers must use "me" or
- * "system". Partial-update bodies (PATCH) may omit a field entirely, so
- * only fields PRESENT in the body constrain the outcome.
+ * Trigger shape contract — delegates to the SAME core predicate the
+ * superform applies (`job_trigger_shape` in the closed validator
+ * registry): one rule, two surfaces, zero drift. The rule covers
+ * event-or-schedule presence, `execution_context "user"` needing an
+ * event, and a one-shot `@at` lying in the past (server clock injected).
+ * PATCH bodies carry only the changed fields, so the predicate runs on
+ * the MERGED record — the shape contract always sees the whole entity.
  */
-export function assertTriggerShape(body: Record<string, unknown>, isCreate: boolean): void {
-  const eventOk = typeof body.event_subject === "string" && body.event_subject.length > 0;
-  const scheduleOk = typeof body.schedule_spec === "string" && body.schedule_spec.length > 0;
-  if (isCreate && !eventOk && !scheduleOk) {
+export async function assertTriggerShape(
+  body: Record<string, unknown>,
+  isCreate: boolean,
+  loadExisting?: () => Promise<Record<string, unknown> | undefined>,
+): Promise<void> {
+  const existing = !isCreate && loadExisting ? await loadExisting() : undefined;
+  const entity = isCreate ? body : { ...existing, ...body };
+  const issues = jobTriggerShapeIssues(entity);
+  if (issues.length > 0) {
     throw new ValidationError(
-      `a trigger needs at least one of event_subject or schedule_spec`,
-    );
-  }
-  const eventCleared = "event_subject" in body && !eventOk;
-  const scheduleCleared = "schedule_spec" in body && !scheduleOk;
-  if (eventCleared && scheduleCleared) {
-    throw new ValidationError(
-      `a trigger needs at least one of event_subject or schedule_spec — clearing both is not allowed`,
-    );
-  }
-  if (body.execution_context === "user" && (eventCleared || (isCreate && !eventOk))) {
-    throw new ValidationError(
-      `execution_context "user" requires an event source — use "me" or "system" for schedule-only triggers`,
+      issues.map((i) => `${i.path}: ${i.message}`).join("; "),
     );
   }
 }
@@ -136,18 +133,19 @@ export class JobTriggersService {
     },
     hooks: {
       beforeCreate: async (body: Record<string, unknown>) => {
-        assertTriggerShape(body, true);
+        await assertTriggerShape(body, true);
         await assertCallableTarget(body);
         await assertPayloadMapConformance(body);
         return body;
       },
       beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
-        assertTriggerShape(body, false);
-        await assertCallableTarget(body);
-        await assertPayloadMapConformance(body, async () => {
+        const loadExisting = async () => {
           const row = await this.svc.get(uuid);
           return row as Record<string, unknown> | undefined;
-        });
+        };
+        await assertTriggerShape(body, false, loadExisting);
+        await assertCallableTarget(body);
+        await assertPayloadMapConformance(body, loadExisting);
         return body;
       },
       afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },
@@ -167,6 +165,12 @@ export class JobTriggersService {
  * Read-only service over the `job_schedules` mirror — schedule state is
  * written ONLY by `schedule-service.ts` (declare/disarm), never through
  * entity CRUD. The entity route exposes list/get/audit only.
+ *
+ * Every row is decorated with `live` (the declaration exists on NATS —
+ * the scheduler's truth) and `drift` (`stale` = mirror says terminal but
+ * NATS still fires; `missing` = mirror says armed but nothing is
+ * scheduled). The mirror never impersonates reality: an admin always
+ * sees BOTH states.
  */
 export class JobSchedulesService {
   private svc = getDal().entityService<JobScheduleEntity & Record<string, unknown>>({
@@ -180,8 +184,28 @@ export class JobSchedulesService {
     },
   } as never);
 
-  get list() { return this.svc.list.bind(this.svc); }
-  get get() { return this.svc.get.bind(this.svc); }
+  /** Decorate rows with live/drift — ONE enumeration per call. */
+  private async decorate(rows: (JobScheduleEntity & Record<string, unknown>)[]): Promise<void> {
+    const liveSubjects = await listJobScheduleSubjects().catch(() => undefined);
+    for (const row of rows) {
+      const d = scheduleDrift(row, liveSubjects === undefined ? undefined : liveSubjects.includes(row.schedule_subject));
+      row.live = d.live;
+      row.drift = d.drift;
+    }
+  }
+
+  list = async (query: Parameters<EntityService<JobScheduleEntity & Record<string, unknown>>["list"]>[0]) => {
+    const result = await this.svc.list(query);
+    await this.decorate(result.rows as (JobScheduleEntity & Record<string, unknown>)[]);
+    return result;
+  };
+
+  get = async (uuid: string) => {
+    const row = await this.svc.get(uuid);
+    await this.decorate([row as JobScheduleEntity & Record<string, unknown>]);
+    return row;
+  };
+
   get audit() { return this.svc.audit.bind(this.svc); }
 }
 

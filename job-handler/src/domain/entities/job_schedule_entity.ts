@@ -3,9 +3,9 @@
  *
  * Written ONLY by primebrick-job (sole writer of `jobs.schedule.*`): each
  * row mirrors one rollup-subject declaration message. `kind` distinguishes
- * the derivation source — `infra_derived` rows come from entity metadata
- * (e.g. @PartitionField retention), `trigger` rows from job_triggers evaluation,
- * `manual` rows from admin action.
+ * the derivation source — `infra_derived` rows come from a service
+ * self-declaring via `jobs.ctl.schedule.request` (e.g. AI partition
+ * retention), `trigger` rows are materialized by the triggers engine.
  */
 import {
   Entity,
@@ -39,7 +39,7 @@ export class JobScheduleEntity
   @Column({ nullable: false })
   job_name!: string;
 
-  /** infra_derived | rule | manual */
+  /** infra_derived | trigger */
   @Column({ length: 30, nullable: false })
   kind!: string;
 
@@ -59,7 +59,7 @@ export class JobScheduleEntity
   @Column({ nullable: false })
   target_subject!: string;
 
-  /** armed | disarmed */
+  /** armed | disarmed | fired (one-shot dispatched) | expired (TTL elapsed) */
   @Column({ length: 20, nullable: false })
   status!: string;
 
@@ -76,6 +76,14 @@ export class JobScheduleEntity
 
   @Column({ nullable: true })
   disarmed_at?: Date;
+
+  /** When a `once` schedule actually dispatched (status → fired). */
+  @Column({ nullable: true })
+  fired_at?: Date;
+
+  /** `armed_at + Nats-Schedule-TTL` — when the declaration self-purges. */
+  @Column({ nullable: true })
+  expires_at?: Date;
 
 
 

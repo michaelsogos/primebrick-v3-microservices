@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-02T20:32:37.089Z",
+  "generatedAt": "2026-11-04T23:54:20.231Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -515,6 +515,32 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "fired_at": {
+          "name": "fired_at",
+          "ordinalPosition": 21,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -597,7 +623,7 @@
           "formatType": "text",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": false,
+          "isNullable": true,
           "isPrimaryKey": false
         },
         "service_code": {
@@ -793,6 +819,19 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "fire_seq": {
+          "name": "fire_seq",
+          "ordinalPosition": 19,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
           "isPrimaryKey": false
         }
       },

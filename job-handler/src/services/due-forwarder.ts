@@ -20,10 +20,12 @@
  * callable will then deny it — that IS the governance).
  */
 
-import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, type AuthUser, logger } from "@primebrick/sdk";
+import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, type AuthUser, logger } from "@primebrick/sdk";
 import { getDal } from "../db/dal.js";
+import { Filter, field } from "@primebrick/dal-pg";
 import { JobRunEntity } from "../domain/entities/job_run_entity.js";
 import { JOBS_STREAM } from "./run-recorder.js";
+import { markScheduleFired } from "./schedule-service.js";
 
 export const FORWARD_ENVELOPE_MARK = "__pb_job_forward";
 
@@ -53,37 +55,68 @@ function isEnvelope(v: unknown): v is JobForwardEnvelope {
 const CALLABLE_SUBJECT_RE = /^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
 
 /**
- * JH is the publisher — it records the dispatch itself (no due-tap). A
- * successful republish lands a `dispatched` run row linked to the rule's
- * schedule; a publish failure lands a `failed` row. Envelopes armed before
- * this contract (no schedule_subject) skip the record — they are replaced
- * the next time their rule's event fires.
+ * JH is the publisher — it records the dispatch itself (no due-tap).
+ * The run row is inserted BEFORE the republish so its uuid becomes the
+ * `x-job-run-id` stamped on the callable's message: the transport
+ * middleware's `jobs.result.*` report then correlates the ACTUAL
+ * execution outcome back to this row (dispatched → executed/failed; a
+ * dispatched row that never hears back → the sweeper marks `lost`).
+ * Every dispatch records — immediate envelopes (no schedule link) too.
+ * A record failure must never block the dispatch: observability is a
+ * tap, not a gate.
  */
-async function recordRun(
+async function insertRun(
   envelope: JobForwardEnvelope,
   lane: "user" | "system",
   status: "dispatched" | "failed",
+  errorCode?: string,
   errorDetail?: string,
-): Promise<void> {
-  if (!envelope.schedule_subject) return;
+): Promise<string | undefined> {
   try {
-    await getDal().add<JobRunEntity>(
+    const row = await getDal().add<JobRunEntity>(
       JobRunEntity,
       {
         schedule_subject: envelope.schedule_subject,
-        service_code: "job",
+        // The run executes ON the callable's service — derive it from the
+        // target's first token (`emailsender.send` → `emailsender`).
+        service_code: envelope.target.split(".")[0]!,
         job_name: envelope.target,
         lane,
         status,
-        error_code: status === "failed" ? "DISPATCH_ERROR" : undefined,
+        error_code: errorCode,
         error_detail: errorDetail?.slice(0, 2000),
         initiator: envelope.initiator,
-        report: { target: envelope.target },
       } as never,
       { actor: "system:job" } as never,
     );
+    return (row as unknown as { uuid?: string })?.uuid;
   } catch (err) {
     logger.warn(`due-forwarder: run record failed for ${envelope.target} (${String(err)})`, { tags: ["jobs"] });
+    return undefined;
+  }
+}
+
+/** Flip a recorded run to `failed` — dispatch-level failures only. */
+async function failRun(runUuid: string | undefined, detail: string): Promise<void> {
+  if (!runUuid) return;
+  try {
+    const rows = await getDal().findAll<JobRunEntity>(JobRunEntity, null, {
+      filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", runUuid)],
+    });
+    if (!Array.isArray(rows) || rows.length === 0) return;
+    await getDal().update(
+      JobRunEntity,
+      {
+        uuid: rows[0]!.uuid,
+        status: "failed",
+        error_code: "DISPATCH_ERROR",
+        error_detail: detail.slice(0, 2000),
+        version: rows[0]!.version,
+      } as never,
+      { actor: "system:job", matchBy: "uuid" } as never,
+    );
+  } catch (err) {
+    logger.warn(`due-forwarder: run fail update failed (${String(err)})`, { tags: ["jobs"] });
   }
 }
 
@@ -183,27 +216,46 @@ async function forward(
   if (lane === "user" && actorUuid) {
     const fresh = await freshAuthHeaders(actorUuid, msg);
     if (fresh === null) {
-      await recordRun(envelope, lane, "failed", "auth actor unresolvable (deleted/disabled)");
+      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)");
       return;
     }
     headers = fresh;
   } else {
     headers = forwardAuthHeaders(msg);
   }
+  // Fire-time injectors — `{$inject:name}` markers the arm-time resolver
+  // left in the payload resolve HERE, once per dispatch (uuid per send,
+  // session actor off the due message's forwarded auth headers).
+  const payload = applyPayloadInjectors(envelope.payload ?? null, {
+    session_actor: actorUuid,
+  });
+  // Insert the run row FIRST — its uuid rides as `x-job-run-id` so the
+  // callable's transport middleware reports the real outcome back.
+  const runUuid = await insertRun(envelope, lane, "dispatched");
+  const outHeaders: Record<string, string> = {
+    ...headers,
+    ...(envelope.schedule_subject
+      ? { [JOB_SCHEDULE_SUBJECT_HEADER]: envelope.schedule_subject }
+      : {}),
+    ...(runUuid ? { [JOB_RUN_ID_HEADER]: runUuid } : {}),
+  };
+  let dispatchError: string | undefined;
   try {
-    // Fire-time injectors — `{$inject:name}` markers the arm-time resolver
-    // left in the payload resolve HERE, once per dispatch (uuid per send,
-    // session actor off the due message's forwarded auth headers).
-    const payload = applyPayloadInjectors(envelope.payload ?? null, {
-      session_actor: actorUuid,
-    });
-    await NatsClient.publish(envelope.target, payload, headers);
+    await NatsClient.publish(envelope.target, payload, outHeaders);
   } catch (err) {
-    await recordRun(envelope, lane, "failed", err instanceof Error ? err.message : String(err));
-    logger.warn(`due-forwarder: publish to ${envelope.target} failed (${String(err)})`, { tags: ["jobs"] });
-    return;
+    dispatchError = err instanceof Error ? err.message : String(err);
+    await failRun(runUuid, dispatchError);
+    logger.warn(`due-forwarder: publish to ${envelope.target} failed (${dispatchError})`, { tags: ["jobs"] });
   }
-  await recordRun(envelope, lane, "dispatched");
+  // A one-shot consumed its single fire regardless of the dispatch
+  // outcome — the declaration self-purged, the mirror flips `fired`
+  // (the run row carries the outcome, the schedule status carries the
+  // lifecycle truth: it will never fire again).
+  if (envelope.schedule_subject) {
+    await markScheduleFired(envelope.schedule_subject).catch((err) => {
+      logger.warn(`due-forwarder: fired flip failed for ${envelope.schedule_subject} (${String(err)})`, { tags: ["jobs"] });
+    });
+  }
 }
 
 /**
