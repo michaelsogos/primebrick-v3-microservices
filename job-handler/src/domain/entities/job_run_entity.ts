@@ -40,7 +40,7 @@ export class JobRunEntity
   @Column({ length: 10, nullable: false })
   lane!: string;
 
-  /** dispatched | executed | failed | lost (dispatch never reported) */
+  /** dispatched | succeeded | failed | lost (dispatch never reported) */
   @Column({ length: 20, nullable: false })
   status!: string;
 

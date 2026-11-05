@@ -8,7 +8,7 @@
  *
  *   run_id present        → UPDATE the forwarder's `dispatched` row —
  *                           the callable's REAL outcome lands on the row
- *                           the dispatch created (dispatched → executed /
+ *                           the dispatch created (dispatched → succeeded /
  *                           failed). Late results legitimately overwrite a
  *                           `lost` sweep verdict: evidence beats timeout.
  *   schedule_subject only → INSERT a completed row — own-lane executions
@@ -96,7 +96,7 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
       status: data.status,
       error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
       error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
-      duration_ms: data.duration_ms === undefined ? undefined : BigInt(Math.round(data.duration_ms)),
+      duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
       redelivery_count: redeliveryCount,
       report: plainJson(data.report),
@@ -124,7 +124,7 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
       status: data.status,
       error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
       error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
-      duration_ms: data.duration_ms === undefined ? undefined : BigInt(Math.round(data.duration_ms)),
+      duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
       redelivery_count: redeliveryCount,
       initiator: parsed?.service_code,
