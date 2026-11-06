@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-06T14:54:28.665Z",
+  "issued_at": "2026-11-06T17:16:20.409Z",
   "patches": {
     "0001_job_schema": "db22710c8afde9451346a0dd136c09def53b1cfe1c7103d8c759b5c1d25d6759",
     "0002_seed_config": "e9f712df5936bd80d95d3c19117fae7a9f55669bdebbd31ca49ef84ee51041f4",
@@ -38,7 +38,8 @@
     "20261117000000_trigger_softdelete_disable": "567c60aa2fbcc397c540da170add7ebac92f6c64f521dcfe2335a7fe65b3a4c5",
     "20261118000000_job_schedule_next_run_at": "38e1924a471bd0993a3838372bd149b651ba0312d246b25d67cf714e9d924f9b",
     "20261119000000_job_trigger_confirm_busy_keys": "a117a823da0b0f8b0628aa23cdef474eba32a389b5d1798231e87c63a1f2111b",
-    "20261120000000_trigger_form_title_case": "e6537fedbebd7b72d115d311186d5a6e5dd6e00f2b4d7050a78de593c26c7c56"
+    "20261120000000_trigger_form_title_case": "e6537fedbebd7b72d115d311186d5a6e5dd6e00f2b4d7050a78de593c26c7c56",
+    "20261120100000_trigger_event_subject_hint_no_free_entry": "f37f2c3d5402af69f0ebb544123fd061e36f8311b9e7b192f13b44bf321c3602"
   },
-  "signature": "xr1RqoDj7jL2mp7/gaSTnWOKK6QSyGQYtDde8KO54RlyHbMxIDTm63JIJOnpkL70A0n5/rb4M7qYig1d1xKqBA=="
+  "signature": "mxNWNq1ghXH0YQRN/r74HkkSrYh+G9w0mRePAScZJUmGHOfpijiOkP8yjUX6FAGHhFb+9xoeHOvh9tW6VgTGCQ=="
 }
