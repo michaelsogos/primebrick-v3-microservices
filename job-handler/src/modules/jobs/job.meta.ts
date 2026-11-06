@@ -85,7 +85,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     { key: "name", label_key: F("job_trigger", "name"), type: "text", format: "identifier", order: 10, sortable: true, filterable: true, searchable: true },
     {
       key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, filterable: true,
-      icon: "zap", color: "amber-500",
+      icon: "zap", color: "amber-500", options_source: "census.emits",
       tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
     },
     {
@@ -100,12 +100,12 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     },
     {
       key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 50,
-      icon: "send", color: "sky-500",
+      icon: "send", color: "sky-500", options_source: "census.callables",
       tooltip: H("job_trigger", "target_subject"), tooltip_title: HT("job_trigger", "target_subject"), tooltip_priority: "HINT",
     },
     {
       key: "payload_map", label_key: F("job_trigger", "payload_map"), type: "text", format: "json", order: 55,
-      default_visible: false,
+      default_visible: false, widget: "payload_map",
       json_schema: PAYLOAD_MAP_SCHEMA,
       tooltip: H("job_trigger", "payload_map"), tooltip_title: HT("job_trigger", "payload_map"), tooltip_priority: "HINT",
     },
