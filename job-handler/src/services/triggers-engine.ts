@@ -272,7 +272,9 @@ async function dispatch(
 
 async function onEvent(triggerUuid: string, payload: unknown, msg: { headers?: Parameters<typeof forwardAuthHeaders>[0]["headers"] }): Promise<void> {
   const trigger = liveTriggers.get(triggerUuid);
-  if (!trigger || !trigger.enabled) return;
+  // liveTriggers only ever holds non-deleted rows — `deleted_at` IS the
+  // disable flag (loadTrigger filters deleted, refresh evicts them).
+  if (!trigger) return;
 
   if (matchFilter(trigger.filter, payload)) {
     await dispatch(trigger, payload, msg);
@@ -364,7 +366,9 @@ export async function refreshTrigger(uuid: string): Promise<void> {
       });
     }
   }
-  if (!trigger || !trigger.enabled) return;
+  // loadTrigger excludes soft-deleted rows — a deleted (=disabled) trigger
+  // never re-enters liveTriggers; its mirror dropped above.
+  if (!trigger) return;
   liveTriggers.set(uuid, trigger);
   // A trigger enabled at runtime can carry an event_subject nobody was
   // subscribed to at boot — bind it now or its events never arrive.
@@ -374,9 +378,9 @@ export async function refreshTrigger(uuid: string): Promise<void> {
 
 export async function startTriggersEngine(): Promise<void> {
   const dal = getDal();
-  const triggers = (await dal.findAll<JobTriggerEntity>(JobTriggerEntity, null, {
-    filters: [Filter.fieldValue(field(JobTriggerEntity, "enabled"), "=", true)],
-  })) as JobTriggerEntity[];
+  // Soft-deleted rows are excluded by default — `deleted_at` IS the
+  // disable flag, no `enabled` column exists.
+  const triggers = (await dal.findAll<JobTriggerEntity>(JobTriggerEntity, null)) as JobTriggerEntity[];
 
   // One shielded subscription per event subject (dedup) — `bindSubject`
   // fans out to `liveTriggers` at delivery time, so late-enabling a

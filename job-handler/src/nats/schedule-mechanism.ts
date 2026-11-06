@@ -51,6 +51,21 @@ export interface EnsureJobScheduleOpts {
 }
 
 /**
+ * Internal spec → NATS wire spec. The SYSTEM grammar stays 5-field cron
+ * (`minute hour dom mon dow` — sub-minute schedules are not jobs, they
+ * are a design error); nats-server ≥2.10 speaks 6-field cron with the
+ * seconds field FIRST. The boundary prepends `0 ` — fire exactly at
+ * second 0, identical semantics to the 5-field intent. `*` would mean
+ * every second — the opposite of the minute floor. `@every`/`@at` pass
+ * through verbatim.
+ */
+export function toNatsScheduleSpec(spec: string): string {
+  const s = spec.trim();
+  if (s.startsWith("@")) return s;
+  return `0 ${s}`;
+}
+
+/**
  * Arm a JetStream schedule. Publishes the declaration message — the NATS
  * server itself republishes `payload`/`source` to `target` per `schedule`.
  * INTERNAL: only schedule-service may call this.
@@ -58,7 +73,7 @@ export interface EnsureJobScheduleOpts {
 export async function ensureJobSchedule(opts: EnsureJobScheduleOpts): Promise<bigint> {
   const hdrs: Record<string, string> = {
     ...opts.forwardHeaders,
-    [JOB_SCHEDULE_HEADERS.schedule]: opts.schedule,
+    [JOB_SCHEDULE_HEADERS.schedule]: toNatsScheduleSpec(opts.schedule),
     [JOB_SCHEDULE_HEADERS.target]: opts.target,
   };
   if (opts.ttl) hdrs[JOB_SCHEDULE_HEADERS.ttl] = opts.ttl;

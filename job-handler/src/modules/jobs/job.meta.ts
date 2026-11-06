@@ -85,7 +85,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     { key: "name", label_key: F("job_trigger", "name"), type: "text", format: "identifier", order: 10, sortable: true, filterable: true, searchable: true },
     {
       key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, filterable: true,
-      icon: "zap",
+      icon: "zap", color: "amber-500",
       tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
     },
     {
@@ -100,7 +100,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     },
     {
       key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 50,
-      icon: "send",
+      icon: "send", color: "sky-500",
       tooltip: H("job_trigger", "target_subject"), tooltip_title: HT("job_trigger", "target_subject"), tooltip_priority: "HINT",
     },
     {
@@ -121,29 +121,31 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     {
       // 1:N children link — the runs list filtered by this trigger's
       // schedule-mirror subject (runs record it as `schedule_subject`).
-      key: "runs", label_key: F("job_trigger", "runs"), type: "ref_count", order: 70, virtual: true,
+      key: "runs", label_key: F("job_trigger", "runs"), type: "ref_count", order: 70, kind: "calculated",
       reverse_ref: { entity: "job_run", filter_field: "schedule_subject", value_template: `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}{uuid}` },
     },
+    // NOTE: no `enabled` column — soft-delete IS the disable (ghost rows +
+    // restore CTA + "include deleted" filter are the UX). `deleted_at`/
+    // `deleted_by` are auto-derived system columns.
     {
-      key: "enabled", label_key: F("job_trigger", "enabled"), type: "boolean", order: 80, filterable: true,
-      tooltip: H("job_trigger", "enabled"), tooltip_title: HT("job_trigger", "enabled"), tooltip_priority: "HINT",
-    },
-    {
-      // Decorated by JobTriggersService — max job_runs.created_at per
-      // mirror subject. Virtual: no physical column.
-      key: "last_run", label_key: F("job_trigger", "last_run"), type: "datetime", order: 82, virtual: true,
+      // @Calculated on JobTriggerEntity — max job_runs.created_at per
+      // mirror subject, SQL-projected (sortable/filterable like physical).
+      key: "last_run", label_key: F("job_trigger", "last_run"), type: "datetime", order: 82, kind: "calculated",
       tooltip: H("job_trigger", "last_run"), tooltip_title: HT("job_trigger", "last_run"),
     },
     {
-      // Next fire of the armed mirror schedule — null for disarmed/
-      // event-only triggers and cron specs (NATS owns cron evaluation).
-      key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, virtual: true, default_visible: false,
+      // @Calculated — job_schedules.next_run_at of the armed mirror.
+      // NULL for disabled/event-only triggers and cron specs before
+      // their first fire (NATS owns cron evaluation).
+      key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: false,
+      null_label: { label_key: "job.entities.job_trigger.fields.next_run.states.disabled", when: { field: "deleted_at", not: null } },
       tooltip: H("job_trigger", "next_run"), tooltip_title: HT("job_trigger", "next_run"),
     },
     {
       // Run outcomes over time — trigger-keyed (`row_key:"uuid"` → the
-      // endpoint resolves the mirror subject server-side).
-      key: "run_stats", label_key: F("job_trigger", "run_stats"), type: "sparkline", order: 86, virtual: true,
+      // endpoint resolves the mirror subject server-side). Data arrives
+      // via a batch action call, not the row payload → virtual.
+      key: "run_stats", label_key: F("job_trigger", "run_stats"), type: "sparkline", order: 86, kind: "virtual",
       sparkline: {
         endpoint: "/actions/job-run-stats",
         request_field: "trigger_uuids",
@@ -151,13 +153,25 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
         series: [
           { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
           { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
-          { field: "skipped", color: "fill-amber-400", label_key: V("job_run", "skipped") },
+          { field: "skipped", color: "fill-neutral-400", label_key: V("job_run", "skipped") },
         ],
       },
     },
-    { key: "updated_at", label_key: F("job_trigger", "updated_at"), type: "datetime", order: 90, sortable: true, audited: true },
-    { key: "created_at", label_key: F("job_trigger", "created_at"), type: "datetime", order: 100, sortable: true, default_visible: false, audited: true },
+    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, sortable: true, audited: true },
+    { key: "created_at", label_key: "system.common.fields.created_at", type: "datetime", order: 100, sortable: true, default_visible: false, audited: true },
   ],
+  // Soft-delete IS disable — chrome only: delete renders "Disattiva" +
+  // exec-stop (gradient-filled square, destructive), restore "Attiva" +
+  // exec-start (gradient-filled play, success — a deliberate divergence
+  // from the standard restore-warning: reactivation is a positive op).
+  // exec-* icons are SEMANTIC — icon↔color agreement is enforced, never
+  // free-form. Logic/dialogs/gating stay standard.
+  actions_overrides: {
+    "delete.single": { label_key: "job.entities.job_trigger.actions.disable", icon: "exec-stop", color: "destructive", confirm_key: "job.entities.job_trigger.actions.disable_confirm", busy_key: "job.entities.job_trigger.actions.disabling" },
+    "delete.bulk": { label_key: "job.entities.job_trigger.actions.disable", icon: "exec-stop", color: "destructive", confirm_key: "job.entities.job_trigger.actions.disable_entities_confirm", busy_key: "job.entities.job_trigger.actions.disabling" },
+    "restore.single": { label_key: "job.entities.job_trigger.actions.enable", icon: "exec-start", color: "success", confirm_key: "job.entities.job_trigger.actions.enable_confirm", busy_key: "job.entities.job_trigger.actions.enabling" },
+    "restore.bulk": { label_key: "job.entities.job_trigger.actions.enable", icon: "exec-start", color: "success", confirm_key: "job.entities.job_trigger.actions.enable_entities_confirm", busy_key: "job.entities.job_trigger.actions.enabling" },
+  },
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
 }, JobTriggerEntity);
 
@@ -208,12 +222,12 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       } },
     },
     // Virtual columns — decorated per-row by JobSchedulesService from the
-    // live JetStream enumeration (not DB columns).
+    // live JetStream enumeration (external source, never queryable).
     {
-      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 62, virtual: true,
+      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 62, kind: "virtual",
     },
     {
-      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 64, filterable: false, virtual: true,
+      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 64, kind: "virtual",
       badge: { values: {
         stale: { label_key: V("job_schedule", "stale"), color: "red" },
         missing: { label_key: V("job_schedule", "missing"), color: "amber" },
@@ -222,7 +236,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     // Mini execution histogram — builtin `sparkline` cell fed by ONE batch
     // POST per rows load (virtual column, keyed by schedule_subject).
     {
-      key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "sparkline", order: 70,
+      key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "sparkline", order: 70, kind: "virtual",
       sparkline: {
         endpoint: "/actions/job-run-stats",
         request_field: "schedule_subjects",
@@ -230,11 +244,16 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         series: [
           { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
           { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
-          { field: "skipped", color: "fill-amber-400", label_key: V("job_run", "skipped") },
+          { field: "skipped", color: "fill-neutral-400", label_key: V("job_run", "skipped") },
         ],
       },
     },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80, sortable: true },
+    {
+      // Engine-maintained next fire — deterministic for @every/@at,
+      // server's own Nats-Schedule-Next for cron (null pre-first-fire).
+      key: "next_run_at", label_key: F("job_schedule", "next_run_at"), type: "datetime", order: 82, sortable: true,
+    },
     { key: "updated_at", label_key: F("job_schedule", "updated_at"), type: "datetime", order: 90, sortable: true, audited: true },
   ],
   table: {

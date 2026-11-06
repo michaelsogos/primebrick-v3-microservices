@@ -42,7 +42,6 @@ const TRIGGER_FORM: FormPageDecl = {
     { key: "schedule_spec", default_value: "@every 5m" },
     { key: "execution_context", default_value: "user" },
     { key: "filter" },
-    { key: "enabled", default_value: true },
     { key: "payload_map", widget: "payload_map", col: 2, row: 1, row_span: 7 },
   ],
   // Closed-vocab host rules: ≥1 of event_subject/schedule_spec; "user"

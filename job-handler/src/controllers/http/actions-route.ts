@@ -4,9 +4,9 @@
  *   POST /api/v1/actions/stop-job          — STOP: purge the schedule
  *        instance now (temporary — the owner may re-arm it)
  *   POST /api/v1/actions/disable-schedule  — DISABLE: owner-level off
- *        (trigger → enabled=false; infra → sticky `disarmed` suppression)
+ *        (trigger → soft-delete; infra → sticky `disarmed` suppression)
  *   POST /api/v1/actions/enable-schedule   — ENABLE: owner-level re-arm
- *        (trigger → enabled=true + re-derive; infra → unsuppress + rearm ping)
+ *        (trigger → restore + re-derive; infra → unsuppress + rearm ping)
  *   POST /api/v1/actions/pause-schedule    — PAUSE: suppress re-arm until resume
  *   POST /api/v1/actions/resume-schedule   — RESUME: clear pause + re-arm
  *   POST /api/v1/actions/disarm-all        — DISABLE ALL (bulk)
@@ -148,36 +148,35 @@ function scheduleSubjectBody(raw: unknown): ScheduleSubjectBody {
   return b as ScheduleSubjectBody;
 }
 
-type TriggerUuidBody = { uuid: string };
-
-function triggerUuidBody(raw: unknown): TriggerUuidBody {
-  const b = raw as { uuid?: string };
-  if (typeof b?.uuid !== "string" || !b.uuid) {
-    throw new ValidationError("body.uuid is required");
-  }
-  return b as TriggerUuidBody;
+/** Audit actor — the DAL convention is `user_profiles.uuid` or `"system"`.
+ *  `ctx.user.id` IS the internal uuid (see sdk auth/types). Never fabricate
+ *  `user:<email>` actors: the `<key>_name` join only resolves uuids. */
+function actorOf(ctx: { user?: { id?: string | null } | null }): string {
+  return ctx.user?.id ?? "system";
 }
 
-function actorOf(ctx: { user?: { email?: string | null } | null }): string {
-  return `user:${ctx.user?.email ?? "unknown"}`;
-}
-
-async function loadOwnerTrigger(triggerUuid: string): Promise<JobTriggerEntity | undefined> {
-  const rows = await getDal().findAll<JobTriggerEntity>(JobTriggerEntity, null, {
+async function loadOwnerTrigger(triggerUuid: string, includeDeleted = false): Promise<JobTriggerEntity | undefined> {
+  const rows = (await getDal().findAll<JobTriggerEntity>(JobTriggerEntity, null, {
     filters: [Filter.fieldValue(field(JobTriggerEntity, "uuid"), "=", triggerUuid)],
-  });
+    ...(includeDeleted ? { deletedRecords: "INCLUDED" as const } : {}),
+  })) as JobTriggerEntity[];
   return Array.isArray(rows) ? rows[0] : undefined;
 }
 
-/** Flip the owning trigger's enabled flag + re-derive via the engine. */
-async function setTriggerEnabled(triggerUuid: string, enabled: boolean, actor: string): Promise<void> {
-  const trig = await loadOwnerTrigger(triggerUuid);
+/** Flip the owning trigger's soft-delete state + re-derive via the engine.
+ *  DISABLE IS SOFT-DELETE: `deleted_at` replaces the dropped `enabled`
+ *  column (doctrine — enable flags are a design error). delete/restore go
+ *  through the repo so `deleted_by`/audit hooks stay canonical. */
+async function setTriggerDeleted(triggerUuid: string, deleted: boolean, actor: string): Promise<void> {
+  const trig = await loadOwnerTrigger(triggerUuid, deleted);
   if (!trig) throw new ValidationError(`owner trigger ${triggerUuid} not found`);
-  await getDal().update(
-    JobTriggerEntity,
-    { uuid: trig.uuid, enabled, version: trig.version } as never,
-    { actor, matchBy: "uuid" } as never,
-  );
+  const dal = getDal() as unknown as {
+    delete(e: unknown, m: unknown, o: unknown): Promise<unknown>;
+    restore(e: unknown, m: unknown, o: unknown): Promise<unknown>;
+  };
+  await (deleted
+    ? dal.delete(JobTriggerEntity, { uuid: trig.uuid, version: trig.version }, { actor, matchBy: "uuid" })
+    : dal.restore(JobTriggerEntity, { uuid: trig.uuid, version: trig.version }, { actor, matchBy: "uuid" }));
   await refreshTrigger(triggerUuid);
 }
 
@@ -198,7 +197,7 @@ async function dropIfDeadOwner(row: JobScheduleEntity | undefined, actor: string
 
 /**
  * DISABLE — owner-level off. Trigger schedules cascade to
- * `job_triggers.enabled=false` (the engine disarms); infra schedules get
+ * `job_triggers soft-delete (deleted_at)` (the engine disarms); infra schedules get
  * the sticky `disarmed` suppression — owner re-declares are refused until
  * an explicit enable.
  */
@@ -206,7 +205,7 @@ async function disableSchedule(scheduleSubject: string, actor: string): Promise<
   const row = await getScheduleRow(scheduleSubject);
   if (await dropIfDeadOwner(row, actor)) return { disabled: true };
   if (row?.kind === "trigger" && row.trigger_uuid) {
-    await setTriggerEnabled(row.trigger_uuid, false, actor);
+    await setTriggerDeleted(row.trigger_uuid, true, actor);
     return { disabled: true };
   }
   await disarmSchedule(scheduleSubject, actor, "disarmed");
@@ -214,7 +213,7 @@ async function disableSchedule(scheduleSubject: string, actor: string): Promise<
 }
 
 /**
- * ENABLE — owner-level re-arm. Trigger: enabled=true + re-derive.
+ * ENABLE — owner-level re-arm. Trigger: restore + re-derive.
  * Infra: clear the suppression (`stopped`) + rearm ping — the owner
  * re-declares with fresh payload/headers (JH cannot fabricate them).
  */
@@ -226,7 +225,7 @@ async function enableSchedule(scheduleSubject: string, actor: string): Promise<{
   }
   const row = await unsuppressSchedule(scheduleSubject, actor);
   if (row?.kind === "trigger" && row.trigger_uuid) {
-    await setTriggerEnabled(row.trigger_uuid, true, actor);
+    await setTriggerDeleted(row.trigger_uuid, false, actor);
   } else if (row) {
     await requestOwnerRearm(scheduleSubject, row.service_code);
     return { enabled: true, rearm_requested: true };
@@ -235,7 +234,7 @@ async function enableSchedule(scheduleSubject: string, actor: string): Promise<{
 }
 
 /** RESUME — clear `paused` + re-arm (like enable, minus the trigger flip:
- *  pause never touched `enabled`). */
+ *  pause never soft-deletes the trigger). */
 async function resumeSchedule(scheduleSubject: string, actor: string): Promise<{ resumed: true; rearm_requested?: boolean }> {
   if (await dropIfDeadOwner(await getScheduleRow(scheduleSubject), actor)) {
     throw new ValidationError("owner trigger deleted — schedule mirror dropped");
@@ -287,12 +286,12 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/disable-schedule",
-    entity_op: { entity: "job_schedule", op: "disable", cta: { icon: "power", text_color: "text-red-600", row_key: "schedule_subject", translation_key: "job.jobs.actions.disable", visible_on: { field: "status", values: ["armed", "stopped", "paused"] } } },
+    entity_op: { entity: "job_schedule", op: "disable", cta: { icon: "power", color: "destructive", row_key: "schedule_subject", translation_key: "job.jobs.actions.disable", visible_on: { field: "status", values: ["armed", "stopped", "paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Disable a schedule — owner-level off (admin)",
       description:
-        "Trigger schedules cascade to `job_triggers.enabled=false`; infra schedules get the sticky " +
+        "Trigger schedules cascade to `job_triggers soft-delete (deleted_at)`; infra schedules get the sticky " +
         "`disarmed` suppression (owner re-declares refused until explicit enable).",
       tags: ["jobs", "actions"],
     },
@@ -302,12 +301,12 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/enable-schedule",
-    entity_op: { entity: "job_schedule", op: "enable", cta: { icon: "power", text_color: "text-emerald-600", row_key: "schedule_subject", translation_key: "job.jobs.actions.enable", visible_on: { field: "status", values: ["disarmed", "stopped", "paused"] } } },
+    entity_op: { entity: "job_schedule", op: "enable", cta: { icon: "power", color: "success", row_key: "schedule_subject", translation_key: "job.jobs.actions.enable", visible_on: { field: "status", values: ["disarmed", "stopped", "paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Enable a schedule — owner-level re-arm (admin)",
       description:
-        "Trigger: `enabled=true` + engine re-derive. Infra: clears the `disarmed`/`paused` hold and " +
+        "Trigger: restore + engine re-derive. Infra: clears the `disarmed`/`paused` hold and " +
         "publishes `jobs.ctl.schedule.rearm.<svc>` — the owner re-declares with fresh payload/headers.",
       tags: ["jobs", "actions"],
     },
@@ -322,7 +321,7 @@ export const jobActionsRoutes: RpcRoute[] = [
     openapi: {
       summary: "Pause a schedule — suppressed until resume (admin)",
       description:
-        "`enabled` stays true but every re-arm path (refresh, event-match, ctl re-declare, due-lane) " +
+        "not soft-deleted, and every re-arm path (refresh, event-match, ctl re-declare, due-lane) " +
         "is suppressed while `paused`. Survives restarts.",
       tags: ["jobs", "actions"],
     },
@@ -345,49 +344,20 @@ export const jobActionsRoutes: RpcRoute[] = [
     body: scheduleSubjectBody,
     handler: async (ctx) => resumeSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx)),
   },
-  {
-    method: "POST",
-    path: "/api/v1/actions/enable-trigger",
-    entity_op: { entity: "job_trigger", op: "enable", cta: { icon: "power", text_color: "text-emerald-600", translation_key: "job.jobs.actions.enable", visible_on: { field: "enabled", values: [false] } } },
-    permissions: [Permission.AUTHENTICATED_ADMIN],
-    openapi: {
-      summary: "Enable a trigger — arm it (admin)",
-      description:
-        "Body: { uuid } — sets `enabled=true` and re-derives the trigger's schedule through the engine.",
-      tags: ["jobs", "actions"],
-    },
-    body: triggerUuidBody,
-    handler: async (ctx) => {
-      await setTriggerEnabled((ctx.body as TriggerUuidBody).uuid, true, actorOf(ctx));
-      return { enabled: true };
-    },
-  },
-  {
-    method: "POST",
-    path: "/api/v1/actions/disable-trigger",
-    entity_op: { entity: "job_trigger", op: "disable", cta: { icon: "power", text_color: "text-red-600", translation_key: "job.jobs.actions.disable", visible_on: { field: "enabled", values: [true] } } },
-    permissions: [Permission.AUTHENTICATED_ADMIN],
-    openapi: {
-      summary: "Disable a trigger — disarm it (admin)",
-      description:
-        "Body: { uuid } — sets `enabled=false`; the engine drops the trigger's schedule declaration.",
-      tags: ["jobs", "actions"],
-    },
-    body: triggerUuidBody,
-    handler: async (ctx) => {
-      await setTriggerEnabled((ctx.body as TriggerUuidBody).uuid, false, actorOf(ctx));
-      return { disabled: true };
-    },
-  },
+  // NOTE: no enable/disable-trigger routes — doctrine: DISABLE IS
+  // SOFT-DELETE. Standard `delete.single`/`restore.single` do the work;
+  // `afterWrite` publishes `jobs.ctl.triggers.changed` and the engine
+  // re-derives arms/disarms automatically. Chrome (Disattiva/Attiva
+  // labels + square/play icons) lives in `meta.actions_overrides`.
   {
     method: "POST",
     path: "/api/v1/actions/disarm-all",
-    entity_op: { entity: "job_schedule", op: "disarm_all", cta: { icon: "power", text_color: "text-red-600", translation_key: "job.jobs.actions.disarm_all", confirm_key: "job.jobs.actions.disarm_all_confirm" } },
+    entity_op: { entity: "job_schedule", op: "disarm_all", cta: { icon: "power", color: "destructive", translation_key: "job.jobs.actions.disarm_all", confirm_key: "job.jobs.actions.disarm_all_confirm" } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Disable every armed schedule (admin, bulk)",
       description:
-        "Trigger schedules → `enabled=false` + re-derive; infra schedules → sticky `disarmed`. " +
+        "Trigger schedules → soft-delete + re-derive; infra schedules → sticky `disarmed`. " +
         "Already-suppressed rows are reported as skipped.",
       tags: ["jobs", "actions"],
     },

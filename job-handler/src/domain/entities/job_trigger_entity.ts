@@ -29,6 +29,7 @@ import {
   Key,
   Unique,
   Column,
+  Calculated,
   type UUID,
   EntityBase,
   Auditable,
@@ -86,7 +87,30 @@ export class JobTriggerEntity
   /** user | me | system — explicit opt-in, never inferred. */
   @Column({ length: 10, nullable: false })
   execution_context!: string;
+  // No `enabled` flag — DISABLE IS SOFT-DELETE (`deleted_at` via the
+  // `Deletable` mixin). Doctrine: enable fields are a design error; the
+  // soft-delete machinery gives disable + restore + audit + ELT deleted-row
+  // UX for free.
 
-  @Column({ nullable: false })
-  enabled!: boolean;
+  /** Run count on this trigger's mirror subject — SQL projection
+   *  (`job_runs.schedule_subject = 'jobs.schedule.job.' || uuid`). */
+  @Calculated(
+    `(SELECT count(*)::int FROM job.job_runs jr WHERE jr.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text)`,
+  )
+  runs?: number;
+
+  /** Latest run start on the mirror subject — `max(job_runs.created_at)`. */
+  @Calculated(
+    `(SELECT max(jr.created_at) FROM job.job_runs jr WHERE jr.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text)`,
+  )
+  last_run?: Date;
+
+  /** Next fire of the armed mirror — `job_schedules.next_run_at`, which the
+   *  engine mirrors from NATS (`Nats-Schedule-Next` header + deterministic
+   *  arm-time computation for `@every`/`@at`). NULL for disabled triggers,
+   *  event-only triggers and cron specs before their first fire. */
+  @Calculated(
+    `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_run_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
+  )
+  next_run?: Date;
 }

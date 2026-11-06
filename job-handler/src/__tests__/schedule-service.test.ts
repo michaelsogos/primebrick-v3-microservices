@@ -42,7 +42,8 @@ const h = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../nats/schedule-mechanism.js", () => ({
+vi.mock("../nats/schedule-mechanism.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../nats/schedule-mechanism.js")>()),
   ensureJobSchedule: h.ensure,
   cancelJobSchedule: h.cancel,
   getJobSchedule: h.get,

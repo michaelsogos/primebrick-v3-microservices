@@ -85,6 +85,14 @@ export class JobScheduleEntity
   @Column({ nullable: true })
   expires_at?: Date;
 
+  /** Engine-maintained next fire (mirror of NATS truth, never interpreted
+   *  by us): computed at arm for `@every`/`@at`, then overwritten per fire
+   *  by the server's own `Nats-Schedule-Next` header — cron included.
+   *  NULL while disarmed/terminal and for cron specs before their first
+   *  fire (NATS owns cron evaluation — no second interpreter). */
+  @Column({ nullable: true })
+  next_run_at?: Date;
+
 
 
 
