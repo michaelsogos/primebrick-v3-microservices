@@ -165,6 +165,7 @@ export class JobTriggersService {
   get delete() { return this.svc.delete.bind(this.svc); }
   get restore() { return this.svc.restore.bind(this.svc); }
   get audit() { return this.svc.audit.bind(this.svc); }
+  get auditActors() { return this.svc.auditActors.bind(this.svc); }
 }
 
 /**
@@ -213,6 +214,7 @@ export class JobSchedulesService {
   };
 
   get audit() { return this.svc.audit.bind(this.svc); }
+  get auditActors() { return this.svc.auditActors.bind(this.svc); }
 }
 
 export class JobRunsService {
@@ -234,4 +236,5 @@ export class JobRunsService {
   get delete() { return this.svc.delete.bind(this.svc); }
   get restore() { return this.svc.restore.bind(this.svc); }
   get audit() { return this.svc.audit.bind(this.svc); }
+  get auditActors() { return this.svc.auditActors.bind(this.svc); }
 }

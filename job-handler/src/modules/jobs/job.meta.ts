@@ -90,12 +90,16 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     },
     {
       key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 30,
+      // Authoring-only — a JSON AST has no honest equality/text matcher.
+      filterable: false,
       default_visible: false,
       json_schema: TRIGGER_FILTER_SCHEMA,
       tooltip: H("job_trigger", "filter"), tooltip_title: HT("job_trigger", "filter"), tooltip_priority: "HINT",
     },
     {
       key: "schedule_spec", label_key: F("job_trigger", "schedule_spec"), type: "text", format: "schedule_spec", order: 40,
+      // Authoring-only — the cron spec editor is a writer, not a matcher.
+      filterable: false,
       tooltip: H("job_trigger", "schedule_spec"), tooltip_title: HT("job_trigger", "schedule_spec"), tooltip_priority: "HINT",
     },
     {
@@ -105,6 +109,8 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     },
     {
       key: "payload_map", label_key: F("job_trigger", "payload_map"), type: "text", format: "json", order: 55,
+      // Authoring-only — the payload-map editor is a writer, not a matcher.
+      filterable: false,
       default_visible: false, widget: "payload_map",
       json_schema: PAYLOAD_MAP_SCHEMA,
       tooltip: H("job_trigger", "payload_map"), tooltip_title: HT("job_trigger", "payload_map"), tooltip_priority: "HINT",
@@ -194,7 +200,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         manual: { label_key: V("job_schedule", "manual"), color: "amber" },
       } },
     },
-    { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40 },
+    { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40, filterable: false },
     {
       // Owning trigger for kind=trigger mirrors — detail page via census.
       key: "trigger_uuid", label_key: F("job_schedule", "trigger_uuid"), type: "ref", order: 46, default_visible: false,
@@ -203,7 +209,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     {
       // NOT `filterable` — the `schedule_kind` filter preset owns this
       // field (a sheet filter AND-ed with the preset would contradict it).
-      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45,
+      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45, filterable: false,
       badge: { values: {
         recurring: { label_key: V("job_schedule", "recurring"), color: "blue" },
         once: { label_key: V("job_schedule", "once"), color: "purple" },
