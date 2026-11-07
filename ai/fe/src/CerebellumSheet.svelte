@@ -25,7 +25,7 @@
   import { SliderField } from '@primebrick/ui';
   import { SwitchField } from '@primebrick/ui';
   import { SelectableFieldset } from '@primebrick/ui';
-  import { SheetPanelLayout } from '@primebrick/ui';
+  import { SheetPanelLayout, SheetPanelFooter } from '@primebrick/ui';
   import { CircuitBoard } from '@primebrick/ui/vendor/lucide';
 
   let { ctx }: { ctx: ModuleSheetHost } = $props();
@@ -308,10 +308,10 @@
     </div>
 
   {#snippet footer()}
-    <div class="p-3">
-      <Button variant="default" class="w-full" onclick={save} disabled={saving || !assistant_key || !model_id} data-testid="ai-cerebellum-save">
+    <SheetPanelFooter>
+      <Button variant="default" onclick={save} disabled={saving || !assistant_key || !model_id} data-testid="ai-cerebellum-save">
         {t('app.common.save')}
       </Button>
-    </div>
+    </SheetPanelFooter>
   {/snippet}
 </SheetPanelLayout>

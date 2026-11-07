@@ -1,3 +1,7 @@
 {
+  "rules": {
+    "panel-footer-chrome": {},
+    "panel-toolbar-tools": {}
+  },
   "i18n_namespaces": ["app", "system", "ai"]
 }
