@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-10-31T23:55:10.286Z",
+  "issued_at": "2026-11-08T12:26:43.294Z",
   "patches": {
     "0001_crm_schema": "736c58127fef0e2d01347ac6824c6383bf7b224ea594594aa5f68b5b5fcd67d7",
     "0002_seed_config": "342d2f213ce4ac396859d503e753d171c601980f8771a8d00e86490c105824b5",
@@ -10,7 +10,17 @@
     "0005_customers_ownership": "aa6c02de4841a9d9c7d7d3e8efc4fdf81112df4f77761f9e8693713d5d4c3eaa",
     "0006_customers_audit_partitions": "a63a51722272c58d5085e9ef78e9db94a1bdefe65894626c7ee76484b1106f59",
     "0007_crm_events_labels": "7e65f7be712f46900d86d5d9353b93569766faaea90ac227293f48b9252db795",
-    "0008_customer_preferred_locale": "de259a65a531854d690ec021912a2ed93af0262242810e249569a54cbcf9e937"
+    "0008_customer_preferred_locale": "de259a65a531854d690ec021912a2ed93af0262242810e249569a54cbcf9e937",
+    "20261107174742_create_crm_customer_types_crm_company_dimensions_crm_legal_forms_crm_loc": "f62ff01901013cf5ef939edaf651e0fa3392091dc608595f8d6259582aef6054",
+    "20261107175619_addcols_crm_customers": "16bc99afaeb3b366cb5ce5d57b68fd1c5934f3cd83808ece8b30ff5ad5c6fe30",
+    "20261107180000_seed_dictionaries": "f37887c76ed6d72b5fa85091905b9dee4a554b41a94f0704b6deaf69c7e74f53",
+    "20261107181000_dictionary_translations": "7d411a7fa5a9f67cc11324698cc3e7452e1a0ddddd10153a01965055d84d7d0c",
+    "20261107182000_entity_labels_en_it": "92489585f0f6ac74db3b00db06478e9f0e30233a47e4781206ae7cf28a982b34",
+    "20261107182500_legal_forms_abbreviation_text": "93439d11e3aef9ce911b824e61c716f572e1bb286e7106f4af1861b741291155",
+    "20261107183000_legal_forms_iso20275": "4970ab73109d63f40f481c7267c4f556ad09fbe54429d14ebf17eb056bb63a3f",
+    "20261125000000_customer_flat_to_children": "a7ee1013be5b972ae82d878c75cc829f5c77bf828145292ef12701e32513f24b",
+    "20261127000000_settings_sibling_nav_labels": "b916816bf8fd2fe755a1e866fb88b2189aa635e944abb42857d2c02d5af0968c",
+    "20261202000000_crm_dict_audit_backfill": "db764a7e5b67c9e7d78aa0d73fb35367489aa16640de4de00b9eceb05f5e914b"
   },
-  "signature": "Jc0ge+b5CGjNfDuJPm8qG+1U+ZF5GtHi8LNzattcwF0z7X9gP83d8ZPQMaADtdgPit2tccaW5z1LDkRi8VZUCQ=="
+  "signature": "Z4I0bXumoqUVjxN4qczXtrYScacHT5oxkH9m9hSeh48dmgK376LyuDUf9S/icP0YkEXd1laCoQG6IRrWdSP4BQ=="
 }
