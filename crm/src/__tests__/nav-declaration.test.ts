@@ -28,4 +28,15 @@ describe("CRM_NAV declaration", () => {
     expect(routes).toContain("/crm/customers/create");
     expect(routes).not.toContain("/crm/customers/new");
   });
+
+  it("the settings sibling carries the customer_type dict route under /crm/settings", () => {
+    const sib = CRM_NAV.siblings?.find((s) => s.id === "settings");
+    expect(sib).toBeDefined();
+    expect(sib!.route_prefixes).toEqual(["/crm/settings"]);
+    const dict = sib!.routes?.find((r) => r.kind === "dict");
+    expect(dict).toBeDefined();
+    expect(dict!.entity).toBe("customer_type");
+    expect(dict!.route).toBe("/crm/settings/customer_types");
+    expect(sib!.nav.map((l) => l.href)).toContain(dict!.route);
+  });
 });

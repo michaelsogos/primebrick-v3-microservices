@@ -45,7 +45,7 @@ const EmitFakeEventSchema = z.object({
   overrides: z
     .record(z.string(), z.unknown())
     .describe(
-      "Shallow-merged over the canned fake payload, per top-level key — swap any field (e.g. customer.email) without rebuilding the whole document.",
+      "Shallow-merged over the canned fake payload, per top-level key — swap any field (e.g. customer.status) without rebuilding the whole document.",
     )
     .optional(),
 });
@@ -54,17 +54,23 @@ type EmitFakeEventRequest = z.infer<typeof EmitFakeEventSchema>;
 const FAKE_CUSTOMER = {
   uuid: "11111111-2222-3333-4444-555555555555",
   code: "FAKE-001",
-  first_name: "Mario",
-  last_name: "Rossi",
-  company_name: "Acme S.p.A.",
+  display_name: "Mario Rossi",
+  // `email`/`phone` mirror the derived snapshot contract — resolved from
+  // the default EMAIL/VOICE contacts on real emits.
   email: "mario.rossi@acme.example",
   phone: "+39 02 0000000",
   status: "ACTIVE",
-  local_address: "Via Roma 1",
-  local_city: "Milano",
-  local_state: "MI",
-  local_country: "IT",
-  local_zip: "20100",
+  legal_address: {
+    street: "Via Roma 1",
+    postal_code: "20100",
+    city: "Milano",
+    province: "MI",
+    country: "IT",
+  },
+  account: {
+    company_name: "Acme S.p.A.",
+    country: "IT",
+  },
   preferred_locale: "it-IT",
 } as const;
 

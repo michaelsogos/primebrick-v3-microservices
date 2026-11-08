@@ -12,12 +12,14 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { withColumnConstraints } from "@primebrick/dal-pg";
+import { CustomerEntity } from "../../domain/entities/customer_entity.js";
 import {
   CUSTOMER_DEFAULT_SORT,
   CUSTOMER_LIST_COLUMNS,
 } from "./list-config.js";
 
-export const customerMeta: EntityMeta = {
+export const customerMeta: EntityMeta = withColumnConstraints({
   entity: "customer",
   translation_key: "customer",
   entities_ns: "crm",
@@ -30,4 +32,4 @@ export const customerMeta: EntityMeta = {
     default_page_size: 25,
     page_size_options: [10, 25, 50, 100],
   },
-};
+}, CustomerEntity);

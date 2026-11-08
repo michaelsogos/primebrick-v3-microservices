@@ -1,0 +1,27 @@
+/**
+ * CustomerAccountsService — `customer_account` domain service.
+ * Canonical `DomainService` shape; `customer_accounts_audit` exists.
+ */
+import { DomainService } from "@primebrick/dal-pg";
+import { requireActor } from "@primebrick/sdk";
+
+import { CustomerAccountEntity } from "../../domain/entities/customer_account_entity.js";
+import {
+  CUSTOMER_ACCOUNT_DEFAULT_SORT,
+  CUSTOMER_ACCOUNT_FILTERABLE_KEYS,
+  CUSTOMER_ACCOUNT_SEARCHABLE_KEYS,
+} from "./list-config.js";
+
+export class CustomerAccountsService extends DomainService<CustomerAccountEntity & Record<string, unknown>> {
+  constructor() {
+    super({
+      entity: CustomerAccountEntity,
+      actor: requireActor,
+      list: {
+        searchableKeys: CUSTOMER_ACCOUNT_SEARCHABLE_KEYS,
+        filterableKeys: new Set(CUSTOMER_ACCOUNT_FILTERABLE_KEYS),
+        defaultSort: CUSTOMER_ACCOUNT_DEFAULT_SORT,
+      },
+    });
+  }
+}

@@ -1,3 +1,16 @@
 {
-  "i18n_namespaces": ["app", "system", "crm"]
+  "rules": {
+    "panel-footer-chrome": {
+      "appliesTo": ["fe/src/"]
+    },
+    "panel-toolbar-tools": {
+      "appliesTo": ["fe/src/"]
+    }
+  },
+  "i18n_namespaces": ["app", "system", "crm"],
+  "seed_audit_exempt": [
+    "20261107180000_seed_dictionaries.sql",
+    "20261107183000_legal_forms_iso20275.sql",
+    "20261125000000_customer_flat_to_children.sql"
+  ]
 }
