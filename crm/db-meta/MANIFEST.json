@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-08T12:26:43.294Z",
+  "issued_at": "2026-11-08T12:36:17.037Z",
   "patches": {
     "0001_crm_schema": "736c58127fef0e2d01347ac6824c6383bf7b224ea594594aa5f68b5b5fcd67d7",
     "0002_seed_config": "342d2f213ce4ac396859d503e753d171c601980f8771a8d00e86490c105824b5",
@@ -20,7 +20,8 @@
     "20261107183000_legal_forms_iso20275": "4970ab73109d63f40f481c7267c4f556ad09fbe54429d14ebf17eb056bb63a3f",
     "20261125000000_customer_flat_to_children": "a7ee1013be5b972ae82d878c75cc829f5c77bf828145292ef12701e32513f24b",
     "20261127000000_settings_sibling_nav_labels": "b916816bf8fd2fe755a1e866fb88b2189aa635e944abb42857d2c02d5af0968c",
-    "20261202000000_crm_dict_audit_backfill": "db764a7e5b67c9e7d78aa0d73fb35367489aa16640de4de00b9eceb05f5e914b"
+    "20261202000000_crm_dict_audit_backfill": "db764a7e5b67c9e7d78aa0d73fb35367489aa16640de4de00b9eceb05f5e914b",
+    "20261203000000_crm_children_audit_backfill": "5b8eacb38573fdb2bfbc25ff7d362b2531be199697e2a9599c0959243de2b557"
   },
-  "signature": "Z4I0bXumoqUVjxN4qczXtrYScacHT5oxkH9m9hSeh48dmgK376LyuDUf9S/icP0YkEXd1laCoQG6IRrWdSP4BQ=="
+  "signature": "z1T2bbaJtuHnN1vnQUsOTiKRr5dbSZSk6GvL9ldmqXdm7NvWNV969PcSYsNTP5jPDNIO6nG5QJwmeimQ7PUKBw=="
 }
