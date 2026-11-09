@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "panel-footer-chrome": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-toolbar-tools": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-footer-start": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    }
+  },
+  "i18n_namespaces": [
+    "app",
+    "system",
+    "webhook"
+  ]
+}

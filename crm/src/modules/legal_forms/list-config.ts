@@ -38,8 +38,8 @@ const LEGAL_FORM_RAW_COLUMNS: LegalFormListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        ACTV: { label_key: "crm.entities.legal_form.status.ACTV", color: "emerald-300" },
-        INAC: { label_key: "crm.entities.legal_form.status.INAC", color: "zinc-300" },
+        ACTV: { label_key: "crm.entities.legal_form.status.actv", color: "emerald-300" },
+        INAC: { label_key: "crm.entities.legal_form.status.inac", color: "zinc-300" },
       },
     },
   },

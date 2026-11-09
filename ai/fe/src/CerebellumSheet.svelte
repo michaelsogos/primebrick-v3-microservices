@@ -154,7 +154,7 @@
     } else {
       ctx.notify({
         impact: 'MEDIUM',
-        messageKey: 'app.common.saveFailed',
+        messageKey: 'app.common.save_failed',
         scope: 'AI Cerebellum',
         detail: `Save failed (${resp.status})`,
         toast: true,

@@ -114,8 +114,8 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
     filterable: true,
     badge: {
       values: {
-        true: { label_key: "ai.entities.ai_model.compatibility.COMPATIBLE", color: "emerald-300" },
-        false: { label_key: "ai.entities.ai_model.compatibility.NOT_COMPATIBLE", color: "rose-300" },
+        true: { label_key: "ai.entities.ai_model.compatibility.compatible", color: "emerald-300" },
+        false: { label_key: "ai.entities.ai_model.compatibility.not_compatible", color: "rose-300" },
       },
     },
   },

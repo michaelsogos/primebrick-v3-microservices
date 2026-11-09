@@ -85,9 +85,9 @@
   });
 
   const validationError = $derived.by(() => {
-    if (!code.trim()) return 'emailsender.templates.errors.codeRequired';
-    if (!languageIso.trim()) return 'emailsender.templates.errors.languageRequired';
-    if (!parsedVariables.ok) return 'emailsender.templates.errors.invalidVariablesJson';
+    if (!code.trim()) return 'emailsender.templates.errors.code_required';
+    if (!languageIso.trim()) return 'emailsender.templates.errors.language_required';
+    if (!parsedVariables.ok) return 'emailsender.templates.errors.invalid_variables_json';
     return null;
   });
 
@@ -173,7 +173,7 @@
             </div>
             <div class="grid gap-1.5">
               <label class="text-sm font-medium leading-none" for="tpl-lang">
-                {t('emailsender.templates.languageIso')}
+                {t('emailsender.templates.language_iso')}
               </label>
               <input
                 id="tpl-lang"
@@ -196,7 +196,7 @@
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="tpl-mjml">
-              {t('emailsender.templates.mjmlSource')}
+              {t('emailsender.templates.mjml_source')}
             </label>
             <textarea
               id="tpl-mjml"
@@ -206,7 +206,7 @@
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="tpl-html">
-              {t('emailsender.templates.bodyHtml')}
+              {t('emailsender.templates.body_html')}
             </label>
             <textarea
               id="tpl-html"
@@ -216,7 +216,7 @@
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="tpl-text">
-              {t('emailsender.templates.bodyText')}
+              {t('emailsender.templates.body_text')}
             </label>
             <textarea
               id="tpl-text"
@@ -234,7 +234,7 @@
               bind:value={variablesJson}
               placeholder={'{"name": "…"}'}
             ></textarea>
-            <p class="text-muted-foreground text-xs">{t('emailsender.templates.variablesHint')}</p>
+            <p class="text-muted-foreground text-xs">{t('emailsender.templates.variables_hint')}</p>
           </div>
           {#if validationError}
             <p class="text-destructive text-xs">{t(validationError)}</p>

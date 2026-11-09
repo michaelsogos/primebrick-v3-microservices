@@ -20,7 +20,7 @@ export const SendEmailSchema = z.object({
     x_not_editable: true,
   }),
   templateCode: z.string().min(1).meta({
-    x_help_key: "emailsender.callable.send.templateCode",
+    x_help_key: "emailsender.callable.send.template_code",
     description:
       "Code of a row in the sender's template catalog (e.g. customer_high_value). Rendered with `variables`.",
     x_options: {
@@ -34,7 +34,7 @@ export const SendEmailSchema = z.object({
     },
   }),
   languageIso: z.string().regex(LANG_RE).meta({
-    x_help_key: "emailsender.callable.send.languageIso",
+    x_help_key: "emailsender.callable.send.language_iso",
     format: "lang",
     description:
       "The email language — picks which language variant of the template is sent to the recipient (e.g. it-IT, en-US). Uses the standard BCP-47 locale format.",

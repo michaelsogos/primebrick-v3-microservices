@@ -75,7 +75,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       route: triggersPaths.create,
       kind: "create",
       entity: "job_trigger",
-      label_key: "job.jobs.triggerForm.title",
+      label_key: "job.jobs.trigger_form.title",
       // NO component_url — the host entity-form archetype renders it: the
       // entity meta (GET …/entities/job_trigger/meta) supplies field types and
       // physical constraints; `page_props.form` supplies placement + policy.
@@ -85,7 +85,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       route: triggersPaths.detail,
       kind: "detail",
       entity: "job_trigger",
-      label_key: "job.jobs.triggerForm.title",
+      label_key: "job.jobs.trigger_form.title",
       // SAME form declaration as create — detail is the update mode of the
       // `entity_form` archetype (prefill + PUT + optimistic version), and
       // the only mode where collaboration mounts (the record exists).

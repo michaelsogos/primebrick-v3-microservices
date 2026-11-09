@@ -1,12 +1,29 @@
 {
   "rules": {
     "panel-footer-chrome": {
-      "appliesTo": ["fe/src/"]
+      "appliesTo": [
+        "fe/src/"
+      ]
     },
     "panel-toolbar-tools": {
-      "appliesTo": ["fe/src/"]
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-footer-start": {
+      "appliesTo": [
+        "fe/src/"
+      ]
     }
   },
-  "i18n_namespaces": ["app", "system", "job"],
-  "i18n_sql_exempt": ["0005_job_entity_labels.sql"]
+  "i18n_namespaces": [
+    "app",
+    "system",
+    "job"
+  ],
+  "i18n_sql_exempt": [
+    "0004_job_translations.sql",
+    "0005_job_entity_labels.sql",
+    "0012_job_rule_form.sql"
+  ]
 }
