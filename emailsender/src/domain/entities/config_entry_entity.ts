@@ -38,7 +38,7 @@ export class ConfigEntryEntity
   @Column({ length: 100, nullable: true })
   description_key?: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   reserved!: boolean;
 
   @Column({ length: 100, nullable: true })

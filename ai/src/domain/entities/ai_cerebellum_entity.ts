@@ -116,13 +116,13 @@ export class AiCerebellumEntity
    *  evidence proves this (assistant, model, dtype) combo broken. The
    *  assistant picker hides models whose cerebellum row for that
    *  assistant is incompatible. */
-  @Column({ nullable: false, defaultSql: "true" })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "true" })
   is_compatible: boolean;
 
   /** Per-assistant default model: at most one row per assistant_key
    *  (partial unique index). When set, the assistant panel loads this
    *  model instead of the global `ai_assistant_model` config fallback. */
-  @Column({ nullable: false, defaultSql: "false" })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   is_default: boolean;
 
 

@@ -55,6 +55,6 @@ export class CustomerAccountEntity
   contact_id?: bigint;
 
   /** One default account per customer — partial unique index in DDL. */
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   is_default!: boolean;
 }

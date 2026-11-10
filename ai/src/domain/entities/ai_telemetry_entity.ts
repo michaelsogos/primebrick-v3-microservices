@@ -45,7 +45,7 @@ export class AiTelemetryEntity {
   @Column({ pgType: "int4", nullable: false })
   latency_ms!: number;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   success!: boolean;
 
   @Column({ nullable: true })

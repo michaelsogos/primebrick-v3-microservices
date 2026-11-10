@@ -39,7 +39,7 @@ export class DocsIngestLogEntity
   @Column({ length: 20, nullable: false })
   trigger_source: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   ok: boolean;
 
   /** PipelineStats snapshot: docs, chunks embedded/skipped/deleted, ms, etc. */

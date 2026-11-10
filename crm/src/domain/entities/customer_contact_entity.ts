@@ -36,7 +36,7 @@ export class CustomerContactEntity
   @Column({ nullable: false })
   value!: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   is_default!: boolean;
 
   @Column({ nullable: true })

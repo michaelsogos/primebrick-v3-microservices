@@ -93,7 +93,7 @@ export class AiModelEntity
   test_scores?: Record<string, any>;
 
   /** Whether to pass `enable_thinking: true` to WebLLM for this model. */
-  @Column({ nullable: false, defaultSql: "false" })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   enable_thinking: boolean;
 
   /** Sampling temperature (0.00-2.00). */
@@ -130,7 +130,7 @@ export class AiModelEntity
    *  definition), false only after the test harness proves absolute
    *  failures (load crash, zero tokens, dead repo). Per-assistant blocks
    *  live on ai_cerebellum.is_compatible. */
-  @Column({ nullable: false, defaultSql: "true" })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "true" })
   is_compatible: boolean;
 
   /** KV cache bytes per token — derived from HF config.json
