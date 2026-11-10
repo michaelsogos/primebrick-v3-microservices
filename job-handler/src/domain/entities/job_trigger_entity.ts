@@ -99,12 +99,14 @@ export class JobTriggerEntity
    *  (`job_runs.schedule_subject = 'jobs.schedule.job.' || uuid`). */
   @Calculated(
     `(SELECT count(*)::int FROM job.job_runs jr WHERE jr.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text)`,
+    { pgType: "int4" },
   )
   runs?: number;
 
   /** Latest run start on the mirror subject — `max(job_runs.created_at)`. */
   @Calculated(
     `(SELECT max(jr.created_at) FROM job.job_runs jr WHERE jr.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text)`,
+    { pgType: "timestamptz", nullable: true },
   )
   last_run?: Date;
 
@@ -114,6 +116,7 @@ export class JobTriggerEntity
    *  event-only triggers and cron specs before their first fire. */
   @Calculated(
     `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_run_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
+    { pgType: "timestamptz", nullable: true },
   )
   next_run?: Date;
 }
