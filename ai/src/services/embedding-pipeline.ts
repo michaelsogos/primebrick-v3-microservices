@@ -22,17 +22,9 @@ import {
 } from "./docs-kb-repository.js";
 import { createHash } from "node:crypto";
 import { logger, extJsonStringify } from "@primebrick/sdk";
+import { type PipelineStats } from "../domain/jsonb-contracts.js";
 
-export interface PipelineStats {
-  docs_loaded: number;
-  chunks_created: number;
-  chunks_embedded: number;
-  chunks_skipped: number;
-  chunks_deleted: number;
-  errors: number;
-  total_in_db: number;
-  duration_ms: number;
-}
+export type { PipelineStats };
 
 /**
  * Run the full embedding pipeline.

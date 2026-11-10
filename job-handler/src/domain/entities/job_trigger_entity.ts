@@ -35,6 +35,8 @@ import {
   Auditable,
   Deletable,
 } from "@primebrick/dal-pg";
+import { type PayloadMap } from "@primebrick/sdk";
+import { RuleFilter } from "../jsonb-contracts.js";
 
 /**
  * The schedule-mirror rollup subject for a trigger — `jobs.schedule.job.<uuid>`.
@@ -65,8 +67,8 @@ export class JobTriggerEntity
   event_subject?: string;
 
   /** JSON filter — array of { field, op, value } evaluated on the event payload. */
-  @Column({ nullable: true })
-  filter?: unknown;
+  @Column({ jsType: RuleFilter, nullable: true })
+  filter?: RuleFilter[];
 
   /** Schedule spec — "@every 1d", "@at …", cron. On event+schedule
    *  triggers it is materialized on match; on schedule-only triggers it
@@ -82,8 +84,8 @@ export class JobTriggerEntity
   /** Trigger-owned payload map — `PayloadMap` DST from @primebrick/core:
    *  per target field, a {kind:"const"|"path"|"meta"} entry resolved
    *  against the event payload at arm/fire time. NULL/{} = verbatim forward. */
-  @Column({ nullable: true })
-  payload_map?: unknown;
+  @Column({ pgType: "jsonb", nullable: true })
+  payload_map?: PayloadMap;
 
   /** user | me | system — explicit opt-in, never inferred. */
   @Column({ length: 10, nullable: false })

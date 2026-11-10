@@ -15,6 +15,7 @@ import {
   Column,
   Vector,
 } from "@primebrick/dal-pg";
+import { DocMetadata } from "../jsonb-contracts.js";
 
 @Entity("docs_kb", "ai")
 export class DocsKbEntity {
@@ -50,8 +51,8 @@ export class DocsKbEntity {
   @Column({ nullable: false, length: 1024, jsType: "vector" })
   embedding!: Vector;
 
-  @Column({ nullable: false })
-  metadata!: object;
+  @Column({ jsType: DocMetadata, nullable: false })
+  metadata!: DocMetadata;
 
   @Index()
   @Column({ nullable: false })

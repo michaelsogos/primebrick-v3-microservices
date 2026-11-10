@@ -18,6 +18,7 @@ import {
   Auditable,
 } from "@primebrick/dal-pg";
 import { AiConversationEntity } from "./ai_conversation_entity.js";
+import { MessageContent } from "../jsonb-contracts.js";
 
 @Entity("ai_messages", "ai")
 @PartitionChildOf({ parent: AiConversationEntity, ref: "conversation_uuid" })
@@ -37,8 +38,10 @@ export class AiMessageEntity
   @Column({ nullable: false })
   role!: string;
 
-  @Column({ nullable: false })
-  content!: unknown;
+  /** Role-keyed vocabulary — `user`→{text}, `assistant`→{text,tool_calls,
+   *  tool_results}, `tool`→{tool_call_id,tool_name,output}. */
+  @Column({ jsType: MessageContent, nullable: false })
+  content!: MessageContent;
 
   @Column({ pgType: "int4", nullable: true })
   tokens_in?: number;

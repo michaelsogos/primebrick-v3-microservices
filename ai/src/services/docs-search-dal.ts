@@ -23,6 +23,7 @@ import { getDal } from "../db/dal.js";
 import { extJsonParse } from "@primebrick/sdk";
 import { field, Filter, Project, type FilterExpr } from "@primebrick/dal-pg";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
+import { type DocMetadata } from "../domain/jsonb-contracts.js";
 
 export interface DocsSearchResult {
   id: bigint;
@@ -31,7 +32,7 @@ export interface DocsSearchResult {
   title: string;
   chunk_idx: number;
   content: string;
-  metadata: Record<string, unknown>;
+  metadata: DocMetadata;
   similarity: number;
   keyword_hits: number;
   /** ts_rank_cd of the full-text lexical channel (0 when absent). */
@@ -216,7 +217,7 @@ async function expandDocGraph(
     title: row.title,
     chunk_idx: row.chunk_idx,
     content: row.content,
-    metadata: row.metadata as Record<string, unknown>,
+    metadata: row.metadata,
     similarity: Number(row.similarity),
     keyword_hits: 0,
     lexical_score: 0,
@@ -262,7 +263,7 @@ export async function getDocsIndex(): Promise<DocsIndexRepo[]> {
   // relative to the manifest's directory).
   const orderByRepo = new Map<string, Map<string, number>>();
   const docs = rows.filter((r) => {
-    const meta = r.metadata as Record<string, unknown> | undefined;
+    const meta = r.metadata;
     if (meta?.order_manifest === true) {
       try {
         const parsed = extJsonParse<{ pages?: unknown }>(r.content);
@@ -284,7 +285,7 @@ export async function getDocsIndex(): Promise<DocsIndexRepo[]> {
 
   const byRepo = new Map<string, DocsIndexEntry[]>();
   for (const r of docs) {
-    const meta = r.metadata as Record<string, unknown> | undefined;
+    const meta = r.metadata;
     const order = orderByRepo.get(r.repo)?.get(r.path.replace(/\.mdx$/i, "")) ?? null;
     const entry: DocsIndexEntry = {
       path: r.path,
@@ -318,7 +319,7 @@ export async function getDocsIndex(): Promise<DocsIndexRepo[]> {
  */
 export async function getDocByPath(
   params: { path: string; repo?: string },
-): Promise<{ repo: string; path: string; title: string; content: string; metadata: Record<string, unknown> } | null> {
+): Promise<{ repo: string; path: string; title: string; content: string; metadata: DocMetadata } | null> {
   const filters: FilterExpr[] = [Filter.fieldValue(field(DocsKbEntity, "path"), "=", params.path)];
   if (params.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", params.repo));
 
@@ -346,5 +347,5 @@ export async function getDocByPath(
     ? sourceRow.content
     : repoRows.filter((r) => r.chunk_idx !== -1).map((r) => r.content).join("\n\n");
   const metaRow = repoRows.find((r) => r.chunk_idx === 0) ?? first;
-  return { repo: first.repo, path: first.path, title: first.title, content, metadata: (metaRow.metadata ?? {}) as Record<string, unknown> };
+  return { repo: first.repo, path: first.path, title: first.title, content, metadata: metaRow.metadata };
 }

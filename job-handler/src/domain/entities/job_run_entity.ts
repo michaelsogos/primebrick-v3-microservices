@@ -68,8 +68,9 @@ export class JobRunEntity
   @Column({ nullable: true })
   initiator?: string;
 
-  /** Free-form executor report (e.g. partitions dropped). */
-  @Column({ nullable: true })
+  /** Free-form executor report (e.g. partitions dropped) — shape owned by
+   *  each handler's `JobResultMessage.report`, folded in verbatim. */
+  @Column({ pgType: "jsonb", nullable: true })
   report?: unknown;
 
 

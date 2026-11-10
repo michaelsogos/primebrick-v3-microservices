@@ -22,6 +22,7 @@ import {
   Auditable,
   Deletable,
 } from "@primebrick/dal-pg";
+import { PipelineStats } from "../jsonb-contracts.js";
 
 @Entity("docs_ingest_log", "ai")
 export class DocsIngestLogEntity
@@ -43,8 +44,8 @@ export class DocsIngestLogEntity
   ok: boolean;
 
   /** PipelineStats snapshot: docs, chunks embedded/skipped/deleted, ms, etc. */
-  @Column({ nullable: false, defaultSql: "'{}'::jsonb" })
-  stats: Record<string, unknown>;
+  @Column({ jsType: PipelineStats, nullable: false, defaultSql: "'{}'::jsonb" })
+  stats!: PipelineStats;
 
   @Column({ nullable: true })
   error?: string;

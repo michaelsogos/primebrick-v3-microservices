@@ -32,6 +32,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
+import { ExecutionConfig, type AiTestScore } from "../jsonb-contracts.js";
 
 @Entity("ai_cerebellum", "ai")
 @AuditTrail()
@@ -97,14 +98,14 @@ export class AiCerebellumEntity
 
   /** Partial execution-config override — merged over ai_models.execution_config.
    *  NULL = inherit the whole execution_config. */
-  @Column({ nullable: true })
-  execution_config?: Record<string, any>;
+  @Column({ jsType: ExecutionConfig, nullable: true })
+  execution_config?: ExecutionConfig;
 
   /** Per-tuning test measurements keyed by test case. JSONB — same shape as
    *  ai_models.test_scores, kept separate so tuning scores never overwrite
    *  model-level scores. */
-  @Column({ nullable: true })
-  test_scores?: Record<string, any>;
+  @Column({ pgType: "jsonb", nullable: true })
+  test_scores?: Record<string, AiTestScore>;
 
   /** Visual recommendation badge ('RECOMMENDED' | 'NOT_RECOMMENDED' | NULL).
    *  Purely cosmetic — does NOT affect selection or execution. */

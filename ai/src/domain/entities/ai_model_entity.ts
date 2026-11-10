@@ -26,6 +26,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
+import { ExecutionConfig, WorkingSetDetail, type AiTestScore } from "../jsonb-contracts.js";
 
 @Entity("ai_models", "ai")
 @AuditTrail()
@@ -87,10 +88,10 @@ export class AiModelEntity
   @Column({ pgType: "float8", nullable: false, defaultSql: "1.0" })
   rank: number;
 
-  /** Test case scores with full runs[] arrays. JSONB.
-   *  Structure: { "regex_test_score": { "runs": [5,4,5], "score": 4.6, "method": "mean", "updated_at": "..." } } */
-  @Column({ nullable: true })
-  test_scores?: Record<string, any>;
+  /** Test case scores with full runs[] arrays. JSONB — one `AiTestScore`
+   *  per `<case>_test_score` key. */
+  @Column({ pgType: "jsonb", nullable: true })
+  test_scores?: Record<string, AiTestScore>;
 
   /** Whether to pass `enable_thinking: true` to WebLLM for this model. */
   @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
@@ -159,14 +160,14 @@ export class AiModelEntity
 
   /** ws provenance breakdown: {weights_mb, kv_mb, ctx_ref,
    *  measured_vram_bytes, measured_at, measured_ctx_tokens}. */
-  @Column({ nullable: true })
-  working_set_detail?: Record<string, any>;
+  @Column({ jsType: WorkingSetDetail, nullable: true })
+  working_set_detail?: WorkingSetDetail;
 
   /** Execution config — drives the FE worker cache behavior.
    *  Set empirically by the test harness. NULL = safe fallback (no KV cache reuse).
    *  JSONB: { kv_cache_reuse, sliding_window, max_history_turns, intent_detection } */
-  @Column({ nullable: true })
-  execution_config?: Record<string, any>;
+  @Column({ jsType: ExecutionConfig, nullable: true })
+  execution_config?: ExecutionConfig;
 
 
 

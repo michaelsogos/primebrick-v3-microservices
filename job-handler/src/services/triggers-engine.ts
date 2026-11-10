@@ -53,8 +53,8 @@ import { getDal } from "../db/dal.js";
 import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../domain/entities/job_trigger_entity.js";
 import { declareSchedule, disarmSchedule, dropScheduleMirror, getScheduleRow } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
+import { type RuleFilter } from "../domain/jsonb-contracts.js";
 
-type RuleFilter = { field: string; op?: string; value?: unknown };
 type Lane = "user" | "system";
 
 const AUTH_RESOLVE_USER_SUBJECT = "auth.ctl.resolve_user";
