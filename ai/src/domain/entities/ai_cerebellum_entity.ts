@@ -80,11 +80,11 @@ export class AiCerebellumEntity
   enable_thinking?: boolean;
 
   /** NULL = inherit ai_models.temperature. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   temperature?: number;
 
   /** NULL = inherit ai_models.top_p. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   top_p?: number;
 
   /** NULL = inherit ai_models.max_tokens. */
@@ -92,7 +92,7 @@ export class AiCerebellumEntity
   max_tokens?: number;
 
   /** NULL = inherit ai_models.repetition_penalty. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   repetition_penalty?: number;
 
   /** Partial execution-config override — merged over ai_models.execution_config.

@@ -84,7 +84,7 @@ export class AiModelEntity
    *  response_s (<=3s→5 … <=60s→1, timeout→0). >=2 timeouts of 5 turns
    *  => NOT_COMPATIBLE. power_level is not part of rank.
    *  See docs/modules/ai-models.md for the full scoring spec. */
-  @Column({ nullable: false, defaultSql: "1.0" })
+  @Column({ pgType: "float8", nullable: false, defaultSql: "1.0" })
   rank: number;
 
   /** Test case scores with full runs[] arrays. JSONB.
@@ -97,11 +97,11 @@ export class AiModelEntity
   enable_thinking: boolean;
 
   /** Sampling temperature (0.00-2.00). */
-  @Column({ nullable: false, defaultSql: "0.70" })
+  @Column({ pgType: "float8", nullable: false, defaultSql: "0.70" })
   temperature: number;
 
   /** Nucleus sampling top_p (0.01-1.00). */
-  @Column({ nullable: false, defaultSql: "0.90" })
+  @Column({ pgType: "float8", nullable: false, defaultSql: "0.90" })
   top_p: number;
 
   /** Max generation tokens. */
@@ -109,7 +109,7 @@ export class AiModelEntity
   max_tokens: number;
 
   /** Repetition penalty (1.00-2.00). */
-  @Column({ nullable: false, defaultSql: "1.10" })
+  @Column({ pgType: "float8", nullable: false, defaultSql: "1.10" })
   repetition_penalty: number;
 
   /** Display order (ascending). */
@@ -123,7 +123,7 @@ export class AiModelEntity
   /** Curated in-memory weight estimate in MB (hf_estimate input for
    *  working_set_mb). Measured GPU totals go to working_set_mb via
    *  working_set_source='e2e_measured' — never here (they include KV). */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   vram_mb?: number;
 
   /** Compatibility flag: true (default — user-added models are wanted by
@@ -139,14 +139,14 @@ export class AiModelEntity
   kv_cache_bytes_per_token?: bigint;
 
   /** Approx FLOPs per generated token (~2 × params). Agnostic, machine-independent. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   flops_per_token?: number;
 
   /** Working set in MB at the reference context 8192 (weights + KV).
    *  Agnostic, machine-independent — the only input of
    *  powerLevelFromWorkingSet(). How the value was produced is recorded
    *  in working_set_source. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   working_set_mb?: number;
 
   /** Provenance of working_set_mb:

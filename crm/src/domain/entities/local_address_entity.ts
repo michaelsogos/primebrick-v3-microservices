@@ -55,10 +55,10 @@ export class LocalAddressEntity
   @Column({ length: 2, nullable: false })
   country!: string;
 
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   lat?: number;
 
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   lng?: number;
 
   /** POI display name when the address is a point of interest. */

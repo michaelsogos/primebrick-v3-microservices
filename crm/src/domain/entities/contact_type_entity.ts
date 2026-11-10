@@ -37,6 +37,6 @@ export class ContactTypeEntity
   @Column({ length: 20, nullable: false })
   value_kind!: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "int4", nullable: false })
   sort!: number;
 }

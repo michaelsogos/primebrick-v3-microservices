@@ -53,6 +53,6 @@ export class LegalFormEntity
   @Column({ length: 10, nullable: false })
   status!: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "int4", nullable: false })
   sort!: number;
 }

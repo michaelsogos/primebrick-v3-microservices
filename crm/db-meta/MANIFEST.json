@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-08T12:36:17.037Z",
+  "issued_at": "2026-11-10T18:31:17.372Z",
   "patches": {
     "0001_crm_schema": "736c58127fef0e2d01347ac6824c6383bf7b224ea594594aa5f68b5b5fcd67d7",
     "0002_seed_config": "342d2f213ce4ac396859d503e753d171c601980f8771a8d00e86490c105824b5",
@@ -18,10 +18,12 @@
     "20261107182000_entity_labels_en_it": "92489585f0f6ac74db3b00db06478e9f0e30233a47e4781206ae7cf28a982b34",
     "20261107182500_legal_forms_abbreviation_text": "93439d11e3aef9ce911b824e61c716f572e1bb286e7106f4af1861b741291155",
     "20261107183000_legal_forms_iso20275": "4970ab73109d63f40f481c7267c4f556ad09fbe54429d14ebf17eb056bb63a3f",
+    "20261110183056_drift_crm_customer_types_crm_company_dimensions_crm_legal_forms_crm_loca": "7c0113f9b2ded18563b7b2d1b8fdb613571eb2fad70def90472fa0a04feef67e",
     "20261125000000_customer_flat_to_children": "a7ee1013be5b972ae82d878c75cc829f5c77bf828145292ef12701e32513f24b",
     "20261127000000_settings_sibling_nav_labels": "b916816bf8fd2fe755a1e866fb88b2189aa635e944abb42857d2c02d5af0968c",
     "20261202000000_crm_dict_audit_backfill": "db764a7e5b67c9e7d78aa0d73fb35367489aa16640de4de00b9eceb05f5e914b",
-    "20261203000000_crm_children_audit_backfill": "5b8eacb38573fdb2bfbc25ff7d362b2531be199697e2a9599c0959243de2b557"
+    "20261203000000_crm_children_audit_backfill": "5b8eacb38573fdb2bfbc25ff7d362b2531be199697e2a9599c0959243de2b557",
+    "20261205000000_i18n_key_snake_cleanup": "90d58b67fd9b235a4fdbe6dc66151c862a4f38d9a93fe7f53d27226a3355f8dd"
   },
-  "signature": "z1T2bbaJtuHnN1vnQUsOTiKRr5dbSZSk6GvL9ldmqXdm7NvWNV969PcSYsNTP5jPDNIO6nG5QJwmeimQ7PUKBw=="
+  "signature": "LAuxFC9B1cNs/AyWl1v8TBwk+ThbtnPvVANKIApttY5ij6afIRM0u3VBiurzAUcVhBufkhdWuSlwkvxorGHrDg=="
 }

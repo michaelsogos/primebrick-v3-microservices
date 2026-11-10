@@ -30,6 +30,6 @@ export class AccountKindEntity
   @Column({ length: 100, nullable: false })
   label_key!: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "int4", nullable: false })
   sort!: number;
 }

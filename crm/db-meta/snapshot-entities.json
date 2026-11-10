@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-07T19:29:13.418Z",
+  "generatedAt": "2026-11-10T18:30:56.317Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -109,7 +109,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "key": {
           "name": "key",
@@ -326,7 +327,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -579,7 +581,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -592,26 +595,26 @@
           "propertyKey": "code",
           "isNullable": false
         },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 11,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sort",
+          "isNullable": false
+        },
         "label_key": {
           "name": "label_key",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "varchar(100)",
           "typname": "varchar(100)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "label_key",
-          "isNullable": false
-        },
-        "sort": {
-          "name": "sort",
-          "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "sort",
           "isNullable": false
         }
       },
@@ -741,7 +744,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -768,8 +772,8 @@
         "min_size": {
           "name": "min_size",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -779,8 +783,8 @@
         "max_size": {
           "name": "max_size",
           "ordinalPosition": 13,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -790,8 +794,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 14,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -925,7 +929,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1007,8 +1012,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 17,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -1142,7 +1147,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1169,8 +1175,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -1304,7 +1310,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1331,8 +1338,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -1466,7 +1473,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1493,8 +1501,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -1628,7 +1636,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1666,8 +1675,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 13,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -1801,7 +1810,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1828,8 +1838,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -1963,7 +1973,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -1990,8 +2001,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -2125,7 +2136,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -2152,8 +2164,8 @@
         "sort": {
           "name": "sort",
           "ordinalPosition": 12,
-          "dataType": "float8",
-          "typname": "float8",
+          "dataType": "int4",
+          "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -2287,7 +2299,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "customer_id": {
           "name": "customer_id",
@@ -2529,7 +2542,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "customer_id": {
           "name": "customer_id",
@@ -2738,7 +2752,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "customer_id": {
           "name": "customer_id",
@@ -2914,7 +2929,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "customer_id": {
           "name": "customer_id",
@@ -3134,7 +3150,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "parent_customer_id": {
           "name": "parent_customer_id",

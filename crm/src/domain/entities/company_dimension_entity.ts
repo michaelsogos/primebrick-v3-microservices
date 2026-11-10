@@ -30,13 +30,13 @@ export class CompanyDimensionEntity
   @Column({ length: 100, nullable: false })
   label_key!: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "int4", nullable: false })
   min_size!: number;
 
   /** Inclusive upper bound; null = unbounded (e.g. "500+"). */
-  @Column({ nullable: true })
+  @Column({ pgType: "int4", nullable: true })
   max_size?: number;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "int4", nullable: false })
   sort!: number;
 }
