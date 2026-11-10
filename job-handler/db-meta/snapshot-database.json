@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-04T23:54:20.231Z",
+  "generatedAt": "2026-11-10T19:37:09.058Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -541,6 +541,19 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "next_run_at": {
+          "name": "next_run_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -978,19 +991,6 @@
           "typeOid": 1043,
           "typcategory": "S",
           "formatType": "character varying(10)",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "enabled": {
-          "name": "enabled",
-          "ordinalPosition": 10,
-          "dataType": "bool",
-          "typname": "bool",
-          "typeOid": 16,
-          "typcategory": "B",
-          "formatType": "boolean",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,

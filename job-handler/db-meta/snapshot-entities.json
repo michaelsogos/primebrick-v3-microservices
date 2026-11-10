@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-04T23:54:20.228Z",
+  "generatedAt": "2026-11-10T19:37:09.054Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -109,7 +109,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "key": {
           "name": "key",
@@ -303,7 +304,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -469,6 +471,17 @@
           "isPostgresIdentity": false,
           "propertyKey": "expires_at",
           "isNullable": true
+        },
+        "next_run_at": {
+          "name": "next_run_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "next_run_at",
+          "isNullable": true
         }
       },
       "indexes": [
@@ -574,7 +587,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -826,7 +840,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "name": {
           "name": "name",
@@ -903,17 +918,6 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "execution_context",
-          "isNullable": false
-        },
-        "enabled": {
-          "name": "enabled",
-          "ordinalPosition": 17,
-          "dataType": "boolean",
-          "typname": "boolean",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "enabled",
           "isNullable": false
         }
       },
