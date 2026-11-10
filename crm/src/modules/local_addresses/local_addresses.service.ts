@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { LocalAddressEntity } from "../../domain/entities/local_address_entity.js";
 import {
   LOCAL_ADDRESS_DEFAULT_SORT,
-  LOCAL_ADDRESS_FILTERABLE_KEYS,
-  LOCAL_ADDRESS_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { LOCAL_ADDRESS_SEARCHABLE_KEYS, LOCAL_ADDRESS_FILTERABLE_KEYS } from "./local_address.meta.js";
 
 export class LocalAddressesService extends DomainService<LocalAddressEntity & Record<string, unknown>> {
   constructor() {

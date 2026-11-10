@@ -5,6 +5,7 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { listColumnKeys } from "@primebrick/sdk";
 import { withColumnConstraints } from "@primebrick/dal-pg";
 import { LegalFormEntity } from "../../domain/entities/legal_form_entity.js";
 import { LEGAL_FORM_DEFAULT_SORT, LEGAL_FORM_LIST_COLUMNS } from "./list-config.js";
@@ -23,3 +24,12 @@ export const legalFormMeta: EntityMeta = withColumnConstraints({
     page_size_options: [10, 25, 50, 100],
   },
 }, LegalFormEntity);
+
+/** Wire key sets derived from the RESOLVED meta — `withColumnConstraints`
+ *  injects the system columns the authored list lacks, so the sort_key
+ *  enum and the service narrowings mirror the served contract. */
+export const {
+  sortable: LEGAL_FORM_SORT_KEYS,
+  searchable: LEGAL_FORM_SEARCHABLE_KEYS,
+  filterable: LEGAL_FORM_FILTERABLE_KEYS,
+} = listColumnKeys(legalFormMeta.columns);

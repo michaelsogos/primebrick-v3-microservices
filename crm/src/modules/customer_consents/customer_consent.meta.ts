@@ -5,6 +5,7 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { listColumnKeys } from "@primebrick/sdk";
 import { withColumnConstraints } from "@primebrick/dal-pg";
 import { CustomerConsentEntity } from "../../domain/entities/customer_consent_entity.js";
 import { CUSTOMER_CONSENT_DEFAULT_SORT, CUSTOMER_CONSENT_LIST_COLUMNS } from "./list-config.js";
@@ -23,3 +24,12 @@ export const customerConsentMeta: EntityMeta = withColumnConstraints({
     page_size_options: [10, 25, 50],
   },
 }, CustomerConsentEntity);
+
+/** Wire key sets derived from the RESOLVED meta — `withColumnConstraints`
+ *  injects the system columns the authored list lacks, so the sort_key
+ *  enum and the service narrowings mirror the served contract. */
+export const {
+  sortable: CUSTOMER_CONSENT_SORT_KEYS,
+  searchable: CUSTOMER_CONSENT_SEARCHABLE_KEYS,
+  filterable: CUSTOMER_CONSENT_FILTERABLE_KEYS,
+} = listColumnKeys(customerConsentMeta.columns);

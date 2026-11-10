@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { MARKETING_QUALIFICATION_SORT_KEYS } from "./list-config.js";
+import { MARKETING_QUALIFICATION_SORT_KEYS } from "./marketing_qualification.meta.js";
 
 export const MarketingQualificationListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(MARKETING_QUALIFICATION_SORT_KEYS as [string, ...string[]]).optional(),

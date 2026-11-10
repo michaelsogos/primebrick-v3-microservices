@@ -21,24 +21,26 @@
  * `emailsender.entities.provider.{plural|singular}`.
  */
 import type { EntityMeta } from "@primebrick/sdk";
+import { withColumnConstraints } from "@primebrick/dal-pg";
+import { ProviderEntity } from "../../domain/entities/registry.js";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
 const F = (c: string) => `emailsender.entities.provider.fields.${c}`;
 
-export const providerMeta: EntityMeta = {
+export const providerMeta: EntityMeta = withColumnConstraints({
   entity: "provider",
   translation_key: "provider",
   entities_ns: "emailsender",
   uid: "uuid",
   display_field: "provider",
   columns: [
-    { key: "provider", label_key: F("provider"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
-    { key: "api_endpoint", label_key: F("api_endpoint"), type: "text", order: 20, filterable: true, searchable: true },
-    { key: "from_email", label_key: F("from_email"), type: "text", order: 30, filterable: true, searchable: true },
-    { key: "from_name", label_key: F("from_name"), type: "text", order: 40, searchable: true },
+    { key: "provider", label_key: F("provider"), type: "text", order: 10 },
+    { key: "api_endpoint", label_key: F("api_endpoint"), type: "text", order: 20 },
+    { key: "from_email", label_key: F("from_email"), type: "text", order: 30 },
+    { key: "from_name", label_key: F("from_name"), type: "text", order: 40 },
     { key: "reply_to", label_key: F("reply_to"), type: "text", order: 50, default_visible: false },
-    { key: "updated_at", label_key: F("updated_at"), type: "datetime", order: 60, sortable: true, audited: true },
-    { key: "created_at", label_key: F("created_at"), type: "datetime", order: 70, sortable: true, default_visible: false, audited: true },
+    // updated_at stays declared only to keep it visible by default (derived default is false)
+    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 60, default_visible: true },
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
-};
+}, ProviderEntity);

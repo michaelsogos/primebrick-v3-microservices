@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { MarketingQualificationEntity } from "../../domain/entities/marketing_qualification_entity.js";
 import {
   MARKETING_QUALIFICATION_DEFAULT_SORT,
-  MARKETING_QUALIFICATION_FILTERABLE_KEYS,
-  MARKETING_QUALIFICATION_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { MARKETING_QUALIFICATION_SEARCHABLE_KEYS, MARKETING_QUALIFICATION_FILTERABLE_KEYS } from "./marketing_qualification.meta.js";
 
 export class MarketingQualificationsService extends DomainService<MarketingQualificationEntity & Record<string, unknown>> {
   constructor() {

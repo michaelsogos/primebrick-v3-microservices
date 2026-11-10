@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { LegalFormEntity } from "../../domain/entities/legal_form_entity.js";
 import {
   LEGAL_FORM_DEFAULT_SORT,
-  LEGAL_FORM_FILTERABLE_KEYS,
-  LEGAL_FORM_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { LEGAL_FORM_SEARCHABLE_KEYS, LEGAL_FORM_FILTERABLE_KEYS } from "./legal_form.meta.js";
 
 export class LegalFormsService extends DomainService<LegalFormEntity & Record<string, unknown>> {
   constructor() {

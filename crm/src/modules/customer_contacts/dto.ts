@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { CUSTOMER_CONTACT_SORT_KEYS } from "./list-config.js";
+import { CUSTOMER_CONTACT_SORT_KEYS } from "./customer_contact.meta.js";
 
 export const CustomerContactListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(CUSTOMER_CONTACT_SORT_KEYS as [string, ...string[]]).optional(),

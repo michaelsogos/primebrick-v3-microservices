@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults } from "../shared/validation.js";
 
 import type { CustomerStatus } from "../../domain/entities/customer_entity.js";
-import { CUSTOMER_SORT_KEYS } from "./list-config.js";
+import { CUSTOMER_SORT_KEYS } from "./customer.meta.js";
 import {
   ListQueryBaseSchema,
   ListFiltersQuerySchema,

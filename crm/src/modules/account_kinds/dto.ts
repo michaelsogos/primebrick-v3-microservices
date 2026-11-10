@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { ACCOUNT_KIND_SORT_KEYS } from "./list-config.js";
+import { ACCOUNT_KIND_SORT_KEYS } from "./account_kind.meta.js";
 
 export const AccountKindListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(ACCOUNT_KIND_SORT_KEYS as [string, ...string[]]).optional(),

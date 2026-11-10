@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { QUALIFICATION_SORT_KEYS } from "./list-config.js";
+import { QUALIFICATION_SORT_KEYS } from "./qualification.meta.js";
 
 export const QualificationListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(QUALIFICATION_SORT_KEYS as [string, ...string[]]).optional(),

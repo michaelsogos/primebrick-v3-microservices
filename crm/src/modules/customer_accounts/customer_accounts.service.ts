@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { CustomerAccountEntity } from "../../domain/entities/customer_account_entity.js";
 import {
   CUSTOMER_ACCOUNT_DEFAULT_SORT,
-  CUSTOMER_ACCOUNT_FILTERABLE_KEYS,
-  CUSTOMER_ACCOUNT_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { CUSTOMER_ACCOUNT_SEARCHABLE_KEYS, CUSTOMER_ACCOUNT_FILTERABLE_KEYS } from "./customer_account.meta.js";
 
 export class CustomerAccountsService extends DomainService<CustomerAccountEntity & Record<string, unknown>> {
   constructor() {

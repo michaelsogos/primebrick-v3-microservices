@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { AccountKindEntity } from "../../domain/entities/account_kind_entity.js";
 import {
   ACCOUNT_KIND_DEFAULT_SORT,
-  ACCOUNT_KIND_FILTERABLE_KEYS,
-  ACCOUNT_KIND_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { ACCOUNT_KIND_SEARCHABLE_KEYS, ACCOUNT_KIND_FILTERABLE_KEYS } from "./account_kind.meta.js";
 
 export class AccountKindsService extends DomainService<AccountKindEntity & Record<string, unknown>> {
   constructor() {

@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { CompanyDimensionEntity } from "../../domain/entities/company_dimension_entity.js";
 import {
   COMPANY_DIMENSION_DEFAULT_SORT,
-  COMPANY_DIMENSION_FILTERABLE_KEYS,
-  COMPANY_DIMENSION_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { COMPANY_DIMENSION_SEARCHABLE_KEYS, COMPANY_DIMENSION_FILTERABLE_KEYS } from "./company_dimension.meta.js";
 
 export class CompanyDimensionsService extends DomainService<CompanyDimensionEntity & Record<string, unknown>> {
   constructor() {

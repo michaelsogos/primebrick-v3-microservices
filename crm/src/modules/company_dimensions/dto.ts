@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { COMPANY_DIMENSION_SORT_KEYS } from "./list-config.js";
+import { COMPANY_DIMENSION_SORT_KEYS } from "./company_dimension.meta.js";
 
 export const CompanyDimensionListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(COMPANY_DIMENSION_SORT_KEYS as [string, ...string[]]).optional(),

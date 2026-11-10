@@ -4,6 +4,7 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { listColumnKeys } from "@primebrick/sdk";
 import { withColumnConstraints } from "@primebrick/dal-pg";
 import { QualificationEntity } from "../../domain/entities/qualification_entity.js";
 import { QUALIFICATION_DEFAULT_SORT, QUALIFICATION_LIST_COLUMNS } from "./list-config.js";
@@ -22,3 +23,12 @@ export const qualificationMeta: EntityMeta = withColumnConstraints({
     page_size_options: [10, 25, 50],
   },
 }, QualificationEntity);
+
+/** Wire key sets derived from the RESOLVED meta — `withColumnConstraints`
+ *  injects the system columns the authored list lacks, so the sort_key
+ *  enum and the service narrowings mirror the served contract. */
+export const {
+  sortable: QUALIFICATION_SORT_KEYS,
+  searchable: QUALIFICATION_SEARCHABLE_KEYS,
+  filterable: QUALIFICATION_FILTERABLE_KEYS,
+} = listColumnKeys(qualificationMeta.columns);

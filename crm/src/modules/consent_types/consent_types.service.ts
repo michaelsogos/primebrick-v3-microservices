@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { ConsentTypeEntity } from "../../domain/entities/consent_type_entity.js";
 import {
   CONSENT_TYPE_DEFAULT_SORT,
-  CONSENT_TYPE_FILTERABLE_KEYS,
-  CONSENT_TYPE_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { CONSENT_TYPE_SEARCHABLE_KEYS, CONSENT_TYPE_FILTERABLE_KEYS } from "./consent_type.meta.js";
 
 export class ConsentTypesService extends DomainService<ConsentTypeEntity & Record<string, unknown>> {
   constructor() {

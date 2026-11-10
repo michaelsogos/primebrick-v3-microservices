@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { LOCAL_ADDRESS_TYPE_SORT_KEYS } from "./list-config.js";
+import { LOCAL_ADDRESS_TYPE_SORT_KEYS } from "./local_address_type.meta.js";
 
 export const LocalAddressTypeListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(LOCAL_ADDRESS_TYPE_SORT_KEYS as [string, ...string[]]).optional(),

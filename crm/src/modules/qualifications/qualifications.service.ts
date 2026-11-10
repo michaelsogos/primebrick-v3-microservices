@@ -8,9 +8,8 @@ import { requireActor } from "@primebrick/sdk";
 import { QualificationEntity } from "../../domain/entities/qualification_entity.js";
 import {
   QUALIFICATION_DEFAULT_SORT,
-  QUALIFICATION_FILTERABLE_KEYS,
-  QUALIFICATION_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { QUALIFICATION_SEARCHABLE_KEYS, QUALIFICATION_FILTERABLE_KEYS } from "./qualification.meta.js";
 
 export class QualificationsService extends DomainService<QualificationEntity & Record<string, unknown>> {
   constructor() {

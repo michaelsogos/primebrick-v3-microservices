@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ListQueryBaseSchema } from "../shared/validation.js";
-import { CUSTOMER_CONSENT_SORT_KEYS } from "./list-config.js";
+import { CUSTOMER_CONSENT_SORT_KEYS } from "./customer_consent.meta.js";
 
 export const CustomerConsentListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(CUSTOMER_CONSENT_SORT_KEYS as [string, ...string[]]).optional(),

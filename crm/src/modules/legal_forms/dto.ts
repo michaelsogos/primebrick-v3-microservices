@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
-import { LEGAL_FORM_SORT_KEYS } from "./list-config.js";
+import { LEGAL_FORM_SORT_KEYS } from "./legal_form.meta.js";
 
 export const LegalFormListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(LEGAL_FORM_SORT_KEYS as [string, ...string[]]).optional(),

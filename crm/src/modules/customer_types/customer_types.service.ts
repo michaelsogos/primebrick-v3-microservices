@@ -10,9 +10,8 @@ import { requireActor } from "@primebrick/sdk";
 import { CustomerTypeEntity } from "../../domain/entities/customer_type_entity.js";
 import {
   CUSTOMER_TYPE_DEFAULT_SORT,
-  CUSTOMER_TYPE_FILTERABLE_KEYS,
-  CUSTOMER_TYPE_SEARCHABLE_KEYS,
 } from "./list-config.js";
+import { CUSTOMER_TYPE_SEARCHABLE_KEYS, CUSTOMER_TYPE_FILTERABLE_KEYS } from "./customer_type.meta.js";
 
 export class CustomerTypesService extends DomainService<CustomerTypeEntity & Record<string, unknown>> {
   constructor() {

@@ -5,6 +5,7 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { listColumnKeys } from "@primebrick/sdk";
 import { withColumnConstraints } from "@primebrick/dal-pg";
 import { CompanyDimensionEntity } from "../../domain/entities/company_dimension_entity.js";
 import { COMPANY_DIMENSION_DEFAULT_SORT, COMPANY_DIMENSION_LIST_COLUMNS } from "./list-config.js";
@@ -23,3 +24,12 @@ export const companyDimensionMeta: EntityMeta = withColumnConstraints({
     page_size_options: [10, 25, 50],
   },
 }, CompanyDimensionEntity);
+
+/** Wire key sets derived from the RESOLVED meta — `withColumnConstraints`
+ *  injects the system columns the authored list lacks, so the sort_key
+ *  enum and the service narrowings mirror the served contract. */
+export const {
+  sortable: COMPANY_DIMENSION_SORT_KEYS,
+  searchable: COMPANY_DIMENSION_SEARCHABLE_KEYS,
+  filterable: COMPANY_DIMENSION_FILTERABLE_KEYS,
+} = listColumnKeys(companyDimensionMeta.columns);

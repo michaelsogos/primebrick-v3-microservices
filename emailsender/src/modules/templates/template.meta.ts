@@ -25,26 +25,28 @@
  * used by `send` callers.
  */
 import type { EntityMeta } from "@primebrick/sdk";
+import { withColumnConstraints } from "@primebrick/dal-pg";
+import { EmailTemplateEntity } from "../../domain/entities/registry.js";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
 const F = (c: string) => `emailsender.entities.email_template.fields.${c}`;
 
-export const templateMeta: EntityMeta = {
+export const templateMeta: EntityMeta = withColumnConstraints({
   entity: "email_template",
   translation_key: "email_template",
   entities_ns: "emailsender",
   uid: "uuid",
   display_field: "subject",
   columns: [
-    { key: "code", label_key: F("code"), type: "text", order: 10, sortable: true, filterable: true, searchable: true },
-    { key: "language_iso", label_key: F("language_iso"), type: "text", order: 20, sortable: true, filterable: true, searchable: true },
-    { key: "subject", label_key: F("subject"), type: "text", order: 30, filterable: true, searchable: true },
+    { key: "code", label_key: F("code"), type: "text", order: 10 },
+    { key: "language_iso", label_key: F("language_iso"), type: "text", order: 20 },
+    { key: "subject", label_key: F("subject"), type: "text", order: 30 },
     // Declared so the list endpoint returns it — `x_options` consumers
     // (payload_map `x_map_keys`) read the template's variable vocabulary
     // off the selected row. Hidden from the default list view.
     { key: "variables", label_key: F("variables"), type: "text", format: "json", order: 35, default_visible: false },
-    { key: "updated_at", label_key: F("updated_at"), type: "datetime", order: 40, sortable: true, audited: true },
-    { key: "created_at", label_key: F("created_at"), type: "datetime", order: 50, sortable: true, default_visible: false, audited: true },
+    // updated_at stays declared only to keep it visible by default (derived default is false)
+    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 40, default_visible: true },
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
-};
+}, EmailTemplateEntity);
