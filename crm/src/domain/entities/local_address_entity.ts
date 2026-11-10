@@ -24,7 +24,7 @@ export class LocalAddressEntity
   @Unique()
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
   @Column({ pgType: "uuid", nullable: false })

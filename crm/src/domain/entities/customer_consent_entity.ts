@@ -25,7 +25,7 @@ export class CustomerConsentEntity
   @Unique()
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
   /** Lazy meta ref → consent_types. */
@@ -36,10 +36,10 @@ export class CustomerConsentEntity
   @Column({ length: 50, nullable: false })
   doc_version!: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   granted_at!: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   revoked_at?: Date;
 
   /** Grant channel (web form, paper, import, …). */

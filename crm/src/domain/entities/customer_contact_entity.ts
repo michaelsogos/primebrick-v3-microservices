@@ -25,7 +25,7 @@ export class CustomerContactEntity
   @Unique()
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
   /** Lazy meta ref → contact_types. */

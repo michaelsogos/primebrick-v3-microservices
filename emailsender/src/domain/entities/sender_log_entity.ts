@@ -11,7 +11,7 @@ import { Entity, Key, Column, Unique, type UUID } from "@primebrick/dal-pg";
 export class SenderLogEntity {
   @Key() id!: bigint;
 
-  @Column({ nullable: true }) entity_id?: bigint;
+  @Column({ jsType: "bigint", nullable: true }) entity_id?: bigint;
   @Column({ nullable: true }) entity_uuid?: UUID;
   @Column({ nullable: false }) type!: string;
   /** Provider-assigned message id (Brevo `message-id`) — unique correlation key for webhook events. */
@@ -24,6 +24,6 @@ export class SenderLogEntity {
   @Column({ nullable: false }) recipients!: object;
   @Column({ nullable: true }) interpolated_sent_message?: string;
   @Column({ nullable: true }) error_message?: string;
-  @Column({ nullable: true }) sent_at?: Date;
-  @Column({ nullable: true }) status_changed_at?: Date;
+  @Column({ nullable: true, jsType: "instant" }) sent_at?: Date;
+  @Column({ nullable: true, jsType: "instant" }) status_changed_at?: Date;
 }

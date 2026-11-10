@@ -27,11 +27,11 @@ export class CustomerLinkEntity
   uuid!: UUID;
 
   /** Edge source — true FK → crm.customers(id). */
-  @Column({ nullable: false })
+  @Column({ jsType: "bigint", nullable: false })
   parent_customer_id!: bigint;
 
   /** Edge target — true FK → crm.customers(id). */
-  @Column({ nullable: false })
+  @Column({ jsType: "bigint", nullable: false })
   child_customer_id!: bigint;
 
   /** Lazy meta ref → customer_link_types (subsidiary, employee, …). */

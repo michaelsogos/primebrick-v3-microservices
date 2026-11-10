@@ -26,7 +26,7 @@ export class CustomerAccountEntity
   @Unique()
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
   /** Lazy meta ref → account_kinds (invoice, legal, …). */
@@ -46,11 +46,11 @@ export class CustomerAccountEntity
   country!: string;
 
   /** Which LU of the customer represents this account (billing address). */
-  @Column({ nullable: true })
+  @Column({ jsType: "bigint", nullable: true })
   local_address_id?: bigint;
 
   /** Which contact channel of the customer serves this account. */
-  @Column({ nullable: true })
+  @Column({ jsType: "bigint", nullable: true })
   contact_id?: bigint;
 
   /** One default account per customer — partial unique index in DDL. */

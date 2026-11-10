@@ -45,7 +45,7 @@ export class JobRunEntity
   status!: string;
 
   /** Stream sequence of the due fire — dedupes result reports per fire. */
-  @Column({ nullable: true })
+  @Column({ jsType: "bigint", nullable: true })
   fire_seq?: bigint;
 
   /** RFC-style error code on failure (e.g. "401", "RBAC_PERMISSION_DENIED"). */
@@ -56,7 +56,7 @@ export class JobRunEntity
   error_detail?: string;
 
   /** Wall-clock duration reported by the executor. */
-  @Column({ nullable: true })
+  @Column({ jsType: "bigint", nullable: true })
   duration_ms?: bigint;
 
   /** JetStream redelivery count at execution time. */

@@ -134,7 +134,7 @@ export class AiModelEntity
 
   /** KV cache bytes per token — derived from HF config.json
    *  (2 × layers × kv_heads × head_dim × dtype_bytes). Agnostic, machine-independent. */
-  @Column({ nullable: true })
+  @Column({ jsType: "bigint", nullable: true })
   kv_cache_bytes_per_token?: bigint;
 
   /** Approx FLOPs per generated token (~2 × params). Agnostic, machine-independent. */
