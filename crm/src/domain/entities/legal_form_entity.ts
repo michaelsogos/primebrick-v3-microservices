@@ -23,6 +23,7 @@ export class LegalFormEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

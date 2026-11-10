@@ -20,6 +20,7 @@ export class QualificationEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

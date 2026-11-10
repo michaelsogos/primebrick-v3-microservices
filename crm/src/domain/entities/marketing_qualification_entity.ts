@@ -20,6 +20,7 @@ export class MarketingQualificationEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

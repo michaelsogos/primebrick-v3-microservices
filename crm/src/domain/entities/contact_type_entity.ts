@@ -24,6 +24,7 @@ export class ContactTypeEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

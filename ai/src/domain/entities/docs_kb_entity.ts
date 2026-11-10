@@ -57,9 +57,9 @@ export class DocsKbEntity {
   @Column({ nullable: false })
   content_hash!: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   created_at!: Date;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   updated_at!: Date;
 }

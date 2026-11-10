@@ -52,6 +52,7 @@ export class JobTriggerEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

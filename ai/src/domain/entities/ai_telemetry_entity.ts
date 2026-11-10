@@ -15,13 +15,13 @@ export class AiTelemetryEntity {
   id!: bigint;
 
   @Unique("ai_telemetry_uuid_uq", 0)
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
-  @Column({ nullable: true })
+  @Column({ pgType: "uuid", nullable: true })
   conversation_uuid?: UUID | null;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   user_uuid!: UUID;
 
   @Column({ nullable: false })
@@ -51,6 +51,6 @@ export class AiTelemetryEntity {
   @Column({ nullable: true })
   error?: string | null;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   created_at!: Date;
 }

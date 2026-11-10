@@ -20,6 +20,7 @@ export class CustomerLinkTypeEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

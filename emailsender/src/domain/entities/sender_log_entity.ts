@@ -12,14 +12,14 @@ export class SenderLogEntity {
   @Key() id!: bigint;
 
   @Column({ jsType: "bigint", nullable: true }) entity_id?: bigint;
-  @Column({ nullable: true }) entity_uuid?: UUID;
+  @Column({ pgType: "uuid", nullable: true }) entity_uuid?: UUID;
   @Column({ nullable: false }) type!: string;
   /** Provider-assigned message id (Brevo `message-id`) — unique correlation key for webhook events. */
   @Unique()
   @Column({ nullable: true }) provider_message_id?: string;
-  @Column({ nullable: false }) provider_uuid!: UUID;
+  @Column({ pgType: "uuid", nullable: false }) provider_uuid!: UUID;
   @Column({ length: 50, nullable: false }) status!: string;
-  @Column({ nullable: true }) template_uuid?: UUID;
+  @Column({ pgType: "uuid", nullable: true }) template_uuid?: UUID;
   @Column({ nullable: false }) senders!: object;
   @Column({ nullable: false }) recipients!: object;
   @Column({ nullable: true }) interpolated_sent_message?: string;

@@ -28,10 +28,10 @@ export class AiMessageEntity
   id!: bigint;
 
   @Unique()
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   conversation_uuid!: UUID;
 
   @Column({ nullable: false })

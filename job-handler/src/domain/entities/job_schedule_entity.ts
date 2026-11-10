@@ -24,6 +24,7 @@ export class JobScheduleEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   /** The rollup subject the declaration is stored on — unique per schedule. */
@@ -68,21 +69,21 @@ export class JobScheduleEntity
   initiator?: string;
 
   /** The trigger this schedule was materialized from (kind=trigger). */
-  @Column({ nullable: true })
+  @Column({ pgType: "uuid", nullable: true })
   trigger_uuid?: UUID;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   armed_at?: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   disarmed_at?: Date;
 
   /** When a `once` schedule actually dispatched (status → fired). */
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   fired_at?: Date;
 
   /** `armed_at + Nats-Schedule-TTL` — when the declaration self-purges. */
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   expires_at?: Date;
 
   /** Engine-maintained next fire (mirror of NATS truth, never interpreted
@@ -90,7 +91,7 @@ export class JobScheduleEntity
    *  by the server's own `Nats-Schedule-Next` header — cron included.
    *  NULL while disarmed/terminal and for cron specs before their first
    *  fire (NATS owns cron evaluation — no second interpreter). */
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   next_run_at?: Date;
 
 

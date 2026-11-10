@@ -24,6 +24,7 @@ export class JobRunEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   /** Schedule subject that fired this run — null for immediate dispatches. */

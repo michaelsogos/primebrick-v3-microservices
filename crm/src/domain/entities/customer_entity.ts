@@ -39,6 +39,7 @@ export class CustomerEntity
   id: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   @Column({ length: 20, nullable: false })
@@ -78,7 +79,7 @@ export class CustomerEntity
    * Customer onboarding instant, stored as `timestamptz` (UTC in PostgreSQL).
    * Pair with {@link onboarding_time_zone} so the UI can format in the creator IANA zone (incl. DST).
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   onboarding_at?: Date;
 
   /** IANA time zone id (e.g. `Europe/Rome`) captured when onboarding was recorded. */

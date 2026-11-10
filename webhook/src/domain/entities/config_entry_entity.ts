@@ -16,6 +16,7 @@ export class ConfigEntryEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()

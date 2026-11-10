@@ -27,13 +27,13 @@ export class AiFeedbackEntity
   id!: bigint;
 
   @Unique()
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   message_uuid!: UUID;
 
-  @Column({ nullable: true })
+  @Column({ pgType: "uuid", nullable: true })
   conversation_uuid?: UUID;
 
   @Column({ nullable: false })

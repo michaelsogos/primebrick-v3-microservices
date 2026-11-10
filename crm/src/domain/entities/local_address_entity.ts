@@ -22,6 +22,7 @@ export class LocalAddressEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Column({ jsType: "bigint", nullable: false })

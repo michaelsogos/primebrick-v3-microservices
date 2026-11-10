@@ -43,6 +43,7 @@ export class AiCerebellumEntity
   id: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   /** Assistant identifier (e.g. `regex`, `json_config`).

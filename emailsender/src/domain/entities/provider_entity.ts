@@ -16,6 +16,7 @@ export class ProviderEntity
   id: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   @Column({ length: 50, nullable: false })

@@ -24,6 +24,7 @@ export class CustomerLinkEntity
   id!: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   /** Edge source — true FK → crm.customers(id). */

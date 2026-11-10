@@ -37,6 +37,7 @@ export class AiModelEntity
   id: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   /** Bare HF repo id (e.g. `onnx-community/Qwen3-4B-ONNX`) — the quantization

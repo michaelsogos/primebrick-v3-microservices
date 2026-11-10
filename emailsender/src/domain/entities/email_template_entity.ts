@@ -16,6 +16,7 @@ export class EmailTemplateEntity
   id: bigint;
 
   @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   @Column({ length: 100, nullable: false })

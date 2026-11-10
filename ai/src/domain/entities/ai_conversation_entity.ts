@@ -34,7 +34,7 @@ export class AiConversationEntity
   id!: bigint;
 
   @Unique("ai_conversations_uuid_uq", 0)
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
   @Column({ nullable: true })
@@ -50,7 +50,7 @@ export class AiConversationEntity
    */
   @Unique("ai_conversations_uuid_uq", 1)
   @PartitionField({ interval: "1 month", retention: "6 months" })
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   last_seen_at!: Date;
 
 
