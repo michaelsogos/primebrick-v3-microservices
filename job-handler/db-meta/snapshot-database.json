@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T15:56:39.731Z",
+  "generatedAt": "2026-11-11T16:56:55.616Z",
   "source": "database",
   "tables": {
     "job.config_entries": {

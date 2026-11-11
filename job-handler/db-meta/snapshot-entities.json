@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T15:56:39.722Z",
+  "generatedAt": "2026-11-11T16:56:55.613Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -110,7 +110,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
@@ -305,7 +305,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -588,7 +588,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -842,7 +842,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "name": {
           "name": "name",

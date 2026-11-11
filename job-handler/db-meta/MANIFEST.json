@@ -1,11 +1,12 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T15:56:38.432Z",
+  "issued_at": "2026-11-11T16:56:55.835Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
-    "0003_job_translations": "6548b57bf90c0d782ac04d7bac4ed24505ebb5914073642e001b4893b897c524"
+    "0003_job_translations": "6548b57bf90c0d782ac04d7bac4ed24505ebb5914073642e001b4893b897c524",
+    "0004_uuidv7_defaults": "700f95f5399ba81f2ec9a1121fbe303d9e977d1fbf8aff71029d196eb8b95cc6"
   },
-  "signature": "XFpEk2qxxhp+K7eT7epMAw6K6EF9HVrJoj//rFuRal0HBzcTsngLSFXX/ItatVvfd7BZD05SSOmMK4ZYi39WBw=="
+  "signature": "SzAX+6g4NDbTvntbwjK3+c5e4P5Gl4HnHUN2aae/xXNgmeLmkXmv7Smxp0AABtkbA41Mh/tavOe3ul/QuTHNBw=="
 }
