@@ -21,9 +21,6 @@ import { DocMetadata } from "../jsonb-contracts.js";
 @Entity("docs_kb", "ai")
 export class DocsKbEntity {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 

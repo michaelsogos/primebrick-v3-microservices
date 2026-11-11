@@ -10,7 +10,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   PartitionChildOf,
   type IAuditableEntity,
   type UUID,
@@ -24,11 +23,7 @@ import { MessageContent } from "../jsonb-contracts.js";
 @PartitionChildOf({ parent: AiConversationEntity, ref: "conversation_uuid" })
 export class AiMessageEntity
   extends Auditable(EntityBase) {
-  /** Internal PK — FK/JOIN performance only, never exposed to callers. */
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 

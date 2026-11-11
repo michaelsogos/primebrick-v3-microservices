@@ -1,12 +1,13 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T16:57:55.236Z",
+  "issued_at": "2026-11-11T17:41:44.214Z",
   "patches": {
     "0001_ai_schema": "1d3db8305d2a1114da22b197444b5486651b556e0bf5750b684b69d963a36c65",
     "0002_seed_config": "9b1c33abb48950074654b08ba277d8435078abb1320ceae21cfe7748fd724f44",
     "0003_ai_translations": "1b091edb8853297fc455ec1a0af34ecb9508177cee5e0838cce0b0c7e7995933",
-    "0004_uuidv7_defaults": "3a27e040ee243f8d48d201688d503de1046b84a108f99541798e99caf8e971e9"
+    "0004_uuidv7_defaults": "3a27e040ee243f8d48d201688d503de1046b84a108f99541798e99caf8e971e9",
+    "0005_uuid_pk_swap": "27bd467473d3717b0483d0f93f5e3bdcfc218f6a5c4b1a736027bf9960899e2e"
   },
-  "signature": "Has2ByRgQuFH7rpru6ECOMxLThvHWpEOElp8wFSTvxSqn77i2DP2j57X7TqXUeC9WOBhXuoshnjMHeuqa7uKCg=="
+  "signature": "NFKkdRUf9AddfRrTbR/OYzI4EwHYmM85sP8Fm9hLFyCFH/FmkyucrIggRNXjDHsQz/jDYpkWsza8SyeIVaPNBA=="
 }

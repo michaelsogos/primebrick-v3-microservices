@@ -10,7 +10,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   PartitionChildOf,
   type IAuditableEntity,
   type UUID,
@@ -24,9 +23,6 @@ import { AiConversationEntity } from "./ai_conversation_entity.js";
 export class AiFeedbackEntity
   extends Auditable(EntityBase) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 

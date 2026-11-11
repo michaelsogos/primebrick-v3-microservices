@@ -26,7 +26,7 @@ import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 import { type DocMetadata } from "../domain/jsonb-contracts.js";
 
 export interface DocsSearchResult {
-  id: bigint;
+  uuid: string;
   repo: string;
   path: string;
   title: string;
@@ -60,12 +60,12 @@ const LEX_MATCH_MIN = 0.1;
 /** How many HNSW candidates to fetch before keyword re-ranking. */
 const OVERSAMPLE = 4;
 
-const KB_FIELDS = (["id", "repo", "path", "title", "chunk_idx", "content", "metadata"] as const)
+const KB_FIELDS = (["uuid", "repo", "path", "title", "chunk_idx", "content", "metadata"] as const)
   .map((k) => Project.field(field(DocsKbEntity, k)));
 
 /** Row shape returned by the hybrid `vectorSearch` — KB projection plus
  *  the channel columns the builder adds on demand. */
-type SearchRow = Pick<DocsKbEntity, "id" | "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata"> & {
+type SearchRow = Pick<DocsKbEntity, "uuid" | "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata"> & {
   similarity: number;
   keyword_hits?: number;
   lexical_score?: number;
@@ -211,7 +211,7 @@ async function expandDocGraph(
   }
 
   return [...bestByPath.values()].map((row) => ({
-    id: row.id,
+    uuid: row.uuid,
     repo: row.repo,
     path: row.path,
     title: row.title,

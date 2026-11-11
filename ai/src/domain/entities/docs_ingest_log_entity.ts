@@ -17,7 +17,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   type IAuditableEntity,
   EntityBase,
   Auditable,
@@ -29,9 +28,6 @@ import { PipelineStats } from "../jsonb-contracts.js";
 export class DocsIngestLogEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid: UUID;
 

@@ -41,9 +41,6 @@ export class AiCerebellumEntity
   extends Deletable(Auditable(EntityBase))
   implements IExposableEntity {
   @Key()
-  id: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid: UUID;
 
