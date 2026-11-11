@@ -17,6 +17,7 @@ These files help humans and agents collaborate consistently on the
 | [`dal-usage.md`](./dal-usage.md) | DAL Usage — ONE way only |
 | [`data-model-conventions.md`](./data-model-conventions.md) | Data Model Conventions |
 | [`db-patches.md`](./db-patches.md) | Database Patches (db-meta + migration engine) |
+| [`degraded-migration-recovery.md`](./degraded-migration-recovery.md) | Degraded migration recovery — self-heal without respawn (operator surface) |
 | [`docs-audience.md`](./docs-audience.md) | Documentation Audience (3 tiers) |
 | [`docs-dev-guide.md`](./docs-dev-guide.md) | Developer Documentation |
 | [`docs-order.md`](./docs-order.md) | Documentation Page Order |
