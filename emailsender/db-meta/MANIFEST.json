@@ -1,12 +1,13 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T16:31:47.599Z",
+  "issued_at": "2026-11-11T16:52:59.070Z",
   "patches": {
     "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
     "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
     "0003_seed_email_templates": "847dcf30fc2489e07b236523e580c3379388a792839d36c7ca4a866a98815819",
-    "0004_emailsender_translations": "a5673084409a785c64b064f9d76bc206c061852490fad0c874b71a56381a8043"
+    "0004_emailsender_translations": "a5673084409a785c64b064f9d76bc206c061852490fad0c874b71a56381a8043",
+    "0005_uuidv7_defaults": "1f347f5d0b070706d62ff79d1f536ae8582dde7028d153950e669a7b98545529"
   },
-  "signature": "hqdPEeBCF3tUEgfaZXwSv1X0Hb1ihmcqPjrQodGgzg67M7WdeoOoAos3WIi3PmIzb9weQqML7aqgcOQ+C3hgDg=="
+  "signature": "OynP+zgo8S1GyfT4MCGIadhVDw/UVii+20E5S+CAkvqAxG5JaXepQ6OXtq+jjrLjWokLgUX+ECZSvG7AoDU8Bg=="
 }

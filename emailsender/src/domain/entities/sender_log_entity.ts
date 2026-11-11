@@ -12,6 +12,10 @@ import { RecipientEnvelope, SenderEnvelope } from "../jsonb-contracts.js";
 export class SenderLogEntity {
   @Key() id!: bigint;
 
+  @Unique()
+  @Column({ pgType: "uuid" })
+  uuid!: UUID;
+
   @Column({ jsType: "bigint", nullable: true }) entity_id?: bigint;
   @Column({ pgType: "uuid", nullable: true }) entity_uuid?: UUID;
   @Column({ nullable: false }) type!: string;

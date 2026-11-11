@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T16:26:54.694Z",
+  "generatedAt": "2026-11-11T16:52:58.889Z",
   "source": "entities",
   "tables": {
     "emailsender.providers": {
@@ -110,7 +110,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "provider": {
           "name": "provider",
@@ -305,7 +305,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -413,9 +413,21 @@
           "propertyKey": "id",
           "isNullable": false
         },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 2,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false,
+          "defaultSql": "uuidv7()"
+        },
         "entity_id": {
           "name": "entity_id",
-          "ordinalPosition": 2,
+          "ordinalPosition": 3,
           "dataType": "int8",
           "typname": "int8",
           "isPrimaryKey": false,
@@ -426,7 +438,7 @@
         },
         "entity_uuid": {
           "name": "entity_uuid",
-          "ordinalPosition": 3,
+          "ordinalPosition": 4,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -437,7 +449,7 @@
         },
         "type": {
           "name": "type",
-          "ordinalPosition": 4,
+          "ordinalPosition": 5,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -448,7 +460,7 @@
         },
         "provider_message_id": {
           "name": "provider_message_id",
-          "ordinalPosition": 5,
+          "ordinalPosition": 6,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -459,7 +471,7 @@
         },
         "provider_uuid": {
           "name": "provider_uuid",
-          "ordinalPosition": 6,
+          "ordinalPosition": 7,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -470,7 +482,7 @@
         },
         "status": {
           "name": "status",
-          "ordinalPosition": 7,
+          "ordinalPosition": 8,
           "dataType": "varchar(50)",
           "typname": "varchar(50)",
           "isPrimaryKey": false,
@@ -481,7 +493,7 @@
         },
         "template_uuid": {
           "name": "template_uuid",
-          "ordinalPosition": 8,
+          "ordinalPosition": 9,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -492,7 +504,7 @@
         },
         "senders": {
           "name": "senders",
-          "ordinalPosition": 9,
+          "ordinalPosition": 10,
           "dataType": "jsonb",
           "typname": "jsonb",
           "isPrimaryKey": false,
@@ -503,7 +515,7 @@
         },
         "recipients": {
           "name": "recipients",
-          "ordinalPosition": 10,
+          "ordinalPosition": 11,
           "dataType": "jsonb",
           "typname": "jsonb",
           "isPrimaryKey": false,
@@ -514,7 +526,7 @@
         },
         "interpolated_sent_message": {
           "name": "interpolated_sent_message",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -525,7 +537,7 @@
         },
         "error_message": {
           "name": "error_message",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -536,7 +548,7 @@
         },
         "sent_at": {
           "name": "sent_at",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -547,7 +559,7 @@
         },
         "status_changed_at": {
           "name": "status_changed_at",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -558,6 +570,14 @@
         }
       },
       "indexes": [
+        {
+          "name": "sender_log_uuid_uq",
+          "columns": [
+            "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        },
         {
           "name": "sender_log_provider_message_id_uq",
           "columns": [
@@ -675,7 +695,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
           "isNullable": false,
-          "defaultSql": "gen_random_uuid()"
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
