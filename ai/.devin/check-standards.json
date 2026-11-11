@@ -1,5 +1,25 @@
 {
   "rules": {
+    "dal-access": {
+      "allowPaths": [
+        "adapters/config-repository-adapter.ts",
+        "db/dal.ts",
+        "db/entity-repo.ts",
+        "index.ts",
+        "services/conversation-repository.ts",
+        "services/docs-index-status.ts",
+        "services/docs-kb-repository.ts",
+        "services/docs-pack-reindex.ts",
+        "services/docs-search-dal.ts",
+        "services/feedback-repository.ts",
+        "services/telemetry-repository.ts"
+      ]
+    },
+    "layer-repo-import": {
+      "appliesTo": [
+        "controllers/"
+      ]
+    },
     "panel-footer-chrome": {
       "appliesTo": [
         "fe/src/"

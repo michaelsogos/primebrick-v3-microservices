@@ -1,0 +1,59 @@
+{
+  "violations": [
+    {
+      "file": "controllers/http/composite-route.ts",
+      "rule": "layer-repo-import",
+      "text": "} from \"../../services/conversation-repository.js\";"
+    },
+    {
+      "file": "controllers/http/composite-route.ts",
+      "rule": "layer-repo-import",
+      "text": "} from \"../../services/feedback-repository.js\";"
+    },
+    {
+      "file": "controllers/http/composite-route.ts",
+      "rule": "layer-repo-import",
+      "text": "} from \"../../services/telemetry-repository.js\";"
+    },
+    {
+      "file": "controllers/http/composite-route.ts",
+      "rule": "dal-access",
+      "text": "const adapter = new HealthCheckAdapter(getDal());"
+    },
+    {
+      "file": "controllers/http/config-route.ts",
+      "rule": "dal-access",
+      "text": "config_entries: ((await getDal().findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[]).map(maskRow),"
+    },
+    {
+      "file": "controllers/http/config-route.ts",
+      "rule": "dal-access",
+      "text": "const row = await getDal().find(ConfigEntryEntity, configProjection, {"
+    },
+    {
+      "file": "controllers/http/config-route.ts",
+      "rule": "dal-access",
+      "text": "const dal = getDal();"
+    },
+    {
+      "file": "controllers/nats-sub/docs-pack-subscriber.ts",
+      "rule": "layer-repo-import",
+      "text": "import { deleteRepoDocs } from \"../../services/docs-kb-repository.js\";"
+    },
+    {
+      "file": "controllers/nats-sub/partition-jobs.ts",
+      "rule": "dal-access",
+      "text": "const report = await getDal().partitionMaintenance(ENTITY_REGISTRY);"
+    },
+    {
+      "file": "modules/ai-cerebellum/ai-cerebellum.service.ts",
+      "rule": "dal-access",
+      "text": "this.svc = getDal().entityService<AiCerebellumDetailDto>({"
+    },
+    {
+      "file": "modules/ai-models/ai-models.service.ts",
+      "rule": "dal-access",
+      "text": "this.svc = getDal().entityService<AiModelDetailDto>({"
+    }
+  ]
+}

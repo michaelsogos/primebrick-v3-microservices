@@ -1,0 +1,9 @@
+{
+  "violations": [
+    {
+      "file": "controllers/http/entities-route.ts",
+      "rule": "dal-access",
+      "text": "const rows = (await getDal().findAll("
+    }
+  ]
+}
