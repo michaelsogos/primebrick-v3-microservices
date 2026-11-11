@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-09T11:48:38.260Z",
+  "issued_at": "2026-11-11T18:43:54.072Z",
   "patches": {
     "0001_initial_schema_webhook": "bf4dd142785e3094ea4e3bdebcdb87b1a5d9f469fdf3395e188fd0f423ad1344",
     "0002_seed_webhook_config": "08d871ade3a47770fbaca39fab4954dd8a8082535f58956c1742158c3e857858",
@@ -9,7 +9,8 @@
     "0004_seed_be_base_url": "fd05b69bd627390d648fbc31fd6cc1200844f176601cf32e2283bfd9e45588dd",
     "20261013210300_audit_columns_not_null": "e253ea9d51cfb359a16a636cb01391dd1e340c94a18492594155f3beed392ab4",
     "20261102220000_create_translations_table": "aaecc32e7312fa575d447a48a15a2788dbcfb921877b88832120216d08fe6ab1",
+    "20261111190000_uuid_pk_v7_rewrite": "8e240e0de4ce14b31c8d2e22b1162a99b1cc8cd37340246867f4e51e1d67e919",
     "20261205000000_i18n_key_snake_cleanup": "725d714be7c4430cbe2d890dae7879ebfc90f228368604e5180ea2be3972a354"
   },
-  "signature": "Hpha0wZpbollqKBquRPAivoidx9JH0OR0TSgayqDg4cKY6Z92DJhHVp4f0OLtW84SOibe7QghaqYnHtewxHKDA=="
+  "signature": "jS667h7ONhpcCFAYN7Hdh+AIuycE9Q3Z1Sfkb3v0dJUtz/8O8ZCZN3PCP+qrR62NAvVcDnGfHQdl1nfdaL1TAw=="
 }
