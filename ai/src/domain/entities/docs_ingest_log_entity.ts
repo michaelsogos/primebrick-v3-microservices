@@ -17,6 +17,7 @@ import {
   Column,
   Entity,
   Key,
+  Unique,
   type IAuditableEntity,
   EntityBase,
   Auditable,
@@ -29,6 +30,10 @@ export class DocsIngestLogEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
   id: bigint;
+
+  @Unique()
+  @Column({ pgType: "uuid" })
+  uuid: UUID;
 
   /** Source repository id inside the pack (null = service-level failure before pack parse). */
   @Column({ length: 100, nullable: true })

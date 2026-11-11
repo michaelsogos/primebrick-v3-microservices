@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T16:13:41.126Z",
+  "generatedAt": "2026-11-11T16:57:49.867Z",
   "source": "database",
   "tables": {
     "ai.docs_kb": {
@@ -150,6 +150,19 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 12,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -161,6 +174,15 @@
             "content_hash"
           ],
           "definition": "CREATE INDEX docs_kb_content_hash_idx ON ai.docs_kb USING btree (content_hash)"
+        },
+        {
+          "name": "docs_kb_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX docs_kb_uuid_uq ON ai.docs_kb USING btree (uuid)"
         },
         {
           "name": "docs_kb_repo_path_chunk_idx_key",
@@ -1444,9 +1466,31 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 16,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
+        {
+          "name": "docs_ingest_log_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX docs_ingest_log_uuid_uq ON ai.docs_ingest_log USING btree (uuid)"
+        },
         {
           "name": "docs_ingest_log_created_idx",
           "using": "btree",
