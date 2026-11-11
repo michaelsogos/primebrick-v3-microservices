@@ -51,7 +51,7 @@ export class AiCerebellumEntity
    *  Composite unique (assistant_key, model_id, dtype) — non-partial: a
    *  soft-deleted twin conflicts too and must be restored, never
    *  duplicated (DAL raises ERR05 with the row uuid). */
-  @Unique("ai_cerebellum_assistant_model_dtype_uq", 0)
+  @Unique("ai_cerebellum_assistant_model_dtype_uq", 0, { nullsNotDistinct: true })
   @Column({ length: 60, nullable: false })
   assistant_key: string;
 
