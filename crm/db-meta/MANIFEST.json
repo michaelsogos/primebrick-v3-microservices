@@ -1,30 +1,11 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-10T22:43:06.264Z",
+  "issued_at": "2026-11-11T14:34:09.539Z",
   "patches": {
-    "0001_crm_schema": "736c58127fef0e2d01347ac6824c6383bf7b224ea594594aa5f68b5b5fcd67d7",
-    "0002_seed_config": "342d2f213ce4ac396859d503e753d171c601980f8771a8d00e86490c105824b5",
-    "0003_crm_translations": "868a43fc6f5af8fae758b07a81771b62394de7190abe2a377b6c8fcb84571493",
-    "0004_crm_module_label": "d6b1ef8e8d77af736208e7489ea858d36bab681d448eb1f8cefc3d8a71d7b250",
-    "0005_customers_ownership": "aa6c02de4841a9d9c7d7d3e8efc4fdf81112df4f77761f9e8693713d5d4c3eaa",
-    "0006_customers_audit_partitions": "a63a51722272c58d5085e9ef78e9db94a1bdefe65894626c7ee76484b1106f59",
-    "0007_crm_events_labels": "7e65f7be712f46900d86d5d9353b93569766faaea90ac227293f48b9252db795",
-    "0008_customer_preferred_locale": "de259a65a531854d690ec021912a2ed93af0262242810e249569a54cbcf9e937",
-    "20261107174742_create_crm_customer_types_crm_company_dimensions_crm_legal_forms_crm_loc": "f62ff01901013cf5ef939edaf651e0fa3392091dc608595f8d6259582aef6054",
-    "20261107175619_addcols_crm_customers": "16bc99afaeb3b366cb5ce5d57b68fd1c5934f3cd83808ece8b30ff5ad5c6fe30",
-    "20261107180000_seed_dictionaries": "f37887c76ed6d72b5fa85091905b9dee4a554b41a94f0704b6deaf69c7e74f53",
-    "20261107181000_dictionary_translations": "7d411a7fa5a9f67cc11324698cc3e7452e1a0ddddd10153a01965055d84d7d0c",
-    "20261107182000_entity_labels_en_it": "92489585f0f6ac74db3b00db06478e9f0e30233a47e4781206ae7cf28a982b34",
-    "20261107182500_legal_forms_abbreviation_text": "93439d11e3aef9ce911b824e61c716f572e1bb286e7106f4af1861b741291155",
-    "20261107183000_legal_forms_iso20275": "4970ab73109d63f40f481c7267c4f556ad09fbe54429d14ebf17eb056bb63a3f",
-    "20261110183056_drift_crm_customer_types_crm_company_dimensions_crm_legal_forms_crm_loca": "7c0113f9b2ded18563b7b2d1b8fdb613571eb2fad70def90472fa0a04feef67e",
-    "20261110234400_customer_cloned_from_key_idp_code_cleanup": "7fbb73a44021bc8e0effefaa9a1f97400ff52d096097ea1bf775bfb8e091862d",
-    "20261125000000_customer_flat_to_children": "a7ee1013be5b972ae82d878c75cc829f5c77bf828145292ef12701e32513f24b",
-    "20261127000000_settings_sibling_nav_labels": "b916816bf8fd2fe755a1e866fb88b2189aa635e944abb42857d2c02d5af0968c",
-    "20261202000000_crm_dict_audit_backfill": "db764a7e5b67c9e7d78aa0d73fb35367489aa16640de4de00b9eceb05f5e914b",
-    "20261203000000_crm_children_audit_backfill": "5b8eacb38573fdb2bfbc25ff7d362b2531be199697e2a9599c0959243de2b557",
-    "20261205000000_i18n_key_snake_cleanup": "90d58b67fd9b235a4fdbe6dc66151c862a4f38d9a93fe7f53d27226a3355f8dd"
+    "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
+    "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
+    "0003_crm_translations": "9c6e4f82d50747eb202df560ecfaedbfd7e84965f9ee25108b1b5140e62bf7d7"
   },
-  "signature": "OoJmS40M35+3ne/jNlSrfpi3Xp27/rOFBRDwEL2XE0BVn3CCkbOa8Pk18Q/VhL60TdJ7b9zlkFDwHy/i8GEDDg=="
+  "signature": "trRovxCW+GMXl1HLKATZtJ/xQ8ZtIBbGXVYkfOWm1/Gw+0wK2Vw7e1SGiARvTBAKiH6LFDr71Rx2AM78K4zHCQ=="
 }
