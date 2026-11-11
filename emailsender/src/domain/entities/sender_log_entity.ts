@@ -10,13 +10,10 @@ import { RecipientEnvelope, SenderEnvelope } from "../jsonb-contracts.js";
  */
 @Entity("sender_log", "emailsender")
 export class SenderLogEntity {
-  @Key() id!: bigint;
-
-  @Unique()
+  @Key()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 
-  @Column({ jsType: "bigint", nullable: true }) entity_id?: bigint;
   @Column({ pgType: "uuid", nullable: true }) entity_uuid?: UUID;
   @Column({ nullable: false }) type!: string;
   /** Provider-assigned message id (Brevo `message-id`) — unique correlation key for webhook events. */

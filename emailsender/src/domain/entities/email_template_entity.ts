@@ -13,9 +13,6 @@ import {
 export class EmailTemplateEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid: UUID;
 

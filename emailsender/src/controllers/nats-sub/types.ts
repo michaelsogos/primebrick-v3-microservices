@@ -8,9 +8,9 @@ import { LANG_RE } from "@primebrick/sdk";
  * route factory. `x_*` annotations ride in `.meta()` and land verbatim in
  * the emitted JSON Schema.
  *
- * Wire note: ext-json decodes every JSON integer as bigint — `entityId`
- * is `z.bigint()` (the real wire type), emitted to the census as
- * `{"type":"integer"}` via the `unrepresentable` override below.
+ * Wire note: ext-json decodes every JSON integer as bigint — bigint
+ * request fields are `z.bigint()` (the real wire type), emitted to the
+ * census as `{"type":"integer"}` via the `unrepresentable` override below.
  */
 export const SendEmailSchema = z.object({
   requestId: z.string().min(1).meta({
@@ -67,11 +67,6 @@ export const SendEmailSchema = z.object({
     x_semantic: "entity.table",
     x_not_editable: true,
   }),
-  entityId: z.bigint().optional().meta({
-    description: "Numeric id of the related entity row (see entityTable).",
-    x_semantic: "entity.id",
-    x_not_editable: true,
-  }),
   entityUuid: z.string().optional().meta({
     description: "Uuid of the related entity row (see entityTable).",
     x_semantic: "entity.uuid",
@@ -102,7 +97,7 @@ export interface SendEmailResponse {
   success: boolean;
   providerMessageId?: string;
   error?: string;
-  logId?: bigint;
+  logUuid?: string;
 }
 
 export interface WebhookUpdateRequest {

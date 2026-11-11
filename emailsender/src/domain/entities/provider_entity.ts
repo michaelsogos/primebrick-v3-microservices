@@ -13,9 +13,6 @@ import {
 export class ProviderEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid: UUID;
 
