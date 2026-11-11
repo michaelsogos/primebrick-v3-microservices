@@ -8,7 +8,7 @@ export const CUSTOMER_CONTACT_DEFAULT_SORT = { key: "updated_at", dir: "desc" as
 const F = (c: string) => `crm.entities.customer_contact.fields.${c}`;
 
 const CUSTOMER_CONTACT_RAW_COLUMNS: CustomerContactListColumn[] = [
-  { key: "customer_id", label_key: F("customer_id"), type: "text", order: 0, default_visible: false },
+  { key: "customer_uuid", label_key: F("customer_uuid"), type: "text", order: 0, default_visible: false },
   { key: "type_uuid", label_key: F("type_uuid"), type: "ref", order: 1, ref: { entity: "contact_type" } },
   {
     key: "value",

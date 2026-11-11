@@ -18,7 +18,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   CloneField,
   AuditTrail,
   EntityBase,
@@ -36,9 +35,6 @@ export class CustomerEntity
   extends Deletable(Auditable(EntityBase))
   implements IExposableEntity, IClonableEntity {
   @Key()
-  id: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid: UUID;
 

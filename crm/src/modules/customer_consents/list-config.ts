@@ -10,7 +10,7 @@ const F = (c: string) => `crm.entities.customer_consent.fields.${c}`;
 /** Tamper-evident consent records — read/audit surface only (rows are
  *  written by domain flows that compute `seal` server-side). */
 const CUSTOMER_CONSENT_RAW_COLUMNS: CustomerConsentListColumn[] = [
-  { key: "customer_id", label_key: F("customer_id"), type: "text", order: 0, default_visible: false },
+  { key: "customer_uuid", label_key: F("customer_uuid"), type: "text", order: 0, default_visible: false },
   { key: "type_uuid", label_key: F("type_uuid"), type: "ref", order: 1, ref: { entity: "consent_type" } },
   { key: "doc_version", label_key: F("doc_version"), type: "text", order: 2 },
   { key: "granted_at", label_key: F("granted_at"), type: "datetime", order: 3 },

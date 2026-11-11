@@ -2,7 +2,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -11,26 +10,20 @@ import {
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
-/** Local Unit address — true FK `customer_id` (bigint REFERENCES
- *  crm.customers(id)); `type_uuid` is a lazy meta ref → local_address_types. */
+/** Local Unit address — FK `customer_uuid` (REFERENCES
+ *  crm.customers(uuid)); `type_uuid` is a lazy meta ref → local_address_types. */
 @Entity("local_addresses", "crm")
 @AuditTrail()
 @Cached(300_000)
 export class LocalAddressEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 
-  @Column({ jsType: "bigint", nullable: false })
-  customer_id!: bigint;
-
-  /** FK → customers.uuid — uuid twin of customer_id (sole ref after cutover). */
-  @Column({ pgType: "uuid", nullable: true })
-  customer_uuid?: string;
+  /** FK → customers.uuid — the owning customer. */
+  @Column({ pgType: "uuid", nullable: false })
+  customer_uuid!: string;
 
   @Column({ pgType: "uuid", nullable: false })
   type_uuid!: string;

@@ -20,9 +20,6 @@ import { Cached } from "@primebrick/sdk";
 export class LegalFormEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 

@@ -8,16 +8,16 @@ export const CustomerLinkListQuerySchema = ListQueryBaseSchema.extend({
 
 const CustomerLinkBaseSchema = z
   .object({
-    /** True FK → crm.customers(id) — the org/relationship parent. */
-    parent_customer_id: z.coerce.bigint().positive(),
-    /** True FK → crm.customers(id) — subsidiary / private contact. */
-    child_customer_id: z.coerce.bigint().positive(),
+    /** FK → crm.customers(uuid) — the org/relationship parent. */
+    parent_customer_uuid: z.string().uuid(),
+    /** FK → crm.customers(uuid) — subsidiary / private contact. */
+    child_customer_uuid: z.string().uuid(),
     /** Lazy ref → customer_link_types.uuid (subsidiary, employee, …). */
     type_uuid: z.string().uuid(),
   })
-  .refine((v) => v.parent_customer_id !== v.child_customer_id, {
-    message: "parent_customer_id and child_customer_id must differ",
-    path: ["child_customer_id"],
+  .refine((v) => v.parent_customer_uuid !== v.child_customer_uuid, {
+    message: "parent_customer_uuid and child_customer_uuid must differ",
+    path: ["child_customer_uuid"],
   });
 
 export const CustomerLinkCreateBodySchema = CustomerLinkBaseSchema;
@@ -28,17 +28,17 @@ export const CustomerLinkCreateBodySchema = CustomerLinkBaseSchema;
 // schemas carrying refinements.
 export const CustomerLinkUpdateBodySchema = zPartialNoDefaults(
   z.object({
-    parent_customer_id: z.coerce.bigint().positive(),
-    child_customer_id: z.coerce.bigint().positive(),
+    parent_customer_uuid: z.string().uuid(),
+    child_customer_uuid: z.string().uuid(),
     type_uuid: z.string().uuid(),
     version: zBoundedInt(0, Number.MAX_SAFE_INTEGER),
   }),
 ).refine(
   (v) =>
-    v.parent_customer_id === undefined ||
-    v.child_customer_id === undefined ||
-    v.parent_customer_id !== v.child_customer_id,
-  { message: "parent_customer_id and child_customer_id must differ", path: ["child_customer_id"] },
+    v.parent_customer_uuid === undefined ||
+    v.child_customer_uuid === undefined ||
+    v.parent_customer_uuid !== v.child_customer_uuid,
+  { message: "parent_customer_uuid and child_customer_uuid must differ", path: ["child_customer_uuid"] },
 );
 
 export const CustomerLinkAuditQuerySchema = z.object({

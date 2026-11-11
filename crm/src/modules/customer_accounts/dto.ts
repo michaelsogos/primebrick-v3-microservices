@@ -7,8 +7,8 @@ export const CustomerAccountListQuerySchema = ListQueryBaseSchema.extend({
 });
 
 const CustomerAccountBaseSchema = z.object({
-  /** True FK → crm.customers(id). */
-  customer_id: z.coerce.bigint().positive(),
+  /** FK → crm.customers(uuid). */
+  customer_uuid: z.string().uuid(),
   /** Lazy ref → account_kinds.uuid (invoice | legal | user-defined). */
   kind_uuid: z.string().uuid(),
   /** Fiscal/legal company name — the account carries it, not the customer. */
@@ -17,10 +17,10 @@ const CustomerAccountBaseSchema = z.object({
   legal_form_uuid: z.string().uuid().optional(),
   /** Jurisdiction — ISO 3166-1 alpha-2; pivot of the legal_form cascade. */
   country: z.string().length(2),
-  /** True FK → crm.local_addresses(id) — the LU this account represents. */
-  local_address_id: z.coerce.bigint().positive().optional(),
-  /** True FK → crm.customer_contacts(id) — e.g. where invoices are sent. */
-  contact_id: z.coerce.bigint().positive().optional(),
+  /** FK → crm.local_addresses(uuid) — the LU this account represents. */
+  local_address_uuid: z.string().uuid().optional(),
+  /** FK → crm.customer_contacts(uuid) — e.g. where invoices are sent. */
+  contact_uuid: z.string().uuid().optional(),
   is_default: z.boolean().default(false),
 });
 

@@ -17,9 +17,6 @@ import { Cached } from "@primebrick/sdk";
 export class MarketingQualificationEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 

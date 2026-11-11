@@ -21,9 +21,6 @@ import { Cached } from "@primebrick/sdk";
 export class ContactTypeEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 

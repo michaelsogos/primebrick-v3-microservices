@@ -2,7 +2,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -21,18 +20,12 @@ import { Cached } from "@primebrick/sdk";
 export class CustomerAccountEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 
-  @Column({ jsType: "bigint", nullable: false })
-  customer_id!: bigint;
-
-  /** FK → customers.uuid — uuid twin of customer_id (sole ref after cutover; nullable until code writes it). */
-  @Column({ pgType: "uuid", nullable: true })
-  customer_uuid?: string;
+  /** FK → customers.uuid — the owning customer. */
+  @Column({ pgType: "uuid", nullable: false })
+  customer_uuid!: string;
 
   /** Lazy meta ref → account_kinds (invoice, legal, …). */
   @Column({ pgType: "uuid", nullable: false })
@@ -50,19 +43,11 @@ export class CustomerAccountEntity
   @Column({ length: 2, nullable: false })
   country!: string;
 
-  /** Which LU of the customer represents this account (billing address). */
-  @Column({ jsType: "bigint", nullable: true })
-  local_address_id?: bigint;
-
-  /** FK → local_addresses.uuid — uuid twin of local_address_id. */
+  /** FK → local_addresses.uuid — the represented LU. */
   @Column({ pgType: "uuid", nullable: true })
   local_address_uuid?: string;
 
-  /** Which contact channel of the customer serves this account. */
-  @Column({ jsType: "bigint", nullable: true })
-  contact_id?: bigint;
-
-  /** FK → customer_contacts.uuid — uuid twin of contact_id. */
+  /** FK → customer_contacts.uuid — the serving contact channel. */
   @Column({ pgType: "uuid", nullable: true })
   contact_uuid?: string;
 

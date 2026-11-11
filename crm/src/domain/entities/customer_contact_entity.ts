@@ -2,7 +2,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -20,18 +19,12 @@ import { Cached } from "@primebrick/sdk";
 export class CustomerContactEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 
-  @Column({ jsType: "bigint", nullable: false })
-  customer_id!: bigint;
-
-  /** FK → customers.uuid — uuid twin of customer_id (sole ref after cutover). */
-  @Column({ pgType: "uuid", nullable: true })
-  customer_uuid?: string;
+  /** FK → customers.uuid — the owning customer. */
+  @Column({ pgType: "uuid", nullable: false })
+  customer_uuid!: string;
 
   /** Lazy meta ref → contact_types. */
   @Column({ pgType: "uuid", nullable: false })

@@ -2,7 +2,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -21,27 +20,16 @@ import { Cached } from "@primebrick/sdk";
 export class CustomerLinkEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 
-  /** Edge source — true FK → crm.customers(id). */
-  @Column({ jsType: "bigint", nullable: false })
-  parent_customer_id!: bigint;
+  /** FK → customers.uuid — edge source. */
+  @Column({ pgType: "uuid", nullable: false })
+  parent_customer_uuid!: string;
 
-  /** FK → customers.uuid — uuid twin of parent_customer_id. */
-  @Column({ pgType: "uuid", nullable: true })
-  parent_customer_uuid?: string;
-
-  /** Edge target — true FK → crm.customers(id). */
-  @Column({ jsType: "bigint", nullable: false })
-  child_customer_id!: bigint;
-
-  /** FK → customers.uuid — uuid twin of child_customer_id. */
-  @Column({ pgType: "uuid", nullable: true })
-  child_customer_uuid?: string;
+  /** FK → customers.uuid — edge target. */
+  @Column({ pgType: "uuid", nullable: false })
+  child_customer_uuid!: string;
 
   /** Lazy meta ref → customer_link_types (subsidiary, employee, …). */
   @Column({ pgType: "uuid", nullable: false })

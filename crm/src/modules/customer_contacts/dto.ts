@@ -7,8 +7,8 @@ export const CustomerContactListQuerySchema = ListQueryBaseSchema.extend({
 });
 
 const CustomerContactBaseSchema = z.object({
-  /** True FK → crm.customers(id). */
-  customer_id: z.coerce.bigint().positive(),
+  /** FK → crm.customers(uuid). */
+  customer_uuid: z.string().uuid(),
   /** Lazy ref → contact_types.uuid — its `value_kind` picks the
    *  `value` validation/renderer (email → email, phone → E.164). */
   type_uuid: z.string().uuid(),

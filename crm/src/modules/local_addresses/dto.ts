@@ -7,8 +7,8 @@ export const LocalAddressListQuerySchema = ListQueryBaseSchema.extend({
 });
 
 const LocalAddressBaseSchema = z.object({
-  /** True FK → crm.customers(id) — bigint arrives as string/number over JSON. */
-  customer_id: z.coerce.bigint().positive(),
+  /** FK → crm.customers(uuid). */
+  customer_uuid: z.string().uuid(),
   /** Lazy ref → local_address_types.uuid. */
   type_uuid: z.string().uuid(),
   street: z.string().min(1),

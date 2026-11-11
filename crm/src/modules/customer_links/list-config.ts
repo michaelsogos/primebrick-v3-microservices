@@ -7,12 +7,12 @@ export const CUSTOMER_LINK_DEFAULT_SORT = { key: "updated_at", dir: "desc" as co
 
 const F = (c: string) => `crm.entities.customer_link.fields.${c}`;
 
-/** N-N org/relationship graph edge — parent/child carry true bigint FKs
- *  to `crm.customers` (hidden raw ids; link rows are managed from the
+/** N-N org/relationship graph edge — parent/child carry uuid FKs
+ *  to `crm.customers` (hidden; link rows are managed from the
  *  customer detail page). */
 const CUSTOMER_LINK_RAW_COLUMNS: CustomerLinkListColumn[] = [
-  { key: "parent_customer_id", label_key: F("parent_customer_id"), type: "text", order: 0, default_visible: false },
-  { key: "child_customer_id", label_key: F("child_customer_id"), type: "text", order: 1, default_visible: false },
+  { key: "parent_customer_uuid", label_key: F("parent_customer_uuid"), type: "text", order: 0, default_visible: false },
+  { key: "child_customer_uuid", label_key: F("child_customer_uuid"), type: "text", order: 1, default_visible: false },
   { key: "type_uuid", label_key: F("type_uuid"), type: "ref", order: 2, ref: { entity: "customer_link_type" } },
 ];
 

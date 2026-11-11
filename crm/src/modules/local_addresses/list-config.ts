@@ -7,10 +7,10 @@ export const LOCAL_ADDRESS_DEFAULT_SORT = { key: "updated_at", dir: "desc" as co
 
 const F = (c: string) => `crm.entities.local_address.fields.${c}`;
 
-/** Local Unit rows — `customer_id` is the children-list filter pivot
- *  (hidden raw bigint); `type_uuid` renders via ref → local_address_type. */
+/** Local Unit rows — `customer_uuid` is the children-list filter pivot
+ *  (hidden); `type_uuid` renders via ref → local_address_type. */
 const LOCAL_ADDRESS_RAW_COLUMNS: LocalAddressListColumn[] = [
-  { key: "customer_id", label_key: F("customer_id"), type: "text", order: 0, default_visible: false },
+  { key: "customer_uuid", label_key: F("customer_uuid"), type: "text", order: 0, default_visible: false },
   { key: "type_uuid", label_key: F("type_uuid"), type: "ref", order: 1, ref: { entity: "local_address_type" } },
   { key: "street", label_key: F("street"), type: "text", order: 2, hideable: false },
   { key: "street2", label_key: F("street2"), type: "text", order: 3, default_visible: false },
