@@ -19,6 +19,7 @@ export class ProviderEntity
   @Column({ pgType: "uuid" })
   uuid: UUID;
 
+  @Unique()
   @Column({ length: 50, nullable: false })
   provider: string;
 

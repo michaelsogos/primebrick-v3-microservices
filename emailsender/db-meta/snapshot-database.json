@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-24T23:59:35.521Z",
+  "generatedAt": "2026-11-11T16:26:54.697Z",
   "source": "database",
   "tables": {
     "emailsender.providers": {
@@ -419,6 +419,32 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 15,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 16,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
           "isPrimaryKey": false
         }
       },

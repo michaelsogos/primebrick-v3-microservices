@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-24T23:59:35.518Z",
+  "generatedAt": "2026-11-11T16:26:54.694Z",
   "source": "entities",
   "tables": {
     "emailsender.providers": {
@@ -109,7 +109,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "provider": {
           "name": "provider",
@@ -117,7 +118,7 @@
           "dataType": "varchar(50)",
           "typname": "varchar(50)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "provider",
           "isNullable": false
@@ -183,6 +184,14 @@
           "name": "providers_uuid_uq",
           "columns": [
             "uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        },
+        {
+          "name": "providers_provider_uq",
+          "columns": [
+            "provider"
           ],
           "using": "btree",
           "isUnique": true
@@ -295,7 +304,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "code": {
           "name": "code",
@@ -664,7 +674,8 @@
           "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "uuid",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "gen_random_uuid()"
         },
         "key": {
           "name": "key",
