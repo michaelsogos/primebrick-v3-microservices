@@ -1,14 +1,15 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T17:23:08.429Z",
+  "issued_at": "2026-11-11T18:39:10.995Z",
   "patches": {
     "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
     "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
     "0003_seed_email_templates": "847dcf30fc2489e07b236523e580c3379388a792839d36c7ca4a866a98815819",
     "0004_emailsender_translations": "a5673084409a785c64b064f9d76bc206c061852490fad0c874b71a56381a8043",
     "0005_uuidv7_defaults": "1f347f5d0b070706d62ff79d1f536ae8582dde7028d153950e669a7b98545529",
-    "0006_uuid_pk_swap": "8b6229b7e16a5779b7b94c793c2eadb3809473d207b956b9a82728fb53d725a8"
+    "0006_uuid_pk_swap": "8b6229b7e16a5779b7b94c793c2eadb3809473d207b956b9a82728fb53d725a8",
+    "0007_uuid_v4_to_v7_rewrite": "e4259e06e23a727b7572644c6810fe0cd71eb4f099c457d2c4724c4acd5251e3"
   },
-  "signature": "Sxa8LRWzdhVcEX4BFE5ghXWd3/+VGZ/EEBe9bHd1/DbnnomdfvKXKHeiouerSLM+/6bo2toqOYbV3HnuWKV1BQ=="
+  "signature": "0NxWvKBRgm4ZnV7TI3BqG3SuH59Dn6gqWJNL7g3aucyMQ3nie/orVVDImYIgC9LOdX2NxK2z3d8sD1OmEnnCAA=="
 }
