@@ -53,9 +53,6 @@ export const TRIGGER_SCHEDULE_SUBJECT_PREFIX = "jobs.schedule.job.";
 export class JobTriggerEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
   @Column({ pgType: "uuid" })
   uuid!: UUID;
 
