@@ -29,6 +29,10 @@ export class CustomerConsentEntity
   @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
+  /** FK → customers.uuid — uuid twin of customer_id (sole ref after cutover). */
+  @Column({ pgType: "uuid", nullable: true })
+  customer_uuid?: string;
+
   /** Lazy meta ref → consent_types. */
   @Column({ pgType: "uuid", nullable: false })
   type_uuid!: string;

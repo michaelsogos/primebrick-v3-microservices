@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T16:58:18.349Z",
+  "generatedAt": "2026-11-11T17:09:51.081Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -2313,9 +2313,20 @@
           "propertyKey": "customer_id",
           "isNullable": false
         },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "customer_uuid",
+          "isNullable": true
+        },
         "type_uuid": {
           "name": "type_uuid",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -2326,7 +2337,7 @@
         },
         "street": {
           "name": "street",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2337,7 +2348,7 @@
         },
         "street2": {
           "name": "street2",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2348,7 +2359,7 @@
         },
         "postal_code": {
           "name": "postal_code",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "varchar(20)",
           "typname": "varchar(20)",
           "isPrimaryKey": false,
@@ -2359,7 +2370,7 @@
         },
         "city": {
           "name": "city",
-          "ordinalPosition": 15,
+          "ordinalPosition": 16,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2370,7 +2381,7 @@
         },
         "province": {
           "name": "province",
-          "ordinalPosition": 16,
+          "ordinalPosition": 17,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2381,7 +2392,7 @@
         },
         "country": {
           "name": "country",
-          "ordinalPosition": 17,
+          "ordinalPosition": 18,
           "dataType": "varchar(2)",
           "typname": "varchar(2)",
           "isPrimaryKey": false,
@@ -2392,7 +2403,7 @@
         },
         "lat": {
           "name": "lat",
-          "ordinalPosition": 18,
+          "ordinalPosition": 19,
           "dataType": "float8",
           "typname": "float8",
           "isPrimaryKey": false,
@@ -2403,7 +2414,7 @@
         },
         "lng": {
           "name": "lng",
-          "ordinalPosition": 19,
+          "ordinalPosition": 20,
           "dataType": "float8",
           "typname": "float8",
           "isPrimaryKey": false,
@@ -2414,7 +2425,7 @@
         },
         "poi_name": {
           "name": "poi_name",
-          "ordinalPosition": 20,
+          "ordinalPosition": 21,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2556,9 +2567,20 @@
           "propertyKey": "customer_id",
           "isNullable": false
         },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "customer_uuid",
+          "isNullable": true
+        },
         "kind_uuid": {
           "name": "kind_uuid",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -2569,7 +2591,7 @@
         },
         "company_name": {
           "name": "company_name",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2580,7 +2602,7 @@
         },
         "legal_form_uuid": {
           "name": "legal_form_uuid",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -2591,7 +2613,7 @@
         },
         "country": {
           "name": "country",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "varchar(2)",
           "typname": "varchar(2)",
           "isPrimaryKey": false,
@@ -2602,7 +2624,7 @@
         },
         "local_address_id": {
           "name": "local_address_id",
-          "ordinalPosition": 15,
+          "ordinalPosition": 16,
           "dataType": "int8",
           "typname": "int8",
           "isPrimaryKey": false,
@@ -2611,9 +2633,20 @@
           "propertyKey": "local_address_id",
           "isNullable": true
         },
+        "local_address_uuid": {
+          "name": "local_address_uuid",
+          "ordinalPosition": 17,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "local_address_uuid",
+          "isNullable": true
+        },
         "contact_id": {
           "name": "contact_id",
-          "ordinalPosition": 16,
+          "ordinalPosition": 18,
           "dataType": "int8",
           "typname": "int8",
           "isPrimaryKey": false,
@@ -2622,9 +2655,20 @@
           "propertyKey": "contact_id",
           "isNullable": true
         },
+        "contact_uuid": {
+          "name": "contact_uuid",
+          "ordinalPosition": 19,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "contact_uuid",
+          "isNullable": true
+        },
         "is_default": {
           "name": "is_default",
-          "ordinalPosition": 17,
+          "ordinalPosition": 20,
           "dataType": "boolean",
           "typname": "boolean",
           "isPrimaryKey": false,
@@ -2766,9 +2810,20 @@
           "propertyKey": "customer_id",
           "isNullable": false
         },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "customer_uuid",
+          "isNullable": true
+        },
         "type_uuid": {
           "name": "type_uuid",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -2779,7 +2834,7 @@
         },
         "value": {
           "name": "value",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2790,7 +2845,7 @@
         },
         "is_default": {
           "name": "is_default",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "boolean",
           "typname": "boolean",
           "isPrimaryKey": false,
@@ -2801,7 +2856,7 @@
         },
         "label": {
           "name": "label",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -2943,9 +2998,20 @@
           "propertyKey": "customer_id",
           "isNullable": false
         },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "customer_uuid",
+          "isNullable": true
+        },
         "type_uuid": {
           "name": "type_uuid",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -2956,7 +3022,7 @@
         },
         "doc_version": {
           "name": "doc_version",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "varchar(50)",
           "typname": "varchar(50)",
           "isPrimaryKey": false,
@@ -2967,7 +3033,7 @@
         },
         "granted_at": {
           "name": "granted_at",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -2978,7 +3044,7 @@
         },
         "revoked_at": {
           "name": "revoked_at",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -2989,7 +3055,7 @@
         },
         "channel": {
           "name": "channel",
-          "ordinalPosition": 15,
+          "ordinalPosition": 16,
           "dataType": "varchar(50)",
           "typname": "varchar(50)",
           "isPrimaryKey": false,
@@ -3000,7 +3066,7 @@
         },
         "ip": {
           "name": "ip",
-          "ordinalPosition": 16,
+          "ordinalPosition": 17,
           "dataType": "varchar(45)",
           "typname": "varchar(45)",
           "isPrimaryKey": false,
@@ -3011,7 +3077,7 @@
         },
         "user_agent": {
           "name": "user_agent",
-          "ordinalPosition": 17,
+          "ordinalPosition": 18,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -3022,7 +3088,7 @@
         },
         "seal": {
           "name": "seal",
-          "ordinalPosition": 18,
+          "ordinalPosition": 19,
           "dataType": "varchar(64)",
           "typname": "varchar(64)",
           "isPrimaryKey": false,
@@ -3164,9 +3230,20 @@
           "propertyKey": "parent_customer_id",
           "isNullable": false
         },
+        "parent_customer_uuid": {
+          "name": "parent_customer_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "parent_customer_uuid",
+          "isNullable": true
+        },
         "child_customer_id": {
           "name": "child_customer_id",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "int8",
           "typname": "int8",
           "isPrimaryKey": false,
@@ -3175,9 +3252,20 @@
           "propertyKey": "child_customer_id",
           "isNullable": false
         },
+        "child_customer_uuid": {
+          "name": "child_customer_uuid",
+          "ordinalPosition": 13,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "child_customer_uuid",
+          "isNullable": true
+        },
         "type_uuid": {
           "name": "type_uuid",
-          "ordinalPosition": 12,
+          "ordinalPosition": 14,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,

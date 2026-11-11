@@ -30,6 +30,10 @@ export class CustomerAccountEntity
   @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
+  /** FK → customers.uuid — uuid twin of customer_id (sole ref after cutover; nullable until code writes it). */
+  @Column({ pgType: "uuid", nullable: true })
+  customer_uuid?: string;
+
   /** Lazy meta ref → account_kinds (invoice, legal, …). */
   @Column({ pgType: "uuid", nullable: false })
   kind_uuid!: string;
@@ -50,9 +54,17 @@ export class CustomerAccountEntity
   @Column({ jsType: "bigint", nullable: true })
   local_address_id?: bigint;
 
+  /** FK → local_addresses.uuid — uuid twin of local_address_id. */
+  @Column({ pgType: "uuid", nullable: true })
+  local_address_uuid?: string;
+
   /** Which contact channel of the customer serves this account. */
   @Column({ jsType: "bigint", nullable: true })
   contact_id?: bigint;
+
+  /** FK → customer_contacts.uuid — uuid twin of contact_id. */
+  @Column({ pgType: "uuid", nullable: true })
+  contact_uuid?: string;
 
   /** One default account per customer — partial unique index in DDL. */
   @Column({ pgType: "boolean", nullable: false })

@@ -28,6 +28,10 @@ export class LocalAddressEntity
   @Column({ jsType: "bigint", nullable: false })
   customer_id!: bigint;
 
+  /** FK → customers.uuid — uuid twin of customer_id (sole ref after cutover). */
+  @Column({ pgType: "uuid", nullable: true })
+  customer_uuid?: string;
+
   @Column({ pgType: "uuid", nullable: false })
   type_uuid!: string;
 

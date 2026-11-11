@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T16:58:18.356Z",
+  "generatedAt": "2026-11-11T17:09:51.087Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -2761,9 +2761,32 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 22,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
+        {
+          "name": "local_addresses_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
         {
           "name": "local_addresses_uuid_uq",
           "using": "btree",
@@ -2812,6 +2835,15 @@
           "refSchema": "crm",
           "refTable": "customers",
           "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "local_addresses_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
           "onDelete": "cascade",
           "onUpdate": "no_action"
         }
@@ -3042,9 +3074,58 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 18,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "local_address_uuid": {
+          "name": "local_address_uuid",
+          "ordinalPosition": 19,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "contact_uuid": {
+          "name": "contact_uuid",
+          "ordinalPosition": 20,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
+        {
+          "name": "customer_accounts_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_accounts_customer_uuid_idx ON crm.customer_accounts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
         {
           "name": "customer_accounts_uuid_uq",
           "using": "btree",
@@ -3100,6 +3181,33 @@
           "refSchema": "crm",
           "refTable": "customer_contacts",
           "refColumn": "id",
+          "onDelete": "restrict",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_local_address_uuid_fkey",
+          "column": "local_address_uuid",
+          "refSchema": "crm",
+          "refTable": "local_addresses",
+          "refColumn": "uuid",
+          "onDelete": "restrict",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_contact_uuid_fkey",
+          "column": "contact_uuid",
+          "refSchema": "crm",
+          "refTable": "customer_contacts",
+          "refColumn": "uuid",
           "onDelete": "restrict",
           "onUpdate": "no_action"
         }
@@ -3291,9 +3399,32 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 15,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
+        {
+          "name": "customer_contacts_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
         {
           "name": "customer_contacts_uuid_uq",
           "using": "btree",
@@ -3342,6 +3473,15 @@
           "refSchema": "crm",
           "refTable": "customers",
           "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_contacts_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
           "onDelete": "cascade",
           "onUpdate": "no_action"
         }
@@ -3585,9 +3725,32 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 19,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
+        {
+          "name": "customer_consents_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_consents_customer_uuid_idx ON crm.customer_consents USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
         {
           "name": "customer_consents_uuid_uq",
           "using": "btree",
@@ -3615,6 +3778,15 @@
           "refSchema": "crm",
           "refTable": "customers",
           "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_consents_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
           "onDelete": "cascade",
           "onUpdate": "no_action"
         }
@@ -3780,9 +3952,55 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "parent_customer_uuid": {
+          "name": "parent_customer_uuid",
+          "ordinalPosition": 13,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "child_customer_uuid": {
+          "name": "child_customer_uuid",
+          "ordinalPosition": 14,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
+        {
+          "name": "customer_links_parent_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "parent_customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_parent_uuid_idx ON crm.customer_links USING btree (parent_customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_links_child_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "child_customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
+        },
         {
           "name": "customer_links_uuid_uq",
           "using": "btree",
@@ -3841,6 +4059,24 @@
           "refSchema": "crm",
           "refTable": "customers",
           "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_links_parent_uuid_fkey",
+          "column": "parent_customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_links_child_uuid_fkey",
+          "column": "child_customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
           "onDelete": "cascade",
           "onUpdate": "no_action"
         }
