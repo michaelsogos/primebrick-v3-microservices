@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-10T19:37:09.054Z",
+  "generatedAt": "2026-11-11T15:56:39.722Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -739,6 +739,7 @@
       "schema": "job",
       "name": "job_triggers",
       "entityClassName": "JobTriggerEntity",
+      "isAuditable": true,
       "columns": {
         "created_at": {
           "name": "created_at",

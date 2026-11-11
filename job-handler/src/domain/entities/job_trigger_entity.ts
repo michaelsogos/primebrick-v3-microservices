@@ -33,6 +33,7 @@ import {
   type UUID,
   EntityBase,
   Auditable,
+  AuditTrail,
   Deletable,
 } from "@primebrick/dal-pg";
 import { type PayloadMap } from "@primebrick/sdk";
@@ -48,6 +49,7 @@ import { RuleFilter } from "../jsonb-contracts.js";
 export const TRIGGER_SCHEDULE_SUBJECT_PREFIX = "jobs.schedule.job.";
 
 @Entity("job_triggers", "job")
+@AuditTrail()
 export class JobTriggerEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
