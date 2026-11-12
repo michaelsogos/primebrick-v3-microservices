@@ -8,9 +8,9 @@ import { LANG_RE } from "@primebrick/sdk";
  * route factory. `x_*` annotations ride in `.meta()` and land verbatim in
  * the emitted JSON Schema.
  *
- * Wire note: ext-json decodes every JSON integer as bigint — `entityId`
- * is `z.bigint()` (the real wire type), emitted to the census as
- * `{"type":"integer"}` via the `unrepresentable` override below.
+ * Wire note: ext-json decodes every JSON integer as bigint — bigint
+ * request fields are `z.bigint()` (the real wire type), emitted to the
+ * census as `{"type":"integer"}` via the `unrepresentable` override below.
  */
 export const SendEmailSchema = z.object({
   requestId: z.string().min(1).meta({
@@ -20,7 +20,7 @@ export const SendEmailSchema = z.object({
     x_not_editable: true,
   }),
   templateCode: z.string().min(1).meta({
-    x_help_key: "emailsender.callable.send.templateCode",
+    x_help_key: "emailsender.callable.send.template_code",
     description:
       "Code of a row in the sender's template catalog (e.g. customer_high_value). Rendered with `variables`.",
     x_options: {
@@ -34,7 +34,7 @@ export const SendEmailSchema = z.object({
     },
   }),
   languageIso: z.string().regex(LANG_RE).meta({
-    x_help_key: "emailsender.callable.send.languageIso",
+    x_help_key: "emailsender.callable.send.language_iso",
     format: "lang",
     description:
       "The email language — picks which language variant of the template is sent to the recipient (e.g. it-IT, en-US). Uses the standard BCP-47 locale format.",
@@ -67,11 +67,6 @@ export const SendEmailSchema = z.object({
     x_semantic: "entity.table",
     x_not_editable: true,
   }),
-  entityId: z.bigint().optional().meta({
-    description: "Numeric id of the related entity row (see entityTable).",
-    x_semantic: "entity.id",
-    x_not_editable: true,
-  }),
   entityUuid: z.string().optional().meta({
     description: "Uuid of the related entity row (see entityTable).",
     x_semantic: "entity.uuid",
@@ -102,7 +97,7 @@ export interface SendEmailResponse {
   success: boolean;
   providerMessageId?: string;
   error?: string;
-  logId?: bigint;
+  logUuid?: string;
 }
 
 export interface WebhookUpdateRequest {

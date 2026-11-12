@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zBoundedInt, zPartialNoDefaults } from "../shared/validation.js";
 
 import type { CustomerStatus } from "../../domain/entities/customer_entity.js";
-import { CUSTOMER_SORT_KEYS } from "./list-config.js";
+import { CUSTOMER_SORT_KEYS } from "./customer.meta.js";
 import {
   ListQueryBaseSchema,
   ListFiltersQuerySchema,
@@ -24,18 +24,8 @@ export type CustomerListQuery = z.infer<typeof CustomerListQuerySchema>;
 
 const CustomerBaseSchema = z.object({
   code: z.string().min(1).max(20),
-  first_name: z.string().min(1).optional(),
-  last_name: z.string().min(1).optional(),
-  company_name: z.string().min(1).optional(),
-  email: z.string().email().max(320).optional(),
-  phone: z.string().min(1).max(64).optional(),
   status: CustomerStatusSchema.default("ACTIVE"),
   status_reason: z.string().min(1).optional(),
-  local_address: z.string().min(1).optional(),
-  local_city: z.string().min(1).optional(),
-  local_state: z.string().min(1).optional(),
-  local_country: z.string().min(1).optional(),
-  local_zip: z.string().min(1).optional(),
   onboarding_at: z.preprocess(
     (v) => (v === "" || v === null ? undefined : v),
     z.coerce.date().optional()
@@ -54,6 +44,14 @@ const CustomerBaseSchema = z.object({
     },
     z.string().regex(/^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})+$/, "preferred_locale must be a BCP-47 tag (e.g. it-IT, en-US)").max(35).optional()
   ),
+  // Identity + lazy uuid links to the CRM dictionaries. Contact channels
+  // live on `customer_contacts`, LU addresses on `local_addresses`, the
+  // fiscal datasheet on `customer_accounts` — never flat on this row.
+  display_name: z.string().min(1).optional(),
+  customer_type_uuid: z.string().uuid().optional(),
+  qualification_uuid: z.string().uuid().optional(),
+  marketing_qualification_uuid: z.string().uuid().optional(),
+  company_dimension_uuid: z.string().uuid().optional(),
 });
 
 // Refinement for create: both onboarding_at and onboarding_time_zone must be present together or absent together

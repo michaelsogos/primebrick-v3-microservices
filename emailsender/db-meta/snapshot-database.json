@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-24T23:59:35.521Z",
+  "generatedAt": "2026-11-11T17:23:50.865Z",
   "source": "database",
   "tables": {
     "emailsender.providers": {
@@ -8,19 +8,6 @@
       "schema": "emailsender",
       "name": "providers",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -32,7 +19,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "provider": {
           "name": "provider",
@@ -206,15 +193,6 @@
       },
       "indexes": [
         {
-          "name": "providers_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX providers_uuid_uq ON emailsender.providers USING btree (uuid)"
-        },
-        {
           "name": "providers_provider_uq",
           "using": "btree",
           "isUnique": true,
@@ -222,15 +200,6 @@
             "provider"
           ],
           "definition": "CREATE UNIQUE INDEX providers_provider_uq ON emailsender.providers USING btree (provider)"
-        },
-        {
-          "name": "email_config_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX email_config_uuid_uq ON emailsender.providers USING btree (uuid)"
         }
       ]
     },
@@ -239,19 +208,6 @@
       "schema": "emailsender",
       "name": "email_templates",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -263,7 +219,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -420,51 +376,40 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 15,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 16,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
-      },
-      "indexes": [
-        {
-          "name": "email_templates_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX email_templates_uuid_uq ON emailsender.email_templates USING btree (uuid)"
-        }
-      ]
+      }
     },
     "emailsender.sender_log": {
       "kind": "table",
       "schema": "emailsender",
       "name": "sender_log",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
-        "entity_id": {
-          "name": "entity_id",
-          "ordinalPosition": 2,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
         "entity_uuid": {
           "name": "entity_uuid",
           "ordinalPosition": 3,
@@ -620,6 +565,19 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 15,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
         }
       },
       "indexes": [
@@ -639,19 +597,6 @@
       "schema": "emailsender",
       "name": "config_entries",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -663,7 +608,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "key": {
           "name": "key",
@@ -862,24 +807,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "config_entries_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX config_entries_uuid_uq ON emailsender.config_entries USING btree (uuid)"
-        },
-        {
-          "name": "config_entries_deleted_at_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "deleted_at"
-          ],
-          "definition": "CREATE INDEX config_entries_deleted_at_idx ON emailsender.config_entries USING btree (deleted_at)"
-        },
         {
           "name": "config_entries_key_uq",
           "using": "btree",

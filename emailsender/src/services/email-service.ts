@@ -106,7 +106,6 @@ export class EmailService {
       const logRow = await dal.add<SenderLogEntity>(
         SenderLogEntity,
         {
-          entity_id: request.entityId ?? null,
           entity_uuid: request.entityUuid ?? null,
           type: "email",
           provider_message_id: brevoResponse.messageId,
@@ -126,7 +125,7 @@ export class EmailService {
         requestId: request.requestId,
         success: true,
         providerMessageId: brevoResponse.messageId,
-        logId: logRow.id,
+        logUuid: logRow.uuid,
       };
     } catch (error) {
       logger.error("Error sending email", { tags: ["email-service"], error });
@@ -141,7 +140,6 @@ export class EmailService {
         await dal.add<SenderLogEntity>(
           SenderLogEntity,
           {
-            entity_id: request.entityId ?? null,
             entity_uuid: request.entityUuid ?? null,
             type: "email",
             provider_uuid: configUuid,

@@ -29,11 +29,15 @@ import {
   Key,
   Unique,
   Column,
+  Calculated,
   type UUID,
   EntityBase,
   Auditable,
+  AuditTrail,
   Deletable,
 } from "@primebrick/dal-pg";
+import { type PayloadMap } from "@primebrick/sdk";
+import { RuleFilter } from "../jsonb-contracts.js";
 
 /**
  * The schedule-mirror rollup subject for a trigger — `jobs.schedule.job.<uuid>`.
@@ -45,12 +49,11 @@ import {
 export const TRIGGER_SCHEDULE_SUBJECT_PREFIX = "jobs.schedule.job.";
 
 @Entity("job_triggers", "job")
+@AuditTrail()
 export class JobTriggerEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id!: bigint;
-
-  @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
   @Unique()
@@ -63,8 +66,8 @@ export class JobTriggerEntity
   event_subject?: string;
 
   /** JSON filter — array of { field, op, value } evaluated on the event payload. */
-  @Column({ nullable: true })
-  filter?: unknown;
+  @Column({ jsType: RuleFilter, nullable: true })
+  filter?: RuleFilter[];
 
   /** Schedule spec — "@every 1d", "@at …", cron. On event+schedule
    *  triggers it is materialized on match; on schedule-only triggers it
@@ -80,13 +83,39 @@ export class JobTriggerEntity
   /** Trigger-owned payload map — `PayloadMap` DST from @primebrick/core:
    *  per target field, a {kind:"const"|"path"|"meta"} entry resolved
    *  against the event payload at arm/fire time. NULL/{} = verbatim forward. */
-  @Column({ nullable: true })
-  payload_map?: unknown;
+  @Column({ pgType: "jsonb", nullable: true })
+  payload_map?: PayloadMap;
 
   /** user | me | system — explicit opt-in, never inferred. */
   @Column({ length: 10, nullable: false })
   execution_context!: string;
+  // No `enabled` flag — DISABLE IS SOFT-DELETE (`deleted_at` via the
+  // `Deletable` mixin). Doctrine: enable fields are a design error; the
+  // soft-delete machinery gives disable + restore + audit + ELT deleted-row
+  // UX for free.
 
-  @Column({ nullable: false })
-  enabled!: boolean;
+  /** Run count on this trigger's mirror subject — SQL projection
+   *  (`job_runs.schedule_subject = 'jobs.schedule.job.' || uuid`). */
+  @Calculated(
+    `(SELECT count(*)::int FROM job.job_runs jr WHERE jr.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text)`,
+    { pgType: "int4" },
+  )
+  runs?: number;
+
+  /** Latest run start on the mirror subject — `max(job_runs.created_at)`. */
+  @Calculated(
+    `(SELECT max(jr.created_at) FROM job.job_runs jr WHERE jr.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text)`,
+    { pgType: "timestamptz", nullable: true },
+  )
+  last_run?: Date;
+
+  /** Next fire of the armed mirror — `job_schedules.next_run_at`, which the
+   *  engine mirrors from NATS (`Nats-Schedule-Next` header + deterministic
+   *  arm-time computation for `@every`/`@at`). NULL for disabled triggers,
+   *  event-only triggers and cron specs before their first fire. */
+  @Calculated(
+    `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_run_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
+    { pgType: "timestamptz", nullable: true },
+  )
+  next_run?: Date;
 }

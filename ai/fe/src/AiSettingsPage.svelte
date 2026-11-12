@@ -419,7 +419,7 @@
                 <TriangleAlert class="size-20 text-warning" />
               </div>
               <div class="text-sm font-medium text-muted-foreground">
-                {$t('system.entities.list.noRecords')}
+                {$t('system.entities.list.no_records')}
               </div>
             </div>
           </div>
@@ -441,11 +441,11 @@
                       <div class="flex items-center gap-2">
                         <span class="text-sm font-medium">{model.name}</span>
                         {#if model.is_compatible}
-                          <span class="flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400" title={$t('ai.entities.ai_model.compatibility.COMPATIBLE')}>
+                          <span class="flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-400" title={$t('ai.entities.ai_model.compatibility.compatible')}>
                             <ShieldCheck class="size-3" />
                           </span>
                         {:else}
-                          <span class="flex items-center gap-0.5 text-[10px] text-rose-600 dark:text-rose-400" title={$t('ai.entities.ai_model.compatibility.NOT_COMPATIBLE')}>
+                          <span class="flex items-center gap-0.5 text-[10px] text-rose-600 dark:text-rose-400" title={$t('ai.entities.ai_model.compatibility.not_compatible')}>
                             <ShieldX class="size-3" />
                           </span>
                         {/if}

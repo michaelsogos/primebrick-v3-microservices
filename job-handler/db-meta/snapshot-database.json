@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-04T23:54:20.231Z",
+  "generatedAt": "2026-11-11T17:35:58.493Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -8,19 +8,6 @@
       "schema": "job",
       "name": "config_entries",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -32,7 +19,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "key": {
           "name": "key",
@@ -232,15 +219,6 @@
       },
       "indexes": [
         {
-          "name": "config_entries_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX config_entries_uuid_uq ON job.config_entries USING btree (uuid)"
-        },
-        {
           "name": "config_entries_key_uq",
           "using": "btree",
           "isUnique": true,
@@ -256,19 +234,6 @@
       "schema": "job",
       "name": "job_schedules",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -280,7 +245,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -541,18 +506,22 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "next_run_at": {
+          "name": "next_run_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
-        {
-          "name": "job_schedules_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX job_schedules_uuid_uq ON job.job_schedules USING btree (uuid)"
-        },
         {
           "name": "job_schedules_subject_uq",
           "using": "btree",
@@ -587,19 +556,6 @@
       "schema": "job",
       "name": "job_runs",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -611,7 +567,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -837,15 +793,6 @@
       },
       "indexes": [
         {
-          "name": "job_runs_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX job_runs_uuid_uq ON job.job_runs USING btree (uuid)"
-        },
-        {
           "name": "job_runs_schedule_idx",
           "using": "btree",
           "isUnique": false,
@@ -879,19 +826,6 @@
       "schema": "job",
       "name": "job_triggers",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -903,7 +837,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "name": {
           "name": "name",
@@ -978,19 +912,6 @@
           "typeOid": 1043,
           "typcategory": "S",
           "formatType": "character varying(10)",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "enabled": {
-          "name": "enabled",
-          "ordinalPosition": 10,
-          "dataType": "bool",
-          "typname": "bool",
-          "typeOid": 16,
-          "typcategory": "B",
-          "formatType": "boolean",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
@@ -1102,15 +1023,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "job_triggers_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX job_triggers_uuid_uq ON job.job_triggers USING btree (uuid)"
-        },
         {
           "name": "job_triggers_name_uq",
           "using": "btree",

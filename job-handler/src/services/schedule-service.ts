@@ -46,8 +46,9 @@ import {
   cancelJobSchedule,
   getJobSchedule,
   listJobScheduleSubjects,
+  toNatsScheduleSpec,
 } from "../nats/schedule-mechanism.js";
-import { JOB_SCHEDULE_SUBJECT_HEADER, logger, NatsClient } from "@primebrick/sdk";
+import { JOB_SCHEDULE_SUBJECT_HEADER, logger, NatsClient, nextScheduleFire } from "@primebrick/sdk";
 import { Filter, field, toUUID } from "@primebrick/dal-pg";
 import { getDal } from "../db/dal.js";
 import { JobScheduleEntity } from "../domain/entities/job_schedule_entity.js";
@@ -251,8 +252,10 @@ export async function declareSchedule(
     // Step 2 — read-back verify. PubAck proves storage; the headers prove
     // the scheduler accepted the declaration (a spec the server silently
     // dropped would still sit stored — headers must round-trip verbatim).
+    // Compare against the WIRE spec: the boundary converts our 5-field
+    // cron to NATS's 6-field grammar (seconds-first, `0 ` prefix).
     const decl = await getJobSchedule(input.schedule_subject);
-    if (!decl || decl.schedule !== input.schedule || decl.target !== input.target) {
+    if (!decl || decl.schedule !== toNatsScheduleSpec(input.schedule) || decl.target !== input.target) {
       throw new ScheduleDeclarationError(
         "ARM_VERIFY_FAILED",
         `declaration not schedulable on "${input.schedule_subject}" after PubAck ` +
@@ -282,6 +285,10 @@ export async function declareSchedule(
         disarmed_at: undefined,
         fired_at: undefined,
         expires_at: ttlMs === undefined ? undefined : new Date(armedAt.getTime() + ttlMs),
+        // Deterministic first-fire mirror — `@every`/`@at` compute exactly;
+        // cron stays null until the server reports its own next fire via
+        // `Nats-Schedule-Next` on the first fired message (single truth).
+        next_run_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
       };
       const actor = input.caller_service ?? input.initiator ?? "system:primebrick-job";
       if (existing !== undefined) {
@@ -365,6 +372,7 @@ export async function disarmSchedule(
           uuid: rows[0]!.uuid,
           status: to,
           disarmed_at: new Date(),
+          next_run_at: undefined,
           version: rows[0]!.version,
         } as never,
         { actor, matchBy: "uuid" } as never,
@@ -404,7 +412,7 @@ export async function unsuppressSchedule(
   if (!row || !SUPPRESSED_STATUSES.has(row.status)) return row;
   await getDal().update(
     JobScheduleEntity,
-    { uuid: row.uuid, status: "stopped", version: row.version } as never,
+    { uuid: row.uuid, status: "stopped", next_run_at: undefined, version: row.version } as never,
     { actor, matchBy: "uuid" } as never,
   );
   logger.done(`schedule unsuppressed (stopped → awaiting re-arm): ${scheduleSubject}`, { tags: ["jobs"] });
@@ -435,24 +443,37 @@ export async function dropScheduleMirror(scheduleSubject: string, actor: string)
 }
 
 /**
- * Flip a fired one-shot schedule to `fired` — called by the due-forwarder
- * after a successful dispatch of a `schedule_type=once` row. Without it
- * the mirror would say `armed` forever on a declaration NATS already
- * self-purged — a drift that does not exist.
+ * Record a fire on the mirror — called by the due-forwarder on EVERY
+ * dispatched schedule message.
+ *   - `once`: the declaration self-purged, flip `fired` + clear
+ *     `next_run_at` (without it the mirror would say `armed` forever).
+ *   - `recurring`: stays `armed`; `next_run_at` takes the server's own
+ *     `Nats-Schedule-Next` header (RFC3339 — cron included), the single
+ *     truth for when the next fire actually happens. `"purge"` means no
+ *     further fire is scheduled.
  */
-export async function markScheduleFired(scheduleSubject: string): Promise<void> {
+export async function markScheduleFired(scheduleSubject: string, nextFire?: Date | null): Promise<void> {
   const dal = getDal();
   const rows = await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
     filters: [
       Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject),
-      Filter.fieldValue(field(JobScheduleEntity, "schedule_type"), "=", "once"),
       Filter.fieldValue(field(JobScheduleEntity, "status"), "=", "armed"),
     ],
   });
   if (!Array.isArray(rows) || rows.length === 0) return;
+  const row = rows[0]!;
+  if (row.schedule_type === "once") {
+    await dal.update(
+      JobScheduleEntity,
+      { uuid: row.uuid, status: "fired", fired_at: new Date(), next_run_at: undefined, version: row.version } as never,
+      { actor: "system:job", matchBy: "uuid" } as never,
+    );
+    return;
+  }
+  if (nextFire === undefined) return;
   await dal.update(
     JobScheduleEntity,
-    { uuid: rows[0]!.uuid, status: "fired", fired_at: new Date(), version: rows[0]!.version } as never,
+    { uuid: row.uuid, next_run_at: nextFire ?? undefined, version: row.version } as never,
     { actor: "system:job", matchBy: "uuid" } as never,
   );
 }
@@ -575,6 +596,22 @@ export async function reconcileSchedules(opts?: {
           `reconcile: row armed but declaration missing: ${subject} (kind=${row.kind}) — owner/engine must re-declare`,
           { tags: ["jobs"] },
         );
+      }
+    } else if (row.status === "armed" && live && row.next_run_at == null) {
+      // Backfill the next-fire mirror — `@every`/`@at` recompute
+      // deterministically (same formula as arm); cron stays null: the
+      // server's own `Nats-Schedule-Next` writes it on the first fire.
+      const next = nextScheduleFire(row.schedule_spec, { now, since: row.armed_at ?? undefined });
+      if (next !== null) {
+        try {
+          await dal.update(
+            JobScheduleEntity,
+            { uuid: row.uuid, next_run_at: next, version: row.version } as never,
+            { actor: "system:reconcile", matchBy: "uuid" } as never,
+          );
+        } catch (error) {
+          report.errors.push({ subject, error: `next_run_at backfill failed: ${String(error)}` });
+        }
       }
     }
   }

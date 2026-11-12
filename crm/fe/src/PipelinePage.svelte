@@ -16,7 +16,7 @@
 
 <div class="flex min-h-0 flex-1 flex-col overflow-auto">
   <div class="shrink-0 space-y-2">
-    <h2 class="text-lg font-semibold">{$t('crm.pipeline.cardTitle')}</h2>
+    <h2 class="text-lg font-semibold">{$t('crm.pipeline.card_title')}</h2>
     <p class="text-sm text-muted-foreground">{$t('crm.pipeline.description')}</p>
   </div>
   <div class="min-h-0 flex-1 space-y-3 overflow-auto text-sm text-muted-foreground">

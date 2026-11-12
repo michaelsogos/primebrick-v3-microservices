@@ -65,7 +65,7 @@
       error = e instanceof Error ? e.message : 'Failed to load the index status';
       notify({
         impact: 'HIGH',
-        messageKey: 'ai.docs.loadFailed',
+        messageKey: 'ai.docs.load_failed',
         scope: $t('ai.docs.title'),
         detail: error,
       });
@@ -83,8 +83,8 @@
       notify({
         impact: failed.length > 0 ? 'MEDIUM' : 'NONE',
         messageKey: failed.length > 0
-          ? 'ai.docs.reindexFailed'
-          : 'ai.docs.reindexDone',
+          ? 'ai.docs.reindex_failed'
+          : 'ai.docs.reindex_done',
         scope: $t('ai.docs.title'),
         detail: failed.length > 0 ? failed.map((f) => `${f.service}: ${f.error}`).join(' — ') : undefined,
       });
@@ -92,7 +92,7 @@
     } catch (e) {
       notify({
         impact: 'HIGH',
-        messageKey: 'ai.docs.reindexFailed',
+        messageKey: 'ai.docs.reindex_failed',
         scope: $t('ai.docs.title'),
         detail: e instanceof Error ? e.message : undefined,
       });
@@ -121,7 +121,7 @@
           <div class="grid min-h-56 place-items-center p-3">
             <div class="relative flex flex-col items-center gap-2 text-center">
               <div class="pb-watermark-empty"><TriangleAlert class="size-20 text-warning" /></div>
-              <div class="text-sm font-medium text-muted-foreground">{$t('ai.docs.loadFailed')}</div>
+              <div class="text-sm font-medium text-muted-foreground">{$t('ai.docs.load_failed')}</div>
               <Button variant="outline" size="sm" onclick={() => load()}>{$t('app.common.retry')}</Button>
             </div>
           </div>
@@ -144,8 +144,8 @@
                       <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.docs')}</th>
                       <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.chunks')}</th>
                       <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.unembedded')}</th>
-                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.contentSize')}</th>
-                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.vectorSize')}</th>
+                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.content_size')}</th>
+                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.vector_size')}</th>
                       <th class="px-3 py-2"></th>
                     </tr>
                   </thead>
@@ -178,8 +178,8 @@
                   <thead>
                     <tr class="border-b bg-muted/40 text-left text-xs text-muted-foreground">
                       <th class="px-3 py-2 font-medium">{$t('ai.docs.col.service')}</th>
-                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.expectedDocs')}</th>
-                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.expectedChunks')}</th>
+                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.expected_docs')}</th>
+                      <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.col.expected_chunks')}</th>
                       <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.missing')}</th>
                       <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.stale')}</th>
                       <th class="px-3 py-2 font-medium text-right">{$t('ai.docs.orphans')}</th>
@@ -198,7 +198,7 @@
                         <td class="px-3 py-2 text-right">
                           {#if d.error}
                             <Badge variant="outline" title={d.error} class="gap-1 border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-300">
-                              <XCircle class="size-3.5" />{$t('ai.docs.packError')}
+                              <XCircle class="size-3.5" />{$t('ai.docs.pack_error')}
                             </Badge>
                           {:else if driftIssueCount(d) === 0}
                             <Badge variant="outline" class="gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
@@ -206,7 +206,7 @@
                             </Badge>
                           {:else}
                             <Badge variant="outline" title={[...(d.missing_from_index ?? []), ...(d.stale ?? []), ...(d.orphans ?? [])].join('\n')} class="gap-1 border-yellow-500/25 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300">
-                              <TriangleAlert class="size-3.5" />{$t('ai.docs.driftDetected')}
+                              <TriangleAlert class="size-3.5" />{$t('ai.docs.drift_detected')}
                             </Badge>
                           {/if}
                         </td>
@@ -222,10 +222,10 @@
               <div class="flex items-center justify-between">
                 <h2 class="text-sm font-semibold">{$t('ai.docs.section.probes')}</h2>
                 <Button variant="outline" size="sm" disabled={probing} onclick={() => load(true)}>
-                  <BookSearch class="size-3.5" />{#if probing}{$t('app.common.loading')}{:else}{$t('ai.docs.runProbes')}{/if}
+                  <BookSearch class="size-3.5" />{#if probing}{$t('app.common.loading')}{:else}{$t('ai.docs.run_probes')}{/if}
                 </Button>
               </div>
-              <p class="text-xs text-muted-foreground">{$t('ai.docs.probesHint')}</p>
+              <p class="text-xs text-muted-foreground">{$t('ai.docs.probes_hint')}</p>
               {#if status.probes}
                 <div class="rounded-lg border">
                   <table class="w-full text-sm">
@@ -304,7 +304,7 @@
         <div class="flex items-center justify-end gap-2">
           <Button variant="default" disabled={reindexing !== null} onclick={() => reindex()}>
             <RefreshCw class={cn('size-4', reindexing === '*' && 'animate-spin')} />
-            {#if reindexing === '*'}{$t('ai.docs.reindexing')}{:else}{$t('ai.docs.reindexAll')}{/if}
+            {#if reindexing === '*'}{$t('ai.docs.reindexing')}{:else}{$t('ai.docs.reindex_all')}{/if}
           </Button>
         </div>
       </div>

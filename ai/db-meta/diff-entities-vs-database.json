@@ -1,17 +1,20 @@
 {
   "version": 2,
-  "generatedAt": "2026-10-15T16:28:46.376Z",
+  "generatedAt": "2026-11-11T17:41:25.441Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
     "ai.docs_kb": {
       "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
       "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [
+        "docs_kb_uuid_uq",
         "docs_kb_repo_path_chunk_idx_key"
       ],
       "indexMismatches": [
@@ -27,6 +30,153 @@
           ]
         }
       ],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.ai_models": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_models_uuid_uq"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.ai_cerebellum": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_cerebellum_uuid_uq",
+        "ai_cerebellum_one_default_per_assistant_uq"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_config_entries_uuid_uq",
+        "ai_config_entries_deleted_at_idx",
+        "ai_config_entries_key_uq"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.docs_ingest_log": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "docs_ingest_log_uuid_uq",
+        "docs_ingest_log_created_idx",
+        "docs_ingest_log_repo_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.ai_conversations": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_conversations_uuid_uq",
+        "ai_conversations_created_by_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.ai_messages": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_messages_conversation_uuid_created_at_idx",
+        "ai_messages_uuid_uq"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.ai_feedback": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_feedback_uuid_uq",
+        "ai_feedback_message_uuid_idx",
+        "ai_feedback_created_by_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "ai.ai_telemetry": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [
+        "id"
+      ],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "ai_telemetry_uuid_uq",
+        "ai_telemetry_user_uuid_created_at_idx",
+        "ai_telemetry_created_at_idx"
+      ],
+      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []

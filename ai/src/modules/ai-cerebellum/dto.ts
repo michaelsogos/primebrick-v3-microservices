@@ -9,7 +9,7 @@ import {
   zPartialNoDefaults,
   ListQueryBaseSchema,
 } from "../shared/validation.js";
-import { AI_CEREBELLUM_SORT_KEYS } from "./list-config.js";
+import { AI_CEREBELLUM_SORT_KEYS } from "./ai_cerebellum.meta.js";
 
 export const AiCerebellumListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(AI_CEREBELLUM_SORT_KEYS as [string, ...string[]]).optional(),

@@ -13,9 +13,7 @@ import {
 export class EmailTemplateEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id: bigint;
-
-  @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   @Column({ length: 100, nullable: false })
@@ -38,8 +36,9 @@ export class EmailTemplateEntity
 
   /** Declared template placeholders as `{name: descriptor}` — the keys are
    *  the interpolation vocabulary the `variables` payload feeds at send
-   *  time (the payload_map `x_map_keys` hint reads them for suggestions). */
-  @Column({ nullable: true })
+   *  time (the payload_map `x_map_keys` hint reads them for suggestions).
+   *  Free-form by design (the FE editor is a raw JSON textarea). */
+  @Column({ pgType: "jsonb", nullable: true })
   variables?: Record<string, unknown>;
 
 

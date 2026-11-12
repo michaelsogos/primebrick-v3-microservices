@@ -1,0 +1,35 @@
+import { z } from "zod";
+import { zBoundedInt, zPartialNoDefaults, ListQueryBaseSchema } from "../shared/validation.js";
+import { CUSTOMER_ACCOUNT_SORT_KEYS } from "./customer_account.meta.js";
+
+export const CustomerAccountListQuerySchema = ListQueryBaseSchema.extend({
+  sort_key: z.enum(CUSTOMER_ACCOUNT_SORT_KEYS as [string, ...string[]]).optional(),
+});
+
+const CustomerAccountBaseSchema = z.object({
+  /** FK → crm.customers(uuid). */
+  customer_uuid: z.string().uuid(),
+  /** Lazy ref → account_kinds.uuid (invoice | legal | user-defined). */
+  kind_uuid: z.string().uuid(),
+  /** Fiscal/legal company name — the account carries it, not the customer. */
+  company_name: z.string().min(1),
+  /** Lazy ref → legal_forms.uuid — the ragione sociale (ISO 20275). */
+  legal_form_uuid: z.string().uuid().optional(),
+  /** Jurisdiction — ISO 3166-1 alpha-2; pivot of the legal_form cascade. */
+  country: z.string().length(2),
+  /** FK → crm.local_addresses(uuid) — the LU this account represents. */
+  local_address_uuid: z.string().uuid().optional(),
+  /** FK → crm.customer_contacts(uuid) — e.g. where invoices are sent. */
+  contact_uuid: z.string().uuid().optional(),
+  is_default: z.boolean().default(false),
+});
+
+export const CustomerAccountCreateBodySchema = CustomerAccountBaseSchema;
+export const CustomerAccountUpdateBodySchema = zPartialNoDefaults(
+  CustomerAccountBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+);
+
+export const CustomerAccountAuditQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(50),
+});

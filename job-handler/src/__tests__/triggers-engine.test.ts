@@ -97,7 +97,6 @@ const mkTrigger = (over: Record<string, unknown>): JobTriggerEntity =>
     name: "trig",
     target_subject: "emailsender.send",
     execution_context: "user",
-    enabled: true,
     created_by: "author-1",
     payload_map: {},
     ...over,

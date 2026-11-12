@@ -10,7 +10,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   PartitionChildOf,
   type IAuditableEntity,
   type UUID,
@@ -18,27 +17,26 @@ import {
   Auditable,
 } from "@primebrick/dal-pg";
 import { AiConversationEntity } from "./ai_conversation_entity.js";
+import { MessageContent } from "../jsonb-contracts.js";
 
 @Entity("ai_messages", "ai")
 @PartitionChildOf({ parent: AiConversationEntity, ref: "conversation_uuid" })
 export class AiMessageEntity
   extends Auditable(EntityBase) {
-  /** Internal PK — FK/JOIN performance only, never exposed to callers. */
   @Key()
-  id!: bigint;
-
-  @Unique()
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   conversation_uuid!: UUID;
 
   @Column({ nullable: false })
   role!: string;
 
-  @Column({ nullable: false })
-  content!: unknown;
+  /** Role-keyed vocabulary — `user`→{text}, `assistant`→{text,tool_calls,
+   *  tool_results}, `tool`→{tool_call_id,tool_name,output}. */
+  @Column({ jsType: MessageContent, nullable: false })
+  content!: MessageContent;
 
   @Column({ pgType: "int4", nullable: true })
   tokens_in?: number;

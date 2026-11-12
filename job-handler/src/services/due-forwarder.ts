@@ -20,7 +20,7 @@
  * callable will then deny it — that IS the governance).
  */
 
-import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, type AuthUser, logger } from "@primebrick/sdk";
+import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, JOB_SCHEDULE_HEADERS, type AuthUser, logger } from "@primebrick/sdk";
 import { getDal } from "../db/dal.js";
 import { Filter, field } from "@primebrick/dal-pg";
 import { JobRunEntity } from "../domain/entities/job_run_entity.js";
@@ -268,9 +268,14 @@ async function forward(
   // A one-shot consumed its single fire regardless of the dispatch
   // outcome — the declaration self-purged, the mirror flips `fired`
   // (the run row carries the outcome, the schedule status carries the
-  // lifecycle truth: it will never fire again).
+  // lifecycle truth: it will never fire again). Recurring schedules take
+  // the server's own `Nats-Schedule-Next` into `next_run_at` — the
+  // authoritative next fire, cron included ("purge" = nothing more).
   if (envelope.schedule_subject) {
-    await markScheduleFired(envelope.schedule_subject).catch((err) => {
+    const nextHdr = msg.headers?.get(JOB_SCHEDULE_HEADERS.next);
+    const nextFire =
+      nextHdr === undefined ? undefined : nextHdr === "purge" ? null : new Date(nextHdr);
+    await markScheduleFired(envelope.schedule_subject, nextFire).catch((err) => {
       logger.warn(`due-forwarder: fired flip failed for ${envelope.schedule_subject} (${String(err)})`, { tags: ["jobs"] });
     });
   }

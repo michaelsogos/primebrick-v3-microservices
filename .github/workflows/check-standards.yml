@@ -1,0 +1,40 @@
+name: Check Standards
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+jobs:
+  check-standards:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [ai, crm, emailsender, job-handler, webhook]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: primebrick-us-v3
+
+      - name: Checkout sdk (canonical tool)
+        uses: actions/checkout@v4
+        with:
+          repository: michaelsogos/primebrick-v3-sdk
+          ref: develop
+          path: primebrick-v3-sdk
+
+      - name: Checkout core (honesty matrix)
+        uses: actions/checkout@v4
+        with:
+          repository: michaelsogos/primebrick-v3-core
+          ref: develop
+          path: primebrick-v3-core
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: check-standards (${{ matrix.service }})
+        working-directory: primebrick-us-v3/${{ matrix.service }}
+        run: bun ../../primebrick-v3-sdk/tools/check-standards.ts src

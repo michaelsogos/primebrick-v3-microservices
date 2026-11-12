@@ -38,25 +38,51 @@
 import { z } from "zod";
 import { LANG_RE, type ModuleEventsDecl } from "@primebrick/sdk";
 
-/** The customer row projection every CRM event embeds — mirrors
- *  `CustomerEntity`'s public fields (snake_case, no DTO renaming). */
+/** The customer projection every CRM event embeds — mirrors
+ *  `CustomerEntity`'s public fields PLUS the canonical children resolved
+ *  at emit time. `email`/`phone` are DERIVED from the default
+ *  EMAIL/VOICE `customer_contacts` rows (the paths `$.customer.email` /
+ *  `$.customer.phone` keep working — rules never chase the sub-array);
+ *  `legal_address`/`account` come from the legal `local_addresses` row
+ *  and the legal `customer_accounts` datasheet. */
+const LEGAL_ADDRESS_SNAPSHOT = z.object({
+  street: z.string().meta({ description: "Street line 1 (civic included)." }),
+  street2: z.string().optional().meta({ description: "Street line 2." }),
+  postal_code: z.string(),
+  city: z.string(),
+  province: z.string().optional(),
+  country: z.string().length(2).meta({ description: "ISO 3166-1 alpha-2." }),
+});
+const ACCOUNT_SNAPSHOT = z.object({
+  company_name: z.string().meta({ description: "Registered fiscal name." }),
+  country: z.string().length(2).meta({ description: "Fiscal jurisdiction, ISO alpha-2." }),
+  legal_form_uuid: z.string().uuid().optional(),
+});
 const CUSTOMER_SNAPSHOT = z.object({
   uuid: z.string().uuid().meta({ description: "Customer row uuid." }),
   code: z.string().min(1).meta({ description: "Human customer code (unique)." }),
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  company_name: z.string().optional(),
-  email: z.string().email().optional().meta({ description: "Customer contact address." }),
-  phone: z.string().meta({ format: "phone" }).optional(),
+  display_name: z.string().optional().meta({ description: "Informal display name (pseudonym allowed)." }),
+  customer_type_uuid: z.string().uuid().optional(),
+  qualification_uuid: z.string().uuid().optional(),
+  marketing_qualification_uuid: z.string().uuid().optional(),
+  company_dimension_uuid: z.string().uuid().optional(),
+  email: z.string().email().optional().meta({
+    description: "DERIVED — default EMAIL customer_contacts value.",
+  }),
+  phone: z.string().meta({ format: "phone" }).optional().meta({
+    description: "DERIVED — default VOICE customer_contacts value.",
+  }),
   status: z
     .enum(["ACTIVE", "INACTIVE"])
     .meta({ description: "Customer lifecycle status (CustomerEntity.status)." })
     .optional(),
-  local_address: z.string().optional(),
-  local_city: z.string().optional(),
-  local_state: z.string().optional(),
-  local_country: z.string().optional(),
-  local_zip: z.string().optional(),
+  status_reason: z.string().optional(),
+  legal_address: LEGAL_ADDRESS_SNAPSHOT.optional().meta({
+    description: "DERIVED — the customer's legal local_addresses row.",
+  }),
+  account: ACCOUNT_SNAPSHOT.optional().meta({
+    description: "DERIVED — the customer's legal customer_accounts datasheet.",
+  }),
   preferred_locale: z.string().regex(LANG_RE).meta({
     format: "lang",
     description: "Customer's preferred locale — BCP-47 (e.g. it-IT). Map `languageIso` from here.",

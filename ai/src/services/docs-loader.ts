@@ -15,29 +15,14 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname } from "node:path";
 import { parseMdxFrontmatter } from "./chunking.js";
 import { logger } from "@primebrick/sdk";
+import { type DocMetadata } from "../domain/jsonb-contracts.js";
 
 export interface LoadedDoc {
   repo: string;
   path: string;
   title: string;
   content: string;
-  metadata: {
-    source: "mdx" | "openapi";
-    repo: string;
-    path: string;
-    title: string;
-    content_type: "tutorial" | "reference" | "conceptual" | "api";
-    heading_path?: string;
-    entity?: string;
-    endpoint?: string;
-    /** Frontmatter description — fed into the contextual embedding preamble. */
-    description?: string;
-    /** KB paths this doc links to (doc-graph expansion — MDX only). */
-    links?: string[];
-    /** `_order.json` manifest rows — ordering metadata for the docs index,
-     *  not real pages. Excluded from search/index consumers. */
-    order_manifest?: boolean;
-  };
+  metadata: DocMetadata;
 }
 
 /**

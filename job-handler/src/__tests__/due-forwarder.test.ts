@@ -112,7 +112,12 @@ async function handlerFor(lane: Lane): Promise<SubOpts["handler"]> {
   return sub.handler;
 }
 
-const userMsg = (uuid: string) => ({ headers: { "x-user-id": uuid, "x-user-locale": "en-GB" } });
+/** Real `JsMsg.headers` is `MsgHdrs` (`.get(k)`); mocked `forwardAuthHeaders`
+ *  above still indexes the same object — support both on one shape. */
+const hdrs = (o: Record<string, string>) =>
+  Object.assign({}, o, { get: (k: string) => o[k] });
+const userMsg = (uuid: string) => ({ headers: hdrs({ "x-user-id": uuid, "x-user-locale": "en-GB" }) });
+const emptyMsg = () => ({ headers: hdrs({}) });
 
 const published = () =>
   h.publish.mock.calls.map((c) => ({ subject: c[0] as string, payload: c[1], headers: c[2] as Record<string, string> }));
@@ -203,7 +208,7 @@ describe("due-forwarder — run-result correlation", () => {
     const handler = await handlerFor("system");
     h.addRun.mockResolvedValue({ uuid: "run-uuid-42" });
 
-    await handler(envelope(), { headers: {} });
+    await handler(envelope(), emptyMsg());
 
     expect(published()[0].headers["x-job-run-id"]).toBe("run-uuid-42");
   });
@@ -211,7 +216,7 @@ describe("due-forwarder — run-result correlation", () => {
   it("dispatched run rows carry the callable's service code, not JH's", async () => {
     const handler = await handlerFor("system");
 
-    await handler(envelope(), { headers: {} });
+    await handler(envelope(), emptyMsg());
 
     expect(recorded()[0]).toMatchObject({
       service_code: "emailsender",
@@ -223,15 +228,16 @@ describe("due-forwarder — run-result correlation", () => {
   it("marks a one-shot schedule fired after the dispatch attempt", async () => {
     const handler = await handlerFor("system");
 
-    await handler(envelope(), { headers: {} });
+    await handler(envelope(), emptyMsg());
 
-    expect(h.markFired).toHaveBeenCalledWith("jobs.schedule.job.trig");
+    // No Nats-Schedule-Next on this fired message → nextFire stays undefined.
+    expect(h.markFired).toHaveBeenCalledWith("jobs.schedule.job.trig", undefined);
   });
 
   it("an immediate envelope (no schedule_subject) skips both schedule stamps", async () => {
     const handler = await handlerFor("system");
 
-    await handler(envelope({ schedule_subject: undefined }), { headers: {} });
+    await handler(envelope({ schedule_subject: undefined }), emptyMsg());
 
     expect(published()[0].headers["x-job-schedule-subject"]).toBeUndefined();
     expect(published()[0].headers["x-job-run-id"]).toBe("run-uuid-1");
@@ -244,7 +250,7 @@ describe("due-forwarder — envelope handling", () => {
     const handler = await handlerFor("system");
     h.cache.set("auth:epoch", 999);
 
-    await handler(envelope(), { headers: {} });
+    await handler(envelope(), emptyMsg());
 
     expect(h.callNats).not.toHaveBeenCalled();
     expect(published()[0]).toMatchObject({ subject: "emailsender.send" });

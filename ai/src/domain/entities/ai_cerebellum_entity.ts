@@ -32,6 +32,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
+import { ExecutionConfig, type AiTestScore } from "../jsonb-contracts.js";
 
 @Entity("ai_cerebellum", "ai")
 @AuditTrail()
@@ -40,16 +41,14 @@ export class AiCerebellumEntity
   extends Deletable(Auditable(EntityBase))
   implements IExposableEntity {
   @Key()
-  id: bigint;
-
-  @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   /** Assistant identifier (e.g. `regex`, `json_config`).
    *  Composite unique (assistant_key, model_id, dtype) — non-partial: a
    *  soft-deleted twin conflicts too and must be restored, never
    *  duplicated (DAL raises ERR05 with the row uuid). */
-  @Unique("ai_cerebellum_assistant_model_dtype_uq", 0)
+  @Unique("ai_cerebellum_assistant_model_dtype_uq", 0, { nullsNotDistinct: true })
   @Column({ length: 60, nullable: false })
   assistant_key: string;
 
@@ -79,11 +78,11 @@ export class AiCerebellumEntity
   enable_thinking?: boolean;
 
   /** NULL = inherit ai_models.temperature. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   temperature?: number;
 
   /** NULL = inherit ai_models.top_p. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   top_p?: number;
 
   /** NULL = inherit ai_models.max_tokens. */
@@ -91,19 +90,19 @@ export class AiCerebellumEntity
   max_tokens?: number;
 
   /** NULL = inherit ai_models.repetition_penalty. */
-  @Column({ nullable: true })
+  @Column({ pgType: "float8", nullable: true })
   repetition_penalty?: number;
 
   /** Partial execution-config override — merged over ai_models.execution_config.
    *  NULL = inherit the whole execution_config. */
-  @Column({ nullable: true })
-  execution_config?: Record<string, any>;
+  @Column({ jsType: ExecutionConfig, nullable: true })
+  execution_config?: ExecutionConfig;
 
   /** Per-tuning test measurements keyed by test case. JSONB — same shape as
    *  ai_models.test_scores, kept separate so tuning scores never overwrite
    *  model-level scores. */
-  @Column({ nullable: true })
-  test_scores?: Record<string, any>;
+  @Column({ pgType: "jsonb", nullable: true })
+  test_scores?: Record<string, AiTestScore>;
 
   /** Visual recommendation badge ('RECOMMENDED' | 'NOT_RECOMMENDED' | NULL).
    *  Purely cosmetic — does NOT affect selection or execution. */
@@ -115,13 +114,13 @@ export class AiCerebellumEntity
    *  evidence proves this (assistant, model, dtype) combo broken. The
    *  assistant picker hides models whose cerebellum row for that
    *  assistant is incompatible. */
-  @Column({ nullable: false, defaultSql: "true" })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "true" })
   is_compatible: boolean;
 
   /** Per-assistant default model: at most one row per assistant_key
    *  (partial unique index). When set, the assistant panel loads this
    *  model instead of the global `ai_assistant_model` config fallback. */
-  @Column({ nullable: false, defaultSql: "false" })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   is_default: boolean;
 
 
