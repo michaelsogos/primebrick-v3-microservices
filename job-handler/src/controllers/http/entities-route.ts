@@ -43,6 +43,7 @@ export const jobEntityDecls: EntityRouteDecl[] = [
       meta: readPerms, list: readPerms, get: readPerms,
       create: writePerms, update: writePerms,
       delete: writePerms, restore: writePerms, audit: writePerms,
+      bulkDelete: writePerms, bulkRestore: writePerms,
     },
     duplicate: false,
   },
@@ -51,13 +52,16 @@ export const jobEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "job_schedules", label: "job schedule" },
     service: lazy(() => new JobSchedulesService()) as unknown as EntityServiceLike,
     meta: jobScheduleMeta,
-    auditable: true,
+    auditable: false,
     permissions: {
-      meta: readPerms, list: readPerms, get: readPerms, audit: writePerms,
-      // Schedules are armed/disarmed by the services — admin write ops
-      // exist for manual jobs & cleanup, gated to admin.
-      create: writePerms, update: writePerms,
-      delete: writePerms, restore: writePerms,
+      // READ-ONLY MIRROR — job_schedules mirrors live NATS declarations.
+      // CRUD writes would flip the mirror without touching JetStream (the
+      // direct-SQL bypass, but through the canonical API). Arm via
+      // jobs.ctl.schedule.request / schedule-only triggers; disarm via
+      // /api/v1/actions/disable-schedule (owner-level) or stop-job
+      // (instance-level). No create/update/delete/restore.
+      // Derived mirror is not auditable state — no /:uuid/audit endpoint.
+      meta: readPerms, list: readPerms, get: readPerms,
     },
     duplicate: false,
   },
@@ -66,10 +70,11 @@ export const jobEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "job_runs", label: "job run" },
     service: lazy(() => new JobRunsService()) as unknown as EntityServiceLike,
     meta: jobRunMeta,
-    auditable: true,
+    auditable: false,
     permissions: {
       // History is written by services, never edited by humans — read-only.
-      meta: readPerms, list: readPerms, get: readPerms, audit: writePerms,
+      // The run row IS the audit trail — no /:uuid/audit endpoint.
+      meta: readPerms, list: readPerms, get: readPerms,
     },
     duplicate: false,
   },

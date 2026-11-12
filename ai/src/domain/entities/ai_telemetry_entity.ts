@@ -5,23 +5,20 @@
  * a server-default timestamp, `user_uuid` is a domain column (not the
  * audit `created_by`). No updates/deletes by design.
  */
-import { Column, Entity, Key, Unique,
+import { Column, Entity, Key,
   type UUID,
 } from "@primebrick/dal-pg";
 
 @Entity("ai_telemetry", "ai")
 export class AiTelemetryEntity {
   @Key()
-  id!: bigint;
-
-  @Unique("ai_telemetry_uuid_uq", 0)
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
-  @Column({ nullable: true })
+  @Column({ pgType: "uuid", nullable: true })
   conversation_uuid?: UUID | null;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   user_uuid!: UUID;
 
   @Column({ nullable: false })
@@ -45,12 +42,12 @@ export class AiTelemetryEntity {
   @Column({ pgType: "int4", nullable: false })
   latency_ms!: number;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   success!: boolean;
 
   @Column({ nullable: true })
   error?: string | null;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   created_at!: Date;
 }

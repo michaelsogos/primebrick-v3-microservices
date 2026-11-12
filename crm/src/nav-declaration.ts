@@ -23,6 +23,28 @@ import { entityPaths, type ModuleNavDeclaration } from "@primebrick/sdk";
 
 const customersPaths = entityPaths("/crm", "customers");
 
+/**
+ * Dict surfaces — enum/lookup entities rendered by the `dict` archetype
+ * (rows edit inline under the "Impostazioni" sibling node). The route
+ * leaf is the entity's TABLE name (already plural — R1); `entity` is the
+ * wire name served by the entity-router. Adding a dict = one entry here.
+ */
+const DICT_PREFIX = "/crm/settings";
+const dictDecl = (table: string, entity: string) => ({
+  nav: {
+    id: table,
+    label_key: `crm.settings.nav.${table}`,
+    href: `${DICT_PREFIX}/${table}`,
+  },
+  route: {
+    route: `${DICT_PREFIX}/${table}`,
+    kind: "dict" as const,
+    entity,
+    label_key: `crm.settings.nav.${table}`,
+  },
+});
+const customerTypesDict = dictDecl("customer_types", "customer_type");
+
 export const CRM_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/crm", "/system/crm"],
   access: "access.crm",
@@ -51,6 +73,21 @@ export const CRM_NAV: ModuleNavDeclaration = {
       kind: "page",
       component_url: "/svc/crm/api/v1/module-assets/crm-pages.js",
       component_format: "esm-mount",
+    },
+  ],
+  // "Impostazioni" — a SIBLING module node next to CRM under the same
+  // root (never a group inside the module). Discovery emits it as the
+  // `crm-settings` module; its routes live under the `/crm/settings`
+  // prefix (nested under `/crm`), access keys derive as
+  // `access.crm.settings.<leaf>`.
+  siblings: [
+    {
+      id: "settings",
+      label_key: "crm.settings.nav.label",
+      icon: "settings",
+      route_prefixes: [DICT_PREFIX],
+      nav: [{ ...customerTypesDict.nav, default: true }],
+      routes: [customerTypesDict.route],
     },
   ],
 };

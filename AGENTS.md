@@ -18,10 +18,21 @@
   docs/ai/README.md, .devin/rules/, docs/dev-guide/_order.json.
   The missing doc is usually a doc you haven't read.
 
-## ⚠️ CRITICAL: NEVER COMMIT AUTOMATICALLY
-**AI agents MUST NEVER commit changes without explicit user instruction.**
-- WAIT for the user to explicitly tell you to commit before running any `git commit` command.
-- This applies to ALL situations - no exceptions.
+## ⚠️ COMMIT CADENCE — every change turn commits
+
+**A turn that modifies source files ENDS with a commit** — the user has
+authorized this cadence as a standing rule. Do not accumulate uncommitted
+work and do not wait for per-commit permission.
+
+- Before every commit run the relevant checks: **type check** AND
+  **E2E / runtime verification** of the changed path.
+- **A green type check alone is NEVER "verified"** — it only proves the
+  code compiles. Empirical verification = run the thing and look at the
+  output (screenshot for UI, HTTP response for endpoints, query for data).
+- See [docs/ai/commit-verification.md](./docs/ai/commit-verification.md)
+  for the full contract, and [docs/gitflow.md](./docs/gitflow.md) for
+  GitFlow commit rules.
+
 
 ## Repository overview
 Independent Git repository containing the distributed microservices part of the Primebrick v3 Backend.

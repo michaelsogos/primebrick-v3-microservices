@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-02T17:33:56.958Z",
+  "generatedAt": "2026-11-11T17:48:31.024Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -295,32 +295,6 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "email": {
-          "name": "email",
-          "ordinalPosition": 4,
-          "dataType": "varchar",
-          "typname": "varchar",
-          "typeOid": 1043,
-          "typcategory": "S",
-          "formatType": "character varying(320)",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "phone": {
-          "name": "phone",
-          "ordinalPosition": 5,
-          "dataType": "varchar",
-          "typname": "varchar",
-          "typeOid": 1043,
-          "typcategory": "S",
-          "formatType": "character varying(64)",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
         "status": {
           "name": "status",
           "ordinalPosition": 6,
@@ -334,113 +308,9 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "first_name": {
-          "name": "first_name",
-          "ordinalPosition": 7,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "last_name": {
-          "name": "last_name",
-          "ordinalPosition": 8,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "company_name": {
-          "name": "company_name",
-          "ordinalPosition": 9,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
         "status_reason": {
           "name": "status_reason",
           "ordinalPosition": 10,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "local_address": {
-          "name": "local_address",
-          "ordinalPosition": 11,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "local_city": {
-          "name": "local_city",
-          "ordinalPosition": 12,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "local_state": {
-          "name": "local_state",
-          "ordinalPosition": 13,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "local_country": {
-          "name": "local_country",
-          "ordinalPosition": 14,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "local_zip": {
-          "name": "local_zip",
-          "ordinalPosition": 15,
           "dataType": "text",
           "typname": "text",
           "typeOid": 25,
@@ -593,6 +463,71 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "display_name": {
+          "name": "display_name",
+          "ordinalPosition": 27,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "customer_type_uuid": {
+          "name": "customer_type_uuid",
+          "ordinalPosition": 28,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "qualification_uuid": {
+          "name": "qualification_uuid",
+          "ordinalPosition": 29,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "marketing_qualification_uuid": {
+          "name": "marketing_qualification_uuid",
+          "ordinalPosition": 30,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "company_dimension_uuid": {
+          "name": "company_dimension_uuid",
+          "ordinalPosition": 31,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -604,6 +539,3546 @@
             "uuid"
           ],
           "definition": "CREATE UNIQUE INDEX customers_uuid_uq ON crm.customers USING btree (uuid)"
+        }
+      ]
+    },
+    "crm.customer_types": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "customer_types",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "customer_types_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_types_uuid_uq ON crm.customer_types USING btree (uuid)"
+        },
+        {
+          "name": "customer_types_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_types_code_uq ON crm.customer_types USING btree (code)"
+        }
+      ]
+    },
+    "crm.company_dimensions": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "company_dimensions",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "min_size": {
+          "name": "min_size",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "max_size": {
+          "name": "max_size",
+          "ordinalPosition": 13,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 14,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "company_dimensions_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX company_dimensions_uuid_uq ON crm.company_dimensions USING btree (uuid)"
+        },
+        {
+          "name": "company_dimensions_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX company_dimensions_code_uq ON crm.company_dimensions USING btree (code)"
+        }
+      ]
+    },
+    "crm.legal_forms": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "legal_forms",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "country": {
+          "name": "country",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(2)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "elf_code": {
+          "name": "elf_code",
+          "ordinalPosition": 12,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(4)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "name_local": {
+          "name": "name_local",
+          "ordinalPosition": 13,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "name_transliterated": {
+          "name": "name_transliterated",
+          "ordinalPosition": 14,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "abbreviation": {
+          "name": "abbreviation",
+          "ordinalPosition": 15,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "status": {
+          "name": "status",
+          "ordinalPosition": 16,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(10)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 17,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "legal_forms_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX legal_forms_uuid_uq ON crm.legal_forms USING btree (uuid)"
+        },
+        {
+          "name": "legal_forms_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code)"
+        },
+        {
+          "name": "legal_forms_country_elf_uidx",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "country",
+            "elf_code"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX legal_forms_country_elf_uidx ON crm.legal_forms USING btree (country, elf_code) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "legal_forms_country_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "country"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX legal_forms_country_idx ON crm.legal_forms USING btree (country) WHERE (deleted_at IS NULL)"
+        }
+      ]
+    },
+    "crm.local_address_types": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "local_address_types",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "local_address_types_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX local_address_types_uuid_uq ON crm.local_address_types USING btree (uuid)"
+        },
+        {
+          "name": "local_address_types_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX local_address_types_code_uq ON crm.local_address_types USING btree (code)"
+        }
+      ]
+    },
+    "crm.qualifications": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "qualifications",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "qualifications_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX qualifications_uuid_uq ON crm.qualifications USING btree (uuid)"
+        },
+        {
+          "name": "qualifications_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX qualifications_code_uq ON crm.qualifications USING btree (code)"
+        }
+      ]
+    },
+    "crm.marketing_qualifications": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "marketing_qualifications",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "marketing_qualifications_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX marketing_qualifications_uuid_uq ON crm.marketing_qualifications USING btree (uuid)"
+        },
+        {
+          "name": "marketing_qualifications_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX marketing_qualifications_code_uq ON crm.marketing_qualifications USING btree (code)"
+        }
+      ]
+    },
+    "crm.contact_types": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "contact_types",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "value_kind": {
+          "name": "value_kind",
+          "ordinalPosition": 12,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(20)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 13,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "contact_types_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX contact_types_uuid_uq ON crm.contact_types USING btree (uuid)"
+        },
+        {
+          "name": "contact_types_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX contact_types_code_uq ON crm.contact_types USING btree (code)"
+        }
+      ]
+    },
+    "crm.account_kinds": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "account_kinds",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "account_kinds_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX account_kinds_uuid_uq ON crm.account_kinds USING btree (uuid)"
+        },
+        {
+          "name": "account_kinds_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX account_kinds_code_uq ON crm.account_kinds USING btree (code)"
+        }
+      ]
+    },
+    "crm.customer_link_types": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "customer_link_types",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "customer_link_types_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_link_types_uuid_uq ON crm.customer_link_types USING btree (uuid)"
+        },
+        {
+          "name": "customer_link_types_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_link_types_code_uq ON crm.customer_link_types USING btree (code)"
+        }
+      ]
+    },
+    "crm.consent_types": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "consent_types",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "code": {
+          "name": "code",
+          "ordinalPosition": 10,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 12,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "consent_types_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX consent_types_uuid_uq ON crm.consent_types USING btree (uuid)"
+        },
+        {
+          "name": "consent_types_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX consent_types_code_uq ON crm.consent_types USING btree (code)"
+        }
+      ]
+    },
+    "crm.local_addresses": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "local_addresses",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "type_uuid": {
+          "name": "type_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "street": {
+          "name": "street",
+          "ordinalPosition": 12,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "ordinalPosition": 14,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(20)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "city": {
+          "name": "city",
+          "ordinalPosition": 15,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "province": {
+          "name": "province",
+          "ordinalPosition": 16,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "country": {
+          "name": "country",
+          "ordinalPosition": 17,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(2)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "lat": {
+          "name": "lat",
+          "ordinalPosition": 18,
+          "dataType": "float8",
+          "typname": "float8",
+          "typeOid": 701,
+          "typcategory": "N",
+          "formatType": "double precision",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "lng": {
+          "name": "lng",
+          "ordinalPosition": 19,
+          "dataType": "float8",
+          "typname": "float8",
+          "typeOid": 701,
+          "typcategory": "N",
+          "formatType": "double precision",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "poi_name": {
+          "name": "poi_name",
+          "ordinalPosition": 20,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "street2": {
+          "name": "street2",
+          "ordinalPosition": 21,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 22,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "local_addresses_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "local_addresses_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX local_addresses_uuid_uq ON crm.local_addresses USING btree (uuid)"
+        },
+        {
+          "name": "local_addresses_customer_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_id"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX local_addresses_customer_idx ON crm.local_addresses USING btree (customer_id) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "local_addresses_type_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "type_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX local_addresses_type_idx ON crm.local_addresses USING btree (type_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "local_addresses_dedupe_uidx",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "customer_id",
+            "lower(street"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX local_addresses_dedupe_uidx ON crm.local_addresses USING btree (customer_id, lower(street), COALESCE(lower(street2), ''::text), postal_code, lower(city), country) WHERE (deleted_at IS NULL)"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "local_addresses_customer_fk",
+          "column": "customer_id",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "local_addresses_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        }
+      ]
+    },
+    "crm.customer_accounts": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "customer_accounts",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "kind_uuid": {
+          "name": "kind_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "company_name": {
+          "name": "company_name",
+          "ordinalPosition": 12,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "legal_form_uuid": {
+          "name": "legal_form_uuid",
+          "ordinalPosition": 13,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "country": {
+          "name": "country",
+          "ordinalPosition": 14,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(2)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "local_address_id": {
+          "name": "local_address_id",
+          "ordinalPosition": 15,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "contact_id": {
+          "name": "contact_id",
+          "ordinalPosition": 16,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "is_default": {
+          "name": "is_default",
+          "ordinalPosition": 17,
+          "dataType": "bool",
+          "typname": "bool",
+          "typeOid": 16,
+          "typcategory": "B",
+          "formatType": "boolean",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 18,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "local_address_uuid": {
+          "name": "local_address_uuid",
+          "ordinalPosition": 19,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "contact_uuid": {
+          "name": "contact_uuid",
+          "ordinalPosition": 20,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "customer_accounts_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_accounts_customer_uuid_idx ON crm.customer_accounts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_accounts_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_accounts_uuid_uq ON crm.customer_accounts USING btree (uuid)"
+        },
+        {
+          "name": "customer_accounts_default_uidx",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "customer_id"
+          ],
+          "where": "(is_default AND (deleted_at IS NULL))",
+          "definition": "CREATE UNIQUE INDEX customer_accounts_default_uidx ON crm.customer_accounts USING btree (customer_id) WHERE (is_default AND (deleted_at IS NULL))"
+        },
+        {
+          "name": "customer_accounts_customer_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_id"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_accounts_customer_idx ON crm.customer_accounts USING btree (customer_id) WHERE (deleted_at IS NULL)"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "customer_accounts_customer_fk",
+          "column": "customer_id",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_address_fk",
+          "column": "local_address_id",
+          "refSchema": "crm",
+          "refTable": "local_addresses",
+          "refColumn": "id",
+          "onDelete": "restrict",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_contact_fk",
+          "column": "contact_id",
+          "refSchema": "crm",
+          "refTable": "customer_contacts",
+          "refColumn": "id",
+          "onDelete": "restrict",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_local_address_uuid_fkey",
+          "column": "local_address_uuid",
+          "refSchema": "crm",
+          "refTable": "local_addresses",
+          "refColumn": "uuid",
+          "onDelete": "restrict",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_accounts_contact_uuid_fkey",
+          "column": "contact_uuid",
+          "refSchema": "crm",
+          "refTable": "customer_contacts",
+          "refColumn": "uuid",
+          "onDelete": "restrict",
+          "onUpdate": "no_action"
+        }
+      ]
+    },
+    "crm.customer_contacts": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "customer_contacts",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "type_uuid": {
+          "name": "type_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "value": {
+          "name": "value",
+          "ordinalPosition": 12,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "is_default": {
+          "name": "is_default",
+          "ordinalPosition": 13,
+          "dataType": "bool",
+          "typname": "bool",
+          "typeOid": 16,
+          "typcategory": "B",
+          "formatType": "boolean",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "label": {
+          "name": "label",
+          "ordinalPosition": 14,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 15,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "customer_contacts_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_contacts_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_contacts_uuid_uq ON crm.customer_contacts USING btree (uuid)"
+        },
+        {
+          "name": "customer_contacts_default_uidx",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "customer_id",
+            "type_uuid"
+          ],
+          "where": "(is_default AND (deleted_at IS NULL))",
+          "definition": "CREATE UNIQUE INDEX customer_contacts_default_uidx ON crm.customer_contacts USING btree (customer_id, type_uuid) WHERE (is_default AND (deleted_at IS NULL))"
+        },
+        {
+          "name": "customer_contacts_customer_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_id"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_contacts_customer_idx ON crm.customer_contacts USING btree (customer_id) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_contacts_type_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "type_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_contacts_type_idx ON crm.customer_contacts USING btree (type_uuid) WHERE (deleted_at IS NULL)"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "customer_contacts_customer_fk",
+          "column": "customer_id",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_contacts_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        }
+      ]
+    },
+    "crm.customer_consents": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "customer_consents",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "type_uuid": {
+          "name": "type_uuid",
+          "ordinalPosition": 11,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "doc_version": {
+          "name": "doc_version",
+          "ordinalPosition": 12,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "granted_at": {
+          "name": "granted_at",
+          "ordinalPosition": 13,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "ordinalPosition": 14,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "channel": {
+          "name": "channel",
+          "ordinalPosition": 15,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(50)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "ip": {
+          "name": "ip",
+          "ordinalPosition": 16,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(45)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "ordinalPosition": 17,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "seal": {
+          "name": "seal",
+          "ordinalPosition": 18,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(64)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "customer_uuid": {
+          "name": "customer_uuid",
+          "ordinalPosition": 19,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "customer_consents_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_consents_customer_uuid_idx ON crm.customer_consents USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_consents_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_consents_uuid_uq ON crm.customer_consents USING btree (uuid)"
+        },
+        {
+          "name": "customer_consents_customer_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_id"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_consents_customer_idx ON crm.customer_consents USING btree (customer_id) WHERE (deleted_at IS NULL)"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "customer_consents_customer_fk",
+          "column": "customer_id",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_consents_customer_uuid_fkey",
+          "column": "customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        }
+      ]
+    },
+    "crm.customer_links": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "customer_links",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "id": {
+          "name": "id",
+          "ordinalPosition": 8,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 9,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "parent_customer_id": {
+          "name": "parent_customer_id",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "child_customer_id": {
+          "name": "child_customer_id",
+          "ordinalPosition": 11,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "type_uuid": {
+          "name": "type_uuid",
+          "ordinalPosition": 12,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "parent_customer_uuid": {
+          "name": "parent_customer_uuid",
+          "ordinalPosition": 13,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "child_customer_uuid": {
+          "name": "child_customer_uuid",
+          "ordinalPosition": 14,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "customer_links_parent_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "parent_customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_parent_uuid_idx ON crm.customer_links USING btree (parent_customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_links_child_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "child_customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_links_uuid_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_links_uuid_uq ON crm.customer_links USING btree (uuid)"
+        },
+        {
+          "name": "customer_links_edge_uidx",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "parent_customer_id",
+            "child_customer_id",
+            "type_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customer_links_edge_uidx ON crm.customer_links USING btree (parent_customer_id, child_customer_id, type_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_links_parent_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "parent_customer_id"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_parent_idx ON crm.customer_links USING btree (parent_customer_id) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_links_child_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "child_customer_id"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_child_idx ON crm.customer_links USING btree (child_customer_id) WHERE (deleted_at IS NULL)"
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "customer_links_parent_fk",
+          "column": "parent_customer_id",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_links_child_fk",
+          "column": "child_customer_id",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "id",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_links_parent_uuid_fkey",
+          "column": "parent_customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
+        },
+        {
+          "name": "customer_links_child_uuid_fkey",
+          "column": "child_customer_uuid",
+          "refSchema": "crm",
+          "refTable": "customers",
+          "refColumn": "uuid",
+          "onDelete": "cascade",
+          "onUpdate": "no_action"
         }
       ]
     }

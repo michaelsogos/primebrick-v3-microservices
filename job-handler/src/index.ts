@@ -6,6 +6,7 @@ import {
   logger,
   pgServerBanner,
   NatsClient,
+  setProcessInterval,
 } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
 import { initDal, getDal } from "./db/dal.js";
@@ -16,10 +17,11 @@ import { JobAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { jobServiceRouteHandler } from "./service-routes.js";
 import { assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
+import { reconcileSchedules } from "./services/schedule-service.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startDueForwarder } from "./services/due-forwarder.js";
 import { startCallableCatalog } from "./services/callable-catalog.js";
-import { startTriggersEngine } from "./services/triggers-engine.js";
+import { startTriggersEngine, refreshTrigger } from "./services/triggers-engine.js";
 import { JOB_NAV } from "./nav-declaration.js";
 import { JOB_EVENTS } from "./events-declaration.js";
 
@@ -79,7 +81,7 @@ async function main(): Promise<void> {
 
     routeHandler: jobServiceRouteHandler,
 
-    onReady: async () => {
+    onReady: async (ctx) => {
       // JOBS stream — scheduler storage. Wildcards kept NARROW on purpose:
       // `jobs.ctl.*` request subjects must NOT be captured by the stream
       // or the PubAck impersonates the correlation reply.
@@ -88,7 +90,6 @@ async function main(): Promise<void> {
         "jobs.due.>",
         "jobs.result.>",
         "jobs.cancel.>",
-        "jobs.ctl.triggers.changed",
       ], { allowMsgSchedules: true, syncSubjects: true });
 
       await registerScheduleRoutes();
@@ -96,6 +97,25 @@ async function main(): Promise<void> {
       await startDueForwarder();
       await startCallableCatalog();
       await startTriggersEngine();
+      // Mirror-vs-NATS reconcile LAST — the engine has just re-armed
+      // schedule-only triggers, so the live-declaration comparison is
+      // stable. Purges stale declarations left by out-of-band writes;
+      // kind=trigger armed-missing rows are rescued via the engine's
+      // refreshTrigger (it re-derives the schedule from the trigger row).
+      await reconcileSchedules({ rescueTrigger: refreshTrigger });
+      // Periodic reconcile — boot-only left post-boot drift (out-of-band
+      // purges, NATS wipes) invisible until restart. Interval is
+      // config-governed: `reconcile_interval_ms` in job.config_entries,
+      // 0 disables. Re-running the same self-healing function keeps one
+      // truth-sync code path for boot and steady state.
+      const reconcileMs = ctx.configLoader.getTyped("reconcile_interval_ms", Number) ?? 300_000;
+      if (reconcileMs > 0) {
+        setProcessInterval("schedule-reconcile", reconcileMs, () => {
+          reconcileSchedules({ rescueTrigger: refreshTrigger }).catch((err) => {
+            logger.warn(`periodic schedule reconcile failed (${String(err)})`, { tags: ["jobs"] });
+          });
+        });
+      }
     },
   });
 }

@@ -12,7 +12,7 @@
    * Props contract: `ctx.sheet.props` = `{ existing_model_ids?, on_added? }`.
    */
   import type { ModuleSheetHost } from '@primebrick/ui';
-  import { SheetPanelLayout } from '@primebrick/ui';
+  import { SheetPanelLayout, SheetPanelFooter } from '@primebrick/ui';
   import { ComboSelect } from '@primebrick/ui';
   import { ModelIcon } from '@primebrick/ui';
   import { RankMeter } from '@primebrick/ui';
@@ -550,10 +550,9 @@
   </div>
 
   {#snippet footer()}
-    <div class="p-3">
+    <SheetPanelFooter>
       <Button
         variant="default"
-        class="w-full"
         type="button"
         disabled={!selected || adding}
         onclick={addModel}
@@ -561,6 +560,6 @@
       >
         {t('system.entities.ai_model.add_model')}
       </Button>
-    </div>
+    </SheetPanelFooter>
   {/snippet}
 </SheetPanelLayout>

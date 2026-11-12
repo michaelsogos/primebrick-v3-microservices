@@ -14,12 +14,15 @@ import {
   Index,
   Column,
   Vector,
+  type UUID,
 } from "@primebrick/dal-pg";
+import { DocMetadata } from "../jsonb-contracts.js";
 
 @Entity("docs_kb", "ai")
 export class DocsKbEntity {
   @Key()
-  id!: bigint;
+  @Column({ pgType: "uuid" })
+  uuid!: UUID;
 
   /** Chunk identity — UNIQUE(repo, path, chunk_idx) in DDL. matchBy selector
    *  for update/hardDelete bulk ops. */
@@ -50,16 +53,16 @@ export class DocsKbEntity {
   @Column({ nullable: false, length: 1024, jsType: "vector" })
   embedding!: Vector;
 
-  @Column({ nullable: false })
-  metadata!: object;
+  @Column({ jsType: DocMetadata, nullable: false })
+  metadata!: DocMetadata;
 
   @Index()
   @Column({ nullable: false })
   content_hash!: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   created_at!: Date;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   updated_at!: Date;
 }

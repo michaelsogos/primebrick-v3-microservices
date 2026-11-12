@@ -67,7 +67,7 @@ describe("CRM_EVENTS declaration", () => {
       { type: "string" },
       { type: "string", format: "uuid" },
       { type: "array", items: { type: "string" } },
-      schema.properties.customer.properties.first_name,
+      schema.properties.customer.properties.display_name,
       schema.properties.change.properties.changed_fields,
       schema.properties.change.properties.changed_by,
     ]) {

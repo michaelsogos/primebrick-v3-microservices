@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "dal-access": {
+      "allowPaths": [
+        "adapters/config-repository-adapter.ts",
+        "db/dal.ts",
+        "index.ts"
+      ]
+    },
+    "layer-repo-import": {
+      "appliesTo": [
+        "controllers/"
+      ]
+    },
+    "panel-footer-chrome": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-toolbar-tools": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-footer-start": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    }
+  },
+  "i18n_namespaces": [
+    "app",
+    "system",
+    "webhook"
+  ]
+}

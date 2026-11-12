@@ -18,9 +18,8 @@ import type {
 } from "./dto.js";
 import {
   AI_CEREBELLUM_DEFAULT_SORT,
-  AI_CEREBELLUM_SEARCHABLE_KEYS,
-  AI_CEREBELLUM_FILTERABLE_KEYS,
 } from "./list-config.js";
+import { AI_CEREBELLUM_SEARCHABLE_KEYS, AI_CEREBELLUM_FILTERABLE_KEYS } from "./ai_cerebellum.meta.js";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";
 

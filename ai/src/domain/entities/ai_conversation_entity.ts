@@ -18,7 +18,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   PartitionField,
   type IAuditableEntity,
   type UUID,
@@ -29,12 +28,8 @@ import {
 @Entity("ai_conversations", "ai")
 export class AiConversationEntity
   extends Auditable(EntityBase) {
-  /** Internal PK — FK/JOIN performance only, never exposed to callers. */
   @Key()
-  id!: bigint;
-
-  @Unique("ai_conversations_uuid_uq", 0)
-  @Column({ nullable: false })
+  @Column({ pgType: "uuid", nullable: false })
   uuid!: UUID;
 
   @Column({ nullable: true })
@@ -48,9 +43,8 @@ export class AiConversationEntity
    * partitions older than the inactivity window, and the retention job
    * purges the partition's child rows set-based before the drop.
    */
-  @Unique("ai_conversations_uuid_uq", 1)
   @PartitionField({ interval: "1 month", retention: "6 months" })
-  @Column({ nullable: false })
+  @Column({ nullable: false, jsType: "instant" })
   last_seen_at!: Date;
 
 

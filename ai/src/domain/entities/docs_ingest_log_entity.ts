@@ -22,12 +22,14 @@ import {
   Auditable,
   Deletable,
 } from "@primebrick/dal-pg";
+import { PipelineStats } from "../jsonb-contracts.js";
 
 @Entity("docs_ingest_log", "ai")
 export class DocsIngestLogEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
-  id: bigint;
+  @Column({ pgType: "uuid" })
+  uuid: UUID;
 
   /** Source repository id inside the pack (null = service-level failure before pack parse). */
   @Column({ length: 100, nullable: true })
@@ -39,12 +41,12 @@ export class DocsIngestLogEntity
   @Column({ length: 20, nullable: false })
   trigger_source: string;
 
-  @Column({ nullable: false })
+  @Column({ pgType: "boolean", nullable: false })
   ok: boolean;
 
   /** PipelineStats snapshot: docs, chunks embedded/skipped/deleted, ms, etc. */
-  @Column({ nullable: false, defaultSql: "'{}'::jsonb" })
-  stats: Record<string, unknown>;
+  @Column({ jsType: PipelineStats, nullable: false, defaultSql: "'{}'::jsonb" })
+  stats!: PipelineStats;
 
   @Column({ nullable: true })
   error?: string;

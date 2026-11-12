@@ -1,3 +1,41 @@
 {
-  "i18n_namespaces": ["app", "system", "emailsender"]
+  "rules": {
+    "dal-access": {
+      "allowPaths": [
+        "adapters/config-repository-adapter.ts",
+        "db/dal.ts",
+        "db/entity-repo.ts",
+        "index.ts"
+      ]
+    },
+    "layer-repo-import": {
+      "appliesTo": [
+        "controllers/"
+      ]
+    },
+    "panel-footer-chrome": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-toolbar-tools": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    },
+    "panel-footer-start": {
+      "appliesTo": [
+        "fe/src/"
+      ]
+    }
+  },
+  "i18n_namespaces": [
+    "app",
+    "system",
+    "emailsender"
+  ],
+  "i18n_sql_exempt": [
+    "20261025015000_templates_pages.sql",
+    "20261105030000_callable_send_help_keys.sql"
+  ]
 }

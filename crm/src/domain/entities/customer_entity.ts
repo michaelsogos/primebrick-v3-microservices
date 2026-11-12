@@ -2,7 +2,7 @@
  * CustomerEntity — CRM-owned `customer` domain entity.
  *
  * Every declared property is a column with the same SQL name (e.g.
- * `first_name` → `first_name`). `@Column` is only for overrides
+ * `display_name` → `display_name`). `@Column` is only for overrides
  * (`pgType`, `sqlName`, `nullable`).
  *
  * The `!` suffix is required by TypeScript (`strictPropertyInitialization`):
@@ -18,7 +18,6 @@ import {
   Column,
   Entity,
   Key,
-  Unique,
   CloneField,
   AuditTrail,
   EntityBase,
@@ -36,28 +35,34 @@ export class CustomerEntity
   extends Deletable(Auditable(EntityBase))
   implements IExposableEntity, IClonableEntity {
   @Key()
-  id: bigint;
-
-  @Unique()
+  @Column({ pgType: "uuid" })
   uuid: UUID;
 
   @Column({ length: 20, nullable: false })
   code: string;
 
+  /** Informal display name — may be a pseudonym, not verified. The fiscal
+   *  registered name lives on `customer_accounts.company_name`; contact
+   *  channels live on `customer_contacts`; LU addresses on
+   *  `local_addresses`. */
   @Column({ nullable: true })
-  first_name?: string;
+  display_name?: string;
 
-  @Column({ nullable: true })
-  last_name?: string;
+  /** Lazy meta ref → customer_types (private, company, pa, charity, …). */
+  @Column({ pgType: "uuid", nullable: true })
+  customer_type_uuid?: string;
 
-  @Column({ nullable: true })
-  company_name?: string;
+  /** Lazy meta ref → qualifications (LEAD→… lifecycle). */
+  @Column({ pgType: "uuid", nullable: true })
+  qualification_uuid?: string;
 
-  @Column({ length: 320, nullable: true })
-  email?: string;
+  /** Lazy meta ref → marketing_qualifications (MQL/SAL/SQL/PQL). */
+  @Column({ pgType: "uuid", nullable: true })
+  marketing_qualification_uuid?: string;
 
-  @Column({ length: 64, nullable: true })
-  phone?: string;
+  /** Lazy meta ref → company_dimensions; n/a when type=private. */
+  @Column({ pgType: "uuid", nullable: true })
+  company_dimension_uuid?: string;
 
   /** Union alias — NOT NULL esplicito per DDL */
   @Column({ nullable: false })
@@ -66,26 +71,11 @@ export class CustomerEntity
   @Column({ nullable: true })
   status_reason?: string;
 
-  @Column({ nullable: true })
-  local_address?: string;
-
-  @Column({ nullable: true })
-  local_city?: string;
-
-  @Column({ nullable: true })
-  local_state?: string;
-
-  @Column({ nullable: true })
-  local_country?: string;
-
-  @Column({ nullable: true })
-  local_zip?: string;
-
   /**
    * Customer onboarding instant, stored as `timestamptz` (UTC in PostgreSQL).
    * Pair with {@link onboarding_time_zone} so the UI can format in the creator IANA zone (incl. DST).
    */
-  @Column({ nullable: true })
+  @Column({ nullable: true, jsType: "instant" })
   onboarding_at?: Date;
 
   /** IANA time zone id (e.g. `Europe/Rome`) captured when onboarding was recorded. */

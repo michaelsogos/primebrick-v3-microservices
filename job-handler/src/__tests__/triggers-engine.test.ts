@@ -3,13 +3,18 @@
  *
  *   event + schedule → matching event arms the schedule, non-match disarms
  *   event only       → matching event publishes the forward envelope on
- *                      the due trampoline (no JetStream schedule)
+ *                      the due trampoline via jetstreamPublish (PubAck =
+ *                      durable store — a core publish can silently drop)
  *   schedule only    → arms at boot/reload, no event gate
  *
  * Lane semantics: "user" forwards the event's auth headers (refused when
  * absent or when no source exists); "me" resolves the trigger author via
  * auth.ctl.resolve_user at arm time (refused when unresolvable); "system"
  * carries no user context.
+ *
+ * Schedule subjects are uuid-keyed (`jobs.schedule.job.<uuid>`) — a rename
+ * can never orphan a declaration. Event subscriptions ride queue "job"
+ * so N JH replicas load-balance each event to exactly one member.
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,14 +22,20 @@ import type { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js"
 
 const h = vi.hoisted(() => ({
   publish: vi.fn(async (_subject?: unknown, _payload?: unknown, _headers?: unknown) => {}),
+  jetstreamPublish: vi.fn(async (_subject?: unknown, _payload?: unknown, _headers?: unknown) => BigInt(1)),
   jetstreamSubscribe: vi.fn(async (_opts?: unknown) => {}),
-  subscribeShielded: vi.fn(async (_subject?: unknown, _handler?: unknown) => {}),
+  subscribeShielded: vi.fn(async (_subject?: unknown, _handler?: unknown, _opts?: unknown) => {}),
   callNats: vi.fn(async (_subject?: unknown, _data?: unknown) => null as unknown),
   findAll: vi.fn(async () => [] as JobTriggerEntity[]),
-  declareSchedule: vi.fn(async (_opts?: unknown) => {}),
-  disarmSchedule: vi.fn(async (_subject?: unknown, _initiator?: unknown) => {}),
+  declareSchedule: vi.fn(async (_opts?: unknown) => ({ seq: BigInt(1) })),
+  disarmSchedule: vi.fn(async (_subject?: unknown, _actor?: unknown) => {}),
+  dropScheduleMirror: vi.fn(async (_subject?: unknown, _actor?: unknown) => {}),
+  // `armed` row by default — the paused gates in the engine consult it;
+  // paused/suppression behaviour is covered by schedule-service tests.
+  getScheduleRow: vi.fn(async () => ({ status: "armed" })),
   reset() {
     this.publish.mockClear();
+    this.jetstreamPublish.mockClear();
     this.jetstreamSubscribe.mockClear();
     this.subscribeShielded.mockClear();
     this.callNats.mockReset();
@@ -33,6 +44,7 @@ const h = vi.hoisted(() => ({
     this.findAll.mockResolvedValue([]);
     this.declareSchedule.mockClear();
     this.disarmSchedule.mockClear();
+    this.dropScheduleMirror.mockClear();
   },
 }));
 
@@ -45,7 +57,7 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
     NatsClient: {
       publish: h.publish,
       jetstreamSubscribe: h.jetstreamSubscribe,
-      jetstreamPublish: vi.fn(async () => {}),
+      jetstreamPublish: h.jetstreamPublish,
     },
     subscribeShielded: h.subscribeShielded,
     callNats: h.callNats,
@@ -67,6 +79,8 @@ vi.mock("../db/dal.js", () => ({ getDal: () => ({ findAll: h.findAll, add: vi.fn
 vi.mock("../services/schedule-service.js", () => ({
   declareSchedule: h.declareSchedule,
   disarmSchedule: h.disarmSchedule,
+  dropScheduleMirror: h.dropScheduleMirror,
+  getScheduleRow: h.getScheduleRow,
 }));
 vi.mock("../services/run-recorder.js", () => ({ JOBS_STREAM: "JOBS" }));
 
@@ -83,23 +97,31 @@ const mkTrigger = (over: Record<string, unknown>): JobTriggerEntity =>
     name: "trig",
     target_subject: "emailsender.send",
     execution_context: "user",
-    enabled: true,
     created_by: "author-1",
     payload_map: {},
     ...over,
   }) as unknown as JobTriggerEntity;
 
 /** Run the engine with the given triggers live, returning the captured
- *  subject → event-handler map and the reload-tap handler. */
+ *  subject → event-handler map, the reload-tap handler, and the queue
+ *  each event subject was bound with. The reload tap rides core pub/sub
+ *  (`subscribeShielded` on `jobs.ctl.triggers.changed`) — `jobs.ctl.*` is
+ *  the control plane, never stream-captured. */
 async function boot(triggers: JobTriggerEntity[]) {
   h.findAll.mockResolvedValue(triggers);
   await startTriggersEngine();
   const events = new Map<string, (payload: unknown, msg: { headers?: Record<string, string> }) => Promise<unknown>>();
-  for (const c of h.subscribeShielded.mock.calls) events.set(c[0] as string, c[1] as never);
-  const reload = h.jetstreamSubscribe.mock.calls
-    .map((c) => c[0] as { durable: string; handler: (d: { trigger_uuid?: string }) => Promise<void> })
-    .find((o) => o.durable === "job-triggers-reloader")?.handler;
-  return { events, reload };
+  const queues = new Map<string, unknown>();
+  let reload: ((data: { trigger_uuid?: string }) => Promise<unknown>) | undefined;
+  for (const c of h.subscribeShielded.mock.calls) {
+    const subject = c[0] as string;
+    if (subject === "jobs.ctl.triggers.changed") reload = c[1] as never;
+    else {
+      events.set(subject, c[1] as never);
+      queues.set(subject, (c[2] as { queue?: string } | undefined)?.queue);
+    }
+  }
+  return { events, queues, reload };
 }
 
 const userMsg = { headers: { "x-user-id": "actor-9", "x-user-locale": "it-IT" } };
@@ -118,7 +140,7 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
 
     expect(h.declareSchedule).toHaveBeenCalledWith(
       expect.objectContaining({
-        schedule_subject: "jobs.schedule.job.trig",
+        schedule_subject: "jobs.schedule.job.trig-1",
         schedule: "@every 1d",
         target: "jobs.due.user.job.forward.trig-1",
         kind: "trigger",
@@ -128,11 +150,11 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
         payload: expect.objectContaining({
           target: "emailsender.send",
           payload: { vip: true },
-          schedule_subject: "jobs.schedule.job.trig",
+          schedule_subject: "jobs.schedule.job.trig-1",
         }),
       }),
     );
-    expect(h.publish).not.toHaveBeenCalled(); // gated → armed, not fired
+    expect(h.jetstreamPublish).not.toHaveBeenCalled(); // gated → armed, not fired
   });
 
   it("a non-matching event disarms (fail-closed)", async () => {
@@ -141,9 +163,25 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
 
     expect(h.declareSchedule).not.toHaveBeenCalled();
     expect(h.disarmSchedule).toHaveBeenCalledWith(
-      "jobs.schedule.job.trig",
+      "jobs.schedule.job.trig-1",
       expect.stringContaining("trigger"),
     );
+  });
+});
+
+describe("triggers-engine — multi-replica queue semantics", () => {
+  it("event subjects subscribe on queue \"job\" — one replica per event", async () => {
+    const { queues } = await boot([
+      mkTrigger({ event_subject: "customer.updated", schedule_spec: "@every 1d" }),
+    ]);
+    expect(queues.get("customer.updated")).toBe("job");
+  });
+
+  it("the reload tap stays UNQUEUED — every replica must see the broadcast", async () => {
+    await boot([mkTrigger({ event_subject: "customer.updated", schedule_spec: "@every 1d" })]);
+    const tap = h.subscribeShielded.mock.calls.find((c) => c[0] === "jobs.ctl.triggers.changed");
+    expect(tap).toBeDefined();
+    expect((tap![2] as { queue?: string } | undefined)?.queue).toBeUndefined();
   });
 });
 
@@ -156,11 +194,14 @@ describe("triggers-engine — event only (immediate dispatch)", () => {
     await events.get("order.placed")!({ order_id: "o-1" }, userMsg);
 
     expect(h.declareSchedule).not.toHaveBeenCalled();
-    expect(h.publish).toHaveBeenCalledWith(
+    // jetstreamPublish, never core publish: the trampoline subject is
+    // stream-captured — only a PubAck proves durable storage.
+    expect(h.jetstreamPublish).toHaveBeenCalledWith(
       "jobs.due.user.job.forward.trig-2",
       expect.objectContaining({ target: "emailsender.send", payload: { order_id: "o-1" } }),
       { "x-user-id": "actor-9", "x-user-locale": "it-IT" },
     );
+    expect(h.publish).not.toHaveBeenCalled();
   });
 
   it("a non-matching event does nothing (nothing armed to disarm)", async () => {
@@ -172,7 +213,7 @@ describe("triggers-engine — event only (immediate dispatch)", () => {
     ]);
     await events.get("order.placed")!({ kind: "b2c" }, userMsg);
 
-    expect(h.publish).not.toHaveBeenCalled();
+    expect(h.jetstreamPublish).not.toHaveBeenCalled();
     expect(h.declareSchedule).not.toHaveBeenCalled();
     expect(h.disarmSchedule).not.toHaveBeenCalled();
   });
@@ -180,7 +221,7 @@ describe("triggers-engine — event only (immediate dispatch)", () => {
 
 describe("triggers-engine — schedule only (pure timer)", () => {
   it("system lane arms at boot on the system trampoline", async () => {
-    await boot([
+    const { events } = await boot([
       mkTrigger({
         uuid: "trig-3",
         name: "timer",
@@ -190,7 +231,9 @@ describe("triggers-engine — schedule only (pure timer)", () => {
       }),
     ]);
 
-    expect(h.subscribeShielded).not.toHaveBeenCalled();
+    // No event subject → the only shielded subscription is the reload tap.
+    expect(events.size).toBe(0);
+    expect(h.subscribeShielded).toHaveBeenCalledTimes(1);
     expect(h.declareSchedule).toHaveBeenCalledWith(
       expect.objectContaining({ target: "jobs.due.system.job.forward.trig-3", kind: "trigger" }),
     );
@@ -254,7 +297,7 @@ describe("triggers-engine — user lane auth requirements", () => {
     await events.get("customer.updated")!({ any: "thing" }, { headers: {} });
 
     expect(h.declareSchedule).not.toHaveBeenCalled();
-    expect(h.publish).not.toHaveBeenCalled();
+    expect(h.jetstreamPublish).not.toHaveBeenCalled();
   });
 });
 
@@ -275,7 +318,7 @@ describe("triggers-engine — reload tap", () => {
     ]);
     await reload!({ trigger_uuid: "trig-8" });
 
-    expect(h.disarmSchedule).toHaveBeenCalledWith("jobs.schedule.job.trig", expect.any(String));
+    expect(h.disarmSchedule).toHaveBeenCalledWith("jobs.schedule.job.trig-8", expect.any(String));
     expect(h.declareSchedule).toHaveBeenCalledWith(
       expect.objectContaining({ target: "jobs.due.system.job.forward.trig-8", schedule: "@every 2h" }),
     );
@@ -288,9 +331,20 @@ describe("triggers-engine — reload tap", () => {
     h.findAll.mockResolvedValue([mkTrigger({ uuid: "trig-9", enabled: false, schedule_spec: "@every 1d" })]);
     await reload!({ trigger_uuid: "trig-9" });
 
-    expect(h.disarmSchedule).toHaveBeenCalledWith("jobs.schedule.job.trig", expect.any(String));
+    expect(h.disarmSchedule).toHaveBeenCalledWith("jobs.schedule.job.trig-9", expect.any(String));
     await events.get("customer.updated")!({ x: 1 }, userMsg);
     expect(h.declareSchedule.mock.calls.filter((c) => String((c[0] as { trigger_uuid?: string }).trigger_uuid) === "trig-9")).toHaveLength(0);
-    expect(h.publish).not.toHaveBeenCalled();
+    expect(h.jetstreamPublish).not.toHaveBeenCalled();
+  });
+
+  it("deleting a trigger disarms the timer AND drops the mirror row — no tombstone", async () => {
+    const live = mkTrigger({ uuid: "trig-10", event_subject: "customer.updated", schedule_spec: "@every 1d" });
+    const { reload } = await boot([live]);
+
+    h.findAll.mockResolvedValue([]); // trigger gone
+    await reload!({ trigger_uuid: "trig-10" });
+
+    expect(h.disarmSchedule).toHaveBeenCalledWith("jobs.schedule.job.trig-10", expect.any(String));
+    expect(h.dropScheduleMirror).toHaveBeenCalledWith("jobs.schedule.job.trig-10", expect.any(String));
   });
 });

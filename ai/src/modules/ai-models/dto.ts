@@ -9,7 +9,7 @@ import {
   zPartialNoDefaults,
   ListQueryBaseSchema,
 } from "../shared/validation.js";
-import { AI_MODEL_SORT_KEYS } from "./list-config.js";
+import { AI_MODEL_SORT_KEYS } from "./ai_models.meta.js";
 
 export const AiModelListQuerySchema = ListQueryBaseSchema.extend({
   sort_key: z.enum(AI_MODEL_SORT_KEYS as [string, ...string[]]).optional(),

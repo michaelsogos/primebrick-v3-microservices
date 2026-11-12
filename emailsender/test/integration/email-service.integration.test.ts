@@ -60,7 +60,7 @@ describe("EmailService.sendEmail — integration (real PG + fake Brevo)", () => 
 
     expect(res.success).toBe(true);
     expect(res.providerMessageId).toBe("fake-msg-id-123");
-    expect(res.logId).toBeDefined();
+    expect(res.logUuid).toBeDefined();
 
     // Verify the communication log row
     const log = await findLogByMessageId("fake-msg-id-123");

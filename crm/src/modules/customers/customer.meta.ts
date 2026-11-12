@@ -12,12 +12,15 @@
  */
 
 import type { EntityMeta } from "@primebrick/sdk";
+import { listColumnKeys } from "@primebrick/sdk";
+import { withColumnConstraints } from "@primebrick/dal-pg";
+import { CustomerEntity } from "../../domain/entities/customer_entity.js";
 import {
   CUSTOMER_DEFAULT_SORT,
   CUSTOMER_LIST_COLUMNS,
 } from "./list-config.js";
 
-export const customerMeta: EntityMeta = {
+export const customerMeta: EntityMeta = withColumnConstraints({
   entity: "customer",
   translation_key: "customer",
   entities_ns: "crm",
@@ -30,4 +33,13 @@ export const customerMeta: EntityMeta = {
     default_page_size: 25,
     page_size_options: [10, 25, 50, 100],
   },
-};
+}, CustomerEntity);
+
+/** Wire key sets derived from the RESOLVED meta — `withColumnConstraints`
+ *  injects the system columns the authored list lacks, so the sort_key
+ *  enum and the service narrowings mirror the served contract. */
+export const {
+  sortable: CUSTOMER_SORT_KEYS,
+  searchable: CUSTOMER_SEARCHABLE_KEYS,
+  filterable: CUSTOMER_FILTERABLE_KEYS,
+} = listColumnKeys(customerMeta.columns);

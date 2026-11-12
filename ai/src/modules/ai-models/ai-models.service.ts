@@ -21,9 +21,8 @@ import type {
 } from "./dto.js";
 import {
   AI_MODEL_DEFAULT_SORT,
-  AI_MODEL_SEARCHABLE_KEYS,
-  AI_MODEL_FILTERABLE_KEYS,
 } from "./list-config.js";
+import { AI_MODEL_SEARCHABLE_KEYS, AI_MODEL_FILTERABLE_KEYS } from "./ai_models.meta.js";
 import { powerLevelFromWorkingSet } from "./power-level.js";
 import { entityActor } from "../../db/entity-repo.js";
 import { getDal } from "../../db/dal.js";

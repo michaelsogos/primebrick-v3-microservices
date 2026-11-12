@@ -70,11 +70,11 @@
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const validationError = $derived.by(() => {
-    if (!provider.trim()) return 'emailsender.providers.errors.providerRequired';
-    if (isCreate && !apiKey.trim()) return 'emailsender.providers.errors.apiKeyRequired';
+    if (!provider.trim()) return 'emailsender.providers.errors.provider_required';
+    if (isCreate && !apiKey.trim()) return 'emailsender.providers.errors.api_key_required';
     for (const addr of [fromEmail, replyTo]) {
       if (addr.trim() && !EMAIL_RE.test(addr.trim()))
-        return 'emailsender.providers.errors.invalidEmail';
+        return 'emailsender.providers.errors.invalid_email';
     }
     return null;
   });
@@ -149,7 +149,7 @@
         >
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="prov-name">
-              {t('emailsender.providers.providerName')}
+              {t('emailsender.providers.provider_name')}
             </label>
             <input
               id="prov-name"
@@ -161,7 +161,7 @@
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="prov-key">
-              {t('emailsender.providers.apiKey')}
+              {t('emailsender.providers.api_key')}
             </label>
             <input
               id="prov-key"
@@ -172,12 +172,12 @@
               autocomplete="off"
             />
             {#if !isCreate}
-              <p class="text-muted-foreground text-xs">{t('emailsender.providers.apiKeyLeaveBlank')}</p>
+              <p class="text-muted-foreground text-xs">{t('emailsender.providers.api_key_leave_blank')}</p>
             {/if}
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="prov-endpoint">
-              {t('emailsender.providers.apiEndpoint')}
+              {t('emailsender.providers.api_endpoint')}
             </label>
             <input
               id="prov-endpoint"
@@ -189,7 +189,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div class="grid gap-1.5">
               <label class="text-sm font-medium leading-none" for="prov-from-email">
-                {t('emailsender.providers.fromEmail')}
+                {t('emailsender.providers.from_email')}
               </label>
               <input
                 id="prov-from-email"
@@ -200,7 +200,7 @@
             </div>
             <div class="grid gap-1.5">
               <label class="text-sm font-medium leading-none" for="prov-from-name">
-                {t('emailsender.providers.fromName')}
+                {t('emailsender.providers.from_name')}
               </label>
               <input
                 id="prov-from-name"
@@ -211,7 +211,7 @@
           </div>
           <div class="grid gap-1.5">
             <label class="text-sm font-medium leading-none" for="prov-reply">
-              {t('emailsender.providers.replyTo')}
+              {t('emailsender.providers.reply_to')}
             </label>
             <input
               id="prov-reply"

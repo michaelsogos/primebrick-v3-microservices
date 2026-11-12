@@ -37,13 +37,12 @@ const TRIGGER_FORM: FormPageDecl = {
     // block (its own JsonValueEditor closes at the bottom of the
     // dynamic part — "static left / dynamic right / JSON preview last").
     { key: "name" },
-    { key: "event_subject", options_source: "census.emits", allow_create: false },
-    { key: "target_subject", options_source: "census.callables", allow_create: false },
+    { key: "event_subject" },
+    { key: "target_subject" },
     { key: "schedule_spec", default_value: "@every 5m" },
     { key: "execution_context", default_value: "user" },
     { key: "filter" },
-    { key: "enabled", default_value: true },
-    { key: "payload_map", widget: "payload_map", col: 2, row: 1, row_span: 7 },
+    { key: "payload_map", col: 2, row: 1, row_span: 7 },
   ],
   // Closed-vocab host rules: ≥1 of event_subject/schedule_spec; "user"
   // lane requires an event source (the host also disables that badge
@@ -76,7 +75,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       route: triggersPaths.create,
       kind: "create",
       entity: "job_trigger",
-      label_key: "job.jobs.triggerForm.title",
+      label_key: "job.jobs.trigger_form.title",
       // NO component_url — the host entity-form archetype renders it: the
       // entity meta (GET …/entities/job_trigger/meta) supplies field types and
       // physical constraints; `page_props.form` supplies placement + policy.
@@ -86,7 +85,7 @@ export const JOB_NAV: ModuleNavDeclaration = {
       route: triggersPaths.detail,
       kind: "detail",
       entity: "job_trigger",
-      label_key: "job.jobs.triggerForm.title",
+      label_key: "job.jobs.trigger_form.title",
       // SAME form declaration as create — detail is the update mode of the
       // `entity_form` archetype (prefill + PUT + optimistic version), and
       // the only mode where collaboration mounts (the record exists).

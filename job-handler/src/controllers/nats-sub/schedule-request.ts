@@ -70,7 +70,7 @@ export async function registerScheduleRoutes(): Promise<void> {
         validate: validateDeclare,
         handler: async ({ request, msg }) => {
           const caller = callerServiceCode(msg.headers?.get("user-agent") ?? undefined);
-          const { seq } = await declareSchedule({
+          const r = await declareSchedule({
             schedule_subject: (request as ScheduleRequest).schedule_subject!,
             schedule: (request as ScheduleRequest).schedule!,
             target: (request as ScheduleRequest).target!,
@@ -84,7 +84,10 @@ export async function registerScheduleRoutes(): Promise<void> {
             ttl: (request as ScheduleRequest).ttl,
             initiator: `service:${caller}`,
           });
-          return { armed: true, seq: String(seq) };
+          // A terminal-once skip is a SUCCESSFUL no-op: the schedule's
+          // lifecycle already completed. `armed:false` + the skip reason
+          // is the honest reply — no fake seq (JetStream seqs start at 1).
+          return r.skipped ? { armed: false, skipped: r.skipped } : { armed: true, seq: String(r.seq) };
         },
       } as const,
     ],

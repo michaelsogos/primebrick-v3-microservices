@@ -22,11 +22,8 @@ import { Filter, field, DomainService, type DuplicateResult } from "@primebrick/
 import { requireActor } from "@primebrick/sdk";
 
 import { CustomerEntity } from "../../domain/entities/customer_entity.js";
-import {
-  CUSTOMER_DEFAULT_SORT,
-  CUSTOMER_SEARCHABLE_KEYS,
-  CUSTOMER_FILTERABLE_KEYS,
-} from "./list-config.js";
+import { CUSTOMER_DEFAULT_SORT } from "./list-config.js";
+import { CUSTOMER_SEARCHABLE_KEYS, CUSTOMER_FILTERABLE_KEYS } from "./customer.meta.js";
 
 export class CustomersService extends DomainService<CustomerEntity & Record<string, unknown>> {
   constructor() {

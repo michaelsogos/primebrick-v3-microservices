@@ -21,14 +21,12 @@ import {
 export class JobRunEntity
   extends Auditable(EntityBase) {
   @Key()
-  id!: bigint;
-
-  @Unique()
+  @Column({ pgType: "uuid" })
   uuid!: UUID;
 
-  /** Schedule subject that fired this run (links to job_schedules). */
-  @Column({ nullable: false })
-  schedule_subject!: string;
+  /** Schedule subject that fired this run — null for immediate dispatches. */
+  @Column({ nullable: true })
+  schedule_subject?: string;
 
   @Column({ nullable: false })
   service_code!: string;
@@ -40,9 +38,13 @@ export class JobRunEntity
   @Column({ length: 10, nullable: false })
   lane!: string;
 
-  /** running | succeeded | failed | skipped */
+  /** dispatched | succeeded | failed | lost (dispatch never reported) */
   @Column({ length: 20, nullable: false })
   status!: string;
+
+  /** Stream sequence of the due fire — dedupes result reports per fire. */
+  @Column({ jsType: "bigint", nullable: true })
+  fire_seq?: bigint;
 
   /** RFC-style error code on failure (e.g. "401", "RBAC_PERMISSION_DENIED"). */
   @Column({ nullable: true })
@@ -52,7 +54,7 @@ export class JobRunEntity
   error_detail?: string;
 
   /** Wall-clock duration reported by the executor. */
-  @Column({ nullable: true })
+  @Column({ jsType: "bigint", nullable: true })
   duration_ms?: bigint;
 
   /** JetStream redelivery count at execution time. */
@@ -63,8 +65,9 @@ export class JobRunEntity
   @Column({ nullable: true })
   initiator?: string;
 
-  /** Free-form executor report (e.g. partitions dropped). */
-  @Column({ nullable: true })
+  /** Free-form executor report (e.g. partitions dropped) — shape owned by
+   *  each handler's `JobResultMessage.report`, folded in verbatim. */
+  @Column({ pgType: "jsonb", nullable: true })
   report?: unknown;
 
 

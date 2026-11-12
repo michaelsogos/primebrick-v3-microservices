@@ -1,22 +1,15 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-01T00:06:58.277Z",
+  "issued_at": "2026-11-11T18:39:10.995Z",
   "patches": {
-    "0001_initial_schema": "bf568cb440d74198aa2a9285f6149c85f701549e17ddd126e5ebeb09ec23546e",
-    "0002_seed_emailsender_config": "d2e6513b6a7b83d52a885ca3a6553d857530652060c796b5e8dbb49114c33628",
-    "0003_create_translations_table": "3aeb63fe9220db0272a60b3780ea66d7772f4fe72c2c60fd33f617b17786d503",
-    "0004_seed_gateway_secret": "7586bdc9c798227caa83cd2eadfece66b4e62ff784e1105d6b9cea9c2b170c07",
-    "0005_seed_bootstrap_config": "8c6b9ab8d6df2fd034ed6c90ac5af65149249df31f5c03a229ce721bbac9896b",
-    "20261013210100_audit_columns_not_null": "f56d3e58442086194dc3f417d82946f740c40a69a6c78abedf557c2c6770c835",
-    "20261015144425_noop": "2902349d2344c1beff78b07a11d84323360a3bcc3c5b60d27ebd820b09c96b7f",
-    "20261024230000_providers_pages_ownership": "469a5cf4fa3300f3ec281ba858a7c1ac5c6d9be41b1f5263a575be85dd848a49",
-    "20261024235935_addcols_emailsender_email_templates": "b4cdac4735625da2de9504a358f62c1c9e28281977ced448d91a5d5da3d831ef",
-    "20261025015000_templates_pages": "f8a4962b06b532bdc32c08369d7e205d19fd6cee1f39ae694a9a484ad7554aee",
-    "20261025210000_enduser_display_names": "2b2dd142d2c86827720e4223f609b0f971a6d5561f9a1947c5c7bff597cffb2e",
-    "20261102140000_callable_send_labels": "4636b4c7aa0ed4c72578ab2986f41f97d6faf5ea536c8dc4c8e2c9120295df70",
-    "20261103010000_language_iso_bcp47": "b46a201f6a92bf9cba9edea11497275a2ad4a384b6a8edaf6d63d4308a7c9d12",
-    "20261105020000_customer_high_value_vars": "31ceba39b351bd2ad5250efb1bb3efeeb9bb26b3180d171493ef86e43cf83287"
+    "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
+    "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
+    "0003_seed_email_templates": "847dcf30fc2489e07b236523e580c3379388a792839d36c7ca4a866a98815819",
+    "0004_emailsender_translations": "a5673084409a785c64b064f9d76bc206c061852490fad0c874b71a56381a8043",
+    "0005_uuidv7_defaults": "1f347f5d0b070706d62ff79d1f536ae8582dde7028d153950e669a7b98545529",
+    "0006_uuid_pk_swap": "8b6229b7e16a5779b7b94c793c2eadb3809473d207b956b9a82728fb53d725a8",
+    "0007_uuid_v4_to_v7_rewrite": "e4259e06e23a727b7572644c6810fe0cd71eb4f099c457d2c4724c4acd5251e3"
   },
-  "signature": "W+M8/psMsRNkfd4oEQpBiWZ4EwCQQYbEIsbbmLwo21IwFM0fIE0M8KS10/HX2H+PxnJFGIBG1K5segA9M8WPAg=="
+  "signature": "0NxWvKBRgm4ZnV7TI3BqG3SuH59Dn6gqWJNL7g3aucyMQ3nie/orVVDImYIgC9LOdX2NxK2z3d8sD1OmEnnCAA=="
 }

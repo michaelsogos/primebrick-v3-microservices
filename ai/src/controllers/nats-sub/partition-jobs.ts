@@ -9,28 +9,37 @@
  * `dal.partitionMaintenance(ENTITY_REGISTRY)` — the executor is the owning
  * service itself, never primebrick-job or any shared worker.
  *
- * Declaration goes through the governed `jobs.ctl.schedule.request` route
- * on primebrick-job (sole writer of `jobs.schedule.*` — records it in
- * `job.job_schedules` for the admin UI). Transitional fallback: if
- * primebrick-job is not registered yet, the schedule is published directly
- * and a loud warning is logged — remove the fallback once primebrick-job
- * is mandatory in the deployment.
+ * Arm goes through `armJobSchedule` — the governed `jobs.ctl.schedule.
+ * request` route on primebrick-job, the ONLY writer of `jobs.schedule.*`
+ * (the raw mechanism is not exported — a direct declaration is impossible
+ * by construction). primebrick-job down = arm fails: retried every 30s and
+ * on `service.gateway_online` (the ecosystem restart that re-registers
+ * services — JH is typically back by then). The arm is idempotent: a
+ * re-arm atomically replaces the same-subject declaration.
+ *
+ * This service does NOT own the JOBS stream — `ensureStream` here would
+ * race primebrick-job's authoritative config (`syncSubjects` could strip
+ * subjects it just added). The durable consumer retries "stream not
+ * found" until primebrick-job creates it.
  *
  * The consumer is on the SYSTEM lane (`dueLaneVerify("system")`): L1
  * client-shield only, actor=system — partition retention is a super-partes
- * infrastructure process, not a user action. Results are published to
- * `jobs.result.ai.partition-maintenance` for the governance tap.
+ * infrastructure process, not a user action. The execution outcome is
+ * reported automatically by the SDK transport middleware on
+ * `jobs.result.ai.partition-maintenance` (the fired message carries
+ * `x-job-schedule-subject` — stamped by the governed arm): a returned
+ * object becomes the run report, a throw becomes `failed` + nak.
  */
 
 import {
   NatsClient,
-  callNats,
+  armJobSchedule,
   dueLaneVerify,
-  ensureJobSchedule,
   extJsonStringify,
+  setProcessInterval,
+  subscribeShielded,
+  SERVICE_SUBJECTS,
   logger,
-  JOB_STREAM_SUBJECTS,
-  JOB_SCHEDULE_REQUEST_SUBJECT,
 } from "@primebrick/sdk";
 import { getEntityPersistenceMeta } from "@primebrick/dal-pg";
 import { ENTITY_REGISTRY } from "../../domain/entities/registry.js";
@@ -38,11 +47,38 @@ import { getDal } from "../../db/dal.js";
 import { aiConfig } from "../../config/ai-config.js";
 
 const SERVICE = "ai";
-const JOBS_STREAM = "JOBS";
 const JOB_NAME = "partition-maintenance";
-const SCHEDULE_SUBJECT = `jobs.schedule.${SERVICE}.${JOB_NAME}`;
 const DUE_SUBJECT = `jobs.due.system.${SERVICE}.${JOB_NAME}`;
-const RESULT_SUBJECT = `jobs.result.${SERVICE}.${JOB_NAME}`;
+const ARM_RETRY_MS = 30_000;
+
+let armed = false;
+
+/**
+ * One arm attempt — idempotent and quiet once armed. A failure is never
+ * fatal to boot: the consumer below is ready regardless, and the retry
+ * interval re-attempts until primebrick-job answers.
+ */
+async function tryArm(scheduleSpec: string, reason: string): Promise<void> {
+  if (armed) return;
+  try {
+    await armJobSchedule(
+      {
+        name: JOB_NAME,
+        schedule: scheduleSpec,
+        target: DUE_SUBJECT,
+        payload: { kind: "infra_derived", service: SERVICE },
+      },
+      { timeoutMs: 3000 },
+    );
+    armed = true;
+    logger.done(`${JOB_NAME} schedule armed via primebrick-job (${scheduleSpec})`, { tags: ["jobs"] });
+  } catch (err) {
+    logger.warn(
+      `${JOB_NAME} arm failed (${reason}): ${err instanceof Error ? err.message : err} — retry pending`,
+      { tags: ["jobs"] },
+    );
+  }
+}
 
 export async function startPartitionMaintenanceJob(): Promise<void> {
   const partitioned = ENTITY_REGISTRY.filter(
@@ -55,74 +91,31 @@ export async function startPartitionMaintenanceJob(): Promise<void> {
     return;
   }
 
-  await NatsClient.ensureStream(JOBS_STREAM, [...JOB_STREAM_SUBJECTS], {
-    allowMsgSchedules: true,
-    syncSubjects: true,
-  });
-
-  // 1. Arm the schedule — via the governed route when primebrick-job is up.
-  //    The request subject is OUTSIDE the stream capture set: a reply here
-  //    can only come from a real responder, never a JetStream PubAck.
   // Cadence is a config entry (ops can override without a redeploy);
   // the DEFAULT remains @daily when the key is absent.
   const scheduleSpec = aiConfig("partition_maintenance_schedule") ?? "@daily";
 
-  const declaration = {
-    schedule_subject: SCHEDULE_SUBJECT,
-    schedule: scheduleSpec,
-    target: DUE_SUBJECT,
-    kind: "infra_derived",
-  };
-  try {
-    await callNats(JOB_SCHEDULE_REQUEST_SUBJECT, declaration, { timeoutMs: 3000 });
-    logger.done(`${JOB_NAME} schedule declared via primebrick-job (${scheduleSpec})`, {
-      tags: ["jobs"],
-    });
-  } catch (err) {
-    logger.warn(
-      `primebrick-job unreachable — declaring schedule directly (transitional fallback): ${err instanceof Error ? err.message : err}`,
-      { tags: ["jobs"] },
-    );
-    await ensureJobSchedule({
-      scheduleSubject: SCHEDULE_SUBJECT,
-      schedule: scheduleSpec,
-      target: DUE_SUBJECT,
-      payload: { kind: "infra_derived", service: SERVICE },
-    });
-  }
+  // Arm now; if primebrick-job is unreachable the interval + the
+  // gateway_online broadcast (ecosystem restart — services re-register)
+  // keep retrying. Arm failures must not delay the consumer bind.
+  void tryArm(scheduleSpec, "boot");
+  setProcessInterval("ai-partition-arm-retry", ARM_RETRY_MS, () => tryArm(scheduleSpec, "interval"));
+  await subscribeShielded(SERVICE_SUBJECTS.GATEWAY_ONLINE, () => tryArm(scheduleSpec, "gateway_online"));
 
-  // 2. Durable consumer — the actual executor, inside this process.
+  // Durable consumer — the actual executor, inside this process.
   await NatsClient.jetstreamSubscribe({
-    stream: JOBS_STREAM,
+    stream: "JOBS",
     durable: `exec-${SERVICE}-${JOB_NAME}`,
     filterSubject: DUE_SUBJECT,
     verify: dueLaneVerify("system"),
     consumer: { ackWaitMs: 120_000, maxAckPending: 1 },
     handler: async () => {
-      const started = Date.now();
       logger.info(`${JOB_NAME} fired`, { tags: ["jobs"] });
-      try {
-        const report = await getDal().partitionMaintenance(ENTITY_REGISTRY);
-        logger.done(`${JOB_NAME} done: ${extJsonStringify(report)}`, { tags: ["jobs"] });
-        await NatsClient.jetstreamPublish(RESULT_SUBJECT, {
-          job: JOB_NAME,
-          service: SERVICE,
-          status: "succeeded",
-          duration_ms: Date.now() - started,
-          report,
-        });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        logger.error(`${JOB_NAME} failed: ${message}`, { tags: ["jobs"], error: err });
-        await NatsClient.jetstreamPublish(RESULT_SUBJECT, {
-          job: JOB_NAME,
-          service: SERVICE,
-          status: "failed",
-          duration_ms: Date.now() - started,
-          error: message,
-        }).catch(() => {});
-        throw err; // nak → redelivery per consumer policy
-      }
+      const report = await getDal().partitionMaintenance(ENTITY_REGISTRY);
+      logger.done(`${JOB_NAME} done: ${extJsonStringify(report)}`, { tags: ["jobs"] });
+      // Returned object → the transport middleware publishes it as the
+      // run report on jobs.result.ai.partition-maintenance.
+      return report;
     },
   });
   logger.done(`${JOB_NAME} consumer ready on ${DUE_SUBJECT}`, { tags: ["jobs"] });

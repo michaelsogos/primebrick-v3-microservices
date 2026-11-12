@@ -1,0 +1,39 @@
+{
+  "violations": [
+    {
+      "file": "controllers/http/config-route.ts",
+      "rule": "dal-access",
+      "text": "handler: async () => ({ config_entries: await getDal().findAll(ConfigEntryEntity, configProjection) }),"
+    },
+    {
+      "file": "controllers/http/config-route.ts",
+      "rule": "dal-access",
+      "text": "const row = await getDal().find(ConfigEntryEntity, configProjection, {"
+    },
+    {
+      "file": "controllers/http/config-route.ts",
+      "rule": "dal-access",
+      "text": "const dal = getDal();"
+    },
+    {
+      "file": "modules/providers/providers.service.ts",
+      "rule": "dal-access",
+      "text": "private svc = getDal().entityService<ProviderEntity & Record<string, unknown>>({"
+    },
+    {
+      "file": "modules/templates/templates.service.ts",
+      "rule": "dal-access",
+      "text": "private svc = getDal().entityService<EmailTemplateEntity & Record<string, unknown>>({"
+    },
+    {
+      "file": "services/email-service.ts",
+      "rule": "dal-access",
+      "text": "const dal = getDal();"
+    },
+    {
+      "file": "services/webhook-service.ts",
+      "rule": "dal-access",
+      "text": "const dal = getDal();"
+    }
+  ]
+}
