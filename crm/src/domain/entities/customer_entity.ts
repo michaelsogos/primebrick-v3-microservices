@@ -18,10 +18,10 @@ import {
   Column,
   Entity,
   Key,
-  CloneField,
   AuditTrail,
   EntityBase,
   Auditable,
+  Clonable,
   Deletable,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
@@ -32,7 +32,7 @@ export type CustomerStatus = "ACTIVE" | "INACTIVE";
 @AuditTrail()
 @Cached(300_000) // 5 min TTL — mutable business data
 export class CustomerEntity
-  extends Deletable(Auditable(EntityBase))
+  extends Clonable(Deletable(Auditable(EntityBase)))
   implements IExposableEntity, IClonableEntity {
   @Key()
   @Column({ pgType: "uuid" })
@@ -88,7 +88,4 @@ export class CustomerEntity
   @Column({ length: 35, nullable: true })
   preferred_locale?: string;
 
-  @Column({ pgType: "uuid", nullable: true })
-  @CloneField()
-  cloned_from?: string;
 }
