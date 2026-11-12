@@ -34,6 +34,11 @@
       "appliesTo": [
         "fe/src/"
       ]
+    },
+    "panel-footer-cta": {
+      "appliesTo": [
+        "fe/src/"
+      ]
     }
   },
   "i18n_namespaces": [
