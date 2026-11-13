@@ -20,7 +20,8 @@ service follows — nothing more, nothing less.
     "dev": "bun --hot src/index.ts",
     "build": "tsc",
     "db:migrate": "bun scripts/database-patch-apply.ts",
-    "generate:docs": "bun scripts/build-docs-pack.ts"
+    "generate:docs": "bun src/index.ts --emit-docs",
+    "docs:check": "bun src/index.ts --emit-docs --check"
   },
   "dependencies": {
     "@primebrick/dal-pg": "workspace:*",
