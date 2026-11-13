@@ -23,7 +23,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
     "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
-    "generate:docs": "bun scripts/generate-page-docs.ts && bun scripts/build-docs-pack.ts",
+    "generate:docs": "bun src/index.ts --emit-docs",
     "check:standards": "bun ../../primebrick-v3-sdk/tools/check-standards.ts src",
     "fe:build": "vite build fe",
     "fe:check": "cd fe && svelte-check",

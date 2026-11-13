@@ -20,11 +20,31 @@ The page is visible with the `access.system.emailsender.templates` grant.
 
 ### How to edit an email template
 1. On the **Templates** list page, open the row actions menu on the email template you want to edit and click **Edit**.
-2. Update the fields below.
+2. Update the fields below — required: **Code**, **language Iso**, **Subject**, **body Html**, **body Text**, **mjml Source**, **variables Json**.
 3. Click **Save** — the changes to the email template are saved.
 
 
 The record opens in read mode first — click **Edit** to modify it. Concurrent edits are protected by optimistic locking: if someone else saves the email template while you are editing it, the page tells you before overwriting their changes. The form warns before discarding unsaved changes.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Code** | required | — |
+| **Language** | required | — |
+| **Subject** | required | — |
+| **body Html** | required | — |
+| **body Text** | required | — |
+| **mjml Source** | required | — |
+| **variables Json** | required | — |
+
+- The **Code** field is a required field.
+- The **Language** field is a required field.
+- The **Subject** field is a required field.
+- The **body Html** field is a required field.
+- The **body Text** field is a required field.
+- The **mjml Source** field is a required field.
+- The **variables Json** field is a required field.
 
 ## Actions
 
