@@ -1,0 +1,59 @@
+---
+title: Create Email Provider
+description: Create a new email provider.
+entity: provider
+---
+
+Create a new email provider.
+
+This page is delivered by the owning module as a remote component — its content mounts inside the shared shell.
+
+The page is visible with the `access.system.emailsender.providers.create` grant.
+
+## Pages routes
+
+- `/system/emailsender/providers` — List, search and manage all email providers.
+- `/system/emailsender/providers/create` — Create a new provider. *(this page)*
+- `/system/emailsender/providers/{uuid}` — View and edit an existing provider.
+
+## What you can do here
+
+### How to create a new email provider
+1. On the **Providers** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **provider**, **api Key**, **api Endpoint**, **from Email**, **from Name**, **reply To**.
+3. Click **Save** — the new email provider is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Provider Name** | required | — |
+| **api Key** | required | — |
+| **API Endpoint** | required | — |
+| **From Email** | required | — |
+| **From Name** | required | — |
+| **Reply To** | required | — |
+
+- The **Provider Name** field is a required field.
+- The **api Key** field is a required field.
+- The **API Endpoint** field is a required field.
+- The **From Email** field is a required field.
+- The **From Name** field is a required field.
+- The **Reply To** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `emailsender.provider.create.single` | Validates the form and creates the email provider | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the email provider and it requires the `emailsender.provider.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Providers](/docs/user-guide/generated/providers)
+- [Providers Edit](/docs/user-guide/generated/providers-edit)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

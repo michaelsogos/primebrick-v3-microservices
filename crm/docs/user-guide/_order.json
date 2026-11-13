@@ -1,5 +1,8 @@
 {
   "pages": [
-    "generated/customers"
+    "generated/customers",
+    "generated/customer_types",
+    "generated/customers-create",
+    "generated/pipeline"
   ]
 }

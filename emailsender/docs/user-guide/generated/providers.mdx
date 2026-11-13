@@ -1,0 +1,94 @@
+---
+title: Email Delivery Services
+description: List, search and manage all email providers.
+entity: provider
+---
+
+List, search and manage all email providers.
+
+Each row shows the Provider Name, the API Endpoint, the From Email, the From Name, the Updated at.
+
+The page is visible with the `access.system.emailsender.providers` grant.
+
+## Pages routes
+
+- `/system/emailsender/providers` — List, search and manage all email providers. *(this page)*
+- `/system/emailsender/providers/create` — Create a new provider.
+- `/system/emailsender/providers/{uuid}` — View and edit an existing provider.
+
+## What you can do here
+
+### How to create a new email provider
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **provider**, **api Key**, **api Endpoint**, **from Email**, **from Name**, **reply To**.
+3. Click **Save** — the new email provider is created.
+
+### How to edit an email provider
+1. Open the row actions menu on the email provider and click **Edit**.
+2. Update the fields.
+3. Click **Save** — the changes to the email provider are saved.
+
+### How to delete an email provider
+1. Open the row actions menu on the email provider and click **Delete**.
+2. Confirm the deletion in the dialog — the email provider is soft-deleted and can be restored.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Provider Name** | yes | yes | yes |  |
+| **API Endpoint** | yes | yes | yes |  |
+| **From Email** | yes | yes | yes |  |
+| **From Name** | yes | yes | yes |  |
+| **Reply To** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+| **api key** | no | yes | yes |  |
+
+- The Provider Name column is shown by default and can be sorted and filtered.
+- The API Endpoint column is shown by default and can be sorted and filtered.
+- The From Email column is shown by default and can be sorted and filtered.
+- The From Name column is shown by default and can be sorted and filtered.
+- The Reply To column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+- The api key column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `emailsender.provider.create.single` | Creates a new email provider | no |
+| **update** | ENABLED | `emailsender.provider.update.single` | Opens the email provider for editing | no |
+| **delete** | ENABLED | `emailsender.provider.delete.single` | Marks the email provider as deleted but keeps it so it can be restored | no |
+| **restore** | DISABLED | — | Brings a soft-deleted email provider back | no |
+| **purge** | DISABLED | — | Removes the email provider forever | no |
+| **audit history** | DISABLED | — | Shows the change history of the email provider | no |
+
+- Creating a new email provider is available on this page — the create action opens the create form in the same tab and it requires the `emailsender.provider.create.single` permission.
+- Editing an email provider is available on this page — the row action opens the record in the same tab and it requires the `emailsender.provider.update.single` permission.
+- Soft-deleting an email provider is available on this page — marks the email provider as deleted but keeps it so it can be restored and it requires the `emailsender.provider.delete.single` permission.
+- Restoring a soft-deleted email provider is not available on this page — no permission is declared for it on email providers.
+- Permanently deleting an email provider is not available on this page — no permission is declared for it on email providers.
+- Viewing the change history of an email provider is not available on this page — no permission is declared for it on email providers.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | DISABLED | — | Marks the selected email providers as deleted | no |
+| **restore** | DISABLED | — | Restores the selected email providers | no |
+| **duplicate** | DISABLED | — | Duplicates the selected email providers | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected email providers is not available on this page — no permission is declared for it on email providers.
+- Restoring the selected email providers is not available on this page — no permission is declared for it on email providers.
+- Duplicating the selected email providers is not available on this page — no permission is declared for it on email providers.
+- Exporting the list is not available on this page — no permission is declared for it on email providers.
+
+## Doc references
+
+- [Providers Create](/docs/user-guide/generated/providers-create)
+- [Providers Edit](/docs/user-guide/generated/providers-edit)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+
