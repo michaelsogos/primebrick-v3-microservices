@@ -1,13 +1,12 @@
 /**
- * Entity-service facades over `makeEntityService` — thin, transport-free.
- * The NATS publish on job_trigger writes lets a running instance reload its
- * triggers engine without restart.
+ * Entity domain services on `DomainService` — transport-free, consumed by
+ * the entity router. The NATS publish on job_trigger writes lets a running
+ * instance reload its triggers engine without restart.
  */
 
-import { type EntityService, ValidationError } from "@primebrick/dal-pg";
+import { DomainService, ValidationError, type EntityServiceConfig } from "@primebrick/dal-pg";
 import { NatsClient, makeMarkerAuditPort, payloadMapConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
-import { getDal } from "../../db/dal.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
@@ -119,53 +118,58 @@ export async function assertPayloadMapConformance(
   }
 }
 
-export class JobTriggersService {
-  private svc = getDal().entityService<JobTriggerEntity & Record<string, unknown>>({
-    entity: JobTriggerEntity,
-    actor: entityActor,
-    // Collaboration: audit write + entity-changed marker on NATS — the
-    // gateway persists markers to Redis (services own no Redis client).
-    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_trigger"),
-    list: {
-      searchableKeys: new Set(["name", "event_subject", "target_subject"]),
-      filterableKeys: TRIGGER_FILTERABLE,
-      defaultSort: TRIGGER_DEFAULT_SORT,
-    },
-    hooks: {
-      beforeCreate: async (body: Record<string, unknown>) => {
-        await assertTriggerShape(body, true);
-        await assertCallableTarget(body);
-        await assertPayloadMapConformance(body);
-        return body;
+type TriggerT = JobTriggerEntity & Record<string, unknown>;
+type ScheduleT = JobScheduleEntity & Record<string, unknown>;
+type RunT = JobRunEntity & Record<string, unknown>;
+
+export class JobTriggersService extends DomainService<TriggerT> {
+  constructor() {
+    super({
+      entity: JobTriggerEntity,
+      actor: entityActor,
+      list: {
+        searchableKeys: ["name", "event_subject", "target_subject"],
+        filterableKeys: TRIGGER_FILTERABLE,
+        defaultSort: TRIGGER_DEFAULT_SORT,
       },
-      beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
-        const loadExisting = async () => {
-          const row = await this.svc.get(uuid);
-          return row as Record<string, unknown> | undefined;
-        };
-        await assertTriggerShape(body, false, loadExisting);
-        await assertCallableTarget(body);
-        await assertPayloadMapConformance(body, loadExisting);
-        return body;
-      },
-      afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },
-    },
-  } as never);
+    });
+  }
 
   // `runs`/`last_run`/`next_run` are @Calculated projections on
   // JobTriggerEntity — the DAL emits them inside the list/get SQL itself
   // (sortable + filterable like physical columns). No post-query
   // decoration remains on this service.
 
-  get list() { return this.svc.list.bind(this.svc); }
-  get get() { return this.svc.get.bind(this.svc); }
-
-  get create() { return this.svc.create.bind(this.svc); }
-  get update() { return this.svc.update.bind(this.svc); }
-  get delete() { return this.svc.delete.bind(this.svc); }
-  get restore() { return this.svc.restore.bind(this.svc); }
-  get audit() { return this.svc.audit.bind(this.svc); }
-  get auditActors() { return this.svc.auditActors.bind(this.svc); }
+  /** Config enrichment needing `this.dal` (marker audit port) and hooks
+   *  reading through the resolved `this.svc` — both only safe here, not
+   *  inside `super()`. */
+  protected override buildConfig(): EntityServiceConfig<TriggerT> {
+    return {
+      ...super.buildConfig(),
+      // Collaboration: audit write + entity-changed marker on NATS — the
+      // gateway persists markers to Redis (services own no Redis client).
+      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_trigger"),
+      hooks: {
+        beforeCreate: async (body: Record<string, unknown>) => {
+          await assertTriggerShape(body, true);
+          await assertCallableTarget(body);
+          await assertPayloadMapConformance(body);
+          return body;
+        },
+        beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
+          const loadExisting = async () => {
+            const row = await this.svc.get(uuid);
+            return row as Record<string, unknown> | undefined;
+          };
+          await assertTriggerShape(body, false, loadExisting);
+          await assertCallableTarget(body);
+          await assertPayloadMapConformance(body, loadExisting);
+          return body;
+        },
+        afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },
+      },
+    };
+  }
 }
 
 /**
@@ -179,17 +183,25 @@ export class JobTriggersService {
  * scheduled). The mirror never impersonates reality: an admin always
  * sees BOTH states.
  */
-export class JobSchedulesService {
-  private svc = getDal().entityService<JobScheduleEntity & Record<string, unknown>>({
-    entity: JobScheduleEntity,
-    actor: entityActor,
-    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_schedule"),
-    list: {
-      searchableKeys: new Set(["schedule_subject", "job_name", "service_code"]),
-      filterableKeys: SCHEDULE_FILTERABLE,
-      defaultSort: TRIGGER_DEFAULT_SORT,
-    },
-  } as never);
+export class JobSchedulesService extends DomainService<ScheduleT> {
+  constructor() {
+    super({
+      entity: JobScheduleEntity,
+      actor: entityActor,
+      list: {
+        searchableKeys: ["schedule_subject", "job_name", "service_code"],
+        filterableKeys: SCHEDULE_FILTERABLE,
+        defaultSort: TRIGGER_DEFAULT_SORT,
+      },
+    });
+  }
+
+  protected override buildConfig(): EntityServiceConfig<ScheduleT> {
+    return {
+      ...super.buildConfig(),
+      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_schedule"),
+    };
+  }
 
   /** Decorate rows with live/drift — ONE enumeration per call. */
   private async decorate(rows: (JobScheduleEntity & Record<string, unknown>)[]): Promise<void> {
@@ -201,40 +213,36 @@ export class JobSchedulesService {
     }
   }
 
-  list = async (query: Parameters<EntityService<JobScheduleEntity & Record<string, unknown>>["list"]>[0]) => {
-    const result = await this.svc.list(query);
+  override async list(query: Parameters<DomainService<ScheduleT>["list"]>[0]) {
+    const result = await super.list(query);
     await this.decorate(result.rows as (JobScheduleEntity & Record<string, unknown>)[]);
     return result;
-  };
+  }
 
-  get = async (uuid: string) => {
-    const row = await this.svc.get(uuid);
+  override async get(uuid: string) {
+    const row = await super.get(uuid);
     await this.decorate([row as JobScheduleEntity & Record<string, unknown>]);
     return row;
-  };
-
-  get audit() { return this.svc.audit.bind(this.svc); }
-  get auditActors() { return this.svc.auditActors.bind(this.svc); }
+  }
 }
 
-export class JobRunsService {
-  private svc = getDal().entityService<JobRunEntity & Record<string, unknown>>({
-    entity: JobRunEntity,
-    actor: entityActor,
-    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_run"),
-    list: {
-      searchableKeys: new Set(["job_name", "service_code", "error_code"]),
-      filterableKeys: RUN_FILTERABLE,
-      defaultSort: TRIGGER_DEFAULT_SORT,
-    },
-  } as never);
+export class JobRunsService extends DomainService<RunT> {
+  constructor() {
+    super({
+      entity: JobRunEntity,
+      actor: entityActor,
+      list: {
+        searchableKeys: ["job_name", "service_code", "error_code"],
+        filterableKeys: RUN_FILTERABLE,
+        defaultSort: TRIGGER_DEFAULT_SORT,
+      },
+    });
+  }
 
-  get list() { return this.svc.list.bind(this.svc); }
-  get get() { return this.svc.get.bind(this.svc); }
-  get create() { return this.svc.create.bind(this.svc); }
-  get update() { return this.svc.update.bind(this.svc); }
-  get delete() { return this.svc.delete.bind(this.svc); }
-  get restore() { return this.svc.restore.bind(this.svc); }
-  get audit() { return this.svc.audit.bind(this.svc); }
-  get auditActors() { return this.svc.auditActors.bind(this.svc); }
+  protected override buildConfig(): EntityServiceConfig<RunT> {
+    return {
+      ...super.buildConfig(),
+      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_run"),
+    };
+  }
 }

@@ -1,3 +1,4 @@
+import type { UUID, IClonableEntity } from "@primebrick/dal-pg";
 import {
   Column,
   Entity,
@@ -5,8 +6,8 @@ import {
   AuditTrail,
   EntityBase,
   Auditable,
+  Clonable,
   Deletable,
-  type UUID,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
@@ -17,7 +18,8 @@ import { Cached } from "@primebrick/sdk";
 @AuditTrail()
 @Cached(300_000)
 export class CustomerContactEntity
-  extends Deletable(Auditable(EntityBase)) {
+  extends Clonable(Deletable(Auditable(EntityBase)))
+  implements IClonableEntity {
   @Key()
   @Column({ pgType: "uuid" })
   uuid!: UUID;

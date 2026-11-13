@@ -41,36 +41,6 @@
       "text": "const dal = getDal();"
     },
     {
-      "file": "modules/jobs/jobs.service.ts",
-      "rule": "dal-access",
-      "text": "private svc = getDal().entityService<JobTriggerEntity & Record<string, unknown>>({"
-    },
-    {
-      "file": "modules/jobs/jobs.service.ts",
-      "rule": "dal-access",
-      "text": "auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), \"job_trigger\"),"
-    },
-    {
-      "file": "modules/jobs/jobs.service.ts",
-      "rule": "dal-access",
-      "text": "private svc = getDal().entityService<JobScheduleEntity & Record<string, unknown>>({"
-    },
-    {
-      "file": "modules/jobs/jobs.service.ts",
-      "rule": "dal-access",
-      "text": "auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), \"job_schedule\"),"
-    },
-    {
-      "file": "modules/jobs/jobs.service.ts",
-      "rule": "dal-access",
-      "text": "private svc = getDal().entityService<JobRunEntity & Record<string, unknown>>({"
-    },
-    {
-      "file": "modules/jobs/jobs.service.ts",
-      "rule": "dal-access",
-      "text": "auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), \"job_run\"),"
-    },
-    {
       "file": "services/due-forwarder.ts",
       "rule": "dal-access",
       "text": "const row = await getDal().add<JobRunEntity>("

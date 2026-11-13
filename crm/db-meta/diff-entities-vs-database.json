@@ -1,7 +1,75 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-12T23:29:19.795Z",
+  "generatedAt": "2026-11-13T17:58:48.999Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "crm.local_addresses": {
+      "onlyInEntityColumns": [
+        "cloned_from",
+        "cloned_at",
+        "cloned_by"
+      ],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "local_addresses_customer_uuid_idx",
+        "local_addresses_type_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "local_addresses_customer_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_accounts": {
+      "onlyInEntityColumns": [
+        "cloned_from",
+        "cloned_at",
+        "cloned_by"
+      ],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "customer_accounts_customer_uuid_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "customer_accounts_customer_uuid_fkey",
+        "customer_accounts_local_address_uuid_fkey",
+        "customer_accounts_contact_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_contacts": {
+      "onlyInEntityColumns": [
+        "cloned_from",
+        "cloned_at",
+        "cloned_by"
+      ],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "customer_contacts_customer_uuid_idx",
+        "customer_contacts_type_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "customer_contacts_customer_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    }
+  }
 }

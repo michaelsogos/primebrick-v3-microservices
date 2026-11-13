@@ -232,7 +232,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     // DomainService ctor is I/O-free — safe at module load.
     service: new CustomersService() as unknown as EntityServiceLike,
     meta: customerMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CUSTOMER_READ_ALL, Permission.CUSTOMER_READ_SINGLE],
       list: [Permission.CUSTOMER_READ_ALL],
@@ -266,7 +265,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "customer_types", label: "customer type" },
     service: new CustomerTypesService() as unknown as EntityServiceLike,
     meta: customerTypeMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CUSTOMER_TYPE_READ_ALL, Permission.CRM_CUSTOMER_TYPE_READ_SINGLE],
       list: [Permission.CRM_CUSTOMER_TYPE_READ_ALL],
@@ -291,7 +289,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "company_dimensions", label: "company dimension" },
     service: new CompanyDimensionsService() as unknown as EntityServiceLike,
     meta: companyDimensionMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_COMPANY_DIMENSION_READ_ALL, Permission.CRM_COMPANY_DIMENSION_READ_SINGLE],
       list: [Permission.CRM_COMPANY_DIMENSION_READ_ALL],
@@ -316,7 +313,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "legal_forms", label: "legal form" },
     service: new LegalFormsService() as unknown as EntityServiceLike,
     meta: legalFormMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_LEGAL_FORM_READ_ALL, Permission.CRM_LEGAL_FORM_READ_SINGLE],
       list: [Permission.CRM_LEGAL_FORM_READ_ALL],
@@ -341,7 +337,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "local_address_types", label: "local address type" },
     service: new LocalAddressTypesService() as unknown as EntityServiceLike,
     meta: localAddressTypeMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_LOCAL_ADDRESS_TYPE_READ_ALL, Permission.CRM_LOCAL_ADDRESS_TYPE_READ_SINGLE],
       list: [Permission.CRM_LOCAL_ADDRESS_TYPE_READ_ALL],
@@ -366,7 +361,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "qualifications", label: "qualification" },
     service: new QualificationsService() as unknown as EntityServiceLike,
     meta: qualificationMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_QUALIFICATION_READ_ALL, Permission.CRM_QUALIFICATION_READ_SINGLE],
       list: [Permission.CRM_QUALIFICATION_READ_ALL],
@@ -391,7 +385,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "marketing_qualifications", label: "marketing qualification" },
     service: new MarketingQualificationsService() as unknown as EntityServiceLike,
     meta: marketingQualificationMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_MARKETING_QUALIFICATION_READ_ALL, Permission.CRM_MARKETING_QUALIFICATION_READ_SINGLE],
       list: [Permission.CRM_MARKETING_QUALIFICATION_READ_ALL],
@@ -416,7 +409,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "contact_types", label: "contact type" },
     service: new ContactTypesService() as unknown as EntityServiceLike,
     meta: contactTypeMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CONTACT_TYPE_READ_ALL, Permission.CRM_CONTACT_TYPE_READ_SINGLE],
       list: [Permission.CRM_CONTACT_TYPE_READ_ALL],
@@ -441,7 +433,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "account_kinds", label: "account kind" },
     service: new AccountKindsService() as unknown as EntityServiceLike,
     meta: accountKindMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_ACCOUNT_KIND_READ_ALL, Permission.CRM_ACCOUNT_KIND_READ_SINGLE],
       list: [Permission.CRM_ACCOUNT_KIND_READ_ALL],
@@ -466,7 +457,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "customer_link_types", label: "customer link type" },
     service: new CustomerLinkTypesService() as unknown as EntityServiceLike,
     meta: customerLinkTypeMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CUSTOMER_LINK_TYPE_READ_ALL, Permission.CRM_CUSTOMER_LINK_TYPE_READ_SINGLE],
       list: [Permission.CRM_CUSTOMER_LINK_TYPE_READ_ALL],
@@ -491,7 +481,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "consent_types", label: "consent type" },
     service: new ConsentTypesService() as unknown as EntityServiceLike,
     meta: consentTypeMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CONSENT_TYPE_READ_ALL, Permission.CRM_CONSENT_TYPE_READ_SINGLE],
       list: [Permission.CRM_CONSENT_TYPE_READ_ALL],
@@ -516,7 +505,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "local_addresses", label: "local address" },
     service: new LocalAddressesService() as unknown as EntityServiceLike,
     meta: localAddressMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_LOCAL_ADDRESS_READ_ALL, Permission.CRM_LOCAL_ADDRESS_READ_SINGLE],
       list: [Permission.CRM_LOCAL_ADDRESS_READ_ALL],
@@ -527,6 +515,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_LOCAL_ADDRESS_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_LOCAL_ADDRESS_DELETE_BULK],
       bulkRestore: [Permission.CRM_LOCAL_ADDRESS_RESTORE_BULK],
+      duplicate: [Permission.CRM_LOCAL_ADDRESS_DUPLICATE_BULK],
       audit: [Permission.CRM_LOCAL_ADDRESS_READ_AUDIT],
     },
     schemas: {
@@ -541,7 +530,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "customer_accounts", label: "customer account" },
     service: new CustomerAccountsService() as unknown as EntityServiceLike,
     meta: customerAccountMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CUSTOMER_ACCOUNT_READ_ALL, Permission.CRM_CUSTOMER_ACCOUNT_READ_SINGLE],
       list: [Permission.CRM_CUSTOMER_ACCOUNT_READ_ALL],
@@ -552,6 +540,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_ACCOUNT_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_ACCOUNT_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_ACCOUNT_RESTORE_BULK],
+      duplicate: [Permission.CRM_CUSTOMER_ACCOUNT_DUPLICATE_BULK],
       audit: [Permission.CRM_CUSTOMER_ACCOUNT_READ_AUDIT],
     },
     schemas: {
@@ -566,7 +555,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "customer_contacts", label: "customer contact" },
     service: new CustomerContactsService() as unknown as EntityServiceLike,
     meta: customerContactMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CUSTOMER_CONTACT_READ_ALL, Permission.CRM_CUSTOMER_CONTACT_READ_SINGLE],
       list: [Permission.CRM_CUSTOMER_CONTACT_READ_ALL],
@@ -577,6 +565,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_CONTACT_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_CONTACT_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_CONTACT_RESTORE_BULK],
+      duplicate: [Permission.CRM_CUSTOMER_CONTACT_DUPLICATE_BULK],
       audit: [Permission.CRM_CUSTOMER_CONTACT_READ_AUDIT],
     },
     schemas: {
@@ -591,7 +580,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "customer_links", label: "customer link" },
     service: new CustomerLinksService() as unknown as EntityServiceLike,
     meta: customerLinkMeta,
-    auditable: true,
     permissions: {
       meta: [Permission.CRM_CUSTOMER_LINK_READ_ALL, Permission.CRM_CUSTOMER_LINK_READ_SINGLE],
       list: [Permission.CRM_CUSTOMER_LINK_READ_ALL],
@@ -616,7 +604,6 @@ export const crmEntityDecls: EntityRouteDecl[] = [
     spec: { tag: "customer_consents", label: "customer consent" },
     service: new CustomerConsentsService() as unknown as EntityServiceLike,
     meta: customerConsentMeta,
-    auditable: true,
     // Read/audit-only by design: consent rows are written by domain flows
     // that compute `seal` (sha256 tamper-evidence) server-side — no entity
     // write route exists.
