@@ -49,7 +49,7 @@ export const CRM_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/crm", "/system/crm"],
   access: "access.crm",
   nav: [
-    { id: "customers", label_key: "crm.customers.nav", href: customersPaths.list, icon: "users", default: true },
+    { id: "customers", label_key: "crm.customers.nav", href: customersPaths.list, icon: "users-round", default: true },
     { id: "pipeline", label_key: "crm.pipeline.nav", href: "/system/crm/pipeline", icon: "git-branch" },
   ],
   routes: [
