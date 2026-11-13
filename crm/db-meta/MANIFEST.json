@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-12T23:29:05.197Z",
+  "issued_at": "2026-11-13T14:06:43.682Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -10,7 +10,8 @@
     "0005_uuid_references": "51a1230b11363f7d0e8c5c1c4bbd4fa8d48558ad7ff3008b70664602c254957f",
     "0006_uuid_pk_swap": "adb3766de650794580c5f1b4510f4838308217a74f3809ed1c0679395f97f99e",
     "0007_uuid_v4_to_v7_rewrite": "eabe0e06ef01dd87172301a5e54715273cf533815b9154984db7bb05c6c7bcfd",
-    "0008_customer_clone_audit": "1b8f5799d3b34a7bbaeb44e54d0a62324375eac6fac2ef03aeaa1de37c74665f"
+    "0008_customer_clone_audit": "1b8f5799d3b34a7bbaeb44e54d0a62324375eac6fac2ef03aeaa1de37c74665f",
+    "0009_customers_created_at_trail_repair": "337e9b4ab605f1440ed3272af3fc83aa3c4a368b3b85081ea3a6b22edcf81817"
   },
-  "signature": "mLDDR+KnFHsabCF9bqlKzEjzXr6cqix9b3CLIGmeGDrbjgAK75pF+2q1LTifyxe13RDRSWtH2rWhKCTwvD/9CQ=="
+  "signature": "W1qK/S++Piphi+SMT2UB85kaIAmg/3JIWeiF93Dkw2K6FlIdgA7mrMmAz9+OXLwo7OVs+xyZBid0RlATaVxGAQ=="
 }
