@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-13T17:59:17.167Z",
+  "issued_at": "2026-11-13T23:17:41.418Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -12,7 +12,8 @@
     "0007_uuid_v4_to_v7_rewrite": "eabe0e06ef01dd87172301a5e54715273cf533815b9154984db7bb05c6c7bcfd",
     "0008_customer_clone_audit": "1b8f5799d3b34a7bbaeb44e54d0a62324375eac6fac2ef03aeaa1de37c74665f",
     "0009_customers_created_at_trail_repair": "337e9b4ab605f1440ed3272af3fc83aa3c4a368b3b85081ea3a6b22edcf81817",
-    "20261113175849_addcols_crm_local_addresses_crm_customer_accounts_crm_customer_contacts": "200751b3e26f55ec663d5d38ab8fb5f682e4296dbe36bf44d67548833b4e3d43"
+    "20261113175849_addcols_crm_local_addresses_crm_customer_accounts_crm_customer_contacts": "200751b3e26f55ec663d5d38ab8fb5f682e4296dbe36bf44d67548833b4e3d43",
+    "20261114002000_translations_language_check": "f60c175afbe5d362b178fc93d038a15d42c7d96509620420f8280acadaf17505"
   },
-  "signature": "VK3qG2KrY4izuU6W9w0dpe+Xtpn5n0+FwE2MpGDfarMSR1Ty4maNziXsLs+EUD0frixSCy5kR/2DQZwX7NWHBA=="
+  "signature": "Ei08tubfpp9kX5HyMBVRFsiCPTlOUJiINFd8fUOk5hFXpbrDxz4vmobvWAY9h3uX81m9pPXjliXY0lPEosoqAA=="
 }
