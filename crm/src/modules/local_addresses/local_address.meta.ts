@@ -15,6 +15,7 @@ export const localAddressMeta: EntityMeta = withColumnConstraints({
   entities_ns: "crm",
   uid: "uuid",
   display_field: "street",
+  display_name: "${street} (${city})",
   columns: LOCAL_ADDRESS_LIST_COLUMNS,
   table: {
     default_view: "table",

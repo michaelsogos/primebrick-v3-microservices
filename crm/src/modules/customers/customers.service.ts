@@ -18,18 +18,19 @@
  * copied code.
  */
 
-import { Filter, field, DomainService, type DuplicateResult } from "@primebrick/dal-pg";
+import { Filter, field, DomainService, resolveDisplayTemplate, type DuplicateResult } from "@primebrick/dal-pg";
 import { requireActor } from "@primebrick/sdk";
 
 import { CustomerEntity } from "../../domain/entities/customer_entity.js";
 import { CUSTOMER_DEFAULT_SORT } from "./list-config.js";
-import { CUSTOMER_SEARCHABLE_KEYS, CUSTOMER_FILTERABLE_KEYS } from "./customer.meta.js";
+import { customerMeta, CUSTOMER_SEARCHABLE_KEYS, CUSTOMER_FILTERABLE_KEYS } from "./customer.meta.js";
 
 export class CustomersService extends DomainService<CustomerEntity & Record<string, unknown>> {
   constructor() {
     super({
       entity: CustomerEntity,
       actor: requireActor,
+      display: resolveDisplayTemplate(customerMeta),
       list: {
         searchableKeys: CUSTOMER_SEARCHABLE_KEYS,
         filterableKeys: new Set(CUSTOMER_FILTERABLE_KEYS),

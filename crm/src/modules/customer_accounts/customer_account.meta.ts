@@ -16,6 +16,7 @@ export const customerAccountMeta: EntityMeta = withColumnConstraints({
   entities_ns: "crm",
   uid: "uuid",
   display_field: "company_name",
+  display_name: "${company_name} (${country})",
   columns: CUSTOMER_ACCOUNT_LIST_COLUMNS,
   table: {
     default_view: "table",
