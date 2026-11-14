@@ -334,7 +334,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/resume-schedule",
-    entity_op: { entity: "job_schedule", op: "resume", cta: { icon: "play", row_key: "schedule_subject", translation_key: "job.jobs.actions.resume", visible_on: { field: "status", values: ["paused"] } } },
+    entity_op: { entity: "job_schedule", op: "resume", cta: { icon: "play:filled", row_key: "schedule_subject", translation_key: "job.jobs.actions.resume", visible_on: { field: "status", values: ["paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Resume a paused schedule (admin)",
@@ -404,7 +404,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/resume-all",
-    entity_op: { entity: "job_schedule", op: "resume_all", cta: { icon: "play", translation_key: "job.jobs.actions.resume_all", confirm_key: "job.jobs.actions.resume_all_confirm" } },
+    entity_op: { entity: "job_schedule", op: "resume_all", cta: { icon: "play:filled", translation_key: "job.jobs.actions.resume_all", confirm_key: "job.jobs.actions.resume_all_confirm" } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Resume every paused schedule (admin, bulk)",
