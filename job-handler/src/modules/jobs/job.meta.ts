@@ -188,7 +188,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 15, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
     { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20 },
-    { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" }, manual: { label_key: V("job_schedule", "manual"), color: "amber" } } } },
+    { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
     {
       // WHO armed it — the audit actor stamp, label-overridden to
       // "Armed By" (system-column relabel, same mechanism as job_run's
