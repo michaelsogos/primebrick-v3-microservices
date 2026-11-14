@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T17:35:58.489Z",
+  "generatedAt": "2026-11-14T13:42:50.082Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -299,20 +299,9 @@
           "propertyKey": "service_code",
           "isNullable": false
         },
-        "job_name": {
-          "name": "job_name",
-          "ordinalPosition": 9,
-          "dataType": "text",
-          "typname": "text",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "job_name",
-          "isNullable": false
-        },
         "kind": {
           "name": "kind",
-          "ordinalPosition": 10,
+          "ordinalPosition": 9,
           "dataType": "varchar(30)",
           "typname": "varchar(30)",
           "isPrimaryKey": false,
@@ -323,7 +312,7 @@
         },
         "lane": {
           "name": "lane",
-          "ordinalPosition": 11,
+          "ordinalPosition": 10,
           "dataType": "varchar(10)",
           "typname": "varchar(10)",
           "isPrimaryKey": false,
@@ -334,7 +323,7 @@
         },
         "schedule_spec": {
           "name": "schedule_spec",
-          "ordinalPosition": 12,
+          "ordinalPosition": 11,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -345,7 +334,7 @@
         },
         "schedule_type": {
           "name": "schedule_type",
-          "ordinalPosition": 13,
+          "ordinalPosition": 12,
           "dataType": "varchar(10)",
           "typname": "varchar(10)",
           "isPrimaryKey": false,
@@ -356,7 +345,7 @@
         },
         "target_subject": {
           "name": "target_subject",
-          "ordinalPosition": 14,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -367,7 +356,7 @@
         },
         "status": {
           "name": "status",
-          "ordinalPosition": 15,
+          "ordinalPosition": 14,
           "dataType": "varchar(20)",
           "typname": "varchar(20)",
           "isPrimaryKey": false,
@@ -376,20 +365,9 @@
           "propertyKey": "status",
           "isNullable": false
         },
-        "initiator": {
-          "name": "initiator",
-          "ordinalPosition": 16,
-          "dataType": "text",
-          "typname": "text",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "initiator",
-          "isNullable": true
-        },
         "trigger_uuid": {
           "name": "trigger_uuid",
-          "ordinalPosition": 17,
+          "ordinalPosition": 15,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -400,7 +378,7 @@
         },
         "armed_at": {
           "name": "armed_at",
-          "ordinalPosition": 18,
+          "ordinalPosition": 16,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -411,7 +389,7 @@
         },
         "disarmed_at": {
           "name": "disarmed_at",
-          "ordinalPosition": 19,
+          "ordinalPosition": 17,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -422,7 +400,7 @@
         },
         "fired_at": {
           "name": "fired_at",
-          "ordinalPosition": 20,
+          "ordinalPosition": 18,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -433,7 +411,7 @@
         },
         "expires_at": {
           "name": "expires_at",
-          "ordinalPosition": 21,
+          "ordinalPosition": 19,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -444,7 +422,7 @@
         },
         "next_run_at": {
           "name": "next_run_at",
-          "ordinalPosition": 22,
+          "ordinalPosition": 20,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -651,20 +629,9 @@
           "propertyKey": "redelivery_count",
           "isNullable": true
         },
-        "initiator": {
-          "name": "initiator",
-          "ordinalPosition": 17,
-          "dataType": "text",
-          "typname": "text",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "initiator",
-          "isNullable": true
-        },
         "report": {
           "name": "report",
-          "ordinalPosition": 18,
+          "ordinalPosition": 17,
           "dataType": "jsonb",
           "typname": "jsonb",
           "isPrimaryKey": false,

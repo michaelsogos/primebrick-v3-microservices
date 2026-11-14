@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the armed by, the Schedule, the Service, the Kind, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
+Each row shows the Armed By, the Source Queue, the Service, the Kind, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -14,14 +14,14 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **armed by** | yes | yes | yes |  |
-| **Schedule** | yes | yes | yes |  |
+| **Armed By** | yes | yes | yes |  |
+| **Source Queue** | yes | yes | yes | The queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues. |
 | **Service** | yes | yes | yes |  |
 | **Kind** | yes | yes | yes |  |
 | **Cadence** | yes | yes | no |  |
 | **Trigger** | no | yes | yes |  |
 | **Type** | yes | yes | no |  |
-| **Target Subject** | no | yes | yes |  |
+| **Destination Event** | no | yes | yes | The event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services. |
 | **Status** | yes | yes | yes |  |
 | **Live** | yes | no | no |  |
 | **Drift** | yes | no | no |  |
@@ -34,14 +34,14 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Fired at** | no | yes | yes |  |
 | **Expires at** | no | yes | yes |  |
 
-- The armed by column is shown by default and can be sorted and filtered.
-- The Schedule column is shown by default and can be sorted and filtered.
+- The Armed By column is shown by default and can be sorted and filtered.
+- The Source Queue column is shown by default and can be sorted and filtered — the queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues.
 - The Service column is shown by default and can be sorted and filtered.
 - The Kind column is shown by default and can be sorted and filtered.
 - The Cadence column is shown by default and can be sorted but not filtered.
 - The Trigger column is hidden by default and can be sorted and filtered.
 - The Type column is shown by default and can be sorted but not filtered.
-- The Target Subject column is hidden by default and can be sorted and filtered.
+- The Destination Event column is hidden by default and can be sorted and filtered — the event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services.
 - The Status column is shown by default and can be sorted and filtered.
 - The Live column is shown by default and cannot be sorted or filtered.
 - The Drift column is shown by default and cannot be sorted or filtered.
