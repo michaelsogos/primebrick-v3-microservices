@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-13T17:58:48.716Z",
+  "generatedAt": "2026-11-14T12:56:21.279Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -1806,9 +1806,20 @@
           "propertyKey": "code",
           "isNullable": false
         },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 10,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sort",
+          "isNullable": false
+        },
         "label_key": {
           "name": "label_key",
-          "ordinalPosition": 10,
+          "ordinalPosition": 11,
           "dataType": "varchar(100)",
           "typname": "varchar(100)",
           "isPrimaryKey": false,
@@ -1817,16 +1828,16 @@
           "propertyKey": "label_key",
           "isNullable": false
         },
-        "sort": {
-          "name": "sort",
-          "ordinalPosition": 11,
-          "dataType": "int4",
-          "typname": "int4",
+        "inverse_label_key": {
+          "name": "inverse_label_key",
+          "ordinalPosition": 12,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
-          "propertyKey": "sort",
-          "isNullable": false
+          "propertyKey": "inverse_label_key",
+          "isNullable": true
         }
       },
       "indexes": [
@@ -2982,7 +2993,21 @@
           "propertyKey": "type_uuid",
           "isNullable": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "customer_links_pair_uq",
+          "expressions": [
+            "LEAST(parent_customer_uuid, child_customer_uuid)",
+            "GREATEST(parent_customer_uuid, child_customer_uuid)"
+          ],
+          "columns": [
+            "type_uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
     }
   }
 }

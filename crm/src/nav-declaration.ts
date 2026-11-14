@@ -44,6 +44,7 @@ const dictDecl = (table: string, entity: string) => ({
   },
 });
 const customerTypesDict = dictDecl("customer_types", "customer_type");
+const customerLinkTypesDict = dictDecl("customer_link_types", "customer_link_type");
 
 export const CRM_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/crm", "/system/crm"],
@@ -86,8 +87,8 @@ export const CRM_NAV: ModuleNavDeclaration = {
       label_key: "crm.settings.nav.label",
       icon: "settings",
       route_prefixes: [DICT_PREFIX],
-      nav: [{ ...customerTypesDict.nav, default: true }],
-      routes: [customerTypesDict.route],
+      nav: [{ ...customerTypesDict.nav, default: true }, customerLinkTypesDict.nav],
+      routes: [customerTypesDict.route, customerLinkTypesDict.route],
     },
   ],
 };

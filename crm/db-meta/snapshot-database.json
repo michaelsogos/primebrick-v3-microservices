@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-13T17:58:48.726Z",
+  "generatedAt": "2026-11-14T12:56:21.284Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -2082,6 +2082,19 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "inverse_label_key": {
+          "name": "inverse_label_key",
+          "ordinalPosition": 13,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -2508,6 +2521,45 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "cloned_from": {
+          "name": "cloned_from",
+          "ordinalPosition": 23,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 25,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -2756,6 +2808,45 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "cloned_from": {
+          "name": "cloned_from",
+          "ordinalPosition": 21,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 23,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -2972,6 +3063,45 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "cloned_from": {
+          "name": "cloned_from",
+          "ordinalPosition": 16,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 17,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 18,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
           "isPrimaryKey": false
         }
       },
@@ -3429,6 +3559,16 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_links_pair_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "LEAST(parent_customer_uuid",
+            "child_customer_uuid"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_links_pair_uq ON crm.customer_links USING btree (LEAST(parent_customer_uuid, child_customer_uuid), GREATEST(parent_customer_uuid, child_customer_uuid), type_uuid)"
         }
       ],
       "foreignKeys": [
