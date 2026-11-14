@@ -45,8 +45,8 @@ export const templateMeta: EntityMeta = withColumnConstraints({
     // (payload_map `x_map_keys`) read the template's variable vocabulary
     // off the selected row. Hidden from the default list view.
     { key: "variables", label_key: F("variables"), type: "text", format: "json", order: 35, default_visible: false },
-    // updated_at stays declared only to keep it visible by default (derived default is false)
-    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 40, default_visible: true },
+    // updated_at is NOT declared — auto-derived like every other entity:
+    // audited + canonical band order 2130, toggleable in the picker.
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
 }, EmailTemplateEntity);

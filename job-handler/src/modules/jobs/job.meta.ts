@@ -154,8 +154,8 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
         ],
       },
     },
-    // updated_at stays declared only to keep it visible by default (derived default is false)
-    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, default_visible: true },
+    // updated_at is NOT declared — auto-derived like every other entity:
+    // audited + canonical band order 2130, toggleable in the picker.
   ],
   // Soft-delete IS disable — chrome only: delete renders "Disattiva" +
   // exec-stop (gradient-filled square, destructive), restore "Attiva" +
@@ -270,8 +270,8 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", order: 84, kind: "calculated",
       tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
     },
-    // updated_at stays declared only to keep it visible by default (derived default is false)
-    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, default_visible: true },
+    // updated_at is NOT declared — auto-derived like every other entity:
+    // audited + canonical band order 2130, toggleable in the picker.
     {
       // Internal scheduler shadow — never a column, never in the picker.
       // The mirror's only readers are SQL-level (the `next_run_at` gate)
