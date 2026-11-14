@@ -175,11 +175,16 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_schedule.title",
   uid: "uuid",
-  display_field: "schedule_subject",
+  display_field: "armed_by",
   columns: [
-    { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 0, sticky: true, hideable: false },
-    { key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 10 },
-    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", order: 20 },
+    {
+      // @Calculated on JobScheduleEntity — COALESCE(trigger name, arming
+      // user display_name, service_code); the schedule's identity column:
+      // display_field → the pin derives here (never on a subject mirror).
+      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "text", order: 0, kind: "calculated",
+    },
+    { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 15, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
+    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20 },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" }, manual: { label_key: V("job_schedule", "manual"), color: "amber" } } } },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40, filterable: false },
     {
@@ -195,7 +200,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         once: { label_key: V("job_schedule", "once"), color: "purple" },
       } },
     },
-    { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", order: 50, default_visible: false },
+    { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 50, icon: "send", color: "sky-500", default_visible: false, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
     { key: "status", label_key: F("job_schedule", "status"), type: "badge", order: 60, badge: { values: { armed: { label_key: V("job_schedule", "armed"), color: "green" }, stopped: { label_key: V("job_schedule", "stopped"), color: "amber" }, paused: { label_key: V("job_schedule", "paused"), color: "amber" }, disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" }, fired: { label_key: V("job_schedule", "fired"), color: "gray" }, expired: { label_key: V("job_schedule", "expired"), color: "gray" } } } },
     // Virtual columns — decorated per-row by JobSchedulesService from the
     // live JetStream enumeration (external source, never queryable).
@@ -287,7 +292,7 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   display_field: "job_name",
   columns: [
     { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
-    { key: "service_code", label_key: F("job_run", "service_code"), type: "text", order: 20 },
+    { key: "service_code", label_key: F("job_run", "service_code"), type: "text", format: "service_code", order: 20 },
     { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },

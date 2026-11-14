@@ -234,7 +234,6 @@ async function dispatch(
     target: trigger.target_subject,
     payload: mapped,
     schedule_subject: trigger.schedule_spec ? triggerScheduleSubject(trigger) : undefined,
-    initiator: `trigger:${trigger.name}`,
   };
 
   if (trigger.schedule_spec) {

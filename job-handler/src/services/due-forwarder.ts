@@ -38,8 +38,6 @@ export interface JobForwardEnvelope {
   payload: unknown;
   /** Rule's schedule subject — links job_runs → job_schedules. */
   schedule_subject?: string;
-  /** `trigger:<name>` — who armed this dispatch. */
-  initiator?: string;
 }
 
 function isEnvelope(v: unknown): v is JobForwardEnvelope {
@@ -85,7 +83,6 @@ async function insertRun(
         status,
         error_code: errorCode,
         error_detail: errorDetail?.slice(0, 2000),
-        initiator: envelope.initiator,
       } as never,
       { actor: "system:job" } as never,
     );

@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Schedule, the Job, the Service, the Kind, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
+Each row shows the armed by, the Schedule, the Service, the Kind, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -14,8 +14,8 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
+| **armed by** | yes | yes | yes |  |
 | **Schedule** | yes | yes | yes |  |
-| **Job** | yes | yes | yes |  |
 | **Service** | yes | yes | yes |  |
 | **Kind** | yes | yes | yes |  |
 | **Cadence** | yes | yes | no |  |
@@ -30,13 +30,12 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Next run** | yes | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 | **Lane** | no | yes | yes |  |
-| **Initiator** | no | yes | yes |  |
 | **Disarmed at** | no | yes | yes |  |
 | **Fired at** | no | yes | yes |  |
 | **Expires at** | no | yes | yes |  |
 
+- The armed by column is shown by default and can be sorted and filtered.
 - The Schedule column is shown by default and can be sorted and filtered.
-- The Job column is shown by default and can be sorted and filtered.
 - The Service column is shown by default and can be sorted and filtered.
 - The Kind column is shown by default and can be sorted and filtered.
 - The Cadence column is shown by default and can be sorted but not filtered.
@@ -51,7 +50,6 @@ The page is visible with the `access.system.job.job-schedules` grant.
 - The Next run column is shown by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 - The Lane column is hidden by default and can be sorted and filtered.
-- The Initiator column is hidden by default and can be sorted and filtered.
 - The Disarmed at column is hidden by default and can be sorted and filtered.
 - The Fired at column is hidden by default and can be sorted and filtered.
 - The Expires at column is hidden by default and can be sorted and filtered.

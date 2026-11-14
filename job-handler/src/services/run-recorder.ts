@@ -127,7 +127,6 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
       duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
       redelivery_count: redeliveryCount,
-      initiator: parsed?.service_code,
       report: plainJson(data.report),
     } as never,
     { actor: `system:${parsed?.service_code ?? "job"}` } as never,

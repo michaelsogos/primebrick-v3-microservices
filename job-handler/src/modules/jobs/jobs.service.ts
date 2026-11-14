@@ -17,7 +17,7 @@ import { scheduleDrift } from "../../services/schedule-service.js";
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
 const TRIGGER_FILTERABLE = new Set(["name", "event_subject", "target_subject", "execution_context", "runs", "last_run", "next_run"]);
-const SCHEDULE_FILTERABLE = new Set(["service_code", "job_name", "kind", "lane", "status", "schedule_type", "schedule_subject"]);
+const SCHEDULE_FILTERABLE = new Set(["service_code", "kind", "lane", "status", "schedule_type", "schedule_subject", "armed_by"]);
 
 function publishTriggerChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
@@ -189,7 +189,7 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
       entity: JobScheduleEntity,
       actor: entityActor,
       list: {
-        searchableKeys: ["schedule_subject", "job_name", "service_code"],
+        searchableKeys: ["schedule_subject", "armed_by", "service_code"],
         filterableKeys: SCHEDULE_FILTERABLE,
         defaultSort: TRIGGER_DEFAULT_SORT,
       },

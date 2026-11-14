@@ -57,16 +57,16 @@ export const JOB_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/job"],
   access: "access.system.job",
   nav: [
-    { id: "schedules", label_key: "job.jobs.nav", href: schedulesPaths.list, icon: "list-clock", default: true },
+    { id: "triggers", label_key: "job.jobs.nav_triggers", href: triggersPaths.list, icon: "list-checks", default: true },
+    { id: "schedules", label_key: "job.jobs.nav", href: schedulesPaths.list, icon: "list-clock" },
     { id: "runs", label_key: "job.jobs.nav_runs", href: runsPaths.list, icon: "play" },
-    { id: "triggers", label_key: "job.jobs.nav_triggers", href: triggersPaths.list, icon: "list-checks" },
   ],
   routes: [
     // Host-rendered EntityTablePage lists — the standard archetype,
     // delivered statically by the FE; the service declares ownership.
+    { route: triggersPaths.list, kind: "list", entity: "job_trigger", label_key: "job.jobs.nav_triggers" },
     { route: schedulesPaths.list, kind: "list", entity: "job_schedule", label_key: "job.jobs.nav" },
     { route: runsPaths.list, kind: "list", entity: "job_run", label_key: "job.jobs.nav_runs" },
-    { route: triggersPaths.list, kind: "list", entity: "job_trigger", label_key: "job.jobs.nav_triggers" },
     // The custom surface: trigger creation rides the host entity-form
     // archetype (kind:"create" + page_props.form). Manual schedule arming
     // was absorbed — a schedule-only trigger IS the declaration, so

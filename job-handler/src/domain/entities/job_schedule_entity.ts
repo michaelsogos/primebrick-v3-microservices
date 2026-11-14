@@ -13,6 +13,7 @@ import {
   Unique,
   Column,
   Ref,
+  Calculated,
   type UUID,
   EntityBase,
   Auditable,
@@ -33,10 +34,6 @@ export class JobScheduleEntity
   /** Owning service code — must match the declarer's identity. */
   @Column({ nullable: false })
   service_code!: string;
-
-  /** Job kind inside the service namespace, e.g. "partition-maintenance". */
-  @Column({ nullable: false })
-  job_name!: string;
 
   /** infra_derived | trigger */
   @Column({ length: 30, nullable: false })
@@ -61,10 +58,6 @@ export class JobScheduleEntity
   /** armed | disarmed | fired (one-shot dispatched) | expired (TTL elapsed) */
   @Column({ length: 20, nullable: false })
   status!: string;
-
-  /** Who armed it — service code for infra_derived/trigger, user for manual. */
-  @Column({ nullable: true })
-  initiator?: string;
 
   /** The trigger this schedule was materialized from (kind=trigger). */
   @Ref("job_trigger")
@@ -93,8 +86,19 @@ export class JobScheduleEntity
   @Column({ nullable: true, jsType: "instant" })
   next_run_at?: Date;
 
-
-
+  /** Who armed the schedule — resolved projection: the owning trigger's
+   *  fresh name for kind=trigger mirrors (rename-proof), the arming
+   *  user's display_name for manual schedules (created_by carries the
+   *  bare user uuid), else the owning service code. */
+  @Calculated(
+    `COALESCE(
+      (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid AND jt.deleted_at IS NULL),
+      (SELECT up.display_name FROM public.user_profiles up WHERE up.uuid::text = {self}.created_by),
+      {self}.service_code
+    )`,
+    { pgType: "text" },
+  )
+  armed_by?: string;
 
 
 }

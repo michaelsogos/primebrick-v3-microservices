@@ -61,10 +61,6 @@ export class JobRunEntity
   @Column({ pgType: "int4", nullable: true })
   redelivery_count?: number;
 
-  /** Originating user (user lane) or declaring service (system lane). */
-  @Column({ nullable: true })
-  initiator?: string;
-
   /** Free-form executor report (e.g. partitions dropped) — shape owned by
    *  each handler's `JobResultMessage.report`, folded in verbatim. */
   @Column({ pgType: "jsonb", nullable: true })

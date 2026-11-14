@@ -74,7 +74,6 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
       status: "succeeded",
       duration_ms: 43n,
       fire_seq: 881n,
-      initiator: "ai",
     });
     expect(row.report).toEqual({ maintenance_ran: true });
   });
