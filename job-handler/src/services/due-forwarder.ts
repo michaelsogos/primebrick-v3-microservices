@@ -266,7 +266,7 @@ async function forward(
   // outcome — the declaration self-purged, the mirror flips `fired`
   // (the run row carries the outcome, the schedule status carries the
   // lifecycle truth: it will never fire again). Recurring schedules take
-  // the server's own `Nats-Schedule-Next` into `next_run_at` — the
+  // the server's own `Nats-Schedule-Next` into `next_fire_mirror_at` — the
   // authoritative next fire, cron included ("purge" = nothing more).
   if (envelope.schedule_subject) {
     const nextHdr = msg.headers?.get(JOB_SCHEDULE_HEADERS.next);

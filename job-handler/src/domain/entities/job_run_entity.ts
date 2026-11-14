@@ -38,7 +38,9 @@ export class JobRunEntity
   @Column({ length: 10, nullable: false })
   run_as!: string;
 
-  /** dispatched | succeeded | failed | lost (dispatch never reported) */
+  /** dispatched | succeeded | failed | lost (dispatch never reported) |
+   *  skipped (the due was suppressed — the run row records the arrival,
+   *  no execution ever happened). */
   @Column({ length: 20, nullable: false })
   status!: string;
 

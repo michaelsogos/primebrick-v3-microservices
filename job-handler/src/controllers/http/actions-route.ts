@@ -42,8 +42,10 @@ import {
   getScheduleRow,
   requestOwnerRearm,
   scheduleDrift,
+  ttlToMs,
   unsuppressSchedule,
 } from "../../services/schedule-service.js";
+import { JobSchedulesService } from "../../modules/jobs/jobs.service.js";
 import { refreshTrigger } from "../../services/triggers-engine.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 
@@ -100,6 +102,50 @@ function nextBucket(d: Date, unit: BucketUnit): void {
   else d.setTime(d.getTime() + BUCKET_STEP_MS[unit]);
 }
 
+/**
+ * Expected fires of one schedule inside ONE bucket — closed form, no
+ * iteration. `@every` fires at `armed_at + k·interval` (k≥1): the count
+ * is the k-range intersecting [bucket_start, bucket_end) ∩ (armed_at,
+ * window_end]. `@at` contributes 1 when its instant sits inside both.
+ * The window ends at the latest disarm (`disarmed_at` — stamped by every
+ * disarm flavor), the TTL `expires_at`, or `now`. Re-arms overwrite
+ * `armed_at`: expected counts the CURRENT arm window only — dues owed
+ * before the latest arm are not recoverable (documented limit).
+ * Cron/invalid specs are not derivable (NATS is the sole cron
+ * interpreter) → null.
+ */
+function expectedInBucket(
+  sched: { schedule_spec: string; armed_at?: Date; disarmed_at?: Date; expires_at?: Date },
+  b0: number,
+  b1: number,
+  now: number,
+): number | null {
+  if (!sched.armed_at) return null;
+  const armed = sched.armed_at.getTime();
+  const end = Math.min(
+    sched.disarmed_at?.getTime() ?? Number.POSITIVE_INFINITY,
+    sched.expires_at?.getTime() ?? Number.POSITIVE_INFINITY,
+    now,
+  );
+  const spec = sched.schedule_spec.trim();
+  if (spec.startsWith("@every")) {
+    const interval = ttlToMs(spec.slice(6).trim());
+    if (interval === undefined || interval <= 0) return null;
+    const kMin = Math.max(1, Math.ceil((b0 - armed) / interval));
+    const kMax = Math.min(
+      Math.ceil((b1 - armed) / interval) - 1,
+      Math.floor((end - armed) / interval),
+    );
+    return Math.max(0, kMax - kMin + 1);
+  }
+  if (spec.startsWith("@at")) {
+    const at = new Date(spec.slice(3).trim()).getTime();
+    if (Number.isNaN(at)) return null;
+    return at >= b0 && at < b1 && at >= armed && at <= end ? 1 : 0;
+  }
+  return null; // cron — NATS owns evaluation; not derivable here
+}
+
 export async function runStats(body: RunStatsBody): Promise<unknown> {
   const triggerUuids = Array.isArray(body.trigger_uuids) ? body.trigger_uuids : [];
   const subjects = [
@@ -119,6 +165,8 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
     succeeded: bigint;
     failed: bigint;
     skipped: bigint;
+    lost: bigint;
+    dispatched: bigint;
   }
   const rows = (await getDal().findAll<JobRunEntity, StatRow>(
     JobRunEntity,
@@ -128,6 +176,8 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
       Project.expr("count(*) FILTER (WHERE status = 'succeeded')", "succeeded"),
       Project.expr("count(*) FILTER (WHERE status = 'failed')", "failed"),
       Project.expr("count(*) FILTER (WHERE status = 'skipped')", "skipped"),
+      Project.expr("count(*) FILTER (WHERE status = 'lost')", "lost"),
+      Project.expr("count(*) FILTER (WHERE status = 'dispatched')", "dispatched"),
     ],
     {
       filters: [
@@ -150,10 +200,15 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
     },
   )) as StatRow[];
 
+  // The mirror rows carry the spec + arm window the expected-fires
+  // enumeration needs (run buckets alone cannot say what was owed).
+  const schedBySubject = new Map((await new JobSchedulesService().listRowsBySubjects(subjects)).map((r) => [r.schedule_subject, r]));
+
   // Zero-fill: the FE renders slots by position, so a sparse array would
   // lie about *when* runs happened — every bucket in the span is emitted,
   // empty ones carry zero counts (the "never ran" story is the frame).
-  const sparse = new Map<string, Map<string, { succeeded: number; failed: number; skipped: number }>>();
+  const zeroBucket = { succeeded: 0, failed: 0, skipped: 0, lost: 0, dispatched: 0 };
+  const sparse = new Map<string, Map<string, typeof zeroBucket>>();
   for (const r of rows) {
     let m = sparse.get(r.schedule_subject);
     if (!m) sparse.set(r.schedule_subject, (m = new Map()));
@@ -161,6 +216,8 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
       succeeded: Number(r.succeeded),
       failed: Number(r.failed),
       skipped: Number(r.skipped),
+      lost: Number(r.lost),
+      dispatched: Number(r.dispatched),
     });
   }
 
@@ -170,10 +227,23 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
     grid.push(c.toISOString());
   }
 
-  const stats: Record<string, { bucket_start: string; succeeded: number; failed: number; skipped: number }[]> = {};
+  const stats: Record<string, ({ bucket_start: string; expected: number | null; missed: number | null } & typeof zeroBucket)[]> = {};
   for (const subject of subjects) {
     const m = sparse.get(subject);
-    stats[subject] = grid.map((bucket_start) => ({ bucket_start, ...(m?.get(bucket_start) ?? { succeeded: 0, failed: 0, skipped: 0 }) }));
+    const sched = schedBySubject.get(subject);
+    stats[subject] = grid.map((bucket_start) => {
+      const counts = m?.get(bucket_start) ?? zeroBucket;
+      const b0 = new Date(bucket_start).getTime();
+      const b1 = new Date(bucket_start);
+      nextBucket(b1, unit);
+      const expected = sched ? expectedInBucket(sched, b0, b1.getTime(), now.getTime()) : null;
+      // Missed = owed minus ARRIVED — every status counts as an arrival
+      // (skipped means the due reached the lane and was suppressed; the
+      // fire itself was not missed).
+      const arrived = counts.succeeded + counts.failed + counts.skipped + counts.lost + counts.dispatched;
+      const missed = expected === null ? null : Math.max(0, expected - arrived);
+      return { bucket_start, ...counts, expected, missed };
+    });
   }
   // Trigger-keyed requests bind the sparkline by the row's `uuid`, not the
   // resolved mirror subject — remap those keys back before responding.

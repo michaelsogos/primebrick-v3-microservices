@@ -185,11 +185,14 @@ describe("declareSchedule — arm protocol", () => {
 
     expect(r.skipped).toBeUndefined();
     expect(h.ensure).toHaveBeenCalledOnce();
-    // mirror row resets to armed — a new lifecycle, not a re-fire.
+    // mirror row resets to armed — a new lifecycle, not a re-fire. The
+    // served `fired_at` is a run-derived projection (never written); the
+    // next-fire mirror carries the mechanism's own stamp; the actor is
+    // the honest `system:<caller>` stamp, not provenance soup.
     expect(h.update).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ status: "armed", fired_at: undefined }),
-      expect.anything(),
+      expect.objectContaining({ status: "armed", next_fire_mirror_at: expect.any(Date) }),
+      expect.objectContaining({ actor: "system:ai" }),
     );
   });
 });

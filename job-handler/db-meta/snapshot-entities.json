@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T16:42:21.105Z",
+  "generatedAt": "2026-11-14T20:24:25.528Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -398,20 +398,9 @@
           "propertyKey": "disarmed_at",
           "isNullable": true
         },
-        "fired_at": {
-          "name": "fired_at",
-          "ordinalPosition": 18,
-          "dataType": "timestamptz",
-          "typname": "timestamptz",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "fired_at",
-          "isNullable": true
-        },
         "expires_at": {
           "name": "expires_at",
-          "ordinalPosition": 19,
+          "ordinalPosition": 18,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -420,15 +409,15 @@
           "propertyKey": "expires_at",
           "isNullable": true
         },
-        "next_run_at": {
-          "name": "next_run_at",
-          "ordinalPosition": 20,
+        "next_fire_mirror_at": {
+          "name": "next_fire_mirror_at",
+          "ordinalPosition": 19,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
-          "propertyKey": "next_run_at",
+          "propertyKey": "next_fire_mirror_at",
           "isNullable": true
         }
       },

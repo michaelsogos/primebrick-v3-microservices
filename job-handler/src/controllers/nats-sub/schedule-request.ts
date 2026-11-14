@@ -82,7 +82,6 @@ export async function registerScheduleRoutes(): Promise<void> {
             payload: (request as ScheduleRequest).payload,
             source: (request as ScheduleRequest).source,
             ttl: (request as ScheduleRequest).ttl,
-            initiator: `service:${caller}`,
           });
           // A terminal-once skip is a SUCCESSFUL no-op: the schedule's
           // lifecycle already completed. `armed:false` + the skip reason

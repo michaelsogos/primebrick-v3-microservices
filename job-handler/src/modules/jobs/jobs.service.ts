@@ -13,6 +13,7 @@ import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 import { scheduleDrift } from "../../services/schedule-service.js";
+import { Filter } from "@primebrick/dal-pg";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "run_as", "schedule_subject", "created_at", "updated_at"]);
@@ -223,6 +224,22 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
     const row = await super.get(uuid);
     await this.decorate([row as JobScheduleEntity & Record<string, unknown>]);
     return row;
+  }
+
+  /** Mirror rows for a set of subjects — the spec/arm-window facts the
+   *  run-stats expected-fire enumeration reads (no live/drift decoration:
+   *  this read feeds arithmetic, not the list surface). */
+  async listRowsBySubjects(scheduleSubjects: string[]): Promise<JobScheduleEntity[]> {
+    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+      filters: [
+        Filter.expr(
+          { sql: "schedule_subject" },
+          "=",
+          { sql: "ANY(?)", params: [scheduleSubjects] },
+        ),
+      ],
+    });
+    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
   }
 }
 

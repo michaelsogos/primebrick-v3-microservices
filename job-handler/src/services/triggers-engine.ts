@@ -260,7 +260,6 @@ async function dispatch(
       payload: envelope,
       mirror_target: trigger.target_subject,
       forwardHeaders: auth.headers,
-      initiator: `trigger:${trigger.name}`,
       trigger_uuid: trigger.uuid,
     });
   } else {

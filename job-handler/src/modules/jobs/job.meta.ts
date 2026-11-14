@@ -128,7 +128,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       tooltip: H("job_trigger", "last_run"), tooltip_title: HT("job_trigger", "last_run"),
     },
     {
-      // @Calculated — job_schedules.next_run_at of the armed mirror.
+      // @Calculated — the armed mirror's NATS mirror, status-gated.
       // NULL for disabled/event-only triggers and cron specs before
       // their first fire (NATS owns cron evaluation).
       key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: false,
@@ -147,7 +147,10 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
         series: [
           { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
           { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
+          { field: "lost", color: "fill-orange-500", label_key: V("job_run", "lost") },
+          { field: "dispatched", color: "fill-slate-300", label_key: V("job_run", "dispatched") },
           { field: "skipped", color: "fill-neutral-400", label_key: V("job_run", "skipped") },
+          { field: "missed", color: "fill-rose-300", label_key: V("job_run", "missed") },
         ],
       },
     },
@@ -190,13 +193,18 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20 },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
     {
-      // WHO armed it — the audit actor stamp, label-overridden to
-      // "Armed By" (system-column relabel, same mechanism as job_run's
-      // started_at). The cell renders `created_by_name` automatically:
-      // `trigger:<name>`/`rule:<name>` for engine mirrors, the user
-      // display_name for user actors, the raw service code otherwise.
-      // options_source:"audit.actors" stays class-derived.
-      key: "created_by", label_key: F("job_schedule", "armed_by"), type: "ref", order: 35, default_visible: true,
+      // WHO armed it — ownership, never audit. The @Calculated column
+      // resolves the live trigger name via `trigger_uuid` or the
+      // declaring service via `service_registry`/`service_code`.
+      // LAZY REF: the row itself carries the drill target —
+      // `armed_ref_entity` names the entity, `armed_ref_key` the key
+      // (trigger uid → entity sheet; service code → service panel).
+      // `created_by` goes back to hidden audit plumbing — the legacy
+      // `trigger:`/`rule:` actor soup is purged, never read again.
+      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", order: 35, kind: "calculated",
+      default_visible: true,
+      ref: { entity_field: "armed_ref_entity", key_field: "armed_ref_key" },
+      tooltip: H("job_schedule", "armed_by"), tooltip_title: HT("job_schedule", "armed_by"), tooltip_priority: "HINT",
     },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40, filterable: false },
     {
@@ -213,7 +221,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       } },
     },
     { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 50, icon: "send", color: "sky-500", default_visible: false, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
-    { key: "run_as", label_key: F("job_schedule", "run_as"), type: "badge", order: 55, default_visible: false, badge: { values: { user: { label_key: V("job_schedule", "user"), color: "primary" }, system: { label_key: V("job_schedule", "system"), color: "#000000" } } } },
+    { key: "run_as", label_key: F("job_schedule", "run_as"), type: "badge", order: 55, default_visible: true, badge: { values: { user: { label_key: V("job_schedule", "user"), color: "primary" }, system: { label_key: V("job_schedule", "system"), color: "#000000" } } }, tooltip: H("job_schedule", "run_as"), tooltip_title: HT("job_schedule", "run_as"), tooltip_priority: "HINT" },
     { key: "status", label_key: F("job_schedule", "status"), type: "badge", order: 60, badge: { values: { armed: { label_key: V("job_schedule", "armed"), color: "green" }, stopped: { label_key: V("job_schedule", "stopped"), color: "amber" }, paused: { label_key: V("job_schedule", "paused"), color: "amber" }, disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" }, fired: { label_key: V("job_schedule", "fired"), color: "gray" }, expired: { label_key: V("job_schedule", "expired"), color: "gray" } } } },
     // Virtual columns — decorated per-row by JobSchedulesService from the
     // live JetStream enumeration (external source, never queryable).
@@ -238,15 +246,27 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         series: [
           { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
           { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
+          { field: "lost", color: "fill-orange-500", label_key: V("job_run", "lost") },
+          { field: "dispatched", color: "fill-slate-300", label_key: V("job_run", "dispatched") },
           { field: "skipped", color: "fill-neutral-400", label_key: V("job_run", "skipped") },
+          { field: "missed", color: "fill-rose-300", label_key: V("job_run", "missed") },
         ],
       },
     },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80 },
     {
-      // Engine-maintained next fire — deterministic for @every/@at,
-      // server's own Nats-Schedule-Next for cron (null pre-first-fire).
-      key: "next_run_at", label_key: F("job_schedule", "next_run_at"), type: "datetime", order: 82,
+      // Served next-fire — @Calculated gate on the internal NATS mirror
+      // (`next_fire_mirror_at`): NULL whenever status is not executable —
+      // a disabled/paused/terminal schedule has no next run.
+      key: "next_run_at", label_key: F("job_schedule", "next_run_at"), type: "datetime", order: 82, kind: "calculated",
+      tooltip: H("job_schedule", "next_run_at"), tooltip_title: HT("job_schedule", "next_run_at"), tooltip_priority: "HINT",
+    },
+    {
+      // Universal "Eseguita il" — @Calculated latest ACTUAL run on the
+      // subject (`skipped` excluded — a suppressed due never ran). Same
+      // truth for recurring/once, trigger/infra/user/system fires.
+      key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", order: 84, kind: "calculated",
+      tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
     },
     // updated_at stays declared only to keep it visible by default (derived default is false)
     { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, default_visible: true },
@@ -306,7 +326,7 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   columns: [
     { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
     { key: "service_code", label_key: F("job_run", "service_code"), type: "text", format: "service_code", order: 20 },
-    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
+    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "orange" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
     { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 35, default_visible: false, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },

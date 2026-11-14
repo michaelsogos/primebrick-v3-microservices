@@ -64,7 +64,6 @@ export interface DeclareScheduleInput {
   source?: string;
   ttl?: string;
   forwardHeaders?: Record<string, string>;
-  initiator?: string;
   trigger_uuid?: string;
   /**
    * What job_schedules.target_subject shows when the real destination
@@ -281,14 +280,19 @@ export async function declareSchedule(
         trigger_uuid: input.trigger_uuid === undefined ? undefined : toUUID(input.trigger_uuid),
         armed_at: armedAt,
         disarmed_at: undefined,
-        fired_at: undefined,
         expires_at: ttlMs === undefined ? undefined : new Date(armedAt.getTime() + ttlMs),
         // Deterministic first-fire mirror — `@every`/`@at` compute exactly;
         // cron stays null until the server reports its own next fire via
         // `Nats-Schedule-Next` on the first fired message (single truth).
-        next_run_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
+        next_fire_mirror_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
       };
-      const actor = input.caller_service ?? input.initiator ?? "system:primebrick-job";
+      // Honest system actors — `system:<caller>` for service-declared
+      // schedules, `system:job` for engine materialization. `created_by`
+      // is audit plumbing: provenance lives on the `armed_by` projection
+      // (trigger via trigger_uuid, module via service_code), never on
+      // this stamp — the legacy `trigger:`/`rule:`/`service:` soup was
+      // purged and must never be written or read again.
+      const actor = input.caller_service ? `system:${input.caller_service}` : "system:job";
       if (existing !== undefined) {
         await dal.update(
           JobScheduleEntity,
@@ -370,7 +374,7 @@ export async function disarmSchedule(
           uuid: rows[0]!.uuid,
           status: to,
           disarmed_at: new Date(),
-          next_run_at: undefined,
+          next_fire_mirror_at: undefined,
           version: rows[0]!.version,
         } as never,
         { actor, matchBy: "uuid" } as never,
@@ -410,7 +414,7 @@ export async function unsuppressSchedule(
   if (!row || !SUPPRESSED_STATUSES.has(row.status)) return row;
   await getDal().update(
     JobScheduleEntity,
-    { uuid: row.uuid, status: "stopped", next_run_at: undefined, version: row.version } as never,
+    { uuid: row.uuid, status: "stopped", next_fire_mirror_at: undefined, version: row.version } as never,
     { actor, matchBy: "uuid" } as never,
   );
   logger.done(`schedule unsuppressed (stopped → awaiting re-arm): ${scheduleSubject}`, { tags: ["jobs"] });
@@ -444,11 +448,13 @@ export async function dropScheduleMirror(scheduleSubject: string, actor: string)
  * Record a fire on the mirror — called by the due-forwarder on EVERY
  * dispatched schedule message.
  *   - `once`: the declaration self-purged, flip `fired` + clear
- *     `next_run_at` (without it the mirror would say `armed` forever).
- *   - `recurring`: stays `armed`; `next_run_at` takes the server's own
- *     `Nats-Schedule-Next` header (RFC3339 — cron included), the single
- *     truth for when the next fire actually happens. `"purge"` means no
- *     further fire is scheduled.
+ *     `next_fire_mirror_at` (without it the mirror would say `armed`
+ *     forever). The served `fired_at` derives from the run row — no
+ *     write here.
+ *   - `recurring`: stays `armed`; `next_fire_mirror_at` takes the
+ *     server's own `Nats-Schedule-Next` header (RFC3339 — cron
+ *     included), the single truth for when the next fire actually
+ *     happens. `"purge"` means no further fire is scheduled.
  */
 export async function markScheduleFired(scheduleSubject: string, nextFire?: Date | null): Promise<void> {
   const dal = getDal();
@@ -463,7 +469,7 @@ export async function markScheduleFired(scheduleSubject: string, nextFire?: Date
   if (row.schedule_type === "once") {
     await dal.update(
       JobScheduleEntity,
-      { uuid: row.uuid, status: "fired", fired_at: new Date(), next_run_at: undefined, version: row.version } as never,
+      { uuid: row.uuid, status: "fired", next_fire_mirror_at: undefined, version: row.version } as never,
       { actor: "system:job", matchBy: "uuid" } as never,
     );
     return;
@@ -471,7 +477,7 @@ export async function markScheduleFired(scheduleSubject: string, nextFire?: Date
   if (nextFire === undefined) return;
   await dal.update(
     JobScheduleEntity,
-    { uuid: row.uuid, next_run_at: nextFire ?? undefined, version: row.version } as never,
+    { uuid: row.uuid, next_fire_mirror_at: nextFire ?? undefined, version: row.version } as never,
     { actor: "system:job", matchBy: "uuid" } as never,
   );
 }
@@ -571,7 +577,6 @@ export async function reconcileSchedules(opts?: {
             {
               uuid: row.uuid,
               status: heal,
-              fired_at: heal === "fired" ? now : undefined,
               version: row.version,
             } as never,
             { actor: "system:reconcile", matchBy: "uuid" } as never,
@@ -595,7 +600,7 @@ export async function reconcileSchedules(opts?: {
           { tags: ["jobs"] },
         );
       }
-    } else if (row.status === "armed" && live && row.next_run_at == null) {
+    } else if (row.status === "armed" && live && row.next_fire_mirror_at == null) {
       // Backfill the next-fire mirror — `@every`/`@at` recompute
       // deterministically (same formula as arm); cron stays null: the
       // server's own `Nats-Schedule-Next` writes it on the first fire.
@@ -604,11 +609,11 @@ export async function reconcileSchedules(opts?: {
         try {
           await dal.update(
             JobScheduleEntity,
-            { uuid: row.uuid, next_run_at: next, version: row.version } as never,
+            { uuid: row.uuid, next_fire_mirror_at: next, version: row.version } as never,
             { actor: "system:reconcile", matchBy: "uuid" } as never,
           );
         } catch (error) {
-          report.errors.push({ subject, error: `next_run_at backfill failed: ${String(error)}` });
+          report.errors.push({ subject, error: `next_fire_mirror_at backfill failed: ${String(error)}` });
         }
       }
     }
