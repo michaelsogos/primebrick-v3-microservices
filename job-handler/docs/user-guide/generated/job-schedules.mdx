@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Job Name, the Source Queue, the Service, the Kind, the Armed By, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
+Each row shows the Job Name, the Source Queue, the Service, the Kind, the Armed By, the Cadence, the Type, the Status, the Anomaly, the Run Stats, the Enabled at, the Next run, the Updated at, plus the status flags Enabled.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -23,14 +23,14 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Type** | yes | yes | no |  |
 | **Destination Event** | no | yes | yes | The event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services. |
 | **Status** | yes | yes | yes |  |
-| **Live** | yes | no | no |  |
-| **Drift** | yes | no | no |  |
+| **Enabled** | yes | no | no |  |
+| **Anomaly** | yes | no | no |  |
 | **Run Stats** | yes | no | no |  |
-| **Armed at** | yes | yes | yes |  |
+| **Enabled at** | yes | yes | yes |  |
 | **Next run** | yes | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 | **Lane** | no | yes | yes |  |
-| **Disarmed at** | no | yes | yes |  |
+| **Disabled at** | no | yes | yes |  |
 | **Fired at** | no | yes | yes |  |
 | **Expires at** | no | yes | yes |  |
 
@@ -43,14 +43,14 @@ The page is visible with the `access.system.job.job-schedules` grant.
 - The Type column is shown by default and can be sorted but not filtered.
 - The Destination Event column is hidden by default and can be sorted and filtered — the event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services.
 - The Status column is shown by default and can be sorted and filtered.
-- The Live column is shown by default and cannot be sorted or filtered.
-- The Drift column is shown by default and cannot be sorted or filtered.
+- The Enabled column is shown by default and cannot be sorted or filtered.
+- The Anomaly column is shown by default and cannot be sorted or filtered.
 - The Run Stats column is shown by default and cannot be sorted or filtered.
-- The Armed at column is shown by default and can be sorted and filtered.
+- The Enabled at column is shown by default and can be sorted and filtered.
 - The Next run column is shown by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 - The Lane column is hidden by default and can be sorted and filtered.
-- The Disarmed at column is hidden by default and can be sorted and filtered.
+- The Disabled at column is hidden by default and can be sorted and filtered.
 - The Fired at column is hidden by default and can be sorted and filtered.
 - The Expires at column is hidden by default and can be sorted and filtered.
 

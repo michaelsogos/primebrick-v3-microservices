@@ -58,6 +58,12 @@ interface RunStatsBody {
 
 type BucketUnit = "hour" | "day" | "week" | "month";
 
+const BUCKET_STEP_MS: Record<Exclude<BucketUnit, "month">, number> = {
+  hour: 3_600_000,
+  day: 86_400_000,
+  week: 604_800_000,
+};
+
 /** Choose the bucket unit so `span` lands in ~8–30 buckets. */
 function pickBucketUnit(spanMs: number): { unit: BucketUnit; ms: number } {
   const HOUR = 3_600_000, DAY = 24 * HOUR;
@@ -65,6 +71,33 @@ function pickBucketUnit(spanMs: number): { unit: BucketUnit; ms: number } {
   if (spanMs <= 30 * DAY) return { unit: "day", ms: DAY };
   if (spanMs <= 30 * 7 * DAY) return { unit: "week", ms: 7 * DAY };
   return { unit: "month", ms: 30 * DAY };
+}
+
+/**
+ * UTC `date_trunc` twin — the DB runs Etc/UTC, so JS truncation on the
+ * same boundaries merges 1:1 with the sparse bucket_start keys. `week`
+ * aligns to ISO Monday (Postgres `date_trunc('week')` semantic); `month`
+ * is a calendar month, stepped via setUTCMonth (not a fixed ms span).
+ */
+function truncBucket(d: Date, unit: BucketUnit): Date {
+  const t = new Date(d);
+  if (unit === "hour") {
+    t.setUTCMinutes(0, 0, 0);
+  } else if (unit === "day") {
+    t.setUTCHours(0, 0, 0, 0);
+  } else if (unit === "week") {
+    t.setUTCHours(0, 0, 0, 0);
+    t.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7));
+  } else {
+    t.setUTCHours(0, 0, 0, 0);
+    t.setUTCDate(1);
+  }
+  return t;
+}
+
+function nextBucket(d: Date, unit: BucketUnit): void {
+  if (unit === "month") d.setUTCMonth(d.getUTCMonth() + 1);
+  else d.setTime(d.getTime() + BUCKET_STEP_MS[unit]);
 }
 
 export async function runStats(body: RunStatsBody): Promise<unknown> {
@@ -117,14 +150,30 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
     },
   )) as StatRow[];
 
-  const stats: Record<string, { bucket_start: string; succeeded: number; failed: number; skipped: number }[]> = {};
+  // Zero-fill: the FE renders slots by position, so a sparse array would
+  // lie about *when* runs happened — every bucket in the span is emitted,
+  // empty ones carry zero counts (the "never ran" story is the frame).
+  const sparse = new Map<string, Map<string, { succeeded: number; failed: number; skipped: number }>>();
   for (const r of rows) {
-    (stats[r.schedule_subject] ??= []).push({
-      bucket_start: r.bucket_start.toISOString(),
+    let m = sparse.get(r.schedule_subject);
+    if (!m) sparse.set(r.schedule_subject, (m = new Map()));
+    m.set(r.bucket_start.toISOString(), {
       succeeded: Number(r.succeeded),
       failed: Number(r.failed),
       skipped: Number(r.skipped),
     });
+  }
+
+  const now = new Date();
+  const grid: string[] = [];
+  for (const c = truncBucket(new Date(now.getTime() - spanMs), unit); c.getTime() <= now.getTime(); nextBucket(c, unit)) {
+    grid.push(c.toISOString());
+  }
+
+  const stats: Record<string, { bucket_start: string; succeeded: number; failed: number; skipped: number }[]> = {};
+  for (const subject of subjects) {
+    const m = sparse.get(subject);
+    stats[subject] = grid.map((bucket_start) => ({ bucket_start, ...(m?.get(bucket_start) ?? { succeeded: 0, failed: 0, skipped: 0 }) }));
   }
   // Trigger-keyed requests bind the sparkline by the row's `uuid`, not the
   // resolved mirror subject — remap those keys back before responding.
