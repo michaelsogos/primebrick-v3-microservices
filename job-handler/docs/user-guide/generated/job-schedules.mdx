@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the schedule subject, the Job, the Service, the Kind, the Schedule, the Type, the Status, the Drift, the Run Stats, the Armed at, the next run at, the Updated at, plus the status flags Live.
+Each row shows the Schedule, the Job, the Service, the Kind, the Schedule, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -14,12 +14,12 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **schedule subject** | yes | yes | yes |  |
+| **Schedule** | yes | yes | yes |  |
 | **Job** | yes | yes | yes |  |
 | **Service** | yes | yes | yes |  |
 | **Kind** | yes | yes | yes |  |
 | **Schedule** | yes | yes | no |  |
-| **trigger uuid** | no | yes | yes |  |
+| **Trigger** | no | yes | yes |  |
 | **Type** | yes | yes | no |  |
 | **Target Subject** | no | yes | yes |  |
 | **Status** | yes | yes | yes |  |
@@ -27,7 +27,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Drift** | yes | no | no |  |
 | **Run Stats** | yes | no | no |  |
 | **Armed at** | yes | yes | yes |  |
-| **next run at** | yes | yes | yes |  |
+| **Next run** | yes | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 | **lane** | no | yes | yes |  |
 | **initiator** | no | yes | yes |  |
@@ -35,12 +35,12 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **fired at** | no | yes | yes |  |
 | **expires at** | no | yes | yes |  |
 
-- The schedule subject column is shown by default and can be sorted and filtered.
+- The Schedule column is shown by default and can be sorted and filtered.
 - The Job column is shown by default and can be sorted and filtered.
 - The Service column is shown by default and can be sorted and filtered.
 - The Kind column is shown by default and can be sorted and filtered.
 - The Schedule column is shown by default and can be sorted but not filtered.
-- The trigger uuid column is hidden by default and can be sorted and filtered.
+- The Trigger column is hidden by default and can be sorted and filtered.
 - The Type column is shown by default and can be sorted but not filtered.
 - The Target Subject column is hidden by default and can be sorted and filtered.
 - The Status column is shown by default and can be sorted and filtered.
@@ -48,7 +48,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 - The Drift column is shown by default and cannot be sorted or filtered.
 - The Run Stats column is shown by default and cannot be sorted or filtered.
 - The Armed at column is shown by default and can be sorted and filtered.
-- The next run at column is shown by default and can be sorted and filtered.
+- The Next run column is shown by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 - The lane column is hidden by default and can be sorted and filtered.
 - The initiator column is hidden by default and can be sorted and filtered.
