@@ -316,7 +316,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/pause-schedule",
-    entity_op: { entity: "job_schedule", op: "pause", cta: { icon: "pause", row_key: "schedule_subject", translation_key: "job.jobs.actions.pause", visible_on: { field: "status", values: ["armed"] } } },
+    entity_op: { entity: "job_schedule", op: "pause", cta: { icon: "pause:filled", row_key: "schedule_subject", translation_key: "job.jobs.actions.pause", visible_on: { field: "status", values: ["armed"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Pause a schedule — suppressed until resume (admin)",
@@ -380,7 +380,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/pause-all",
-    entity_op: { entity: "job_schedule", op: "pause_all", cta: { icon: "pause", translation_key: "job.jobs.actions.pause_all", confirm_key: "job.jobs.actions.pause_all_confirm" } },
+    entity_op: { entity: "job_schedule", op: "pause_all", cta: { icon: "pause:filled", translation_key: "job.jobs.actions.pause_all", confirm_key: "job.jobs.actions.pause_all_confirm" } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Pause every armed schedule (admin, bulk)",
