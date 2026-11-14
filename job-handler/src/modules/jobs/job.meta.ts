@@ -190,9 +190,11 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 15, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
-    // Hidden by default — `armed_by` already resolves the owning service
-    // (name + drill); the raw code stays togglable for debug views.
-    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20, default_visible: false },
+    // Fully suppressed — `created_by` is the canonical provenance column
+    // (resolves service actors to service_registry name + drill) and
+    // `armed_by` shows the armer. The field stays physical: armed_by /
+    // armed_ref_key calcs, filterable and searchable consume it.
+    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20, hidden: true },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
     {
       // WHO armed it — ownership, never audit. The @Calculated column
