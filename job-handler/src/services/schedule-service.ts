@@ -273,7 +273,7 @@ export async function declareSchedule(
         schedule_subject: input.schedule_subject,
         service_code: owner,
         kind: input.kind,
-        lane,
+        run_as: lane,
         schedule_spec: input.schedule,
         schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",
         target_subject: input.mirror_target ?? input.target,

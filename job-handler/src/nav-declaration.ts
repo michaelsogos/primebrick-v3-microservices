@@ -40,13 +40,14 @@ const TRIGGER_FORM: FormPageDecl = {
     { key: "event_subject" },
     { key: "target_subject" },
     { key: "schedule_spec", default_value: "@every 5m" },
-    { key: "execution_context", default_value: "user" },
+    { key: "run_as", default_value: "originator" },
     { key: "filter" },
     { key: "payload_map", col: 2, row: 1, row_span: 7 },
   ],
-  // Closed-vocab host rules: ≥1 of event_subject/schedule_spec; "user"
-  // lane requires an event source (the host also disables that badge
-  // option live and coerces the default to "me" when no source).
+  // Closed-vocab host rules: ≥1 of event_subject/schedule_spec; the
+  // "originator" run_as requires an event source (the host also disables
+  // that badge option live and coerces the default to "author" when no
+  // source).
   // `payload_map_conformance` checks map entries against the selected
   // callable's emitted payload_schema — required destination fields
   // covered, `const` values conforming.

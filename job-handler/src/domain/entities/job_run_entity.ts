@@ -34,9 +34,9 @@ export class JobRunEntity
   @Column({ nullable: false })
   job_name!: string;
 
-  /** user | system */
+  /** user | system — the identity channel this run fired under. */
   @Column({ length: 10, nullable: false })
-  lane!: string;
+  run_as!: string;
 
   /** dispatched | succeeded | failed | lost (dispatch never reported) */
   @Column({ length: 20, nullable: false })

@@ -82,7 +82,7 @@ const mirrorRow = (over: Record<string, unknown> = {}) => ({
   service_code: "job",
   job_name: "trig",
   kind: "trigger",
-  lane: "user",
+  run_as: "user",
   schedule_spec: "@every 1d",
   schedule_type: "recurring",
   target_subject: "emailsender.send",

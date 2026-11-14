@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T13:42:50.088Z",
+  "generatedAt": "2026-11-14T16:42:21.108Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -273,19 +273,6 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "job_name": {
-          "name": "job_name",
-          "ordinalPosition": 5,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
-        },
         "kind": {
           "name": "kind",
           "ordinalPosition": 6,
@@ -299,8 +286,8 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "lane": {
-          "name": "lane",
+        "run_as": {
+          "name": "run_as",
           "ordinalPosition": 7,
           "dataType": "varchar",
           "typname": "varchar",
@@ -349,19 +336,6 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "initiator": {
-          "name": "initiator",
-          "ordinalPosition": 11,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
           "isPrimaryKey": false
         },
         "trigger_uuid": {
@@ -608,8 +582,8 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "lane": {
-          "name": "lane",
+        "run_as": {
+          "name": "run_as",
           "ordinalPosition": 6,
           "dataType": "varchar",
           "typname": "varchar",
@@ -681,19 +655,6 @@
           "typeOid": 23,
           "typcategory": "N",
           "formatType": "integer",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "initiator": {
-          "name": "initiator",
-          "ordinalPosition": 12,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": true,
@@ -904,14 +865,14 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "execution_context": {
-          "name": "execution_context",
+        "run_as": {
+          "name": "run_as",
           "ordinalPosition": 8,
           "dataType": "varchar",
           "typname": "varchar",
           "typeOid": 1043,
           "typcategory": "S",
-          "formatType": "character varying(10)",
+          "formatType": "character varying(20)",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,

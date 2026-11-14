@@ -62,16 +62,16 @@ function plainJson<T>(v: T): T {
 const FORWARD_TARGET_RE = /^jobs\.due\.(?:user|system)\.job\.forward\./;
 
 /**
- * Derive `{ service_code, job_name, lane }` from the consumed subject the
- * result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>` strips
- * the lane prefix, plain callable subjects (`emailsender.send`) parse
- * directly. Lane is `system` unless the due subject says `user`.
+ * Derive `{ service_code, job_name, run_as }` from the consumed subject
+ * the result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
+ * strips the lane prefix, plain callable subjects (`emailsender.send`)
+ * parse directly. `run_as` is `system` unless the due subject says `user`.
  */
-function parseTarget(target: string): { service_code: string; job_name: string; lane: "user" | "system" } | null {
+function parseTarget(target: string): { service_code: string; job_name: string; run_as: "user" | "system" } | null {
   const due = /^jobs\.due\.(user|system)\.([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (due) return { service_code: due[2]!, job_name: due[3]!, lane: due[1]! as "user" | "system" };
+  if (due) return { service_code: due[2]!, job_name: due[3]!, run_as: due[1]! as "user" | "system" };
   const plain = /^([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (plain) return { service_code: plain[1]!, job_name: target, lane: "system" };
+  if (plain) return { service_code: plain[1]!, job_name: target, run_as: "system" };
   return null;
 }
 
@@ -120,7 +120,7 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
       schedule_subject: data.schedule_subject,
       service_code: parsed?.service_code ?? "unknown",
       job_name: parsed?.job_name ?? data.target ?? "unknown",
-      lane: parsed?.lane ?? "system",
+      run_as: parsed?.run_as ?? "system",
       status: data.status,
       error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
       error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,

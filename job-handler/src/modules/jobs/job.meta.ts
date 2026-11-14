@@ -111,7 +111,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       json_schema: PAYLOAD_MAP_SCHEMA,
       tooltip: H("job_trigger", "payload_map"), tooltip_title: HT("job_trigger", "payload_map"), tooltip_priority: "HINT",
     },
-    { key: "execution_context", label_key: F("job_trigger", "execution_context"), type: "badge", order: 60, badge: { values: { system: { label_key: V("job_trigger", "system"), color: "#000000" }, user: { label_key: V("job_trigger", "user"), color: "primary" }, me: { label_key: V("job_trigger", "me"), color: "info" } } }, tooltip: H("job_trigger", "execution_context"), tooltip_title: HT("job_trigger", "execution_context"), tooltip_priority: "HINT" },
+    { key: "run_as", label_key: F("job_trigger", "run_as"), type: "badge", order: 60, badge: { values: { system: { label_key: V("job_trigger", "system"), color: "#000000" }, originator: { label_key: V("job_trigger", "originator"), color: "primary" }, author: { label_key: V("job_trigger", "author"), color: "info" } } }, tooltip: H("job_trigger", "run_as"), tooltip_title: HT("job_trigger", "run_as"), tooltip_priority: "HINT" },
     {
       // 1:N children link — the runs list filtered by this trigger's
       // schedule-mirror subject (runs record it as `schedule_subject`).
@@ -213,6 +213,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       } },
     },
     { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 50, icon: "send", color: "sky-500", default_visible: false, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
+    { key: "run_as", label_key: F("job_schedule", "run_as"), type: "badge", order: 55, default_visible: false, badge: { values: { user: { label_key: V("job_schedule", "user"), color: "primary" }, system: { label_key: V("job_schedule", "system"), color: "#000000" } } } },
     { key: "status", label_key: F("job_schedule", "status"), type: "badge", order: 60, badge: { values: { armed: { label_key: V("job_schedule", "armed"), color: "green" }, stopped: { label_key: V("job_schedule", "stopped"), color: "amber" }, paused: { label_key: V("job_schedule", "paused"), color: "amber" }, disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" }, fired: { label_key: V("job_schedule", "fired"), color: "gray" }, expired: { label_key: V("job_schedule", "expired"), color: "gray" } } } },
     // Virtual columns — decorated per-row by JobSchedulesService from the
     // live JetStream enumeration (external source, never queryable).
@@ -306,6 +307,7 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
     { key: "service_code", label_key: F("job_run", "service_code"), type: "text", format: "service_code", order: 20 },
     { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
+    { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 35, default_visible: false, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },
     {

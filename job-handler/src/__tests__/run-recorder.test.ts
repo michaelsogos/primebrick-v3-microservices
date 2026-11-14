@@ -70,7 +70,7 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
       schedule_subject: "jobs.schedule.ai.partition-maintenance",
       service_code: "ai",
       job_name: "partition-maintenance",
-      lane: "system",
+      run_as: "system",
       status: "succeeded",
       duration_ms: 43n,
       fire_seq: 881n,

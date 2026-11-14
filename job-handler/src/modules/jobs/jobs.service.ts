@@ -15,9 +15,9 @@ import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 import { scheduleDrift } from "../../services/schedule-service.js";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
-const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
-const TRIGGER_FILTERABLE = new Set(["name", "event_subject", "target_subject", "execution_context", "runs", "last_run", "next_run"]);
-const SCHEDULE_FILTERABLE = new Set(["service_code", "kind", "lane", "status", "schedule_type", "schedule_subject", "armed_by"]);
+const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "run_as", "schedule_subject", "created_at", "updated_at"]);
+const TRIGGER_FILTERABLE = new Set(["name", "event_subject", "target_subject", "run_as", "runs", "last_run", "next_run"]);
+const SCHEDULE_FILTERABLE = new Set(["service_code", "kind", "run_as", "status", "schedule_type", "schedule_subject", "armed_by"]);
 
 function publishTriggerChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
@@ -52,7 +52,7 @@ async function assertCallableTarget(body: Record<string, unknown>): Promise<void
  * Trigger shape contract — delegates to the SAME core predicate the
  * superform applies (`job_trigger_shape` in the closed validator
  * registry): one rule, two surfaces, zero drift. The rule covers
- * event-or-schedule presence, `execution_context "user"` needing an
+ * event-or-schedule presence, `run_as "originator"` needing an
  * event, and a one-shot `@at` lying in the past (server clock injected).
  * PATCH bodies carry only the changed fields, so the predicate runs on
  * the MERGED record — the shape contract always sees the whole entity.

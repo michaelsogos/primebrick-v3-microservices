@@ -17,12 +17,13 @@
  * `emailsender.send`) picked from `census.callables`; `payload_map`
  * (PayloadMap DST) builds its request payload from the event.
  *
- * `execution_context` decides the identity the fire runs under: "user"
+ * `run_as` decides the identity the fire runs under: "originator"
  * (the originator's AuthUser rides the event's forwarded headers — only
- * meaningful when an event source exists), "me" (the trigger author's
- * AuthUser, resolved via `auth.ctl.resolve_user` at arm time) or "system"
- * (opt-in, declared super-partes business process with no user context —
- * a permissioned callable will deny it).
+ * meaningful when an event source exists), "author" (the trigger author's
+ * AuthUser, resolved via `auth.ctl.resolve_user` at dispatch time) or
+ * "system" (opt-in, declared super-partes business process with no user
+ * context — a permissioned callable will deny it). Both user-context
+ * values materialize on the `jobs.due.user.*` lane.
  */
 import {
   Entity,
@@ -86,9 +87,9 @@ export class JobTriggerEntity
   @Column({ pgType: "jsonb", nullable: true })
   payload_map?: PayloadMap;
 
-  /** user | me | system — explicit opt-in, never inferred. */
-  @Column({ length: 10, nullable: false })
-  execution_context!: string;
+  /** originator | author | system — explicit opt-in, never inferred. */
+  @Column({ length: 20, nullable: false })
+  run_as!: string;
   // No `enabled` flag — DISABLE IS SOFT-DELETE (`deleted_at` via the
   // `Deletable` mixin). Doctrine: enable fields are a design error; the
   // soft-delete machinery gives disable + restore + audit + ELT deleted-row

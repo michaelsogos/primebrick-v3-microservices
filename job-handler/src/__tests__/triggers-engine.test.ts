@@ -96,7 +96,7 @@ const mkTrigger = (over: Record<string, unknown>): JobTriggerEntity =>
     uuid: "trig-1",
     name: "trig",
     target_subject: "emailsender.send",
-    execution_context: "user",
+    run_as: "originator",
     created_by: "author-1",
     payload_map: {},
     ...over,
@@ -227,7 +227,7 @@ describe("triggers-engine — schedule only (pure timer)", () => {
         name: "timer",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "system",
+        run_as: "system",
       }),
     ]);
 
@@ -239,7 +239,7 @@ describe("triggers-engine — schedule only (pure timer)", () => {
     );
   });
 
-  it("me lane resolves the author via auth.ctl.resolve_user and rides the user lane", async () => {
+  it("author lane resolves the author via auth.ctl.resolve_user and rides the user lane", async () => {
     h.callNats.mockResolvedValue({ user_uuid: "author-7" });
     await boot([
       mkTrigger({
@@ -247,7 +247,7 @@ describe("triggers-engine — schedule only (pure timer)", () => {
         name: "mine",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "me",
+        run_as: "author",
         created_by: "author-7",
       }),
     ]);
@@ -261,27 +261,27 @@ describe("triggers-engine — schedule only (pure timer)", () => {
     );
   });
 
-  it("me lane with an unresolvable author refuses to arm (fail-closed)", async () => {
+  it("author lane with an unresolvable author refuses to arm (fail-closed)", async () => {
     h.callNats.mockResolvedValue(null); // author deleted/disabled
     await boot([
       mkTrigger({
         uuid: "trig-5",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "me",
+        run_as: "author",
       }),
     ]);
 
     expect(h.declareSchedule.mock.calls.filter((c) => String((c[0] as { trigger_uuid?: string }).trigger_uuid) === "trig-5")).toHaveLength(0);
   });
 
-  it("user lane on a schedule-only trigger refuses (no event to forward auth from)", async () => {
+  it("originator lane on a schedule-only trigger refuses (no event to forward auth from)", async () => {
     await boot([
       mkTrigger({
         uuid: "trig-6",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "user",
+        run_as: "originator",
       }),
     ]);
 
@@ -314,7 +314,7 @@ describe("triggers-engine — reload tap", () => {
     // Trigger re-shaped to schedule-only → reload disarms the old timer
     // (prev.schedule_spec) and arms the new shape directly.
     h.findAll.mockResolvedValue([
-      mkTrigger({ uuid: "trig-8", event_subject: undefined, schedule_spec: "@every 2h", execution_context: "system" }),
+      mkTrigger({ uuid: "trig-8", event_subject: undefined, schedule_spec: "@every 2h", run_as: "system" }),
     ]);
     await reload!({ trigger_uuid: "trig-8" });
 

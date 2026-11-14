@@ -79,7 +79,7 @@ async function insertRun(
         // target's first token (`emailsender.send` → `emailsender`).
         service_code: envelope.target.split(".")[0]!,
         job_name: envelope.target,
-        lane,
+        run_as: lane,
         status,
         error_code: errorCode,
         error_detail: errorDetail?.slice(0, 2000),

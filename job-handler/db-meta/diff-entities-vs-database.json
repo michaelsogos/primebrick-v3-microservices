@@ -1,47 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-14T13:42:50.162Z",
+  "generatedAt": "2026-11-14T16:42:21.168Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
-  "tables": {
-    "job.job_schedules": {
-      "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [
-        "job_name",
-        "initiator"
-      ],
-      "likelyRenames": [],
-      "typeMismatches": [],
-      "nullabilityMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [
-        "job_schedules_subject_uq",
-        "job_schedules_service_idx",
-        "job_schedules_status_idx"
-      ],
-      "indexMismatches": [],
-      "onlyInEntityForeignKeys": [],
-      "onlyInDatabaseForeignKeys": [],
-      "foreignKeyMismatches": []
-    },
-    "job.job_runs": {
-      "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [
-        "initiator"
-      ],
-      "likelyRenames": [],
-      "typeMismatches": [],
-      "nullabilityMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [
-        "job_runs_schedule_idx",
-        "job_runs_status_idx",
-        "job_runs_created_idx"
-      ],
-      "indexMismatches": [],
-      "onlyInEntityForeignKeys": [],
-      "onlyInDatabaseForeignKeys": [],
-      "foreignKeyMismatches": []
-    }
-  }
+  "tables": {}
 }

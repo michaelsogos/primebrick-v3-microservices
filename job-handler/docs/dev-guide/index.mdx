@@ -63,7 +63,8 @@ of admin-managed schedules.
 ## Domain data (schema `job`)
 
 - `job_triggers` — business triggers: `event_subject` and/or `schedule_spec`
-  (at least one) → `target_subject`; `execution_context`: `user`|`me`|`system`.
+  (at least one) → `target_subject`; `run_as`: `originator`|`author`|`system`
+  (originator/author dispatch on the user lane, system on the system lane).
 - `job_schedules` — **read-only mirror** of NATS declarations (`kind`: `infra_derived` | `trigger` (`manual` absorbed into schedule-only triggers),
   `schedule_type`: `recurring` | `once`, `status`: `armed` | `stopped` | `paused` | `disarmed` | `fired` | `expired`).
   Lifecycle semantics: `stopped` = instance stop (temporary — the owner may

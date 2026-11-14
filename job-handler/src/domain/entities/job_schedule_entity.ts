@@ -39,9 +39,10 @@ export class JobScheduleEntity
   @Column({ length: 30, nullable: false })
   kind!: string;
 
-  /** user | system — which due lane the target lives on. */
+  /** user | system — the identity channel the target fires under:
+   *  which `jobs.due.<user|system>` lane the due message lands on. */
   @Column({ length: 10, nullable: false })
-  lane!: string;
+  run_as!: string;
 
   /** The schedule spec — "@every 30s", "@at …", cron. */
   @Column({ nullable: false })
