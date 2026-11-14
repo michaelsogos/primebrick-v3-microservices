@@ -272,6 +272,24 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     },
     // updated_at stays declared only to keep it visible by default (derived default is false)
     { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, default_visible: true },
+    {
+      // Internal scheduler shadow — never a column, never in the picker.
+      // The mirror's only readers are SQL-level (the `next_run_at` gate)
+      // and server-side (the live/drift decoration); `hidden` drops it
+      // from served meta while the physical field keeps travelling in
+      // the wire row.
+      key: "next_fire_mirror_at", label_key: F("job_schedule", "next_fire_mirror_at"), type: "datetime", order: 94, hidden: true,
+    },
+    {
+      // Lazy-ref wire helpers for `armed_by` — the drill entity/key ride
+      // the row so the cell can resolve its panel, but their truth is
+      // already consolidated in the armed_by badge/link UX. Never shown
+      // standalone: `hidden` suppresses them from meta, picker included.
+      key: "armed_ref_entity", label_key: F("job_schedule", "armed_ref_entity"), type: "text", order: 95, hidden: true,
+    },
+    {
+      key: "armed_ref_key", label_key: F("job_schedule", "armed_ref_key"), type: "text", order: 96, hidden: true,
+    },
   ],
   table: {
     default_view: "table",
