@@ -181,16 +181,18 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   display_field: "job_name",
   columns: [
     {
-      // @Calculated on JobScheduleEntity — the scheduled job's name:
-      // trigger name (live or from the actor stamp) for trigger mirrors,
-      // the declared subject tail for manual/infra declarations. The
-      // schedule has no name of its own — it inherits the job's, same
-      // semantic as `job_run.job_name`. display_field → the pin derives
-      // here (never on a subject mirror).
+      // @Calculated on JobScheduleEntity — the authored job identity:
+      // the trigger's display for trigger mirrors (the job the trigger
+      // declares IS the schedule's name), the declared subject tail for
+      // manual/infra declarations. The schedule has no name of its own —
+      // it inherits the job's. display_field → the pin derives here
+      // (never on a subject mirror).
       key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 15, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
-    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20 },
+    // Hidden by default — `armed_by` already resolves the owning service
+    // (name + drill); the raw code stays togglable for debug views.
+    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20, default_visible: false },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
     {
       // WHO armed it — ownership, never audit. The @Calculated column

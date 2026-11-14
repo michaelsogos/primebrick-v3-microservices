@@ -106,13 +106,19 @@ export class JobScheduleEntity
   )
   next_run_at?: Date;
 
-  /** The scheduled job's name — the callable the due subject addresses:
-   *  `jobs.due.<lane>.<svc>.<name>` → `<name>`; a plain callable subject
-   *  (`emailsender.send`) stays whole. Same parse run-recorder applies
-   *  to consumed subjects, so this mirrors `job_run.job_name` verbatim:
-   *  the schedule has no name of its own, it inherits the job's. */
+  /** The scheduled job's name — the authored job identity. Trigger-owned
+   *  mirrors inherit the trigger's display (`job_triggers.name` via
+   *  `trigger_uuid`): the job the trigger declares IS what this schedule
+   *  runs, and its name survives the trigger's deletion — same contract
+   *  as the `trigger_uuid` ref display join (no `deleted_at` filter).
+   *  Service-owned rows keep the callable tail of `target_subject`
+   *  (`jobs.due.<lane>.<svc>.<name>` → `<name>`; a plain callable subject
+   *  stays whole — same parse run-recorder applies). */
   @Calculated(
-    `regexp_replace({self}.target_subject, '^jobs\\.due\\.[^.]+\\.[^.]+\\.', '')`,
+    `COALESCE(
+      (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),
+      regexp_replace({self}.target_subject, '^jobs\\.due\\.[^.]+\\.[^.]+\\.', '')
+    )`,
     { pgType: "text" },
   )
   job_name?: string;
