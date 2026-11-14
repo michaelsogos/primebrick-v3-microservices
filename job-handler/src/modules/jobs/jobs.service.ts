@@ -189,7 +189,7 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
       entity: JobScheduleEntity,
       actor: entityActor,
       list: {
-        searchableKeys: ["schedule_subject", "armed_by", "service_code"],
+        searchableKeys: ["schedule_subject", "job_name", "service_code"],
         filterableKeys: SCHEDULE_FILTERABLE,
         defaultSort: TRIGGER_DEFAULT_SORT,
       },

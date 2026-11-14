@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Armed By, the Source Queue, the Service, the Kind, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
+Each row shows the Job Name, the Source Queue, the Service, the Kind, the Armed By, the Cadence, the Type, the Status, the Drift, the Run Stats, the Armed at, the Next run, the Updated at, plus the status flags Live.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -14,7 +14,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Armed By** | yes | yes | yes |  |
+| **Job Name** | yes | yes | yes |  |
 | **Source Queue** | yes | yes | yes | The queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues. |
 | **Service** | yes | yes | yes |  |
 | **Kind** | yes | yes | yes |  |
@@ -34,7 +34,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Fired at** | no | yes | yes |  |
 | **Expires at** | no | yes | yes |  |
 
-- The Armed By column is shown by default and can be sorted and filtered.
+- The Job Name column is shown by default and can be sorted and filtered.
 - The Source Queue column is shown by default and can be sorted and filtered — the queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues.
 - The Service column is shown by default and can be sorted and filtered.
 - The Kind column is shown by default and can be sorted and filtered.

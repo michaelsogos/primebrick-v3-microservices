@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-14T13:44:40.617Z",
+  "issued_at": "2026-11-14T14:51:23.101Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
@@ -13,7 +13,8 @@
     "0008_schedule_field_labels": "22735d7c79b9ce3103282461ad3aa26900b321105c50c7cbef1219fd9c7d371a",
     "0009_auto_derived_field_labels": "21790cb8b66e9ed29e51f3beb023dd6acd339e1830e94bd2ad94022280a609c3",
     "0010_schedule_spec_label": "16da8520c15011a0c5f3b0859800653a0016f03bf98786f298c3b57b0f342b30",
-    "0011_armed_by_identity_labels": "b8b060c5fe0b7ce918aee3c379788bcf4ffcd93fbb3dd87d9e8fe8b5827d1eca"
+    "0011_armed_by_identity_labels": "b8b060c5fe0b7ce918aee3c379788bcf4ffcd93fbb3dd87d9e8fe8b5827d1eca",
+    "0012_schedule_job_name_label": "776c384b5f613b6e4bbd40233ffa7db0145b63d37c224cfbedb22b1d4b0bc08a"
   },
-  "signature": "rXLqUG02D4wJVwXqfCKOESKuPubftTte7b/CTvwmgZRjbd7lAPsUgOre0GHmgAFSUXPIM/afydePq+xIkZH7Dw=="
+  "signature": "9Z6O/CZBRHvgJQ/p2zhSQwtLDZdaOughSbQReKi6YhEK/xHZhH0HgqSSCTHfyFWMHm8vjk4KwsIf0JdidsHmCw=="
 }

@@ -175,17 +175,29 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_schedule.title",
   uid: "uuid",
-  display_field: "armed_by",
+  display_field: "job_name",
   columns: [
     {
-      // @Calculated on JobScheduleEntity — COALESCE(trigger name, arming
-      // user display_name, service_code); the schedule's identity column:
-      // display_field → the pin derives here (never on a subject mirror).
-      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "text", order: 0, kind: "calculated",
+      // @Calculated on JobScheduleEntity — the scheduled job's name:
+      // trigger name (live or from the actor stamp) for trigger mirrors,
+      // the declared subject tail for manual/infra declarations. The
+      // schedule has no name of its own — it inherits the job's, same
+      // semantic as `job_run.job_name`. display_field → the pin derives
+      // here (never on a subject mirror).
+      key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 15, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
     { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20 },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" }, manual: { label_key: V("job_schedule", "manual"), color: "amber" } } } },
+    {
+      // WHO armed it — the audit actor stamp, label-overridden to
+      // "Armed By" (system-column relabel, same mechanism as job_run's
+      // started_at). The cell renders `created_by_name` automatically:
+      // `trigger:<name>`/`rule:<name>` for engine mirrors, the user
+      // display_name for user actors, the raw service code otherwise.
+      // options_source:"audit.actors" stays class-derived.
+      key: "created_by", label_key: F("job_schedule", "armed_by"), type: "ref", order: 35, default_visible: true,
+    },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40, filterable: false },
     {
       // Owning trigger for kind=trigger mirrors — detail page via census.

@@ -86,19 +86,24 @@ export class JobScheduleEntity
   @Column({ nullable: true, jsType: "instant" })
   next_run_at?: Date;
 
-  /** Who armed the schedule — resolved projection: the owning trigger's
-   *  fresh name for kind=trigger mirrors (rename-proof), the arming
-   *  user's display_name for manual schedules (created_by carries the
-   *  bare user uuid), else the owning service code. */
+  /** The scheduled job's name — resolved projection: the owning
+   *  trigger's fresh name for kind=trigger mirrors (rename-proof); the
+   *  actor stamp `trigger:<name>`/`rule:<name>` for mirrors whose
+   *  trigger was deleted (the stamp survives the target); the declared
+   *  name — the semantic tail of the rollup subject — for manual and
+   *  infra_derived declarations; the owning service code as last
+   *  resort. Mirrors `job_run.job_name` semantics: the schedule has no
+   *  name of its own, it inherits the job's. */
   @Calculated(
     `COALESCE(
       (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid AND jt.deleted_at IS NULL),
-      (SELECT up.display_name FROM public.user_profiles up WHERE up.uuid::text = {self}.created_by),
+      SUBSTRING({self}.created_by FROM '^(?:trigger|rule):(.+)$'),
+      NULLIF(regexp_replace({self}.schedule_subject, '^jobs\\.schedule\\.[^.]+\\.', ''), {self}.schedule_subject),
       {self}.service_code
     )`,
     { pgType: "text" },
   )
-  armed_by?: string;
+  job_name?: string;
 
 
 }
