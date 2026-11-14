@@ -12,6 +12,7 @@ import {
   Key,
   Unique,
   Column,
+  Ref,
   type UUID,
   EntityBase,
   Auditable,
@@ -66,6 +67,7 @@ export class JobScheduleEntity
   initiator?: string;
 
   /** The trigger this schedule was materialized from (kind=trigger). */
+  @Ref("job_trigger")
   @Column({ pgType: "uuid", nullable: true })
   trigger_uuid?: UUID;
 

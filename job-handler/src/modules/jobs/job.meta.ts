@@ -185,7 +185,6 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     {
       // Owning trigger for kind=trigger mirrors — detail page via census.
       key: "trigger_uuid", label_key: F("job_schedule", "trigger_uuid"), type: "ref", order: 46, default_visible: false,
-      ref: { entity: "job_trigger" },
     },
     {
       // NOT `filterable` — the `schedule_kind` filter preset owns this
