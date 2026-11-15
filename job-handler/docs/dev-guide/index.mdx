@@ -12,41 +12,57 @@ lives in the owning domain service.
 ## Architecture
 
 ```
-Service boot                primebrick-job                 JetStream           owning service
-────────────                ──────────────                 ─────────           ──────────────
-entity registry has
-@PartitionField? ──declare──▶ jobs.ctl.schedule.request ──▶ jobs.schedule.<svc>.<name>
-                            (L1+L2 shield, namespace check)      │ (NATS native scheduler)
-                                                                 ▼
-                                                    jobs.due.<lane>.<svc>.<action>
-                                                                 │
-                            ◀── jobs.result.<svc>.<name> ◀── durable consumer ──▶ executor
-                            │                                                    (DAL/service logic)
-                            ▼
-                      job.job_runs (status, duration, error, report)
+job_triggers row            triggers engine                JetStream           owning service
+────────────────            ────────────────               ─────────           ──────────────
+user-made (entity API)  or
+module-declared via ──▶ engine derives + arms ──▶ jobs.schedule.job.<trigger-uuid>
+jobs.ctl.triggers.materialize                          (atomic protocol)        │ (NATS native scheduler)
+                                                                                ▼
+                                                                   jobs.due.<lane>.job.forward.<uuid>
+                                                                                │ forwarder resolves
+                                                                                ▼ actor + payload_map
+                                                                   callable subject ──────────────▶ executor
+                               ◀── jobs.result.<svc>.<name> ◀── durable consumer  (route handler)
+                               │
+                               ▼
+                         job.job_runs (status, duration, error, report)
 ```
 
 - **Scheduler** = the NATS server (`allow_msg_schedules` on the `JOBS` stream).
-- **Sole writer of `jobs.schedule.*`** = job-handler via `jobs.ctl.schedule.request`.
-  Arm/disarm is an **atomic protocol**, awaited end-to-end by `callNats`:
-  declare → PubAck → read-back verify → mirror upsert (a mirror failure
-  compensates with a purge); disarm verifies the declaration is *absent*
-  before flipping the mirror. Re-arming an already-fired/expired `@at`
-  for the same spec is a successful no-op — the reply is
-  `{ armed: false, skipped: "terminal-once" }` (a past `@at` would fire
+- **Sole writer of `jobs.schedule.*`** = job-handler's triggers engine —
+  every schedule mirror is owned by a `job_triggers` row (`trigger_uuid`,
+  NOT NULL). There is no external arm route: modules declare jobs through
+  `jobs.ctl.triggers.materialize` (system triggers, `system_key`-anchored),
+  users through the canonical entity API; the engine derives and arms the
+  schedule itself.
+  Arm/disarm is an **atomic protocol**: declare → PubAck → read-back
+  verify → mirror upsert (a mirror failure compensates with a purge);
+  disarm verifies the declaration is *absent* before flipping the mirror.
+  Re-arming an already-fired/expired `@at` for the same spec is a
+  successful no-op (`skipped: "terminal-once"` — a past `@at` would fire
   immediately on re-declare).
 - **Spec grammar** = `"@every <int><s|m|h|d>"`, `"@at <ISO-8601>"` one-shots,
   5-field cron `m h dom mon dow` (UTC). Recurring specs floor at **one
   minute** — `@every 30s` is rejected at every layer (field validation
-  `schedule_spec_min_interval`, the `jobs.ctl.schedule.request` route with
+  `schedule_spec_min_interval`, the trigger shape rule
   `SCHEDULE_BELOW_MIN_INTERVAL`, and the `declareSchedule` arm backstop);
   `@at`/cron are exempt by construction (one-shot; the grammar cannot go
   below a minute).
-- **Executor** = a durable JetStream consumer inside the domain service.
+- **Executor** = a durable JetStream consumer inside the domain service —
+  for trigger targets, the `jobs.due.<lane>.job.forward.<uuid>` trampoline
+  whose forwarder re-resolves the actor and republishes to the callable
+  subject with fresh auth.
 - **Triggers** = `job.job_triggers` domain data (NOT config) — the triggers engine
   dispatches them: event+schedule gate, event-only immediate, schedule-only timer.
-- **Infrastructure jobs** = metadata-derived (`@PartitionField` on an entity →
-  the owning service self-declares its own schedule at boot).
+  System triggers (`system_key IS NOT NULL` → `is_system`) are materialized
+  by modules via `jobs.ctl.triggers.materialize` with delta-only reconcile:
+  code-owned fields (`event_subject`, `target_subject`, `run_as`,
+  `payload_schema`, `payload_map`, `system_key`) update on drift, user-owned
+  fields (`name`, `schedule_spec`, filter) are never overwritten.
+- **Infrastructure jobs** = metadata-derived declarations (`@PartitionField`
+  on an entity) expressed as system triggers — e.g. AI partition
+  maintenance — governed like every other trigger (users can retune the
+  schedule; the code-owned contract stays frozen).
 
 ## Subjects
 
@@ -57,27 +73,30 @@ entity registry has
 | `jobs.due.system.<svc>.<action>[.<id>]` | Due message — system lane |
 | `jobs.result.<svc>.<name>` | Execution report → recorded in `job.job_runs` |
 | `jobs.cancel.*` | Schedule cancellation |
-| `jobs.ctl.schedule.request` / `jobs.ctl.schedule.cancel` | Governed control routes |
+| `jobs.ctl.triggers.materialize` | System-trigger materialization (service-shielded callNats route) |
 
 ## Namespace security
 
-A remote caller may only declare inside its own `jobs.schedule.<svc>.*`
-namespace **and** the due target must land back on its own service
-(`jobs.due.<lane>.<same-svc>.*`). Internal callers (triggers engine, admin HTTP
-action) own the `job` namespace and may target any service — that's the point
-of admin-managed schedules.
+System triggers anchor on `system_key = <svc>.<name>` — the materialize
+route refuses a `system_key` outside the caller's own service namespace
+(service-shield L1+L2 verified). Schedule declarations live in the `job`
+namespace (`jobs.schedule.job.<trigger-uuid>`) and the engine may target
+any service's due lane — that's the point of triggers.
 
 ## Domain data (schema `job`)
 
 - `job_triggers` — business triggers: `event_subject` and/or `schedule_spec`
   (at least one) → `target_subject`; `run_as`: `originator`|`author`|`system`
   (originator/author dispatch on the user lane, system on the system lane).
-- `job_schedules` — **read-only mirror** of NATS declarations (`kind`: `infra_derived` | `trigger` (`manual` absorbed into schedule-only triggers),
-  `schedule_type`: `recurring` | `once`, `status`: `armed` | `stopped` | `paused` | `disarmed` | `fired` | `expired`).
+- `job_schedules` — **read-only mirror** of NATS declarations. Every row is
+  owned by a `job_triggers` row (`trigger_uuid`, NOT NULL) — user-made and
+  module-declared system triggers alike; the triggers engine is the only
+  materialization path. Columns: `schedule_type`: `recurring` | `once`,
+  `status`: `armed` | `stopped` | `paused` | `disarmed` | `fired` | `expired`.
   Lifecycle semantics: `stopped` = instance stop (temporary — the owner may
   re-arm); `paused` = suppressed re-arm until resume (`enabled` untouched);
-  `disarmed` = owner-level off (trigger `enabled=false` / infra sticky
-  suppression — re-declares refused until explicit enable).
+  `disarmed` = owner-level off (the owning trigger soft-deletes — only an
+  explicit enable restores it).
 - `job_runs` — execution history: `status` (`dispatched` | `succeeded` | `failed` | `lost` | `skipped`),
   `duration_ms`, `fire_seq`, error fields, report (jsonb). `skipped` is the
   pause/suppression audit trail: a queued due honored while its schedule is
@@ -101,9 +120,9 @@ The live schedule truth is the set of JetStream declarations on
 `UPDATE status='disarmed'` leaves the NATS declaration **firing** until a
 reconcile pass purges it. Boot reconcile + the periodic interval
 (`reconcile_interval_ms`) converge mirror↔NATS: stale declarations are
-purged, orphan declarations are purged strictly, `kind=trigger` armed-missing
-rows are re-derived via the engine, and `infra_derived` armed-missing rows
-surface as drift for the owner to re-declare. The list endpoint decorates
+purged, orphan declarations are purged strictly, and armed-missing rows are
+re-derived via the engine's `refreshTrigger` on their owning trigger. The
+list endpoint decorates
 each row with `live`/`drift` (`stale` = mirror terminal but NATS still
 fires — dangerous; `missing` = armed but no declaration).
 
@@ -113,10 +132,10 @@ fires — dangerous; `missing` = armed but no declaration).
 |-------|-------------|
 | `GET /api/v1/entities/job_trigger|job_schedule|job_run/…` | Canonical entity CRUD (meta/list/get/…) |
 | `POST /api/v1/actions/stop-job` | STOP — purge the schedule instance (temporary; owner may re-arm) |
-| `POST /api/v1/actions/disable-schedule` | DISABLE — owner-level off: trigger → `enabled=false`; infra → sticky `disarmed` suppression |
-| `POST /api/v1/actions/enable-schedule` | ENABLE — owner-level re-arm: trigger → `enabled=true` + re-derive; infra → unsuppress + `jobs.ctl.schedule.rearm.<svc>` ping |
+| `POST /api/v1/actions/disable-schedule` | DISABLE — owner-level off: the owning trigger soft-deletes |
+| `POST /api/v1/actions/enable-schedule` | ENABLE — owner-level re-arm: unsuppress + restore + re-derive the owning trigger |
 | `POST /api/v1/actions/pause-schedule` | PAUSE — suppress every re-arm path until resume (`enabled` untouched) |
-| `POST /api/v1/actions/resume-schedule` | RESUME — clear pause + re-arm (trigger re-derive / infra rearm ping) |
+| `POST /api/v1/actions/resume-schedule` | RESUME — clear pause + re-derive the owning trigger |
 | `POST /api/v1/actions/disarm-all` | DISABLE ALL (bulk) — every armed/stopped owner off |
 | `POST /api/v1/actions/pause-all` | PAUSE ALL (bulk) — freeze every armed schedule |
 | `POST /api/v1/actions/resume-all` | RESUME ALL (bulk) — thaw every paused schedule |

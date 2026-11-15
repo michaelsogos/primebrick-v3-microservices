@@ -10,8 +10,9 @@
  *   event only       → immediate dispatch: a matching event publishes the
  *                      forward envelope straight onto the due trampoline
  *                      (no JetStream schedule, nothing to disarm)
- *   schedule only    → pure timer: always armed while enabled (absorbs
- *                      the retired "manual" schedule kind)
+ *   schedule only    → pure timer: always armed while enabled — every
+ *                      schedule mirror is trigger-owned, user-made or
+ *                      materialized from a module declaration
  *
  * `run_as` semantics → dispatch lane:
  *   "originator" → the event publisher's auth headers ride the dispatch
@@ -278,11 +279,10 @@ async function dispatch(
       schedule_subject: triggerScheduleSubject(trigger),
       schedule: trigger.schedule_spec,
       target: trampolineSubject(auth.lane, trigger),
-      kind: "trigger",
+      trigger_uuid: trigger.uuid,
       payload: envelope,
       mirror_target: trigger.target_subject,
       forwardHeaders: auth.headers,
-      trigger_uuid: trigger.uuid,
     });
   } else {
     // Immediate — the envelope lands on the same trampoline the due-

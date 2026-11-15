@@ -60,19 +60,18 @@ vi.mock("../db/dal.js", () => ({
 const svc = await import("../services/schedule-service.js");
 
 const decl = (over: Record<string, unknown> = {}) => ({
-  subject: "jobs.schedule.ai.partition-maintenance",
+  subject: "jobs.schedule.job.trig-1",
   schedule: "@every 6h",
-  target: "jobs.due.system.ai.partition-maintenance",
+  target: "jobs.due.system.job.forward.trig-1",
   seq: 7,
   ...over,
 });
 
 const armInput = (over: Record<string, unknown> = {}) => ({
-  schedule_subject: "jobs.schedule.ai.partition-maintenance",
+  schedule_subject: "jobs.schedule.job.trig-1",
   schedule: "@every 6h",
-  target: "jobs.due.system.ai.partition-maintenance",
-  kind: "infra_derived" as const,
-  caller_service: "ai",
+  target: "jobs.due.system.job.forward.trig-1",
+  trigger_uuid: "00000000-0000-7000-8000-000000000001",
   ...over,
 });
 
@@ -81,7 +80,7 @@ const mirrorRow = (over: Record<string, unknown> = {}) => ({
   schedule_subject: "jobs.schedule.job.trig-1",
   service_code: "job",
   job_name: "trig",
-  kind: "trigger",
+  trigger_uuid: "00000000-0000-7000-8000-000000000001",
   run_as: "user",
   schedule_spec: "@every 1d",
   schedule_type: "recurring",
@@ -106,10 +105,10 @@ describe("declareSchedule — arm protocol", () => {
     expect(h.add).toHaveBeenCalledOnce();
     const row = h.add.mock.calls[0]![1] as unknown as Record<string, unknown>;
     expect(row).toMatchObject({
-      schedule_subject: "jobs.schedule.ai.partition-maintenance",
+      schedule_subject: "jobs.schedule.job.trig-1",
       status: "armed",
       schedule_type: "recurring",
-      service_code: "ai",
+      service_code: "job",
     });
   });
 
@@ -126,20 +125,15 @@ describe("declareSchedule — arm protocol", () => {
 
     await expect(svc.declareSchedule(armInput())).rejects.toMatchObject({ internal_code: "MIRROR_WRITE_FAILED" });
     expect(h.cancel).toHaveBeenCalledWith(
-      "jobs.schedule.ai.partition-maintenance",
-      "jobs.cancel.ai.partition-maintenance",
+      "jobs.schedule.job.trig-1",
+      "jobs.cancel.job.trig-1",
     );
   });
 
-  it("a service cannot declare in a foreign namespace", async () => {
-    await expect(svc.declareSchedule(armInput({ caller_service: "emailsender" }))).rejects.toMatchObject({ internal_code: "FOREIGN_NAMESPACE" });
-    expect(h.ensure).not.toHaveBeenCalled();
-  });
-
-  it("the fired target must execute back on the declaring service", async () => {
+  it("the schedule target MUST be a jobs.due lane — anything else is malformed", async () => {
     await expect(
-      svc.declareSchedule(armInput({ target: "jobs.due.system.emailsender.send" })),
-    ).rejects.toMatchObject({ internal_code: "NAMESPACE_MISMATCH" });
+      svc.declareSchedule(armInput({ target: "emailsender.send" })),
+    ).rejects.toMatchObject({ internal_code: "INVALID_TARGET_SUBJECT" });
     expect(h.ensure).not.toHaveBeenCalled();
   });
 
@@ -202,11 +196,11 @@ describe("declareSchedule — arm protocol", () => {
     // mirror row resets to armed — a new lifecycle, not a re-fire. The
     // served `fired_at` is a run-derived projection (never written); the
     // next-fire mirror carries the mechanism's own stamp; the actor is
-    // the honest `system:<caller>` stamp, not provenance soup.
+    // the honest `system:job` stamp, not provenance soup.
     expect(h.update).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ status: "armed", next_fire_mirror_at: expect.any(Date) }),
-      expect.objectContaining({ actor: "system:ai" }),
+      expect.objectContaining({ actor: "system:job" }),
     );
   });
 });
@@ -327,28 +321,26 @@ describe("reconcileSchedules — strict enforcement", () => {
     expect(report.armed_missing).toEqual(["jobs.schedule.job.trig-1"]);
   });
 
-  it("kind=trigger armed-missing + rescueTrigger → re-derived via the engine, not surfaced", async () => {
+  it("armed-missing + rescueTrigger → re-derived via the owning trigger, not surfaced", async () => {
     h.findAll.mockResolvedValue([
-      mirrorRow({ status: "armed", trigger_uuid: "trig-uuid-9" }),
+      mirrorRow({ status: "armed", trigger_uuid: "00000000-0000-7000-8000-000000000009" }),
     ]);
     h.get.mockResolvedValue(null);
     const rescue = vi.fn(async () => {});
 
     const report = await svc.reconcileSchedules({ rescueTrigger: rescue });
 
-    expect(rescue).toHaveBeenCalledWith("trig-uuid-9");
+    expect(rescue).toHaveBeenCalledWith("00000000-0000-7000-8000-000000000009");
     expect(report.trigger_rescued).toEqual(["jobs.schedule.job.trig-1"]);
     expect(report.armed_missing).toEqual([]);
   });
 
-  it("kind=infra_derived armed-missing → surfaced even with rescueTrigger", async () => {
-    h.findAll.mockResolvedValue([
-      mirrorRow({ status: "armed", kind: "infra_derived", trigger_uuid: undefined }),
-    ]);
+  it("armed-missing without rescueTrigger → surfaced (the owner must re-derive)", async () => {
+    h.findAll.mockResolvedValue([mirrorRow({ status: "armed" })]);
     h.get.mockResolvedValue(null);
     const rescue = vi.fn(async () => {});
 
-    const report = await svc.reconcileSchedules({ rescueTrigger: rescue });
+    const report = await svc.reconcileSchedules();
 
     expect(rescue).not.toHaveBeenCalled();
     expect(report.armed_missing).toEqual(["jobs.schedule.job.trig-1"]);

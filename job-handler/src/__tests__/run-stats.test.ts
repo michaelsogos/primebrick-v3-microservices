@@ -33,7 +33,6 @@ vi.mock("../services/schedule-service.js", () => ({
   dropScheduleMirror: vi.fn(),
   getLastReconcileReport: vi.fn(),
   getScheduleRow: vi.fn(),
-  requestOwnerRearm: vi.fn(),
   scheduleDrift: vi.fn(),
   unsuppressSchedule: vi.fn(),
   // Real impl — `ttlToMs` is pure string math shared with the arm path.

@@ -4,9 +4,9 @@
  *   POST /api/v1/actions/stop-job          — STOP: purge the schedule
  *        instance now (temporary — the owner may re-arm it)
  *   POST /api/v1/actions/disable-schedule  — DISABLE: owner-level off
- *        (trigger → soft-delete; infra → sticky `disarmed` suppression)
+ *        (the owning trigger soft-deletes; the engine disarms)
  *   POST /api/v1/actions/enable-schedule   — ENABLE: owner-level re-arm
- *        (trigger → restore + re-derive; infra → unsuppress + rearm ping)
+ *        (unsuppress + restore + re-derive the owning trigger)
  *   POST /api/v1/actions/pause-schedule    — PAUSE: suppress re-arm until resume
  *   POST /api/v1/actions/resume-schedule   — RESUME: clear pause + re-arm
  *   POST /api/v1/actions/disarm-all        — DISABLE ALL (bulk)
@@ -40,7 +40,6 @@ import {
   dropScheduleMirror,
   getLastReconcileReport,
   getScheduleRow,
-  requestOwnerRearm,
   scheduleDrift,
   ttlToMs,
   unsuppressSchedule,
@@ -300,14 +299,15 @@ async function setTriggerDeleted(triggerUuid: string, deleted: boolean, actor: s
 }
 
 /**
- * Dead-owner detection — a `trigger`-kind mirror row whose owning trigger
- * is soft-deleted is garbage: nothing can ever re-arm it (the engine's
- * `dropScheduleMirror` on trigger delete already proves the model wants
- * no tombstone; this catches rows orphaned while JH was down). Drops the
- * mirror and returns true.
+ * Dead-owner detection — every mirror is trigger-owned (`trigger_uuid`
+ * NOT NULL): a row whose owning trigger is soft-deleted is garbage —
+ * nothing can ever re-arm it (the engine's `dropScheduleMirror` on
+ * trigger delete already proves the model wants no tombstone; this
+ * catches rows orphaned while JH was down). Drops the mirror and
+ * returns true.
  */
 async function dropIfDeadOwner(row: JobScheduleEntity | undefined, actor: string): Promise<boolean> {
-  if (row?.kind !== "trigger" || !row.trigger_uuid) return false;
+  if (!row?.trigger_uuid) return false;
   if (await loadOwnerTrigger(row.trigger_uuid)) return false;
   await dropScheduleMirror(row.schedule_subject, actor);
   logger.done(`schedule mirror dropped — owner trigger deleted: ${row.schedule_subject}`, { tags: ["jobs"] });
@@ -315,15 +315,13 @@ async function dropIfDeadOwner(row: JobScheduleEntity | undefined, actor: string
 }
 
 /**
- * DISABLE — owner-level off. Trigger schedules cascade to
- * `job_triggers soft-delete (deleted_at)` (the engine disarms); infra schedules get
- * the sticky `disarmed` suppression — owner re-declares are refused until
- * an explicit enable.
+ * DISABLE — owner-level off: cascade to `job_triggers` soft-delete
+ * (deleted_at); the engine disarms on the changed broadcast.
  */
 async function disableSchedule(scheduleSubject: string, actor: string): Promise<{ disabled: true }> {
   const row = await getScheduleRow(scheduleSubject);
   if (await dropIfDeadOwner(row, actor)) return { disabled: true };
-  if (row?.kind === "trigger" && row.trigger_uuid) {
+  if (row?.trigger_uuid) {
     await setTriggerDeleted(row.trigger_uuid, true, actor);
     return { disabled: true };
   }
@@ -332,38 +330,31 @@ async function disableSchedule(scheduleSubject: string, actor: string): Promise<
 }
 
 /**
- * ENABLE — owner-level re-arm. Trigger: restore + re-derive.
- * Infra: clear the suppression (`stopped`) + rearm ping — the owner
- * re-declares with fresh payload/headers (JH cannot fabricate them).
+ * ENABLE — owner-level re-arm: clear the suppression (`stopped`), then
+ * restore + re-derive the owning trigger.
  */
-async function enableSchedule(scheduleSubject: string, actor: string): Promise<{ enabled: true; rearm_requested?: boolean }> {
+async function enableSchedule(scheduleSubject: string, actor: string): Promise<{ enabled: true }> {
   // Dead owner → the tombstone drops instead of pretending an enable:
   // there is nothing to re-arm, so the request fails honestly.
   if (await dropIfDeadOwner(await getScheduleRow(scheduleSubject), actor)) {
     throw new ValidationError("owner trigger deleted — schedule mirror dropped");
   }
   const row = await unsuppressSchedule(scheduleSubject, actor);
-  if (row?.kind === "trigger" && row.trigger_uuid) {
+  if (row?.trigger_uuid) {
     await setTriggerDeleted(row.trigger_uuid, false, actor);
-  } else if (row) {
-    await requestOwnerRearm(scheduleSubject, row.service_code);
-    return { enabled: true, rearm_requested: true };
   }
   return { enabled: true };
 }
 
 /** RESUME — clear `paused` + re-arm (like enable, minus the trigger flip:
  *  pause never soft-deletes the trigger). */
-async function resumeSchedule(scheduleSubject: string, actor: string): Promise<{ resumed: true; rearm_requested?: boolean }> {
+async function resumeSchedule(scheduleSubject: string, actor: string): Promise<{ resumed: true }> {
   if (await dropIfDeadOwner(await getScheduleRow(scheduleSubject), actor)) {
     throw new ValidationError("owner trigger deleted — schedule mirror dropped");
   }
   const row = await unsuppressSchedule(scheduleSubject, actor);
-  if (row?.kind === "trigger" && row.trigger_uuid) {
+  if (row?.trigger_uuid) {
     await refreshTrigger(row.trigger_uuid);
-  } else if (row) {
-    await requestOwnerRearm(scheduleSubject, row.service_code);
-    return { resumed: true, rearm_requested: true };
   }
   return { resumed: true };
 }
@@ -410,8 +401,8 @@ export const jobActionsRoutes: RpcRoute[] = [
     openapi: {
       summary: "Disable a schedule — owner-level off (admin)",
       description:
-        "Trigger schedules cascade to `job_triggers soft-delete (deleted_at)`; infra schedules get the sticky " +
-        "`disarmed` suppression (owner re-declares refused until explicit enable).",
+        "Cascades to `job_triggers` soft-delete (deleted_at) — the owning trigger " +
+        "disarms on the engine's changed broadcast; only an explicit enable restores.",
       tags: ["jobs", "actions"],
     },
     body: scheduleSubjectBody,
@@ -425,8 +416,8 @@ export const jobActionsRoutes: RpcRoute[] = [
     openapi: {
       summary: "Enable a schedule — owner-level re-arm (admin)",
       description:
-        "Trigger: restore + engine re-derive. Infra: clears the `disarmed`/`paused` hold and " +
-        "publishes `jobs.ctl.schedule.rearm.<svc>` — the owner re-declares with fresh payload/headers.",
+        "Clears the `disarmed`/`paused` hold, then restores the owning trigger and " +
+        "lets the engine re-derive its schedule.",
       tags: ["jobs", "actions"],
     },
     body: scheduleSubjectBody,
@@ -457,7 +448,7 @@ export const jobActionsRoutes: RpcRoute[] = [
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Resume a paused schedule (admin)",
-      description: "Clears `paused` and re-arms (trigger: re-derive; infra: rearm ping to the owner).",
+      description: "Clears `paused` and re-derives the owning trigger's schedule.",
       tags: ["jobs", "actions"],
     },
     body: scheduleSubjectBody,
@@ -476,8 +467,8 @@ export const jobActionsRoutes: RpcRoute[] = [
     openapi: {
       summary: "Disable every armed schedule (admin, bulk)",
       description:
-        "Trigger schedules → soft-delete + re-derive; infra schedules → sticky `disarmed`. " +
-        "Already-suppressed rows are reported as skipped.",
+        "Every armed/stopped mirror's owning trigger soft-deletes; the engine " +
+        "disarms each. Already-suppressed rows are reported as skipped.",
       tags: ["jobs", "actions"],
     },
     body: (raw) => raw as Record<string, never>,
@@ -527,7 +518,7 @@ export const jobActionsRoutes: RpcRoute[] = [
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Resume every paused schedule (admin, bulk)",
-      description: "Thaw: every `paused` row → `stopped` + re-arm (trigger re-derive / infra rearm ping).",
+      description: "Thaw: every `paused` row → `stopped` + re-derive the owning trigger.",
       tags: ["jobs", "actions"],
     },
     body: (raw) => raw as Record<string, never>,
@@ -573,7 +564,7 @@ export const jobActionsRoutes: RpcRoute[] = [
       const drifted = rows
         .map((r) => {
           const d = scheduleDrift(r, liveSubjects === undefined ? undefined : liveSubjects.includes(r.schedule_subject));
-          return { schedule_subject: r.schedule_subject, status: r.status, kind: r.kind, live: d.live, drift: d.drift };
+          return { schedule_subject: r.schedule_subject, status: r.status, live: d.live, drift: d.drift };
         })
         .filter((r) => r.drift !== null || r.live === false);
       return {

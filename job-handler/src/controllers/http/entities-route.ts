@@ -47,7 +47,8 @@ export const jobEntityDecls: EntityRouteDecl[] = [
       // READ-ONLY MIRROR — job_schedules mirrors live NATS declarations.
       // CRUD writes would flip the mirror without touching JetStream (the
       // direct-SQL bypass, but through the canonical API). Arm via
-      // jobs.ctl.schedule.request / schedule-only triggers; disarm via
+      // materialized triggers (jobs.ctl.triggers.materialize or the
+      // canonical entity API); disarm via
       // /api/v1/actions/disable-schedule (owner-level) or stop-job
       // (instance-level). No create/update/delete/restore.
       // Derived mirror is not auditable state — no /:uuid/audit endpoint.

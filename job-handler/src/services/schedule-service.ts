@@ -1,10 +1,11 @@
 /**
  * schedule-service — the ONLY writer of `jobs.schedule.*` declarations.
  *
- * Every arm/disarm flows through here: the `jobs.ctl.schedule.request`
- * route (services self-declaring infra jobs via the SDK's
- * `armJobSchedule`), the triggers engine, and the admin HTTP action.
- * The raw mechanism lives in `../nats/schedule-mechanism.ts` — job-handler
+ * Every arm/disarm flows through here: the triggers engine (the ONLY
+ * armer — a module's system jobs arrive via
+ * `jobs.ctl.triggers.materialize` onto `job_triggers`, and the engine
+ * re-derives their schedules) and the admin HTTP action. The raw
+ * mechanism lives in `../nats/schedule-mechanism.ts` — job-handler
  * internal, unreachable from other services.
  *
  * ATOMIC PROTOCOL (NATS ↔ PG can never share a transaction — this is the
@@ -31,13 +32,11 @@
  * a racing pair can never interleave (TOCTOU-free).
  *
  * Invariants enforced:
- *   - schedule_subject is `jobs.schedule.<owner>.<name>[.<id>]`
+ *   - schedule_subject is `jobs.schedule.<owner>.<name>[.<id>]` — every
+ *     mirror is owned by a `job_triggers` row (trigger_uuid); schedules
+ *     are declared by primebrick-job itself (owner "job")
  *   - target is `jobs.due.<lane>.<owner>.<action>[.<id>]` — the lane is
  *     derived from the target prefix, never trusted from input
- *   - for route-declared schedules, <owner> MUST equal the caller's
- *     service code (parsed from its UA) — a service can only arm its own
- *     namespace; trigger schedules are declared by primebrick-job
- *     itself (owner "job")
  *   - every arm/disarm is mirrored in job.job_schedules (observability)
  */
 
@@ -64,9 +63,6 @@ export interface DeclareScheduleInput {
   schedule_subject: string;
   schedule: string;
   target: string;
-  kind: "infra_derived" | "trigger";
-  /** Caller's verified service code — undefined for internal (rules engine). */
-  caller_service?: string;
   payload?: unknown;
   source?: string;
   ttl?: string;
@@ -187,26 +183,12 @@ export async function declareSchedule(
       `schedule "${input.schedule}" fires below the ${MIN_SCHEDULE_INTERVAL_MS / 1000}s minimum — sub-minute jobs are a design error`,
     );
   }
-  if (input.caller_service) {
-    // Remote caller (a service self-declaring via jobs.ctl.schedule.request):
-    // it may only declare inside its own namespace AND the fired message
-    // must land back on its own service — a service arms schedules that
-    // execute on itself, never on another service.
-    if (input.caller_service !== owner) {
-      throw new ScheduleDeclarationError(
-        "FOREIGN_NAMESPACE",
-        `service "${input.caller_service}" cannot declare schedules in "${owner}" namespace`,
-      );
-    }
-    if (targetOwner !== owner) {
-      throw new ScheduleDeclarationError(
-        "NAMESPACE_MISMATCH",
-        `target "${input.target}" executes in service "${targetOwner}" but the schedule is declared in "${owner}" namespace`,
-      );
-    }
-  }
-  // Internal callers (triggers engine) own the "job" namespace and MAY
-  // target any service's due subject — that's the point of triggers.
+  // Internal caller only (the triggers engine) — the "job" namespace MAY
+  // target any service's due subject: that's the point of triggers. The
+  // retired `jobs.ctl.schedule.request` remote surface is gone; services
+  // declare jobs through `jobs.ctl.triggers.materialize` and the engine
+  // arms the schedule itself.
+  void targetOwner;
 
   return withSubjectLock(input.schedule_subject, async () => {
     // Terminal-once gate — a `once` mirror row that already reached
@@ -232,25 +214,10 @@ export async function declareSchedule(
       return { skipped: "terminal-once" as const };
     }
 
-    // Admin-suppression gate — infra_derived only. An owner re-declare on
-    // a `disarmed`/`paused` row is REFUSED: the admin deliberately stopped
-    // the job and only an explicit arm/resume action clears it (otherwise
-    // every service restart would resurrect disabled schedules). Trigger
-    // rows are exempt — the engine owns their lifecycle and its
-    // disarm-then-rearm refresh would deadlock against this gate; trigger
-    // suppression lives on `job_triggers.enabled` + the paused row check
-    // in dispatch/refreshTrigger.
-    if (
-      input.kind === "infra_derived" &&
-      existing !== undefined &&
-      SUPPRESSED_STATUSES.has(existing.status)
-    ) {
-      logger.warn(
-        `schedule arm suppressed — ${existing.status} on ${input.schedule_subject} (admin hold; only arm-schedule/resume-schedule clears it)`,
-        { tags: ["jobs"] },
-      );
-      return { skipped: `suppressed:${existing.status}` as const };
-    }
+    // Suppression lives on the OWNING TRIGGER (`job_triggers.enabled`
+    // soft-delete + the paused-row checks in dispatch/refreshTrigger) —
+    // every mirror is trigger-owned, so the engine is the only armer and
+    // its lifecycle checks already prevent any disabled resurrection.
 
     // Step 1 — declare. The declaration stamps its own schedule subject so
     // every fired message self-correlates (SDK middleware → jobs.result.*).
@@ -290,7 +257,6 @@ export async function declareSchedule(
       const row: Partial<JobScheduleEntity> = {
         schedule_subject: input.schedule_subject,
         service_code: owner,
-        kind: input.kind,
         run_as: lane,
         schedule_spec: input.schedule,
         schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",
@@ -305,13 +271,11 @@ export async function declareSchedule(
         // `Nats-Schedule-Next` on the first fired message (single truth).
         next_fire_mirror_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
       };
-      // Honest system actors — `system:<caller>` for service-declared
-      // schedules, `system:job` for engine materialization. `created_by`
-      // is audit plumbing: provenance lives on the `armed_by` projection
-      // (trigger via trigger_uuid, module via service_code), never on
-      // this stamp — the legacy `trigger:`/`rule:`/`service:` soup was
-      // purged and must never be written or read again.
-      const actor = input.caller_service ? `system:${input.caller_service}` : "system:job";
+      // Honest system actor — `system:job` for engine materialization
+      // (the only armer now). `created_by` is audit plumbing: provenance
+      // lives on the `armed_by` projection (the owning trigger via
+      // trigger_uuid), never on this stamp.
+      const actor = "system:job";
       if (existing !== undefined) {
         await dal.update(
           JobScheduleEntity,
@@ -420,10 +384,7 @@ export async function getScheduleRow(scheduleSubject: string): Promise<JobSchedu
 /**
  * Clear an admin suppression — `disarmed`/`paused` → `stopped` (the
  * unsuppressed not-armed state). The caller then re-arms through the
- * owning path: engine `refreshTrigger` for kind=trigger, or the
- * `jobs.ctl.schedule.rearm.<svc>` ping for infra_derived (the owner
- * re-declares with fresh payload/headers — JH cannot fabricate them).
- * Returns the updated row's kind/service for the caller's re-arm path.
+ * owning path — the engine's `refreshTrigger` on the row's trigger_uuid.
  */
 export async function unsuppressSchedule(
   scheduleSubject: string,
@@ -438,15 +399,6 @@ export async function unsuppressSchedule(
   );
   logger.done(`schedule unsuppressed (stopped → awaiting re-arm): ${scheduleSubject}`, { tags: ["jobs"] });
   return { ...row, status: "stopped" } as JobScheduleEntity;
-}
-
-/** Publish the owner re-arm request — `jobs.ctl.schedule.rearm.<svc>`;
- *  the owning service re-executes its own `jobs.ctl.schedule.request`
- *  arm with fresh payload/headers. Services without a rearm handler leave
- *  the row `armed`-missing — visible drift until natural re-declare. */
-export async function requestOwnerRearm(scheduleSubject: string, serviceCode: string): Promise<void> {
-  await NatsClient.publish(`jobs.ctl.schedule.rearm.${serviceCode}`, { schedule_subject: scheduleSubject });
-  logger.done(`rearm requested to ${serviceCode} for ${scheduleSubject}`, { tags: ["jobs"] });
 }
 
 export async function dropScheduleMirror(scheduleSubject: string, actor: string): Promise<void> {
@@ -532,7 +484,7 @@ export interface ReconcileReport {
   purged_orphan: string[];
   /** armed row + missing declaration → row self-healed to fired/expired. */
   self_healed: { subject: string; to: "fired" | "expired" }[];
-  /** kind=trigger armed-missing → re-derived via the engine's refreshTrigger. */
+  /** armed-missing rows → re-derived via the engine's refreshTrigger. */
   trigger_rescued: string[];
   /** armed row with no live declaration → surfaced (owner re-declares). */
   armed_missing: string[];
@@ -554,9 +506,9 @@ export function getLastReconcileReport(): ReconcileReport | null {
 const TERMINAL_STATUSES = new Set(["disarmed", "stopped", "paused", "fired", "expired"]);
 
 export async function reconcileSchedules(opts?: {
-  /** kind=trigger rescue — the engine re-derives the schedule from its
-   * trigger record (`refreshTrigger`). Injected by index.ts to keep
-   * schedule-service free of the engine dependency. */
+  /** Armed-missing rescue — the engine re-derives the schedule from its
+   * owning trigger record (`refreshTrigger`). Injected by index.ts to
+   * keep schedule-service free of the engine dependency. */
   rescueTrigger?: (uuid: string) => Promise<void>;
 }): Promise<ReconcileReport> {
   const report: ReconcileReport = {
@@ -604,7 +556,7 @@ export async function reconcileSchedules(opts?: {
         } catch (error) {
           report.errors.push({ subject, error: `self-heal to ${heal} failed: ${String(error)}` });
         }
-      } else if (row.kind === "trigger" && row.trigger_uuid && opts?.rescueTrigger) {
+      } else if (row.trigger_uuid && opts?.rescueTrigger) {
         try {
           await opts.rescueTrigger(row.trigger_uuid);
           report.trigger_rescued.push(subject);
@@ -615,7 +567,7 @@ export async function reconcileSchedules(opts?: {
       } else {
         report.armed_missing.push(subject);
         logger.warn(
-          `reconcile: row armed but declaration missing: ${subject} (kind=${row.kind}) — owner/engine must re-declare`,
+          `reconcile: row armed but declaration missing: ${subject} — the owning trigger must re-derive`,
           { tags: ["jobs"] },
         );
       }

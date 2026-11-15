@@ -2,10 +2,11 @@
  * `job.job_schedules` — registry of every armed NATS JetStream schedule.
  *
  * Written ONLY by primebrick-job (sole writer of `jobs.schedule.*`): each
- * row mirrors one rollup-subject declaration message. `kind` distinguishes
- * the derivation source — `infra_derived` rows come from a service
- * self-declaring via `jobs.ctl.schedule.request` (e.g. AI partition
- * retention), `trigger` rows are materialized by the triggers engine.
+ * row mirrors one rollup-subject declaration message and is OWNED by a
+ * `job_triggers` row (`trigger_uuid`, NOT NULL) — user-made triggers and
+ * module-declared system triggers alike. The triggers engine is the only
+ * materialization path; a row without an owner is an orphan by
+ * definition and the reconcile drops it.
  */
 import {
   Entity,
@@ -31,13 +32,11 @@ export class JobScheduleEntity
   @Column({ nullable: false })
   schedule_subject!: string;
 
-  /** Owning service code — must match the declarer's identity. */
+  /** Owning service code — the namespace the schedule subject lives in
+   *  (`job` for every trigger-declared mirror today; kept as wire data
+   *  for the `armed_by` service fallback, never a second owner). */
   @Column({ nullable: false })
   service_code!: string;
-
-  /** infra_derived | trigger */
-  @Column({ length: 30, nullable: false })
-  kind!: string;
 
   /** user | system — the identity channel the target fires under:
    *  which `jobs.due.<user|system>` lane the due message lands on. */
@@ -60,10 +59,11 @@ export class JobScheduleEntity
   @Column({ length: 20, nullable: false })
   status!: string;
 
-  /** The trigger this schedule was materialized from (kind=trigger). */
+  /** The trigger this schedule was materialized from — the ONE owner,
+   *  by construction (the engine is the only writer). */
   @Ref("job_trigger")
-  @Column({ pgType: "uuid", nullable: true })
-  trigger_uuid?: UUID;
+  @Column({ pgType: "uuid", nullable: false })
+  trigger_uuid!: UUID;
 
   /** Latest arm/declaration stamp — overwritten on every re-arm;
    *  distinct from `created_at` (mirror-row creation). */

@@ -206,11 +206,11 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   columns: [
     {
       // @Calculated on JobScheduleEntity — the authored job identity:
-      // the trigger's display for trigger mirrors (the job the trigger
-      // declares IS the schedule's name), the declared subject tail for
-      // manual/infra declarations. The schedule has no name of its own —
-      // it inherits the job's. display_field → the pin derives here
-      // (never on a subject mirror).
+      // the owning trigger's display name (the job the trigger declares
+      // IS the schedule's name), falling back to the declared subject
+      // tail. The schedule has no name of its own — it inherits the
+      // job's. display_field → the pin derives here (never on a subject
+      // mirror).
       key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 10, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
@@ -221,7 +221,6 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20, hidden: true },
     { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 20, icon: "send", color: "sky-500", default_visible: true, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 30, filterable: false },
-    { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 40, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
     {
       // Wire-filterable — the `schedule_kind` filter preset filters on it.
       // The filters PANEL excludes it anyway: preset-owned fields are
@@ -293,7 +292,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "armed_ref_key", label_key: F("job_schedule", "armed_ref_key"), type: "text", order: 96, hidden: true,
     },
     {
-      // Owning trigger for kind=trigger mirrors — detail page via census.
+      // Owning trigger — the ONE owner of every mirror row (NOT NULL).
       // Togglable detail: trails the business block rather than sitting
       // mid-sequence (its old slot was taken by the destination column).
       key: "trigger_uuid", label_key: F("job_schedule", "trigger_uuid"), type: "ref", order: 100, default_visible: false,

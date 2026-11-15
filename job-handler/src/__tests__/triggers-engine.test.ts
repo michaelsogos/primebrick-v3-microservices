@@ -143,7 +143,6 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
         schedule_subject: "jobs.schedule.job.trig-1",
         schedule: "@every 1d",
         target: "jobs.due.user.job.forward.trig-1",
-        kind: "trigger",
         mirror_target: "emailsender.send",
         trigger_uuid: "trig-1",
         forwardHeaders: { "x-user-id": "actor-9", "x-user-locale": "it-IT" },
@@ -297,7 +296,7 @@ describe("triggers-engine — schedule only (pure timer)", () => {
     expect(events.size).toBe(0);
     expect(h.subscribeShielded).toHaveBeenCalledTimes(1);
     expect(h.declareSchedule).toHaveBeenCalledWith(
-      expect.objectContaining({ target: "jobs.due.system.job.forward.trig-3", kind: "trigger" }),
+      expect.objectContaining({ target: "jobs.due.system.job.forward.trig-3" }),
     );
   });
 
