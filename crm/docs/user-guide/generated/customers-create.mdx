@@ -1,0 +1,32 @@
+---
+title: Create Customer
+description: Create a new customer.
+entity: customer
+---
+
+Create a new customer.
+
+This page is delivered by the owning module as a remote component — its content mounts inside the shared shell.
+
+The page is visible with the `access.crm.create` grant.
+
+## Pages routes
+
+- `/crm/customers` — List, search and manage all customers.
+- `/crm/customers/create` — Create a new customer. *(this page)*
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `customer.create.single` | Validates the form and creates the customer | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the customer and it requires the `customer.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Customers](/docs/user-guide/generated/customers)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

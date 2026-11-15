@@ -1,9 +1,8 @@
 /**
- * `job.job_triggers` — admin-managed business trigger declarations.
- *
- * Only BUSINESS triggers live here: infrastructure jobs (partition
- * maintenance) are derived from entity metadata, never duplicated in this
- * table. A trigger binds an optional event source and/or an optional
+ * `job.job_triggers` — the single declaration of record for EVERY
+ * scheduled job: admin-managed business triggers AND module-declared
+ * system triggers materialized at registration (`system_key` set).
+ * A trigger binds an optional event source and/or an optional
  * schedule to a callable target:
  *
  *   event + schedule → event-gated timer (match arms, non-match disarms)
@@ -17,12 +16,13 @@
  * `emailsender.send`) picked from `census.callables`; `payload_map`
  * (PayloadMap DST) builds its request payload from the event.
  *
- * `execution_context` decides the identity the fire runs under: "user"
+ * `run_as` decides the identity the fire runs under: "originator"
  * (the originator's AuthUser rides the event's forwarded headers — only
- * meaningful when an event source exists), "me" (the trigger author's
- * AuthUser, resolved via `auth.ctl.resolve_user` at arm time) or "system"
- * (opt-in, declared super-partes business process with no user context —
- * a permissioned callable will deny it).
+ * meaningful when an event source exists), "author" (the trigger author's
+ * AuthUser, resolved via `auth.ctl.resolve_user` at dispatch time) or
+ * "system" (opt-in, declared super-partes business process with no user
+ * context — a permissioned callable will deny it). Both user-context
+ * values materialize on the `jobs.due.user.*` lane.
  */
 import {
   Entity,
@@ -60,6 +60,13 @@ export class JobTriggerEntity
   @Column({ length: 200, nullable: false })
   name!: string;
 
+  /** Stable module-owned job id — written ONCE at materialization by the
+   *  declaring service, the reconcile anchor across releases. NULL on
+   *  user-made triggers; a non-NULL value IS the system flag (`is_system`
+   *  projects it — one physical source, never a second truth). */
+  @Column({ nullable: true })
+  system_key?: string;
+
   /** Event subject to subscribe, e.g. "customer.updated". NULL when the
    *  trigger is schedule-only. */
   @Column({ nullable: true })
@@ -86,9 +93,16 @@ export class JobTriggerEntity
   @Column({ pgType: "jsonb", nullable: true })
   payload_map?: PayloadMap;
 
-  /** user | me | system — explicit opt-in, never inferred. */
-  @Column({ length: 10, nullable: false })
-  execution_context!: string;
+  /** originator | author | system — explicit opt-in, never inferred. */
+  @Column({ length: 20, nullable: false })
+  run_as!: string;
+
+  /** System-owned trigger — `system_key IS NOT NULL`. True rows carry a
+   *  code-owned interchange contract: event/target/run_as/payload_map/
+   *  filter are frozen (the `depends_on.set` gate on `system_key` + the
+   *  wire's frozen-set rule); `schedule_spec` and `name` stay user-owned. */
+  @Calculated(`({self}.system_key IS NOT NULL)`, { pgType: "bool" })
+  is_system?: boolean;
   // No `enabled` flag — DISABLE IS SOFT-DELETE (`deleted_at` via the
   // `Deletable` mixin). Doctrine: enable fields are a design error; the
   // soft-delete machinery gives disable + restore + audit + ELT deleted-row
@@ -109,12 +123,14 @@ export class JobTriggerEntity
   )
   last_run?: Date;
 
-  /** Next fire of the armed mirror — `job_schedules.next_run_at`, which the
-   *  engine mirrors from NATS (`Nats-Schedule-Next` header + deterministic
-   *  arm-time computation for `@every`/`@at`). NULL for disabled triggers,
+  /** Next fire of the armed mirror — `job_schedules.next_fire_mirror_at`
+   *  gated to `status='armed'` (the same gate the served `next_run_at`
+   *  column applies). The engine mirrors NATS truth into that column:
+   *  `Nats-Schedule-Next` header per fire + deterministic arm-time
+   *  computation for `@every`/`@at`. NULL for disabled triggers,
    *  event-only triggers and cron specs before their first fire. */
   @Calculated(
-    `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_run_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
+    `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_fire_mirror_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
     { pgType: "timestamptz", nullable: true },
   )
   next_run?: Date;

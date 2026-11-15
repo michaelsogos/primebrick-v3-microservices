@@ -6,39 +6,43 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Job, the Service, the Kind, the Schedule, the Type, the Status, the Run Stats, the Armed at, the Updated at.
+Each row shows the Job Name, the Source Queue, the Destination Event, the Cadence, the Type, the Run As, the Status, the Anomaly, the Run Stats, the Next run, the Fired at, the Armed By, the Armed at.
 
 The page is visible with the `access.system.job.job-schedules` grant.
-
-## What you can do here
-
-### How to view the change history of a job schedule
-1. Open the row actions menu on the job schedule and click **Audit history**.
-2. The version history of the job schedule will appear on the right sheet panel.
 
 ## Columns
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Job** | yes | yes | yes |  |
-| **Service** | yes | yes | yes |  |
-| **Kind** | yes | yes | yes |  |
-| **Schedule** | yes | yes | yes |  |
+| **Job Name** | yes | yes | yes |  |
+| **Source Queue** | yes | yes | yes | The queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues. |
+| **Destination Event** | yes | yes | yes | The event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services. |
+| **Cadence** | yes | yes | no |  |
 | **Type** | yes | yes | yes |  |
-| **Target Subject** | no | yes | yes |  |
+| **Run As** | yes | yes | yes | The identity the fire executes under — `user` inherits the originator's or author's credentials, `system` runs with module privileges. |
 | **Status** | yes | yes | yes |  |
-| **Run Stats** | yes | yes | yes |  |
-| **Armed at** | yes | yes | yes |  |
+| **Enabled** | no | no | no |  |
+| **Anomaly** | yes | no | no |  |
+| **Run Stats** | yes | no | no |  |
+| **Next run** | yes | yes | yes | Next scheduled fire, mirrored from the scheduler. Empty whenever the schedule cannot run — disabled, paused, stopped, already fired or expired. |
+| **Trigger** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+| **Expires at** | no | yes | yes |  |
 
-- The Job column is shown by default and can be sorted and filtered.
-- The Service column is shown by default and can be sorted and filtered.
-- The Kind column is shown by default and can be sorted and filtered.
-- The Schedule column is shown by default and can be sorted and filtered.
+- The Job Name column is shown by default and can be sorted and filtered.
+- The Source Queue column is shown by default and can be sorted and filtered — the queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues.
+- The Destination Event column is shown by default and can be sorted and filtered — the event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services.
+- The Cadence column is shown by default and can be sorted but not filtered.
 - The Type column is shown by default and can be sorted and filtered.
-- The Target Subject column is hidden by default and can be sorted and filtered.
+- The Run As column is shown by default and can be sorted and filtered — the identity the fire executes under — `user` inherits the originator's or author's credentials, `system` runs with module privileges.
 - The Status column is shown by default and can be sorted and filtered.
-- The Run Stats column is shown by default and can be sorted and filtered.
-- The Armed at column is shown by default and can be sorted and filtered.
+- The Enabled column is hidden by default and cannot be sorted or filtered.
+- The Anomaly column is shown by default and cannot be sorted or filtered.
+- The Run Stats column is shown by default and cannot be sorted or filtered.
+- The Next run column is shown by default and can be sorted and filtered — next scheduled fire, mirrored from the scheduler. Empty whenever the schedule cannot run — disabled, paused, stopped, already fired or expired.
+- The Trigger column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+- The Expires at column is hidden by default and can be sorted and filtered.
 
 ## Actions
 
@@ -51,14 +55,14 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **delete** | DISABLED | — | Marks the job schedule as deleted but keeps it so it can be restored | no |
 | **restore** | DISABLED | — | Brings a soft-deleted job schedule back | no |
 | **purge** | DISABLED | — | Removes the job schedule forever | no |
-| **audit history** | ENABLED | `_authenticated_admin` | Shows the change history of the job schedule | no |
+| **audit history** | DISABLED | — | Shows the change history of the job schedule | no |
 
 - Creating a new job schedule is not available on this page — no permission is declared for it on job schedules.
 - Editing a job schedule is not available on this page — no permission is declared for it on job schedules.
 - Soft-deleting a job schedule is not available on this page — no permission is declared for it on job schedules.
 - Restoring a soft-deleted job schedule is not available on this page — no permission is declared for it on job schedules.
 - Permanently deleting a job schedule is not available on this page — no permission is declared for it on job schedules.
-- Viewing the change history of a job schedule is available on this page — every job schedule keeps a full version history and it requires the `_authenticated_admin` permission.
+- Viewing the change history of a job schedule is not available on this page — no permission is declared for it on job schedules.
 
 ### Bulk actions
 

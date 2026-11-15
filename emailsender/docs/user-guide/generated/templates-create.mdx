@@ -1,0 +1,61 @@
+---
+title: Create Email Template
+description: Create a new email template.
+entity: email_template
+---
+
+Create a new email template.
+
+This page is delivered by the owning module as a remote component — its content mounts inside the shared shell.
+
+The page is visible with the `access.system.emailsender.templates.create` grant.
+
+## Pages routes
+
+- `/system/emailsender/templates` — List, search and manage all email templates.
+- `/system/emailsender/templates/create` — Create a new email template. *(this page)*
+- `/system/emailsender/templates/{uuid}` — View and edit an existing email template.
+
+## What you can do here
+
+### How to create a new email template
+1. On the **Templates** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **Code**, **language Iso**, **Subject**, **body Html**, **body Text**, **mjml Source**, **variables Json**.
+3. Click **Save** — the new email template is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Code** | required | — |
+| **Language** | required | — |
+| **Subject** | required | — |
+| **body Html** | required | — |
+| **body Text** | required | — |
+| **mjml Source** | required | — |
+| **variables Json** | required | — |
+
+- The **Code** field is a required field.
+- The **Language** field is a required field.
+- The **Subject** field is a required field.
+- The **body Html** field is a required field.
+- The **body Text** field is a required field.
+- The **mjml Source** field is a required field.
+- The **variables Json** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `emailsender.email_template.create.single` | Validates the form and creates the email template | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the email template and it requires the `emailsender.email_template.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Templates](/docs/user-guide/generated/templates)
+- [Templates Edit](/docs/user-guide/generated/templates-edit)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T18:42:52.757Z",
+  "issued_at": "2026-11-15T20:22:52.071Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -9,7 +9,15 @@
     "0004_uuidv7_defaults": "a415eb76f37cda107e35ae3fbf9010d9f3352faeeaf58c46b300025dc2d4b03e",
     "0005_uuid_references": "51a1230b11363f7d0e8c5c1c4bbd4fa8d48558ad7ff3008b70664602c254957f",
     "0006_uuid_pk_swap": "adb3766de650794580c5f1b4510f4838308217a74f3809ed1c0679395f97f99e",
-    "0007_uuid_v4_to_v7_rewrite": "eabe0e06ef01dd87172301a5e54715273cf533815b9154984db7bb05c6c7bcfd"
+    "0007_uuid_v4_to_v7_rewrite": "eabe0e06ef01dd87172301a5e54715273cf533815b9154984db7bb05c6c7bcfd",
+    "0008_customer_clone_audit": "1b8f5799d3b34a7bbaeb44e54d0a62324375eac6fac2ef03aeaa1de37c74665f",
+    "0009_customers_created_at_trail_repair": "337e9b4ab605f1440ed3272af3fc83aa3c4a368b3b85081ea3a6b22edcf81817",
+    "20261113175849_addcols_crm_local_addresses_crm_customer_accounts_crm_customer_contacts": "200751b3e26f55ec663d5d38ab8fb5f682e4296dbe36bf44d67548833b4e3d43",
+    "20261114002000_translations_language_check": "f60c175afbe5d362b178fc93d038a15d42c7d96509620420f8280acadaf17505",
+    "20261114125538_addcols_crm_customer_link_types": "1901ab2f3215eab10a1b0c6a81d3a8dd6d98077fc4e3bd5a5a1c57b0d05fd011",
+    "20261114131000_customer_link_directional_vocabulary": "1222408937fe349dc9ee88b7b4c08188166577e6a81e556c358e65c1b427835c",
+    "20261115210000_version_history_actions_dedup": "61bde5ca80774729fd7d2b65282be0b34b7fbc6d4fe74084ce3922db26f50418",
+    "20261115221000_version_history_full_dedup": "220c2deb7b6f5e52923e898f8ab69cdb548c95e1b38f50aee7ce8166a4f1e784"
   },
-  "signature": "eiRSTvTKFGJPUatI6tWWWr9LbU9OihCiQ04mm1gvavjnWqk6uqpSJjotBu6gPkOOGyoh6Ztj4ycAnXBLrRnuBQ=="
+  "signature": "2cQuKC45rB6Pebp+7hkSsHCYchKzM5Tk/veFQrgEPus5arQuNpt7JQ8gpV2CzhULEDU2VN57X68CFTk6FNqoDQ=="
 }

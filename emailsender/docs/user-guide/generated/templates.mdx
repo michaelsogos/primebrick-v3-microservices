@@ -1,0 +1,96 @@
+---
+title: Email Templates
+description: List, search and manage all email templates.
+entity: email_template
+---
+
+List, search and manage all email templates.
+
+Each row shows the Code, the Language, the Subject.
+
+The page is visible with the `access.system.emailsender.templates` grant.
+
+## Pages routes
+
+- `/system/emailsender/templates` — List, search and manage all email templates. *(this page)*
+- `/system/emailsender/templates/create` — Create a new email template.
+- `/system/emailsender/templates/{uuid}` — View and edit an existing email template.
+
+## What you can do here
+
+### How to create a new email template
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **Code**, **language Iso**, **Subject**, **body Html**, **body Text**, **mjml Source**, **variables Json**.
+3. Click **Save** — the new email template is created.
+
+### How to edit an email template
+1. Open the row actions menu on the email template and click **Edit**.
+2. Update the fields — required: **Code**, **language Iso**, **Subject**, **body Html**, **body Text**, **mjml Source**, **variables Json**.
+3. Click **Save** — the changes to the email template are saved.
+
+### How to delete an email template
+1. Open the row actions menu on the email template and click **Delete**.
+2. Confirm the deletion in the dialog — the email template is soft-deleted and can be restored.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Code** | yes | yes | yes |  |
+| **Language** | yes | yes | yes |  |
+| **Subject** | yes | yes | yes |  |
+| **variables** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+| **body html** | no | yes | yes |  |
+| **body text** | no | yes | yes |  |
+| **mjml source** | no | yes | yes |  |
+
+- The Code column is shown by default and can be sorted and filtered.
+- The Language column is shown by default and can be sorted and filtered.
+- The Subject column is shown by default and can be sorted and filtered.
+- The variables column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+- The body html column is hidden by default and can be sorted and filtered.
+- The body text column is hidden by default and can be sorted and filtered.
+- The mjml source column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `emailsender.email_template.create.single` | Creates a new email template | no |
+| **update** | ENABLED | `emailsender.email_template.update.single` | Opens the email template for editing | no |
+| **delete** | ENABLED | `emailsender.email_template.delete.single` | Marks the email template as deleted but keeps it so it can be restored | no |
+| **restore** | DISABLED | — | Brings a soft-deleted email template back | no |
+| **purge** | DISABLED | — | Removes the email template forever | no |
+| **audit history** | DISABLED | — | Shows the change history of the email template | no |
+
+- Creating a new email template is available on this page — the create action opens the create form in the same tab and it requires the `emailsender.email_template.create.single` permission.
+- Editing an email template is available on this page — the row action opens the record in the same tab and it requires the `emailsender.email_template.update.single` permission.
+- Soft-deleting an email template is available on this page — marks the email template as deleted but keeps it so it can be restored and it requires the `emailsender.email_template.delete.single` permission.
+- Restoring a soft-deleted email template is not available on this page — no permission is declared for it on email templates.
+- Permanently deleting an email template is not available on this page — no permission is declared for it on email templates.
+- Viewing the change history of an email template is not available on this page — no permission is declared for it on email templates.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | DISABLED | — | Marks the selected email templates as deleted | no |
+| **restore** | DISABLED | — | Restores the selected email templates | no |
+| **duplicate** | DISABLED | — | Duplicates the selected email templates | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected email templates is not available on this page — no permission is declared for it on email templates.
+- Restoring the selected email templates is not available on this page — no permission is declared for it on email templates.
+- Duplicating the selected email templates is not available on this page — no permission is declared for it on email templates.
+- Exporting the list is not available on this page — no permission is declared for it on email templates.
+
+## Doc references
+
+- [Templates Create](/docs/user-guide/generated/templates-create)
+- [Templates Edit](/docs/user-guide/generated/templates-edit)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

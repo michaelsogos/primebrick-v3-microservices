@@ -22,23 +22,15 @@ const CustomerLinkBaseSchema = z
 
 export const CustomerLinkCreateBodySchema = CustomerLinkBaseSchema;
 
-// Update keeps the same edge contract — revalidation only when both ends
-// are supplied (partial bodies pass the refine on the merged row server-side).
-// The refine runs AFTER zPartialNoDefaults: zod 4 refuses `.partial()` on
-// schemas carrying refinements.
+// Edge ends are immutable (served meta `immutable:true` — create-set,
+// frozen afterwards): repointing an edge is DELETE + CREATE, never an
+// update. The only mutable payload is `type_uuid` — the relationship
+// may evolve while the two endpoints stay the same edge.
 export const CustomerLinkUpdateBodySchema = zPartialNoDefaults(
   z.object({
-    parent_customer_uuid: z.string().uuid(),
-    child_customer_uuid: z.string().uuid(),
     type_uuid: z.string().uuid(),
     version: zBoundedInt(0, Number.MAX_SAFE_INTEGER),
-  }),
-).refine(
-  (v) =>
-    v.parent_customer_uuid === undefined ||
-    v.child_customer_uuid === undefined ||
-    v.parent_customer_uuid !== v.child_customer_uuid,
-  { message: "parent_customer_uuid and child_customer_uuid must differ", path: ["child_customer_uuid"] },
+  }).strict(),
 );
 
 export const CustomerLinkAuditQuerySchema = z.object({

@@ -47,14 +47,6 @@ const AiModelUpdateWrite = entityOnlyWriteBody(AiModelUpdateBodySchema);
 const AiCerebellumCreateWrite = entityOnlyWriteBody(AiCerebellumCreateBodySchema);
 const AiCerebellumUpdateWrite = entityOnlyWriteBody(AiCerebellumUpdateBodySchema);
 
-/** Lazy service proxy — instantiated on first method call (post-initDal). */
-function lazy<T extends object>(factory: () => T): T {
-  let inst: T | null = null;
-  return new Proxy({} as T, {
-    get: (_t, k) => ((inst ??= factory()) as Record<string | symbol, unknown>)[k],
-  });
-}
-
 const readPerms = [Permission.AUTHENTICATED_USER];
 const writePerms = [Permission.AUTHENTICATED_ADMIN];
 
@@ -64,9 +56,8 @@ export const aiEntityDecls: EntityRouteDecl[] = [
   {
     entityName: "ai_model",
     spec: { tag: "ai_models" },
-    service: lazy(() => new AiModelsService()) as unknown as EntityServiceLike,
+    service: new AiModelsService() as unknown as EntityServiceLike,
     meta: aiModelMeta,
-    auditable: true,
     permissions: {
       meta: readPerms,
       list: readPerms,
@@ -77,7 +68,6 @@ export const aiEntityDecls: EntityRouteDecl[] = [
       restore: writePerms,
       audit: writePerms,
     },
-    duplicate: false,
     schemas: {
       listQuery: (q) => AiModelListQuerySchema.parse(q),
       createBody: (b) => AiModelCreateWrite.parse(b) as { entity: Record<string, unknown> },
@@ -88,9 +78,8 @@ export const aiEntityDecls: EntityRouteDecl[] = [
   {
     entityName: "ai_cerebellum",
     spec: { tag: "ai_cerebellum" },
-    service: lazy(() => new AiCerebellumService()) as unknown as EntityServiceLike,
+    service: new AiCerebellumService() as unknown as EntityServiceLike,
     meta: aiCerebellumMeta,
-    auditable: true,
     permissions: {
       meta: readPerms,
       list: readPerms,
@@ -101,7 +90,6 @@ export const aiEntityDecls: EntityRouteDecl[] = [
       restore: writePerms,
       audit: writePerms,
     },
-    duplicate: false,
     schemas: {
       listQuery: (q) => AiCerebellumListQuerySchema.parse(q),
       createBody: (b) => AiCerebellumCreateWrite.parse(b) as { entity: Record<string, unknown> },

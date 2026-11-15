@@ -16,16 +16,6 @@
       "text": "const dal = getDal();"
     },
     {
-      "file": "modules/providers/providers.service.ts",
-      "rule": "dal-access",
-      "text": "private svc = getDal().entityService<ProviderEntity & Record<string, unknown>>({"
-    },
-    {
-      "file": "modules/templates/templates.service.ts",
-      "rule": "dal-access",
-      "text": "private svc = getDal().entityService<EmailTemplateEntity & Record<string, unknown>>({"
-    },
-    {
       "file": "services/email-service.ts",
       "rule": "dal-access",
       "text": "const dal = getDal();"

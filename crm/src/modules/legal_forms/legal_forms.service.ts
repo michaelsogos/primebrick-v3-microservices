@@ -9,7 +9,7 @@ import { LegalFormEntity } from "../../domain/entities/legal_form_entity.js";
 import {
   LEGAL_FORM_DEFAULT_SORT,
 } from "./list-config.js";
-import { LEGAL_FORM_SEARCHABLE_KEYS, LEGAL_FORM_FILTERABLE_KEYS } from "./legal_form.meta.js";
+import { legalFormMeta } from "./legal_form.meta.js";
 
 export class LegalFormsService extends DomainService<LegalFormEntity & Record<string, unknown>> {
   constructor() {
@@ -17,8 +17,7 @@ export class LegalFormsService extends DomainService<LegalFormEntity & Record<st
       entity: LegalFormEntity,
       actor: requireActor,
       list: {
-        searchableKeys: LEGAL_FORM_SEARCHABLE_KEYS,
-        filterableKeys: new Set(LEGAL_FORM_FILTERABLE_KEYS),
+        meta: legalFormMeta,
         defaultSort: LEGAL_FORM_DEFAULT_SORT,
       },
     });

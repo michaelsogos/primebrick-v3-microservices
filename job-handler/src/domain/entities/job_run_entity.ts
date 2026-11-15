@@ -34,11 +34,13 @@ export class JobRunEntity
   @Column({ nullable: false })
   job_name!: string;
 
-  /** user | system */
+  /** user | system — the identity channel this run fired under. */
   @Column({ length: 10, nullable: false })
-  lane!: string;
+  run_as!: string;
 
-  /** dispatched | succeeded | failed | lost (dispatch never reported) */
+  /** dispatched | succeeded | failed | lost (dispatch never reported) |
+   *  skipped (the due was suppressed — the run row records the arrival,
+   *  no execution ever happened). */
   @Column({ length: 20, nullable: false })
   status!: string;
 
@@ -60,10 +62,6 @@ export class JobRunEntity
   /** JetStream redelivery count at execution time. */
   @Column({ pgType: "int4", nullable: true })
   redelivery_count?: number;
-
-  /** Originating user (user lane) or declaring service (system lane). */
-  @Column({ nullable: true })
-  initiator?: string;
 
   /** Free-form executor report (e.g. partitions dropped) — shape owned by
    *  each handler's `JobResultMessage.report`, folded in verbatim. */

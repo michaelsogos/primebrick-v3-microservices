@@ -1,26 +1,24 @@
 /**
- * Entity-service facades over `makeEntityService` — thin, transport-free.
- * The NATS publish on job_trigger writes lets a running instance reload its
- * triggers engine without restart.
+ * Entity domain services on `DomainService` — transport-free, consumed by
+ * the entity router. The NATS publish on job_trigger writes lets a running
+ * instance reload its triggers engine without restart.
  */
 
-import { type EntityService, ValidationError } from "@primebrick/dal-pg";
+import { DomainService, ValidationError, type EntityServiceConfig } from "@primebrick/dal-pg";
 import { NatsClient, makeMarkerAuditPort, payloadMapConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
-import { getDal } from "../../db/dal.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 import { scheduleDrift } from "../../services/schedule-service.js";
+import { jobTriggerMeta, jobScheduleMeta, jobRunMeta } from "./job.meta.js";
+import { Filter } from "@primebrick/dal-pg";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
-const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "lane", "schedule_subject", "created_at", "updated_at"]);
-const TRIGGER_FILTERABLE = new Set(["name", "event_subject", "target_subject", "execution_context", "runs", "last_run", "next_run"]);
-const SCHEDULE_FILTERABLE = new Set(["service_code", "job_name", "kind", "lane", "status", "schedule_type", "schedule_subject"]);
 
-function publishTriggerChanged(uuid: unknown): void {
+export function publishTriggerChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
   // Core pub/sub, not JetStream: `jobs.ctl.*` is the control plane and must
   // stay OUTSIDE the stream capture set (a stored subject would swallow
@@ -53,7 +51,7 @@ async function assertCallableTarget(body: Record<string, unknown>): Promise<void
  * Trigger shape contract — delegates to the SAME core predicate the
  * superform applies (`job_trigger_shape` in the closed validator
  * registry): one rule, two surfaces, zero drift. The rule covers
- * event-or-schedule presence, `execution_context "user"` needing an
+ * event-or-schedule presence, `run_as "originator"` needing an
  * event, and a one-shot `@at` lying in the past (server clock injected).
  * PATCH bodies carry only the changed fields, so the predicate runs on
  * the MERGED record — the shape contract always sees the whole entity.
@@ -119,53 +117,112 @@ export async function assertPayloadMapConformance(
   }
 }
 
-export class JobTriggersService {
-  private svc = getDal().entityService<JobTriggerEntity & Record<string, unknown>>({
-    entity: JobTriggerEntity,
-    actor: entityActor,
-    // Collaboration: audit write + entity-changed marker on NATS — the
-    // gateway persists markers to Redis (services own no Redis client).
-    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_trigger"),
-    list: {
-      searchableKeys: new Set(["name", "event_subject", "target_subject"]),
-      filterableKeys: TRIGGER_FILTERABLE,
-      defaultSort: TRIGGER_DEFAULT_SORT,
-    },
-    hooks: {
-      beforeCreate: async (body: Record<string, unknown>) => {
-        await assertTriggerShape(body, true);
-        await assertCallableTarget(body);
-        await assertPayloadMapConformance(body);
-        return body;
+/**
+ * Code-owned interchange fields on a system trigger (`system_key` set) —
+ * source, destination, execution identity, payload shaping, event gate.
+ * This is the SAME frozen set the form's `depends_on.set` gate renders
+ * disabled; the wire is the fail-closed mirror — API writes never see
+ * the FE. `schedule_spec`/`name` stay user-owned: that is the point of
+ * the model (the user governs cadence and display, the code owns the
+ * inter-service contract).
+ */
+const SYSTEM_TRIGGER_FROZEN_FIELDS = ["event_subject", "target_subject", "run_as", "payload_map", "filter"] as const;
+
+/** Re-exported for the materialize reconcile — the SAME structural
+ *  compare decides both "user tried to change it" (wire rule) and
+ *  "declaration drifted from the row" (reconcile). */
+export { canonJson } from "../../utils/canon-json.js";
+import { canonJson } from "../../utils/canon-json.js";
+
+/**
+ * The system-trigger frozen-set rule — wire side.
+ * - CREATE: `system_key` in the body is rejected outright — system rows
+ *   are born ONLY from module materialization, never claimed via API.
+ * - UPDATE: `system_key` itself may never change (a user row cannot turn
+ *   system, a system row cannot shed or swap its identity); on a system
+ *   row, a frozen field whose value DIFFERS from the stored one is
+ *   rejected — a verbatim echo of the stored value is not a mutation.
+ * Materialization reconciles through its own path, not this hook.
+ */
+export function assertSystemTriggerMutable(
+  body: Record<string, unknown>,
+  isCreate: boolean,
+  existing?: Record<string, unknown>,
+): void {
+  const KEY = "app.common.validation.system_trigger_immutable";
+  if (isCreate) {
+    if (body["system_key"] !== undefined && body["system_key"] !== null) {
+      throw new ValidationError(`system_key: ${KEY}`);
+    }
+    return;
+  }
+  if ("system_key" in body && canonJson(body["system_key"]) !== canonJson(existing?.["system_key"])) {
+    throw new ValidationError(`system_key: ${KEY}`);
+  }
+  if (existing?.["system_key"] == null) return; // user-made row — nothing is frozen
+  const violated = SYSTEM_TRIGGER_FROZEN_FIELDS.filter(
+    (f) => f in body && canonJson(body[f]) !== canonJson(existing[f]),
+  );
+  if (violated.length > 0) {
+    throw new ValidationError(
+      violated.map((f) => `${f}: ${KEY}`).join("; "),
+    );
+  }
+}
+
+type TriggerT = JobTriggerEntity & Record<string, unknown>;
+type ScheduleT = JobScheduleEntity & Record<string, unknown>;
+type RunT = JobRunEntity & Record<string, unknown>;
+
+export class JobTriggersService extends DomainService<TriggerT> {
+  constructor() {
+    super({
+      entity: JobTriggerEntity,
+      actor: entityActor,
+      list: {
+        meta: jobTriggerMeta,
+        defaultSort: TRIGGER_DEFAULT_SORT,
       },
-      beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
-        const loadExisting = async () => {
-          const row = await this.svc.get(uuid);
-          return row as Record<string, unknown> | undefined;
-        };
-        await assertTriggerShape(body, false, loadExisting);
-        await assertCallableTarget(body);
-        await assertPayloadMapConformance(body, loadExisting);
-        return body;
-      },
-      afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },
-    },
-  } as never);
+    });
+  }
 
   // `runs`/`last_run`/`next_run` are @Calculated projections on
   // JobTriggerEntity — the DAL emits them inside the list/get SQL itself
   // (sortable + filterable like physical columns). No post-query
   // decoration remains on this service.
 
-  get list() { return this.svc.list.bind(this.svc); }
-  get get() { return this.svc.get.bind(this.svc); }
-
-  get create() { return this.svc.create.bind(this.svc); }
-  get update() { return this.svc.update.bind(this.svc); }
-  get delete() { return this.svc.delete.bind(this.svc); }
-  get restore() { return this.svc.restore.bind(this.svc); }
-  get audit() { return this.svc.audit.bind(this.svc); }
-  get auditActors() { return this.svc.auditActors.bind(this.svc); }
+  /** Config enrichment needing `this.dal` (marker audit port) and hooks
+   *  reading through the resolved `this.svc` — both only safe here, not
+   *  inside `super()`. */
+  protected override buildConfig(): EntityServiceConfig<TriggerT> {
+    return {
+      ...super.buildConfig(),
+      // Collaboration: audit write + entity-changed marker on NATS — the
+      // gateway persists markers to Redis (services own no Redis client).
+      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_trigger"),
+      hooks: {
+        beforeCreate: async (body: Record<string, unknown>) => {
+          assertSystemTriggerMutable(body, true);
+          await assertTriggerShape(body, true);
+          await assertCallableTarget(body);
+          await assertPayloadMapConformance(body);
+          return body;
+        },
+        beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
+          const loadExisting = async () => {
+            const row = await this.svc.get(uuid);
+            return row as Record<string, unknown> | undefined;
+          };
+          assertSystemTriggerMutable(body, false, await loadExisting());
+          await assertTriggerShape(body, false, loadExisting);
+          await assertCallableTarget(body);
+          await assertPayloadMapConformance(body, loadExisting);
+          return body;
+        },
+        afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },
+      },
+    };
+  }
 }
 
 /**
@@ -179,17 +236,24 @@ export class JobTriggersService {
  * scheduled). The mirror never impersonates reality: an admin always
  * sees BOTH states.
  */
-export class JobSchedulesService {
-  private svc = getDal().entityService<JobScheduleEntity & Record<string, unknown>>({
-    entity: JobScheduleEntity,
-    actor: entityActor,
-    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_schedule"),
-    list: {
-      searchableKeys: new Set(["schedule_subject", "job_name", "service_code"]),
-      filterableKeys: SCHEDULE_FILTERABLE,
-      defaultSort: TRIGGER_DEFAULT_SORT,
-    },
-  } as never);
+export class JobSchedulesService extends DomainService<ScheduleT> {
+  constructor() {
+    super({
+      entity: JobScheduleEntity,
+      actor: entityActor,
+      list: {
+        meta: jobScheduleMeta,
+        defaultSort: TRIGGER_DEFAULT_SORT,
+      },
+    });
+  }
+
+  protected override buildConfig(): EntityServiceConfig<ScheduleT> {
+    return {
+      ...super.buildConfig(),
+      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_schedule"),
+    };
+  }
 
   /** Decorate rows with live/drift — ONE enumeration per call. */
   private async decorate(rows: (JobScheduleEntity & Record<string, unknown>)[]): Promise<void> {
@@ -201,40 +265,51 @@ export class JobSchedulesService {
     }
   }
 
-  list = async (query: Parameters<EntityService<JobScheduleEntity & Record<string, unknown>>["list"]>[0]) => {
-    const result = await this.svc.list(query);
+  override async list(query: Parameters<DomainService<ScheduleT>["list"]>[0]) {
+    const result = await super.list(query);
     await this.decorate(result.rows as (JobScheduleEntity & Record<string, unknown>)[]);
     return result;
-  };
+  }
 
-  get = async (uuid: string) => {
-    const row = await this.svc.get(uuid);
+  override async get(uuid: string) {
+    const row = await super.get(uuid);
     await this.decorate([row as JobScheduleEntity & Record<string, unknown>]);
     return row;
-  };
+  }
 
-  get audit() { return this.svc.audit.bind(this.svc); }
-  get auditActors() { return this.svc.auditActors.bind(this.svc); }
+  /** Mirror rows for a set of subjects — the spec/arm-window facts the
+   *  run-stats expected-fire enumeration reads (no live/drift decoration:
+   *  this read feeds arithmetic, not the list surface). */
+  async listRowsBySubjects(scheduleSubjects: string[]): Promise<JobScheduleEntity[]> {
+    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+      filters: [
+        Filter.expr(
+          { sql: "schedule_subject" },
+          "=",
+          { sql: "ANY(?)", params: [scheduleSubjects] },
+        ),
+      ],
+    });
+    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
+  }
 }
 
-export class JobRunsService {
-  private svc = getDal().entityService<JobRunEntity & Record<string, unknown>>({
-    entity: JobRunEntity,
-    actor: entityActor,
-    auditPort: makeMarkerAuditPort(getDal().tableAuditPort(), "job_run"),
-    list: {
-      searchableKeys: new Set(["job_name", "service_code", "error_code"]),
-      filterableKeys: RUN_FILTERABLE,
-      defaultSort: TRIGGER_DEFAULT_SORT,
-    },
-  } as never);
+export class JobRunsService extends DomainService<RunT> {
+  constructor() {
+    super({
+      entity: JobRunEntity,
+      actor: entityActor,
+      list: {
+        meta: jobRunMeta,
+        defaultSort: TRIGGER_DEFAULT_SORT,
+      },
+    });
+  }
 
-  get list() { return this.svc.list.bind(this.svc); }
-  get get() { return this.svc.get.bind(this.svc); }
-  get create() { return this.svc.create.bind(this.svc); }
-  get update() { return this.svc.update.bind(this.svc); }
-  get delete() { return this.svc.delete.bind(this.svc); }
-  get restore() { return this.svc.restore.bind(this.svc); }
-  get audit() { return this.svc.audit.bind(this.svc); }
-  get auditActors() { return this.svc.auditActors.bind(this.svc); }
+  protected override buildConfig(): EntityServiceConfig<RunT> {
+    return {
+      ...super.buildConfig(),
+      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_run"),
+    };
+  }
 }

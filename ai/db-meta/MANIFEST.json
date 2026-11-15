@@ -1,14 +1,16 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T18:41:21.011Z",
+  "issued_at": "2026-11-15T18:15:07.058Z",
   "patches": {
     "0001_ai_schema": "1d3db8305d2a1114da22b197444b5486651b556e0bf5750b684b69d963a36c65",
     "0002_seed_config": "9b1c33abb48950074654b08ba277d8435078abb1320ceae21cfe7748fd724f44",
     "0003_ai_translations": "1b091edb8853297fc455ec1a0af34ecb9508177cee5e0838cce0b0c7e7995933",
     "0004_uuidv7_defaults": "3a27e040ee243f8d48d201688d503de1046b84a108f99541798e99caf8e971e9",
     "0005_uuid_pk_swap": "27bd467473d3717b0483d0f93f5e3bdcfc218f6a5c4b1a736027bf9960899e2e",
-    "0006_uuid_v4_to_v7_rewrite": "c7afaa8bbe842cec91e70ce478c741d231eb7189f68032bc573f6a3ccdfb1b34"
+    "0006_uuid_v4_to_v7_rewrite": "c7afaa8bbe842cec91e70ce478c741d231eb7189f68032bc573f6a3ccdfb1b34",
+    "0007_translations_language_check": "9761bb66f11e8e8927d5b129f6288e46cbc1f65a7fc0848f6d260cce7ac577d9",
+    "20261115120000_partition_maintenance_callable_i18n": "067bf679646992635d8616a28e6780e1394e12c78cd78c6c260e423bc2c45de0"
   },
-  "signature": "N6umAHsrgUGnTGG5NS7PVxJSQJk+S7l/qnPNKZQuuqOF0nAgnV0jSJ/3X/fvE0owMFucxHzj0Qxl1YBgzr21CA=="
+  "signature": "ST7086WbcWxWfNcW+nPBWTZpN7LQuOPXufRVukLsxahnnCoHl1d4t48csaPowDPxWQ62IWSBYiBqAIu+WizeBA=="
 }

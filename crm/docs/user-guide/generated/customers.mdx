@@ -1,12 +1,14 @@
 ---
-title: Customers List
+title: Customers
 description: List, search and manage all customers.
 entity: customer
 ---
 
 List, search and manage all customers.
 
-Each row shows the Onboarded At.
+Each row shows the Code, the Display Name, the Status, the Onboarded At.
+
+The page is visible with the `access.crm.customers` grant.
 
 ## Pages routes
 
@@ -14,6 +16,11 @@ Each row shows the Onboarded At.
 - `/crm/customers/create` — Create a new customer.
 
 ## What you can do here
+
+### How to create a new customer
+1. Click **New** in the toolbar.
+2. Fill in the form — required fields are marked.
+3. Click **Save** — the new customer is created.
 
 ### How to delete a customer
 1. Open the row actions menu on the customer and click **Delete**.
@@ -32,39 +39,31 @@ Each row shows the Onboarded At.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **UUID** | no | yes | no |  |
-| **Code** | no | yes | yes |  |
-| **First name** | no | yes | yes |  |
-| **Last name** | no | yes | yes |  |
-| **Company** | no | yes | yes |  |
-| **Email** | no | yes | yes |  |
-| **Phone** | no | no | no |  |
-| **Status** | no | yes | yes |  |
+| **Code** | yes | yes | yes |  |
+| **Display Name** | yes | yes | yes |  |
+| **Status** | yes | yes | yes |  |
 | **Onboarded At** | yes | yes | yes |  |
-| **Status reason** | no | no | no |  |
-| **Address** | no | no | no |  |
-| **City** | no | yes | yes |  |
-| **State/Region** | no | yes | yes |  |
-| **Country** | no | yes | yes |  |
-| **ZIP** | no | no | no |  |
-| **Onboarding time zone** | no | yes | no |  |
+| **Status reason** | no | no | yes |  |
+| **Onboarding time zone** | no | yes | yes |  |
+| **Preferred locale** | no | yes | yes |  |
+| **Customer type** | no | yes | yes |  |
+| **Qualification** | no | yes | yes |  |
+| **Marketing qualification** | no | yes | yes |  |
+| **Company dimension** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
 
-- The UUID column is hidden by default and can be sorted but not filtered.
-- The Code column is hidden by default and can be sorted and filtered.
-- The First name column is hidden by default and can be sorted and filtered.
-- The Last name column is hidden by default and can be sorted and filtered.
-- The Company column is hidden by default and can be sorted and filtered.
-- The Email column is hidden by default and can be sorted and filtered.
-- The Phone column is hidden by default and cannot be sorted or filtered.
-- The Status column is hidden by default and can be sorted and filtered.
+- The Code column is shown by default and can be sorted and filtered.
+- The Display Name column is shown by default and can be sorted and filtered.
+- The Status column is shown by default and can be sorted and filtered.
 - The Onboarded At column is shown by default and can be sorted and filtered.
-- The Status reason column is hidden by default and cannot be sorted or filtered.
-- The Address column is hidden by default and cannot be sorted or filtered.
-- The City column is hidden by default and can be sorted and filtered.
-- The State/Region column is hidden by default and can be sorted and filtered.
-- The Country column is hidden by default and can be sorted and filtered.
-- The ZIP column is hidden by default and cannot be sorted or filtered.
-- The Onboarding time zone column is hidden by default and can be sorted but not filtered.
+- The Status reason column is hidden by default and can be filtered but not sorted.
+- The Onboarding time zone column is hidden by default and can be sorted and filtered.
+- The Preferred locale column is hidden by default and can be sorted and filtered.
+- The Customer type column is hidden by default and can be sorted and filtered.
+- The Qualification column is hidden by default and can be sorted and filtered.
+- The Marketing qualification column is hidden by default and can be sorted and filtered.
+- The Company dimension column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
 
 ## Actions
 
@@ -72,14 +71,14 @@ Each row shows the Onboarded At.
 
 | Action | Status | Permission | What it does | Require Step-Up Auth |
 |--------|--------|------------|--------------|----------------------|
-| **create** | DISABLED | `customer.create.single` | Creates a new customer | no |
+| **create** | ENABLED | `customer.create.single` | Creates a new customer | no |
 | **update** | DISABLED | `customer.update.single` | Opens the customer for editing | no |
 | **delete** | ENABLED | `customer.delete.single` | Marks the customer as deleted but keeps it so it can be restored | no |
 | **restore** | ENABLED | `customer.restore.single` | Brings a soft-deleted customer back | no |
 | **purge** | DISABLED | — | Removes the customer forever | no |
 | **audit history** | ENABLED | `customer.read.audit` | Shows the change history of the customer | no |
 
-- Creating a new customer is not available on this page — if enabled, it would require the `customer.create.single` permission.
+- Creating a new customer is available on this page — the create action opens the create form in the same tab and it requires the `customer.create.single` permission.
 - Editing a customer is not available on this page — if enabled, it would require the `customer.update.single` permission.
 - Soft-deleting a customer is available on this page — marks the customer as deleted but keeps it so it can be restored and it requires the `customer.delete.single` permission.
 - Restoring a soft-deleted customer is available on this page — brings a soft-deleted customer back and it requires the `customer.restore.single` permission.
@@ -102,5 +101,6 @@ Each row shows the Onboarded At.
 
 ## Doc references
 
+- [Customers Create](/docs/user-guide/generated/customers-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

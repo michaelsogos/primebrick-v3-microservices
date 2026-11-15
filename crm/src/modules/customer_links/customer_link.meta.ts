@@ -14,7 +14,6 @@ export const customerLinkMeta: EntityMeta = withColumnConstraints({
   translation_key: "customer_link",
   entities_ns: "crm",
   uid: "uuid",
-  display_field: "uuid",
   columns: CUSTOMER_LINK_LIST_COLUMNS,
   table: {
     default_view: "table",

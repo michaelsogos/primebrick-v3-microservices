@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     serviceDisplayName: "CRM",
     serviceDescription:
       "CRM playground — module-ownership case study: nav, route census and translations declared via service registration.",
-    icon: "users",
+    icon: "users-round",
     iconType: "icon",
 
     // Root level — the CRM module IS its own root level: its FE route

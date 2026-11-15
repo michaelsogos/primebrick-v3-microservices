@@ -1,5 +1,5 @@
 /**
- * AiCerebellumService — thin facade over `makeEntityService` (dal-pg).
+ * AiCerebellumService — `ai_cerebellum` domain service on `DomainService`.
  *
  * Core CRUD is generic; the entity-specific rule lives in `beforeCreate`:
  * a tuning preset name must be unique within the same (assistant_key,
@@ -7,34 +7,32 @@
  *
  * Migrated from the BE's `modules/ai-cerebellum`.
  */
-import { type EntityService } from "@primebrick/dal-pg";
+import { DomainService, type EntityServiceConfig } from "@primebrick/dal-pg";
 import { ValidationError } from "@primebrick/sdk";
 import { AiCerebellumEntity } from "../../domain/entities/ai_cerebellum_entity.js";
-import type {
-  AiCerebellumCreateBody,
-  AiCerebellumUpdateBody,
-  AiCerebellumListQuery,
-  AiCerebellumDetailDto,
-} from "./dto.js";
-import {
-  AI_CEREBELLUM_DEFAULT_SORT,
-} from "./list-config.js";
-import { AI_CEREBELLUM_SEARCHABLE_KEYS, AI_CEREBELLUM_FILTERABLE_KEYS } from "./ai_cerebellum.meta.js";
+import type { AiCerebellumDetailDto } from "./dto.js";
+import { AI_CEREBELLUM_DEFAULT_SORT } from "./list-config.js";
+import { aiCerebellumMeta } from "./ai_cerebellum.meta.js";
 import { entityActor } from "../../db/entity-repo.js";
-import { getDal } from "../../db/dal.js";
 
-export class AiCerebellumService {
-  private svc: EntityService<AiCerebellumDetailDto>;
+type T = AiCerebellumDetailDto & Record<string, unknown>;
 
+export class AiCerebellumService extends DomainService<T> {
   constructor() {
-    this.svc = getDal().entityService<AiCerebellumDetailDto>({
+    super({
       entity: AiCerebellumEntity,
       actor: entityActor,
       list: {
-        searchableKeys: AI_CEREBELLUM_SEARCHABLE_KEYS,
-        filterableKeys: new Set(AI_CEREBELLUM_FILTERABLE_KEYS),
+        meta: aiCerebellumMeta,
         defaultSort: AI_CEREBELLUM_DEFAULT_SORT,
       },
+    });
+  }
+
+  /** Uniqueness check reads through `this.svc` — must run post-resolution. */
+  protected override buildConfig(): EntityServiceConfig<T> {
+    return {
+      ...super.buildConfig(),
       hooks: {
         beforeCreate: async (body) => {
           // A tuning preset name must be unique within the same
@@ -57,53 +55,6 @@ export class AiCerebellumService {
           return body;
         },
       },
-    });
-  }
-
-  list(query: AiCerebellumListQuery) {
-    return this.svc.list(query);
-  }
-
-  get(uuid: string) {
-    return this.svc.get(uuid);
-  }
-
-  create(body: AiCerebellumCreateBody) {
-    return this.svc.create(body as unknown as Record<string, unknown>);
-  }
-
-  update(uuid: string, body: AiCerebellumUpdateBody) {
-    return this.svc.update(
-      uuid,
-      body as unknown as Record<string, unknown> & { version: number },
-    );
-  }
-
-  delete(uuid: string, version: number) {
-    return this.svc.delete(uuid, version);
-  }
-
-  restore(uuid: string, version: number) {
-    return this.svc.restore(uuid, version);
-  }
-
-  audit(uuid: string, page: number, limit: number) {
-    return this.svc.audit(uuid, page, limit);
-  }
-
-  purge(uuid: string, version: number) {
-    return this.svc.purge(uuid, version);
-  }
-
-  duplicate(uuids: string[]) {
-    return this.svc.duplicate(uuids);
-  }
-
-  bulkDelete(items: Array<{ uuid: string; version: number }>) {
-    return this.svc.bulkDelete(items);
-  }
-
-  bulkRestore(items: Array<{ uuid: string; version: number }>) {
-    return this.svc.bulkRestore(items);
+    };
   }
 }

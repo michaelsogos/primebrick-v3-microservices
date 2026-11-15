@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T17:48:31.024Z",
+  "generatedAt": "2026-11-14T12:56:21.284Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -8,19 +8,6 @@
       "schema": "crm",
       "name": "config_entries",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -32,7 +19,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "key": {
           "name": "key",
@@ -232,15 +219,6 @@
       },
       "indexes": [
         {
-          "name": "crm_config_entries_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX crm_config_entries_uuid_uq ON crm.config_entries USING btree (uuid)"
-        },
-        {
           "name": "crm_config_entries_key_uq",
           "using": "btree",
           "isUnique": true,
@@ -256,19 +234,6 @@
       "schema": "crm",
       "name": "customers",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -280,7 +245,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -528,19 +493,34 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 32,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 33,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
-      },
-      "indexes": [
-        {
-          "name": "customers_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customers_uuid_uq ON crm.customers USING btree (uuid)"
-        }
-      ]
+      }
     },
     "crm.customer_types": {
       "kind": "table",
@@ -638,19 +618,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -662,7 +629,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -705,15 +672,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "customer_types_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customer_types_uuid_uq ON crm.customer_types USING btree (uuid)"
-        },
         {
           "name": "customer_types_code_uq",
           "using": "btree",
@@ -821,19 +779,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -845,7 +790,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -914,15 +859,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "company_dimensions_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX company_dimensions_uuid_uq ON crm.company_dimensions USING btree (uuid)"
-        },
         {
           "name": "company_dimensions_code_uq",
           "using": "btree",
@@ -1030,19 +966,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -1054,7 +977,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -1162,15 +1085,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "legal_forms_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX legal_forms_uuid_uq ON crm.legal_forms USING btree (uuid)"
-        },
         {
           "name": "legal_forms_code_uq",
           "using": "btree",
@@ -1299,19 +1213,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -1323,7 +1224,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -1366,15 +1267,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "local_address_types_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX local_address_types_uuid_uq ON crm.local_address_types USING btree (uuid)"
-        },
         {
           "name": "local_address_types_code_uq",
           "using": "btree",
@@ -1482,19 +1374,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -1506,7 +1385,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -1549,15 +1428,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "qualifications_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX qualifications_uuid_uq ON crm.qualifications USING btree (uuid)"
-        },
         {
           "name": "qualifications_code_uq",
           "using": "btree",
@@ -1665,19 +1535,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -1689,7 +1546,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -1732,15 +1589,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "marketing_qualifications_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX marketing_qualifications_uuid_uq ON crm.marketing_qualifications USING btree (uuid)"
-        },
         {
           "name": "marketing_qualifications_code_uq",
           "using": "btree",
@@ -1848,19 +1696,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -1872,7 +1707,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -1928,15 +1763,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "contact_types_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX contact_types_uuid_uq ON crm.contact_types USING btree (uuid)"
-        },
         {
           "name": "contact_types_code_uq",
           "using": "btree",
@@ -2044,19 +1870,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -2068,7 +1881,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -2111,15 +1924,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "account_kinds_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX account_kinds_uuid_uq ON crm.account_kinds USING btree (uuid)"
-        },
         {
           "name": "account_kinds_code_uq",
           "using": "btree",
@@ -2227,19 +2031,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -2251,7 +2042,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -2291,18 +2082,22 @@
           "numericScale": null,
           "isNullable": false,
           "isPrimaryKey": false
+        },
+        "inverse_label_key": {
+          "name": "inverse_label_key",
+          "ordinalPosition": 13,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
-        {
-          "name": "customer_link_types_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customer_link_types_uuid_uq ON crm.customer_link_types USING btree (uuid)"
-        },
         {
           "name": "customer_link_types_code_uq",
           "using": "btree",
@@ -2410,19 +2205,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -2434,7 +2216,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "code": {
           "name": "code",
@@ -2477,15 +2259,6 @@
         }
       },
       "indexes": [
-        {
-          "name": "consent_types_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX consent_types_uuid_uq ON crm.consent_types USING btree (uuid)"
-        },
         {
           "name": "consent_types_code_uq",
           "using": "btree",
@@ -2593,19 +2366,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -2617,20 +2377,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "customer_id": {
-          "name": "customer_id",
-          "ordinalPosition": 10,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -2772,6 +2519,45 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "cloned_from": {
+          "name": "cloned_from",
+          "ordinalPosition": 23,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 25,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
         }
@@ -2788,25 +2574,6 @@
           "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
         },
         {
-          "name": "local_addresses_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX local_addresses_uuid_uq ON crm.local_addresses USING btree (uuid)"
-        },
-        {
-          "name": "local_addresses_customer_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_id"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX local_addresses_customer_idx ON crm.local_addresses USING btree (customer_id) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "local_addresses_type_idx",
           "using": "btree",
           "isUnique": false,
@@ -2815,29 +2582,9 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX local_addresses_type_idx ON crm.local_addresses USING btree (type_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "local_addresses_dedupe_uidx",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "customer_id",
-            "lower(street"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE UNIQUE INDEX local_addresses_dedupe_uidx ON crm.local_addresses USING btree (customer_id, lower(street), COALESCE(lower(street2), ''::text), postal_code, lower(city), country) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
-        {
-          "name": "local_addresses_customer_fk",
-          "column": "customer_id",
-          "refSchema": "crm",
-          "refTable": "customers",
-          "refColumn": "id",
-          "onDelete": "cascade",
-          "onUpdate": "no_action"
-        },
         {
           "name": "local_addresses_customer_uuid_fkey",
           "column": "customer_uuid",
@@ -2945,19 +2692,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -2969,20 +2703,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "customer_id": {
-          "name": "customer_id",
-          "ordinalPosition": 10,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "kind_uuid": {
           "name": "kind_uuid",
@@ -3036,32 +2757,6 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "local_address_id": {
-          "name": "local_address_id",
-          "ordinalPosition": 15,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "contact_id": {
-          "name": "contact_id",
-          "ordinalPosition": 16,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
         "is_default": {
           "name": "is_default",
           "ordinalPosition": 17,
@@ -3085,7 +2780,7 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
+          "isNullable": false,
           "isPrimaryKey": false
         },
         "local_address_uuid": {
@@ -3113,6 +2808,45 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "cloned_from": {
+          "name": "cloned_from",
+          "ordinalPosition": 21,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 23,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -3125,65 +2859,9 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX customer_accounts_customer_uuid_idx ON crm.customer_accounts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "customer_accounts_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customer_accounts_uuid_uq ON crm.customer_accounts USING btree (uuid)"
-        },
-        {
-          "name": "customer_accounts_default_uidx",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "customer_id"
-          ],
-          "where": "(is_default AND (deleted_at IS NULL))",
-          "definition": "CREATE UNIQUE INDEX customer_accounts_default_uidx ON crm.customer_accounts USING btree (customer_id) WHERE (is_default AND (deleted_at IS NULL))"
-        },
-        {
-          "name": "customer_accounts_customer_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_id"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_accounts_customer_idx ON crm.customer_accounts USING btree (customer_id) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
-        {
-          "name": "customer_accounts_customer_fk",
-          "column": "customer_id",
-          "refSchema": "crm",
-          "refTable": "customers",
-          "refColumn": "id",
-          "onDelete": "cascade",
-          "onUpdate": "no_action"
-        },
-        {
-          "name": "customer_accounts_address_fk",
-          "column": "local_address_id",
-          "refSchema": "crm",
-          "refTable": "local_addresses",
-          "refColumn": "id",
-          "onDelete": "restrict",
-          "onUpdate": "no_action"
-        },
-        {
-          "name": "customer_accounts_contact_fk",
-          "column": "contact_id",
-          "refSchema": "crm",
-          "refTable": "customer_contacts",
-          "refColumn": "id",
-          "onDelete": "restrict",
-          "onUpdate": "no_action"
-        },
         {
           "name": "customer_accounts_customer_uuid_fkey",
           "column": "customer_uuid",
@@ -3309,19 +2987,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -3333,20 +2998,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "customer_id": {
-          "name": "customer_id",
-          "ordinalPosition": 10,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -3410,6 +3062,45 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "cloned_from": {
+          "name": "cloned_from",
+          "ordinalPosition": 16,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_at": {
+          "name": "cloned_at",
+          "ordinalPosition": 17,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "cloned_by": {
+          "name": "cloned_by",
+          "ordinalPosition": 18,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
         }
@@ -3426,36 +3117,6 @@
           "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
         },
         {
-          "name": "customer_contacts_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customer_contacts_uuid_uq ON crm.customer_contacts USING btree (uuid)"
-        },
-        {
-          "name": "customer_contacts_default_uidx",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "customer_id",
-            "type_uuid"
-          ],
-          "where": "(is_default AND (deleted_at IS NULL))",
-          "definition": "CREATE UNIQUE INDEX customer_contacts_default_uidx ON crm.customer_contacts USING btree (customer_id, type_uuid) WHERE (is_default AND (deleted_at IS NULL))"
-        },
-        {
-          "name": "customer_contacts_customer_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_id"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_contacts_customer_idx ON crm.customer_contacts USING btree (customer_id) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "customer_contacts_type_idx",
           "using": "btree",
           "isUnique": false,
@@ -3467,15 +3128,6 @@
         }
       ],
       "foreignKeys": [
-        {
-          "name": "customer_contacts_customer_fk",
-          "column": "customer_id",
-          "refSchema": "crm",
-          "refTable": "customers",
-          "refColumn": "id",
-          "onDelete": "cascade",
-          "onUpdate": "no_action"
-        },
         {
           "name": "customer_contacts_customer_uuid_fkey",
           "column": "customer_uuid",
@@ -3583,19 +3235,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -3607,20 +3246,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "customer_id": {
-          "name": "customer_id",
-          "ordinalPosition": 10,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -3736,7 +3362,7 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
+          "isNullable": false,
           "isPrimaryKey": false
         }
       },
@@ -3750,37 +3376,9 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX customer_consents_customer_uuid_idx ON crm.customer_consents USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "customer_consents_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customer_consents_uuid_uq ON crm.customer_consents USING btree (uuid)"
-        },
-        {
-          "name": "customer_consents_customer_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_id"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_consents_customer_idx ON crm.customer_consents USING btree (customer_id) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
-        {
-          "name": "customer_consents_customer_fk",
-          "column": "customer_id",
-          "refSchema": "crm",
-          "refTable": "customers",
-          "refColumn": "id",
-          "onDelete": "cascade",
-          "onUpdate": "no_action"
-        },
         {
           "name": "customer_consents_customer_uuid_fkey",
           "column": "customer_uuid",
@@ -3888,19 +3486,6 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 8,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 9,
@@ -3912,33 +3497,7 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "parent_customer_id": {
-          "name": "parent_customer_id",
-          "ordinalPosition": 10,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "child_customer_id": {
-          "name": "child_customer_id",
-          "ordinalPosition": 11,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -3963,7 +3522,7 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
+          "isNullable": false,
           "isPrimaryKey": false
         },
         "child_customer_uuid": {
@@ -3976,7 +3535,7 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
+          "isNullable": false,
           "isPrimaryKey": false
         }
       },
@@ -4002,66 +3561,17 @@
           "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
         },
         {
-          "name": "customer_links_uuid_uq",
+          "name": "customer_links_pair_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
-            "uuid"
+            "LEAST(parent_customer_uuid",
+            "child_customer_uuid"
           ],
-          "definition": "CREATE UNIQUE INDEX customer_links_uuid_uq ON crm.customer_links USING btree (uuid)"
-        },
-        {
-          "name": "customer_links_edge_uidx",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "parent_customer_id",
-            "child_customer_id",
-            "type_uuid"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE UNIQUE INDEX customer_links_edge_uidx ON crm.customer_links USING btree (parent_customer_id, child_customer_id, type_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "customer_links_parent_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "parent_customer_id"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_links_parent_idx ON crm.customer_links USING btree (parent_customer_id) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "customer_links_child_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "child_customer_id"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_links_child_idx ON crm.customer_links USING btree (child_customer_id) WHERE (deleted_at IS NULL)"
+          "definition": "CREATE UNIQUE INDEX customer_links_pair_uq ON crm.customer_links USING btree (LEAST(parent_customer_uuid, child_customer_uuid), GREATEST(parent_customer_uuid, child_customer_uuid), type_uuid)"
         }
       ],
       "foreignKeys": [
-        {
-          "name": "customer_links_parent_fk",
-          "column": "parent_customer_id",
-          "refSchema": "crm",
-          "refTable": "customers",
-          "refColumn": "id",
-          "onDelete": "cascade",
-          "onUpdate": "no_action"
-        },
-        {
-          "name": "customer_links_child_fk",
-          "column": "child_customer_id",
-          "refSchema": "crm",
-          "refTable": "customers",
-          "refColumn": "id",
-          "onDelete": "cascade",
-          "onUpdate": "no_action"
-        },
         {
           "name": "customer_links_parent_uuid_fkey",
           "column": "parent_customer_uuid",

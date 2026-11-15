@@ -10,23 +10,27 @@
  *   event only       → immediate dispatch: a matching event publishes the
  *                      forward envelope straight onto the due trampoline
  *                      (no JetStream schedule, nothing to disarm)
- *   schedule only    → pure timer: always armed while enabled (absorbs
- *                      the retired "manual" schedule kind)
+ *   schedule only    → pure timer: always armed while enabled — every
+ *                      schedule mirror is trigger-owned, user-made or
+ *                      materialized from a module declaration
  *
- * Lane semantics (`execution_context`):
- *   "user"   → the event publisher's auth headers ride the dispatch
- *              verbatim; an event with no auth material is refused
- *              (fail-closed, never impersonated). Meaningful only with
- *              an event source — schedule-only "user" triggers can never
- *              arm (no message to forward headers from) and are rejected.
- *   "me"     → the trigger author's AuthUser is resolved fresh via
- *              `auth.ctl.resolve_user` and serialized into headers; cached
- *              per live trigger, re-resolved on reload. Resolution failure
- *              (deleted/disabled author, backend down) fails closed.
- *   "system" → no user context at all.
+ * `run_as` semantics → dispatch lane:
+ *   "originator" → the event publisher's auth headers ride the dispatch
+ *                  verbatim; an event with no auth material is refused
+ *                  (fail-closed, never impersonated). Meaningful only with
+ *                  an event source — schedule-only "originator" triggers
+ *                  can never arm (no message to forward headers from) and
+ *                  are rejected.
+ *   "author"     → the trigger author's AuthUser is resolved fresh via
+ *                  `auth.ctl.resolve_user` and serialized into headers;
+ *                  cached per live trigger, re-resolved on reload.
+ *                  Resolution failure (deleted/disabled author, backend
+ *                  down) fails closed.
+ *   "system"     → no user context at all.
  *
- * "me" and "user" dispatches both travel the USER forward lane — they
- * carry a user identity; the lane split is identity-presence, not origin.
+ * "author" and "originator" dispatches both travel the USER forward lane —
+ * they carry a user identity; the lane split is identity-presence, not
+ * origin.
  *
  * Reload tap: trigger CRUD publishes `jobs.ctl.triggers.changed` so a
  * running instance picks up changes without restart. New event subjects
@@ -68,18 +72,40 @@ function getPath(obj: unknown, path: string): unknown {
   return cur;
 }
 
+/**
+ * Numeric coercion for comparisons — ext-json delivers EVERY integer as
+ * `bigint` (canonical codec), while stored filter specs (`job_triggers.filter`
+ * jsonb) arrive as plain `number`. A `typeof` gate on "number" alone makes
+ * `gt`/`lt`/`eq` reject every integer field on real events — verified live.
+ * Non-safe-integer magnitudes stay uncoerced (precision honesty: a bigint
+ * beyond MAX_SAFE_INTEGER must not silently truncate into a comparison).
+ */
+const asNum = (v: unknown): number | undefined => {
+  if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
+  if (typeof v === "bigint") {
+    return v >= BigInt(Number.MIN_SAFE_INTEGER) && v <= BigInt(Number.MAX_SAFE_INTEGER)
+      ? Number(v)
+      : undefined;
+  }
+  return undefined;
+};
+
 function matchFilter(filters: unknown, payload: unknown): boolean {
   if (!Array.isArray(filters) || filters.length === 0) return true;
   return (filters as RuleFilter[]).every((f) => {
     const actual = getPath(payload, f.field);
+    const a = asNum(actual);
+    const b = asNum(f.value);
     switch (f.op ?? "eq") {
-      case "eq": return actual === f.value;
-      case "neq": return actual !== f.value;
+      // `eq`/`neq` keep strict equality for non-numeric operands; when both
+      // sides are numeric the comparison is by value, not by wire boxing.
+      case "eq": return a !== undefined && b !== undefined ? a === b : actual === f.value;
+      case "neq": return a !== undefined && b !== undefined ? a !== b : actual !== f.value;
       case "exists": return actual !== undefined && actual !== null;
       case "contains":
         return typeof actual === "string" && typeof f.value === "string" && actual.includes(f.value);
-      case "gt": return typeof actual === "number" && typeof f.value === "number" && actual > f.value;
-      case "lt": return typeof actual === "number" && typeof f.value === "number" && actual < f.value;
+      case "gt": return a !== undefined && b !== undefined && a > b;
+      case "lt": return a !== undefined && b !== undefined && a < b;
       default: return false;
     }
   });
@@ -100,12 +126,12 @@ const liveTriggers = new Map<string, JobTriggerEntity>(); // uuid → trigger
 const boundSubjects = new Set<string>(); // event subjects with a live subscription
 
 /**
- * Resolved author identity for "me"-lane headers AND `creator_email` —
+ * Resolved author identity for "author"-lane headers AND `creator_email` —
  * resolved once per live trigger, dropped on reload. Fire-time freshness
  * beyond this snapshot is the due-forwarder auth checkpoint's job.
  */
-const meLaneUsers = new Map<string, AuthUser>(); // uuid → AuthUser
-const meLaneHeaders = new Map<string, Record<string, string>>(); // uuid → headers
+const authorLaneUsers = new Map<string, AuthUser>(); // uuid → AuthUser
+const authorLaneHeaders = new Map<string, Record<string, string>>(); // uuid → headers
 
 async function loadTrigger(uuid: string): Promise<JobTriggerEntity | undefined> {
   const rows = (await getDal().findAll<JobTriggerEntity>(JobTriggerEntity, null, {
@@ -115,13 +141,13 @@ async function loadTrigger(uuid: string): Promise<JobTriggerEntity | undefined> 
 }
 
 /**
- * Resolve the trigger author's current AuthUser — shared by the me-lane
- * forward headers AND the `creator_email` payload-map meta (one
- * `auth.ctl.resolve_user` call per trigger, cached). `created_by` holds
- * the author's internal uuid (auditable convention).
+ * Resolve the trigger author's current AuthUser — shared by the
+ * author-lane forward headers AND the `creator_email` payload-map meta
+ * (one `auth.ctl.resolve_user` call per trigger, cached). `created_by`
+ * holds the author's internal uuid (auditable convention).
  */
 async function resolveCreator(trigger: JobTriggerEntity): Promise<AuthUser | undefined> {
-  const cached = meLaneUsers.get(trigger.uuid);
+  const cached = authorLaneUsers.get(trigger.uuid);
   if (cached) return cached;
   if (!trigger.created_by) return undefined;
   let user: AuthUser | null;
@@ -141,18 +167,18 @@ async function resolveCreator(trigger: JobTriggerEntity): Promise<AuthUser | und
     );
     return undefined;
   }
-  meLaneUsers.set(trigger.uuid, user);
+  authorLaneUsers.set(trigger.uuid, user);
   return user;
 }
 
-/** Serialize the creator's AuthUser into me-lane forward headers. */
-async function resolveMeHeaders(trigger: JobTriggerEntity): Promise<Record<string, string> | undefined> {
-  const cached = meLaneHeaders.get(trigger.uuid);
+/** Serialize the creator's AuthUser into author-lane forward headers. */
+async function resolveAuthorHeaders(trigger: JobTriggerEntity): Promise<Record<string, string> | undefined> {
+  const cached = authorLaneHeaders.get(trigger.uuid);
   if (cached) return cached;
   const user = await resolveCreator(trigger);
   if (!user) return undefined;
   const headers = serializeAuthUserToHeaders(user, getAuthConfig());
-  meLaneHeaders.set(trigger.uuid, headers);
+  authorLaneHeaders.set(trigger.uuid, headers);
   return headers;
 }
 
@@ -165,18 +191,18 @@ async function laneAuth(
   trigger: JobTriggerEntity,
   msg?: { headers?: Parameters<typeof forwardAuthHeaders>[0]["headers"] },
 ): Promise<{ lane: Lane; headers?: Record<string, string> } | undefined> {
-  switch (trigger.execution_context) {
+  switch (trigger.run_as) {
     case "system":
       return { lane: "system" };
-    case "me": {
-      const headers = await resolveMeHeaders(trigger);
+    case "author": {
+      const headers = await resolveAuthorHeaders(trigger);
       return headers ? { lane: "user", headers } : undefined;
     }
     default: {
-      // "user" — requires an event message to forward auth from.
+      // "originator" — requires an event message to forward auth from.
       if (!msg) {
         logger.warn(
-          `trigger "${trigger.name}": execution_context "user" requires an event source — dispatch refused`,
+          `trigger "${trigger.name}": run_as "originator" requires an event source — dispatch refused`,
           { tags: ["jobs"] },
         );
         return undefined;
@@ -210,7 +236,7 @@ async function dispatch(
   // Payload map resolves against THIS event's snapshot — every schedule
   // fire replays the arm-time mapped request by design. `creator_email`
   // resolves lazily (one cached resolve_user call, shared with the
-  // me-lane) only when the map actually references it.
+  // author-lane) only when the map actually references it.
   const actor = msg ? forwardedActor(msg) : {};
   const ctx: PayloadMapContext = {
     actor_uuid: actor.actor_uuid ?? trigger.created_by,
@@ -234,7 +260,6 @@ async function dispatch(
     target: trigger.target_subject,
     payload: mapped,
     schedule_subject: trigger.schedule_spec ? triggerScheduleSubject(trigger) : undefined,
-    initiator: `trigger:${trigger.name}`,
   };
 
   if (trigger.schedule_spec) {
@@ -254,12 +279,10 @@ async function dispatch(
       schedule_subject: triggerScheduleSubject(trigger),
       schedule: trigger.schedule_spec,
       target: trampolineSubject(auth.lane, trigger),
-      kind: "trigger",
+      trigger_uuid: trigger.uuid,
       payload: envelope,
       mirror_target: trigger.target_subject,
       forwardHeaders: auth.headers,
-      initiator: `trigger:${trigger.name}`,
-      trigger_uuid: trigger.uuid,
     });
   } else {
     // Immediate — the envelope lands on the same trampoline the due-
@@ -336,8 +359,8 @@ export async function refreshTrigger(uuid: string): Promise<void> {
   const trigger = await loadTrigger(uuid);
   const prev = liveTriggers.get(uuid);
   liveTriggers.delete(uuid);
-  meLaneHeaders.delete(uuid);
-  meLaneUsers.delete(uuid);
+  authorLaneHeaders.delete(uuid);
+  authorLaneUsers.delete(uuid);
   // Any prior timer disarms first — covers disable, delete, and
   // source/schedule shape changes in one step. The failure is loud:
   // a failed disarm leaves a timer firing for a trigger that no longer

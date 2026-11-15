@@ -96,7 +96,7 @@ const mkTrigger = (over: Record<string, unknown>): JobTriggerEntity =>
     uuid: "trig-1",
     name: "trig",
     target_subject: "emailsender.send",
-    execution_context: "user",
+    run_as: "originator",
     created_by: "author-1",
     payload_map: {},
     ...over,
@@ -143,7 +143,6 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
         schedule_subject: "jobs.schedule.job.trig-1",
         schedule: "@every 1d",
         target: "jobs.due.user.job.forward.trig-1",
-        kind: "trigger",
         mirror_target: "emailsender.send",
         trigger_uuid: "trig-1",
         forwardHeaders: { "x-user-id": "actor-9", "x-user-locale": "it-IT" },
@@ -166,6 +165,68 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
       "jobs.schedule.job.trig-1",
       expect.stringContaining("trigger"),
     );
+  });
+});
+
+describe("triggers-engine — numeric matchFilter (ext-json bigint domain)", () => {
+  // ext-json decodes EVERY integer payload field as bigint; stored filter
+  // specs arrive as plain numbers. The operators must compare by value,
+  // not by wire boxing — a `typeof === "number"` gate used to reject them
+  // all (verified live: `gt:100000` dropped an `amount:200000` event).
+  const threshold = () =>
+    mkTrigger({
+      event_subject: "customer.updated",
+      schedule_spec: "@every 1d",
+      filter: [{ field: "amount", op: "gt", value: 100000 }],
+    });
+
+  it("gt: bigint event value beats a number threshold", async () => {
+    const { events } = await boot([threshold()]);
+    await events.get("customer.updated")!({ amount: 200000n }, userMsg);
+    expect(h.declareSchedule).toHaveBeenCalled();
+  });
+
+  it("gt: bigint under threshold still rejects (fail-closed)", async () => {
+    const { events } = await boot([threshold()]);
+    await events.get("customer.updated")!({ amount: 50n }, userMsg);
+    expect(h.declareSchedule).not.toHaveBeenCalled();
+    expect(h.disarmSchedule).toHaveBeenCalled();
+  });
+
+  it("eq: bigint vs number compares by value", async () => {
+    const { events } = await boot([
+      mkTrigger({
+        event_subject: "customer.updated",
+        schedule_spec: "@every 1d",
+        filter: [{ field: "level", op: "eq", value: 3 }],
+      }),
+    ]);
+    await events.get("customer.updated")!({ level: 3n }, userMsg);
+    expect(h.declareSchedule).toHaveBeenCalled();
+  });
+
+  it("neq: bigint equal to the filter value rejects", async () => {
+    const { events } = await boot([
+      mkTrigger({
+        event_subject: "customer.updated",
+        schedule_spec: "@every 1d",
+        filter: [{ field: "level", op: "neq", value: 3 }],
+      }),
+    ]);
+    await events.get("customer.updated")!({ level: 3n }, userMsg);
+    expect(h.declareSchedule).not.toHaveBeenCalled();
+  });
+
+  it("non-safe-integer bigint stays uncoerced — no silent truncation into a comparison", async () => {
+    const { events } = await boot([
+      mkTrigger({
+        event_subject: "customer.updated",
+        schedule_spec: "@every 1d",
+        filter: [{ field: "amount", op: "gt", value: 1 }],
+      }),
+    ]);
+    await events.get("customer.updated")!({ amount: 9007199254740993n }, userMsg);
+    expect(h.declareSchedule).not.toHaveBeenCalled();
   });
 });
 
@@ -227,7 +288,7 @@ describe("triggers-engine — schedule only (pure timer)", () => {
         name: "timer",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "system",
+        run_as: "system",
       }),
     ]);
 
@@ -235,11 +296,11 @@ describe("triggers-engine — schedule only (pure timer)", () => {
     expect(events.size).toBe(0);
     expect(h.subscribeShielded).toHaveBeenCalledTimes(1);
     expect(h.declareSchedule).toHaveBeenCalledWith(
-      expect.objectContaining({ target: "jobs.due.system.job.forward.trig-3", kind: "trigger" }),
+      expect.objectContaining({ target: "jobs.due.system.job.forward.trig-3" }),
     );
   });
 
-  it("me lane resolves the author via auth.ctl.resolve_user and rides the user lane", async () => {
+  it("author lane resolves the author via auth.ctl.resolve_user and rides the user lane", async () => {
     h.callNats.mockResolvedValue({ user_uuid: "author-7" });
     await boot([
       mkTrigger({
@@ -247,7 +308,7 @@ describe("triggers-engine — schedule only (pure timer)", () => {
         name: "mine",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "me",
+        run_as: "author",
         created_by: "author-7",
       }),
     ]);
@@ -261,27 +322,27 @@ describe("triggers-engine — schedule only (pure timer)", () => {
     );
   });
 
-  it("me lane with an unresolvable author refuses to arm (fail-closed)", async () => {
+  it("author lane with an unresolvable author refuses to arm (fail-closed)", async () => {
     h.callNats.mockResolvedValue(null); // author deleted/disabled
     await boot([
       mkTrigger({
         uuid: "trig-5",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "me",
+        run_as: "author",
       }),
     ]);
 
     expect(h.declareSchedule.mock.calls.filter((c) => String((c[0] as { trigger_uuid?: string }).trigger_uuid) === "trig-5")).toHaveLength(0);
   });
 
-  it("user lane on a schedule-only trigger refuses (no event to forward auth from)", async () => {
+  it("originator lane on a schedule-only trigger refuses (no event to forward auth from)", async () => {
     await boot([
       mkTrigger({
         uuid: "trig-6",
         event_subject: undefined,
         schedule_spec: "@every 1h",
-        execution_context: "user",
+        run_as: "originator",
       }),
     ]);
 
@@ -314,7 +375,7 @@ describe("triggers-engine — reload tap", () => {
     // Trigger re-shaped to schedule-only → reload disarms the old timer
     // (prev.schedule_spec) and arms the new shape directly.
     h.findAll.mockResolvedValue([
-      mkTrigger({ uuid: "trig-8", event_subject: undefined, schedule_spec: "@every 2h", execution_context: "system" }),
+      mkTrigger({ uuid: "trig-8", event_subject: undefined, schedule_spec: "@every 2h", run_as: "system" }),
     ]);
     await reload!({ trigger_uuid: "trig-8" });
 

@@ -91,7 +91,10 @@ const { startDueForwarder, FORWARD_ENVELOPE_MARK } = await import("../services/d
 type Lane = "user" | "system";
 type SubOpts = {
   durable: string;
-  handler: (data: unknown, msg: { headers?: Record<string, string> }) => Promise<void>;
+  handler: (
+    data: unknown,
+    msg: { headers?: Record<string, string>; info?: { streamSequence?: number | bigint } },
+  ) => Promise<void>;
 };
 
 const envelope = (over: Record<string, unknown> = {}) => ({
@@ -232,6 +235,23 @@ describe("due-forwarder — run-result correlation", () => {
 
     // No Nats-Schedule-Next on this fired message → nextFire stays undefined.
     expect(h.markFired).toHaveBeenCalledWith("jobs.schedule.job.trig", undefined);
+  });
+
+  it("stamps fire_seq from the due message's stream sequence", async () => {
+    const handler = await handlerFor("system");
+    await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 1175 } });
+    expect(recorded()[0]).toMatchObject({ status: "dispatched", fire_seq: 1175n });
+  });
+
+  it("a suppressed due keeps fire_seq on the skipped row", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "paused" } as never);
+    await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 42 } });
+    expect(recorded()[0]).toMatchObject({
+      status: "skipped",
+      error_detail: "suppressed: schedule status is paused",
+      fire_seq: 42n,
+    });
   });
 
   it("an immediate envelope (no schedule_subject) skips both schedule stamps", async () => {

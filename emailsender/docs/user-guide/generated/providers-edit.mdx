@@ -1,0 +1,62 @@
+---
+title: Edit Email Provider
+description: View and edit an existing email provider.
+entity: provider
+---
+
+View and edit an existing email provider.
+
+This page is delivered by the owning module as a remote component — its content mounts inside the shared shell.
+
+The page is visible with the `access.system.emailsender.providers` grant.
+
+## Pages routes
+
+- `/system/emailsender/providers` — List, search and manage all email providers.
+- `/system/emailsender/providers/create` — Create a new provider.
+- `/system/emailsender/providers/{uuid}` — View and edit an existing provider. *(this page)*
+
+## What you can do here
+
+### How to edit an email provider
+1. On the **Providers** list page, open the row actions menu on the email provider you want to edit and click **Edit**.
+2. Update the fields below — required: **provider**, **api Key**, **api Endpoint**, **from Email**, **from Name**, **reply To**.
+3. Click **Save** — the changes to the email provider are saved.
+
+
+The record opens in read mode first — click **Edit** to modify it. Concurrent edits are protected by optimistic locking: if someone else saves the email provider while you are editing it, the page tells you before overwriting their changes. The form warns before discarding unsaved changes.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Provider Name** | required | — |
+| **api Key** | required | — |
+| **API Endpoint** | required | — |
+| **From Email** | required | — |
+| **From Name** | required | — |
+| **Reply To** | required | — |
+
+- The **Provider Name** field is a required field.
+- The **api Key** field is a required field.
+- The **API Endpoint** field is a required field.
+- The **From Email** field is a required field.
+- The **From Name** field is a required field.
+- The **Reply To** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `emailsender.provider.update.single` | Validates the form and saves changes to the email provider | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and saves changes to the email provider and it requires the `emailsender.provider.update.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Providers](/docs/user-guide/generated/providers)
+- [Providers Create](/docs/user-guide/generated/providers-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

@@ -44,16 +44,6 @@
       "file": "controllers/nats-sub/partition-jobs.ts",
       "rule": "dal-access",
       "text": "const report = await getDal().partitionMaintenance(ENTITY_REGISTRY);"
-    },
-    {
-      "file": "modules/ai-cerebellum/ai-cerebellum.service.ts",
-      "rule": "dal-access",
-      "text": "this.svc = getDal().entityService<AiCerebellumDetailDto>({"
-    },
-    {
-      "file": "modules/ai-models/ai-models.service.ts",
-      "rule": "dal-access",
-      "text": "this.svc = getDal().entityService<AiModelDetailDto>({"
     }
   ]
 }

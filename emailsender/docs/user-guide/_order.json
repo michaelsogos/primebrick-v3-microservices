@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "generated/providers",
+    "generated/providers-create",
+    "generated/providers-edit",
+    "generated/templates",
+    "generated/templates-create",
+    "generated/templates-edit"
+  ]
+}

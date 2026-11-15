@@ -7,10 +7,11 @@
  * declared nowhere (decoupled by design). Dynamic tail segments use the
  * NATS `*` single-token wildcard.
  *
- * `jobs.result.ai.<job>` — JetStream result of a partition-maintenance job
- *   run (controllers/nats-sub/partition-jobs.ts). The job name is a
- *   per-job token — today only `partition-maintenance`, future partition
- *   jobs publish under the same template.
+ * `jobs.result.ai.<job>` — JetStream result of a system-job run
+ *   (controllers/nats-sub/partition-jobs.ts — the `ai.partition_maintenance`
+ *   callable). The job name is a per-job token — today only
+ *   `partition_maintenance`, future system jobs publish under the same
+ *   template.
  */
 import type { ModuleEventsDecl } from "@primebrick/sdk";
 

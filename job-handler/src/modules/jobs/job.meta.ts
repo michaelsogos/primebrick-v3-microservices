@@ -83,13 +83,26 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
   display_field: "name",
   columns: [
     { key: "name", label_key: F("job_trigger", "name"), type: "text", format: "identifier", order: 10 },
-    { key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, icon: "zap", color: "amber-500", options_source: "census.emits", tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT" },
+    {
+      // @Calculated — `system_key IS NOT NULL`. The ELT-visible flag for
+      // "this row is a module-declared system trigger": the interchange
+      // fields below are code-owned on these rows (the depends_on.set
+      // gate + the wire's frozen-set rule read the same physical source).
+      key: "is_system", label_key: F("job_trigger", "is_system"), type: "boolean", order: 15, kind: "calculated",
+      tooltip: H("job_trigger", "is_system"), tooltip_title: HT("job_trigger", "is_system"), tooltip_priority: "HINT",
+    },
+    {
+      key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, icon: "zap", color: "amber-500", options_source: "census.emits",
+      depends_on: { field: "system_key", disabled_when: { set: true } },
+      tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
+    },
     {
       key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 30,
       // Authoring-only — a JSON AST has no honest equality/text matcher.
       filterable: false,
       default_visible: false,
       json_schema: TRIGGER_FILTER_SCHEMA,
+      depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "filter"), tooltip_title: HT("job_trigger", "filter"), tooltip_priority: "HINT",
     },
     {
@@ -101,6 +114,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     {
       key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 50,
       icon: "send", color: "sky-500", options_source: "census.callables",
+      depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "target_subject"), tooltip_title: HT("job_trigger", "target_subject"), tooltip_priority: "HINT",
     },
     {
@@ -109,9 +123,10 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       filterable: false,
       default_visible: false, widget: "payload_map",
       json_schema: PAYLOAD_MAP_SCHEMA,
+      depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "payload_map"), tooltip_title: HT("job_trigger", "payload_map"), tooltip_priority: "HINT",
     },
-    { key: "execution_context", label_key: F("job_trigger", "execution_context"), type: "badge", order: 60, badge: { values: { system: { label_key: V("job_trigger", "system"), color: "#000000" }, user: { label_key: V("job_trigger", "user"), color: "primary" }, me: { label_key: V("job_trigger", "me"), color: "info" } } }, tooltip: H("job_trigger", "execution_context"), tooltip_title: HT("job_trigger", "execution_context"), tooltip_priority: "HINT" },
+    { key: "run_as", label_key: F("job_trigger", "run_as"), type: "badge", order: 60, badge: { values: { system: { label_key: V("job_trigger", "system"), color: "#000000" }, originator: { label_key: V("job_trigger", "originator"), color: "primary" }, author: { label_key: V("job_trigger", "author"), color: "info" } } }, depends_on: { field: "system_key", disabled_when: { set: true } }, tooltip: H("job_trigger", "run_as"), tooltip_title: HT("job_trigger", "run_as"), tooltip_priority: "HINT" },
     {
       // 1:N children link — the runs list filtered by this trigger's
       // schedule-mirror subject (runs record it as `schedule_subject`).
@@ -128,12 +143,21 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       tooltip: H("job_trigger", "last_run"), tooltip_title: HT("job_trigger", "last_run"),
     },
     {
-      // @Calculated — job_schedules.next_run_at of the armed mirror.
+      // @Calculated — the armed mirror's NATS mirror, status-gated.
       // NULL for disabled/event-only triggers and cron specs before
       // their first fire (NATS owns cron evaluation).
       key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: false,
       null_label: { label_key: "job.entities.job_trigger.fields.next_run.states.disabled", when: { field: "deleted_at", not: null } },
       tooltip: H("job_trigger", "next_run"), tooltip_title: HT("job_trigger", "next_run"),
+    },
+    {
+      // The module's stable job id — the materialization anchor. Written
+      // once by the declaring service (never by the form — it is not in
+      // page_props.form — and never by API: the wire rejects it); NULL
+      // on user-made triggers. Togglable in the picker for audits.
+      key: "system_key", label_key: F("job_trigger", "system_key"), type: "text", format: "identifier", order: 90,
+      immutable: true, default_visible: false,
+      tooltip: H("job_trigger", "system_key"), tooltip_title: HT("job_trigger", "system_key"), tooltip_priority: "HINT",
     },
     {
       // Run outcomes over time — trigger-keyed (`row_key:"uuid"` → the
@@ -147,12 +171,15 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
         series: [
           { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
           { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
+          { field: "lost", color: "fill-orange-500", label_key: V("job_run", "lost") },
+          { field: "dispatched", color: "fill-slate-300", label_key: V("job_run", "dispatched") },
           { field: "skipped", color: "fill-neutral-400", label_key: V("job_run", "skipped") },
+          { field: "missed", color: "fill-rose-300", label_key: V("job_run", "missed") },
         ],
       },
     },
-    // updated_at stays declared only to keep it visible by default (derived default is false)
-    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, default_visible: true },
+    // updated_at is NOT declared — auto-derived like every other entity:
+    // audited + canonical band order 2130, toggleable in the picker.
   ],
   // Soft-delete IS disable — chrome only: delete renders "Disattiva" +
   // exec-stop (gradient-filled square, destructive), restore "Attiva" +
@@ -175,36 +202,40 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_schedule.title",
   uid: "uuid",
-  display_field: "schedule_subject",
+  display_field: "job_name",
   columns: [
-    { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 0, sticky: true, hideable: false },
-    { key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 10 },
-    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", order: 20 },
-    { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" }, manual: { label_key: V("job_schedule", "manual"), color: "amber" } } } },
-    { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40, filterable: false },
     {
-      // Owning trigger for kind=trigger mirrors — detail page via census.
-      key: "trigger_uuid", label_key: F("job_schedule", "trigger_uuid"), type: "ref", order: 46, default_visible: false,
-      ref: { entity: "job_trigger" },
+      // @Calculated on JobScheduleEntity — the authored job identity:
+      // the owning trigger's display name (the job the trigger declares
+      // IS the schedule's name), falling back to the declared subject
+      // tail. The schedule has no name of its own — it inherits the
+      // job's. display_field → the pin derives here (never on a subject
+      // mirror).
+      key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
     },
+    { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 10, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
+    { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 20, icon: "send", color: "sky-500", default_visible: true, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
+    { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 30, filterable: false },
     {
-      // NOT `filterable` — the `schedule_kind` filter preset owns this
-      // field (a sheet filter AND-ed with the preset would contradict it).
-      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 45, filterable: false,
+      // Wire-filterable — the `schedule_kind` filter preset filters on it.
+      // The filters PANEL excludes it anyway: preset-owned fields are
+      // derived out of the sheet's field list on the FE side (a sheet
+      // criterion AND-ed with the preset would contradict it).
+      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 50,
       badge: { values: {
         recurring: { label_key: V("job_schedule", "recurring"), color: "blue" },
         once: { label_key: V("job_schedule", "once"), color: "purple" },
       } },
     },
-    { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", order: 50, default_visible: false },
-    { key: "status", label_key: F("job_schedule", "status"), type: "badge", order: 60, badge: { values: { armed: { label_key: V("job_schedule", "armed"), color: "green" }, stopped: { label_key: V("job_schedule", "stopped"), color: "amber" }, paused: { label_key: V("job_schedule", "paused"), color: "amber" }, disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" }, fired: { label_key: V("job_schedule", "fired"), color: "gray" }, expired: { label_key: V("job_schedule", "expired"), color: "gray" } } } },
+    { key: "run_as", label_key: F("job_schedule", "run_as"), type: "badge", order: 60, default_visible: true, badge: { values: { user: { label_key: V("job_schedule", "user"), color: "primary" }, system: { label_key: V("job_schedule", "system"), color: "#000000" } } }, tooltip: H("job_schedule", "run_as"), tooltip_title: HT("job_schedule", "run_as"), tooltip_priority: "HINT" },
+    { key: "status", label_key: F("job_schedule", "status"), type: "badge", order: 70, badge: { values: { armed: { label_key: V("job_schedule", "armed"), color: "green" }, stopped: { label_key: V("job_schedule", "stopped"), color: "amber" }, paused: { label_key: V("job_schedule", "paused"), color: "amber" }, disarmed: { label_key: V("job_schedule", "disarmed"), color: "red" }, fired: { label_key: V("job_schedule", "fired"), color: "gray" }, expired: { label_key: V("job_schedule", "expired"), color: "gray" } } } },
     // Virtual columns — decorated per-row by JobSchedulesService from the
     // live JetStream enumeration (external source, never queryable).
     {
-      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 62, kind: "virtual",
+      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 72, kind: "virtual", default_visible: false,
     },
     {
-      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 64, kind: "virtual",
+      key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 74, kind: "virtual",
       badge: { values: {
         stale: { label_key: V("job_schedule", "stale"), color: "red" },
         missing: { label_key: V("job_schedule", "missing"), color: "amber" },
@@ -213,7 +244,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     // Mini execution histogram — builtin `sparkline` cell fed by ONE batch
     // POST per rows load (virtual column, keyed by schedule_subject).
     {
-      key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "sparkline", order: 70, kind: "virtual",
+      key: "run_stats", label_key: F("job_schedule", "run_stats"), type: "sparkline", order: 80, kind: "virtual",
       sparkline: {
         endpoint: "/actions/job-run-stats",
         request_field: "schedule_subjects",
@@ -221,18 +252,64 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         series: [
           { field: "succeeded", color: "fill-emerald-500", label_key: V("job_run", "succeeded") },
           { field: "failed", color: "fill-red-500", label_key: V("job_run", "failed") },
+          { field: "lost", color: "fill-orange-500", label_key: V("job_run", "lost") },
+          { field: "dispatched", color: "fill-slate-300", label_key: V("job_run", "dispatched") },
           { field: "skipped", color: "fill-neutral-400", label_key: V("job_run", "skipped") },
+          { field: "missed", color: "fill-rose-300", label_key: V("job_run", "missed") },
         ],
       },
     },
-    { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80 },
     {
-      // Engine-maintained next fire — deterministic for @every/@at,
-      // server's own Nats-Schedule-Next for cron (null pre-first-fire).
-      key: "next_run_at", label_key: F("job_schedule", "next_run_at"), type: "datetime", order: 82,
+      // Served next-fire — @Calculated gate on the internal NATS mirror
+      // (`next_fire_mirror_at`): NULL whenever status is not executable —
+      // a disabled/paused/terminal schedule has no next run.
+      key: "next_run_at", label_key: F("job_schedule", "next_run_at"), type: "datetime", order: 90, kind: "calculated",
+      tooltip: H("job_schedule", "next_run_at"), tooltip_title: HT("job_schedule", "next_run_at"), tooltip_priority: "HINT",
     },
-    // updated_at stays declared only to keep it visible by default (derived default is false)
-    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 90, default_visible: true },
+    // updated_at is NOT declared — auto-derived like every other entity:
+    // audited + canonical band order 2130, toggleable in the picker.
+    {
+      // Internal scheduler shadow — never a column, never in the picker.
+      // The mirror's only readers are SQL-level (the `next_run_at` gate)
+      // and server-side (the live/drift decoration); `hidden` drops it
+      // from served meta while the physical field keeps travelling in
+      // the wire row.
+      key: "next_fire_mirror_at", label_key: F("job_schedule", "next_fire_mirror_at"), type: "datetime", order: 94, hidden: true,
+    },
+    {
+      // Owning trigger — the ONE owner of every mirror row (NOT NULL).
+      // Togglable detail: trails the business block rather than sitting
+      // mid-sequence (its old slot was taken by the destination column).
+      key: "trigger_uuid", label_key: F("job_schedule", "trigger_uuid"), type: "ref", order: 100, default_visible: false,
+    },
+    // ── Extra audit stamps (entity-specific lifecycle facts) ─────────
+    // These are audited columns: a schedule's utility is not "created,
+    // therefore exists" but "created AND armed". They rank FIRST of the
+    // audit block (canonical extras band — declaration order IS the
+    // sequence: fired_at → armed_by → armed_at → disarmed_at), ahead of
+    // the standard created/updated pairs. `fired_at`/`armed_at` stay
+    // visible by default; `disarmed_at` is togglable like every audit.
+    // Semantics: `armed_at` is monotonic history (persists across disarm);
+    // `disarmed_at` is the active disarm stamp (cleared on re-arm) — both
+    // populated reads "armed at T1, disarmed at T2".
+    {
+      // Universal "Eseguita il" — @Calculated latest ACTUAL run on the
+      // subject (`skipped` excluded — a suppressed due never ran).
+      key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", kind: "calculated", audited: true, default_visible: true, order: 2000,
+      tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
+    },
+    {
+      // WHO armed it — the owning trigger, always (`trigger_uuid` NOT
+      // NULL). The @Calculated column resolves its display name and the
+      // static ref drills it by uuid — same target as the `trigger_uuid`
+      // column itself, no lazy indirection left.
+      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", kind: "calculated", audited: true,
+      default_visible: true, order: 2010,
+      ref: { entity: "job_trigger", key_field: "trigger_uuid" },
+      tooltip: H("job_schedule", "armed_by"), tooltip_title: HT("job_schedule", "armed_by"), tooltip_priority: "HINT",
+    },
+    { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", audited: true, default_visible: true, order: 2020 },
+    { key: "disarmed_at", label_key: F("job_schedule", "disarmed_at"), type: "datetime", audited: true, default_visible: false, order: 2030 },
   ],
   table: {
     default_view: "table",
@@ -288,8 +365,9 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   display_field: "job_name",
   columns: [
     { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
-    { key: "service_code", label_key: F("job_run", "service_code"), type: "text", order: 20 },
-    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
+    { key: "service_code", label_key: F("job_run", "service_code"), type: "text", format: "service_code", order: 20 },
+    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "orange" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
+    { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 35, default_visible: false, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },
     {

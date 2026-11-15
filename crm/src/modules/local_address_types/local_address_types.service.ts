@@ -9,7 +9,7 @@ import { LocalAddressTypeEntity } from "../../domain/entities/local_address_type
 import {
   LOCAL_ADDRESS_TYPE_DEFAULT_SORT,
 } from "./list-config.js";
-import { LOCAL_ADDRESS_TYPE_SEARCHABLE_KEYS, LOCAL_ADDRESS_TYPE_FILTERABLE_KEYS } from "./local_address_type.meta.js";
+import { localAddressTypeMeta } from "./local_address_type.meta.js";
 
 export class LocalAddressTypesService extends DomainService<LocalAddressTypeEntity & Record<string, unknown>> {
   constructor() {
@@ -17,8 +17,7 @@ export class LocalAddressTypesService extends DomainService<LocalAddressTypeEnti
       entity: LocalAddressTypeEntity,
       actor: requireActor,
       list: {
-        searchableKeys: LOCAL_ADDRESS_TYPE_SEARCHABLE_KEYS,
-        filterableKeys: new Set(LOCAL_ADDRESS_TYPE_FILTERABLE_KEYS),
+        meta: localAddressTypeMeta,
         defaultSort: LOCAL_ADDRESS_TYPE_DEFAULT_SORT,
       },
     });

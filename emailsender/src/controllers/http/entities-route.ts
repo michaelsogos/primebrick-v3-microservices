@@ -21,14 +21,6 @@ import { providerMeta } from "../../modules/providers/provider.meta.js";
 import { TemplatesService } from "../../modules/templates/templates.service.js";
 import { templateMeta } from "../../modules/templates/template.meta.js";
 
-/** Lazy service proxy — instantiated on first method call (post-initDal). */
-function lazy<T extends object>(factory: () => T): T {
-  let inst: T | null = null;
-  return new Proxy({} as T, {
-    get: (_t, k) => ((inst ??= factory()) as Record<string | symbol, unknown>)[k],
-  });
-}
-
 /**
  * `{entity}` write envelope — strict, no `translations` sibling (piggyback
  * translation writes are gateway-owned; a US entity route must not accept
@@ -53,12 +45,11 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
   {
     entityName: "provider",
     spec: { tag: "providers", label: "email provider" },
-    service: lazy(() => new ProvidersService()) as unknown as EntityServiceLike,
+    service: new ProvidersService() as unknown as EntityServiceLike,
     meta: providerMeta,
     // Auditable columns (created_by/updated_at/version) are stamped — the
     // entity intentionally has NO providers_audit trail table, so no
     // audit route/collaboration surface is exposed.
-    auditable: false,
     permissions: {
       meta: [Permission.EMAILSENDER_PROVIDER_READ_ALL],
       list: [Permission.EMAILSENDER_PROVIDER_READ_ALL],
@@ -67,17 +58,15 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
       update: [Permission.EMAILSENDER_PROVIDER_UPDATE_SINGLE],
       delete: [Permission.EMAILSENDER_PROVIDER_DELETE_SINGLE],
     },
-    duplicate: false,
     schemas: { createBody: entityBody, updateBody: entityBody },
   },
   {
     entityName: "email_template",
     spec: { tag: "templates", label: "email template" },
-    service: lazy(() => new TemplatesService()) as unknown as EntityServiceLike,
+    service: new TemplatesService() as unknown as EntityServiceLike,
     meta: templateMeta,
     // Same audit-columns-without-trail contract as provider — no
     // email_templates_audit table exists BY REQUIREMENT.
-    auditable: false,
     permissions: {
       meta: [Permission.EMAILSENDER_EMAIL_TEMPLATE_READ_ALL],
       list: [Permission.EMAILSENDER_EMAIL_TEMPLATE_READ_ALL],
@@ -86,7 +75,6 @@ export const emailsenderEntityDecls: EntityRouteDecl[] = [
       update: [Permission.EMAILSENDER_EMAIL_TEMPLATE_UPDATE_SINGLE],
       delete: [Permission.EMAILSENDER_EMAIL_TEMPLATE_DELETE_SINGLE],
     },
-    duplicate: false,
     schemas: { createBody: entityBody, updateBody: entityBody },
   },
 ];

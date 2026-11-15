@@ -16,7 +16,7 @@ import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { JobAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { jobServiceRouteHandler } from "./service-routes.js";
 import { assertDbEnv } from "@primebrick/sdk";
-import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
+import { registerSystemTriggerRoutes } from "./controllers/nats-sub/system-trigger-request.js";
 import { reconcileSchedules } from "./services/schedule-service.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startDueForwarder } from "./services/due-forwarder.js";
@@ -92,7 +92,7 @@ async function main(): Promise<void> {
         "jobs.cancel.>",
       ], { allowMsgSchedules: true, syncSubjects: true });
 
-      await registerScheduleRoutes();
+      await registerSystemTriggerRoutes();
       await startRunRecorder();
       await startDueForwarder();
       await startCallableCatalog();
@@ -100,8 +100,8 @@ async function main(): Promise<void> {
       // Mirror-vs-NATS reconcile LAST — the engine has just re-armed
       // schedule-only triggers, so the live-declaration comparison is
       // stable. Purges stale declarations left by out-of-band writes;
-      // kind=trigger armed-missing rows are rescued via the engine's
-      // refreshTrigger (it re-derives the schedule from the trigger row).
+      // armed-missing rows are rescued via the engine's refreshTrigger
+      // (it re-derives the schedule from the owning trigger row).
       await reconcileSchedules({ rescueTrigger: refreshTrigger });
       // Periodic reconcile — boot-only left post-boot drift (out-of-band
       // purges, NATS wipes) invisible until restart. Interval is

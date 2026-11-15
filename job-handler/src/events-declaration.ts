@@ -9,8 +9,8 @@
  *
  * NOTE: `jobs.due.<lane>.*` subjects are published BY NATS itself at
  *   schedule fire-time — they are the due-lane target vocabulary, not
- *   module emits. `jobs.ctl.schedule.request` is a callNats RPC subject,
- *   not an event.
+ *   module emits. `jobs.ctl.triggers.materialize` is a callNats RPC
+ *   subject, not an event.
  */
 import type { ModuleEventsDecl } from "@primebrick/sdk";
 

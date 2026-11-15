@@ -9,7 +9,7 @@ import { ConsentTypeEntity } from "../../domain/entities/consent_type_entity.js"
 import {
   CONSENT_TYPE_DEFAULT_SORT,
 } from "./list-config.js";
-import { CONSENT_TYPE_SEARCHABLE_KEYS, CONSENT_TYPE_FILTERABLE_KEYS } from "./consent_type.meta.js";
+import { consentTypeMeta } from "./consent_type.meta.js";
 
 export class ConsentTypesService extends DomainService<ConsentTypeEntity & Record<string, unknown>> {
   constructor() {
@@ -17,8 +17,7 @@ export class ConsentTypesService extends DomainService<ConsentTypeEntity & Recor
       entity: ConsentTypeEntity,
       actor: requireActor,
       list: {
-        searchableKeys: CONSENT_TYPE_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CONSENT_TYPE_FILTERABLE_KEYS),
+        meta: consentTypeMeta,
         defaultSort: CONSENT_TYPE_DEFAULT_SORT,
       },
     });

@@ -11,7 +11,7 @@ import { CustomerTypeEntity } from "../../domain/entities/customer_type_entity.j
 import {
   CUSTOMER_TYPE_DEFAULT_SORT,
 } from "./list-config.js";
-import { CUSTOMER_TYPE_SEARCHABLE_KEYS, CUSTOMER_TYPE_FILTERABLE_KEYS } from "./customer_type.meta.js";
+import { customerTypeMeta } from "./customer_type.meta.js";
 
 export class CustomerTypesService extends DomainService<CustomerTypeEntity & Record<string, unknown>> {
   constructor() {
@@ -19,8 +19,7 @@ export class CustomerTypesService extends DomainService<CustomerTypeEntity & Rec
       entity: CustomerTypeEntity,
       actor: requireActor,
       list: {
-        searchableKeys: CUSTOMER_TYPE_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CUSTOMER_TYPE_FILTERABLE_KEYS),
+        meta: customerTypeMeta,
         defaultSort: CUSTOMER_TYPE_DEFAULT_SORT,
       },
     });

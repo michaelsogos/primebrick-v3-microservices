@@ -26,6 +26,10 @@ writes generated artifacts     docs land on main         SHA drift → sync → 
      `docs/dev-guide/_extracted/*.json` + rendered `api-reference.mdx`.
    - Services (BE, US/*): `generate:docs` → `docs/user-guide/generated/*.mdx`
      + `dist/docs-pack/` (the pack the AI service ingests at registration).
+   - US services gate drift in `pnpm test`: `docs:check` emits into a temp
+     dir and diffs against committed `generated/` (exit 1 on drift) — stale
+     docs cannot pass the suite. Heal with `generate:docs` and commit the
+     regenerated files alongside the code change.
 
 2. **Upstream release puts docs on `main`.** The site only trusts `main` —
    develop/feature content is invisible to sync by design.

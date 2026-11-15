@@ -3,8 +3,8 @@
  * `GET /api/v1/entities/customer/meta`.
  *
  * Pure data, no logic. Canonical `EntityMeta` shape (`@primebrick/core`).
- * `display_name` is omitted — the router's `assembleMeta` materializes it as
- * `"${code}"` from `display_field`.
+ * `display_name` is authored — `"${display_name} (${code})"` resolves the
+ * customer's full identity (title, ref combos, `cloned_from_name` cell).
  *
  * `entities_ns: "crm"` — the module OWNS this entity's label keys
  * (`crm.entities.customer.*` in `crm.translations`); export labels and field
@@ -26,6 +26,7 @@ export const customerMeta: EntityMeta = withColumnConstraints({
   entities_ns: "crm",
   uid: "uuid",
   display_field: "code",
+  display_name: "${display_name} (${code})",
   columns: CUSTOMER_LIST_COLUMNS,
   table: {
     default_view: "table",

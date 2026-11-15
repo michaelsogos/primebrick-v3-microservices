@@ -2,10 +2,10 @@
  * schedule-mechanism — the RAW JetStream schedule primitives, private to
  * primebrick-job. Moved out of the SDK on purpose: a service that could
  * call these directly could create a declaration with no mirror row (an
- * orphan by design). Every external caller goes through the governed
- * `jobs.ctl.schedule.request|cancel` routes → `schedule-service.ts`,
- * which wraps these primitives in the atomic protocol (PubAck →
- * read-back → mirror → compensation).
+ * orphan by design). The ONLY writer is `schedule-service.ts`, invoked
+ * by the triggers engine — every schedule mirror is owned by a
+ * `job_triggers` row. It wraps these primitives in the atomic protocol
+ * (PubAck → read-back → mirror → compensation).
  *
  * Verified empirically against nats-server 2.14.3:
  *   - The purge inside a cancel publish is applied AT PubAck time — the
@@ -26,7 +26,7 @@ export interface EnsureJobScheduleOpts {
    * One schedule per subject; republishing replaces it atomically.
    */
   scheduleSubject: string;
-  /** `"@every 30s"` | `"@at 2025-12-01T09:00:00Z"` | cron expression. */
+  /** `"@every 5m"` (≥1m floor) | `"@at 2025-12-01T09:00:00Z"` | cron expression. */
   schedule: string;
   /** Subject the stored message is republished to at fire time —
    *  `jobs.due.user.*` or `jobs.due.system.*`. Must be covered by the same
@@ -105,7 +105,7 @@ export async function cancelJobSchedule(
 /** One live schedule declaration found in the stream (read via `last_by_subj`). */
 export interface JobScheduleDeclaration {
   subject: string;
-  /** `Nats-Schedule` spec — "@every 30s", cron, "@at …". */
+  /** `Nats-Schedule` spec — "@every 5m" (≥1m floor), cron, "@at …". */
   schedule: string | undefined;
   /** `Nats-Schedule-Target` — the fired republish destination. */
   target: string | undefined;

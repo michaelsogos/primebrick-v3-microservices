@@ -1,14 +1,28 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-11T18:40:19.303Z",
+  "issued_at": "2026-11-15T20:11:42.868Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
     "0003_job_translations": "6548b57bf90c0d782ac04d7bac4ed24505ebb5914073642e001b4893b897c524",
     "0004_uuidv7_defaults": "700f95f5399ba81f2ec9a1121fbe303d9e977d1fbf8aff71029d196eb8b95cc6",
     "0005_uuid_pk_swap": "e3fc8ba1a2715570c737944522eff8d9072e11aeb1ac34d0bcfb8aed624284d2",
-    "0006_uuid_v4_to_v7_rewrite": "9461cc65809fb01d3f11cb8734fa283e3cab0438b19171382232bf30cff3f5a4"
+    "0006_uuid_v4_to_v7_rewrite": "9461cc65809fb01d3f11cb8734fa283e3cab0438b19171382232bf30cff3f5a4",
+    "0007_translations_language_check": "19f3e55d725438e00ea9653743e7fca20497d805599615dac016d1b0734b39ad",
+    "0008_schedule_field_labels": "22735d7c79b9ce3103282461ad3aa26900b321105c50c7cbef1219fd9c7d371a",
+    "0009_auto_derived_field_labels": "21790cb8b66e9ed29e51f3beb023dd6acd339e1830e94bd2ad94022280a609c3",
+    "0010_schedule_spec_label": "16da8520c15011a0c5f3b0859800653a0016f03bf98786f298c3b57b0f342b30",
+    "0011_armed_by_identity_labels": "b8b060c5fe0b7ce918aee3c379788bcf4ffcd93fbb3dd87d9e8fe8b5827d1eca",
+    "0012_schedule_job_name_label": "776c384b5f613b6e4bbd40233ffa7db0145b63d37c224cfbedb22b1d4b0bc08a",
+    "0013_manual_kind_vocabulary_drop": "bbe33481f328954e575f8d5a919e8f8562ce0cac4fea345a4b7313e790627010",
+    "0014_enabled_disabled_anomaly_labels": "4cc932f09372b20079a140a9bed06b8c529a4eac6a88f1538f15e030a7412f41",
+    "0015_label_updates_bump_updated_at": "f7fc03e6c490d57b6885a07e1805277c5d958a799dd9ca23f6ba9311be7377e4",
+    "0016_run_as_unification": "72dc8fe8192d0d7a74f3069e76e1b687935b67c443a2fc50ca907fc24c582a29",
+    "20261114202425_schedule_armed_truth": "7edb1b300a7d8a12b671566b3b8cdd404da054f780432b2c861ba6c02635877f",
+    "20261115100000_system_trigger_key": "36d3d8385fc74a62add52884a32b44ba01596ff81e8d724b0147e61c0c15ac3c",
+    "20261115130000_schedule_kind_drop": "8d13ac254c75dc6a83824f8eac9441447ddc84d7605144dabb5fc12ed6f02436",
+    "20261115220000_schedule_service_code_drop": "046d5a57a9600f51ff2ae93a21b02d97f4c350d9e6dc6eea3ec034b7f5e117e1"
   },
-  "signature": "f2E8J0kn2SqmQOsYd2SBkiU6r2QLwyPLvmZ7PRlYoBesgI7H2dUTpVOMCeQUYtRrkOq5mSTbeWpOIfBHo7RgDw=="
+  "signature": "lI2zwvxFC7Z1W3Hl30RMtb+rFrSUiVei3UAcsKKUifU1byAY6uo+a7r+VRrQcOBliKGKDiihc0sxpCTLM6JMBA=="
 }

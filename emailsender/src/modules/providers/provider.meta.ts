@@ -39,8 +39,8 @@ export const providerMeta: EntityMeta = withColumnConstraints({
     { key: "from_email", label_key: F("from_email"), type: "text", order: 30 },
     { key: "from_name", label_key: F("from_name"), type: "text", order: 40 },
     { key: "reply_to", label_key: F("reply_to"), type: "text", order: 50, default_visible: false },
-    // updated_at stays declared only to keep it visible by default (derived default is false)
-    { key: "updated_at", label_key: "system.common.fields.updated_at", type: "datetime", order: 60, default_visible: true },
+    // updated_at is NOT declared — auto-derived like every other entity:
+    // audited + canonical band order 2130, toggleable in the picker.
   ],
   table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
 }, ProviderEntity);

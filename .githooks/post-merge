@@ -15,8 +15,9 @@ if [ "${PB_SKIP_POST_MERGE_DB_MIGRATE:-}" = "1" ]; then
 fi
 
 FAILED=0
-for svc in ai emailsender webhook job-handler; do
-  if [ -f "$svc/package.json" ] && grep -q '"db:migrate"' "$svc/package.json" 2>/dev/null; then
+for pkg in */package.json; do
+  svc="${pkg%/package.json}"
+  if grep -q '"db:migrate"' "$pkg" 2>/dev/null; then
     if [ -z "$DATABASE_URL" ] && [ ! -f "$svc/.env" ]; then
       echo "post-merge: $svc — DATABASE_URL not set and no .env — skipping"
       continue

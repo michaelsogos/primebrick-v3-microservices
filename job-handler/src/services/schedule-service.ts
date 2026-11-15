@@ -1,10 +1,11 @@
 /**
  * schedule-service — the ONLY writer of `jobs.schedule.*` declarations.
  *
- * Every arm/disarm flows through here: the `jobs.ctl.schedule.request`
- * route (services self-declaring infra jobs via the SDK's
- * `armJobSchedule`), the triggers engine, and the admin HTTP action.
- * The raw mechanism lives in `../nats/schedule-mechanism.ts` — job-handler
+ * Every arm/disarm flows through here: the triggers engine (the ONLY
+ * armer — a module's system jobs arrive via
+ * `jobs.ctl.triggers.materialize` onto `job_triggers`, and the engine
+ * re-derives their schedules) and the admin HTTP action. The raw
+ * mechanism lives in `../nats/schedule-mechanism.ts` — job-handler
  * internal, unreachable from other services.
  *
  * ATOMIC PROTOCOL (NATS ↔ PG can never share a transaction — this is the
@@ -31,13 +32,11 @@
  * a racing pair can never interleave (TOCTOU-free).
  *
  * Invariants enforced:
- *   - schedule_subject is `jobs.schedule.<owner>.<name>[.<id>]`
+ *   - schedule_subject is `jobs.schedule.<owner>.<name>[.<id>]` — every
+ *     mirror is owned by a `job_triggers` row (trigger_uuid); schedules
+ *     are declared by primebrick-job itself (owner "job")
  *   - target is `jobs.due.<lane>.<owner>.<action>[.<id>]` — the lane is
  *     derived from the target prefix, never trusted from input
- *   - for route-declared schedules, <owner> MUST equal the caller's
- *     service code (parsed from its UA) — a service can only arm its own
- *     namespace; trigger schedules are declared by primebrick-job
- *     itself (owner "job")
  *   - every arm/disarm is mirrored in job.job_schedules (observability)
  */
 
@@ -48,7 +47,14 @@ import {
   listJobScheduleSubjects,
   toNatsScheduleSpec,
 } from "../nats/schedule-mechanism.js";
-import { JOB_SCHEDULE_SUBJECT_HEADER, logger, NatsClient, nextScheduleFire } from "@primebrick/sdk";
+import {
+  JOB_SCHEDULE_SUBJECT_HEADER,
+  logger,
+  MIN_SCHEDULE_INTERVAL_MS,
+  NatsClient,
+  nextScheduleFire,
+  scheduleEveryMs,
+} from "@primebrick/sdk";
 import { Filter, field, toUUID } from "@primebrick/dal-pg";
 import { getDal } from "../db/dal.js";
 import { JobScheduleEntity } from "../domain/entities/job_schedule_entity.js";
@@ -57,14 +63,10 @@ export interface DeclareScheduleInput {
   schedule_subject: string;
   schedule: string;
   target: string;
-  kind: "infra_derived" | "trigger";
-  /** Caller's verified service code — undefined for internal (rules engine). */
-  caller_service?: string;
   payload?: unknown;
   source?: string;
   ttl?: string;
   forwardHeaders?: Record<string, string>;
-  initiator?: string;
   trigger_uuid?: string;
   /**
    * What job_schedules.target_subject shows when the real destination
@@ -159,7 +161,6 @@ export async function declareSchedule(
       `schedule_subject must be jobs.schedule.<owner>.<name>[.<id>], got "${input.schedule_subject}"`,
     );
   }
-  const owner = sm[1]!;
   const tm = TARGET_RE.exec(input.target);
   if (!tm) {
     throw new ScheduleDeclarationError(
@@ -169,26 +170,24 @@ export async function declareSchedule(
   }
   const lane = tm[1]! as "user" | "system";
   const targetOwner = tm[2]!;
-  if (input.caller_service) {
-    // Remote caller (a service self-declaring via jobs.ctl.schedule.request):
-    // it may only declare inside its own namespace AND the fired message
-    // must land back on its own service — a service arms schedules that
-    // execute on itself, never on another service.
-    if (input.caller_service !== owner) {
-      throw new ScheduleDeclarationError(
-        "FOREIGN_NAMESPACE",
-        `service "${input.caller_service}" cannot declare schedules in "${owner}" namespace`,
-      );
-    }
-    if (targetOwner !== owner) {
-      throw new ScheduleDeclarationError(
-        "NAMESPACE_MISMATCH",
-        `target "${input.target}" executes in service "${targetOwner}" but the schedule is declared in "${owner}" namespace`,
-      );
-    }
+  // Minute floor — the engine's own invariant, independent of the
+  // write-path validation: a sub-minute spec that reached the arm path
+  // through any channel (SQL seed, stale row, unvalidated caller) must
+  // not declare. `@at`/cron are exempt by construction (one-shot; the
+  // 5-field grammar cannot go below a minute).
+  const everyMs = scheduleEveryMs(input.schedule);
+  if (everyMs !== undefined && everyMs < MIN_SCHEDULE_INTERVAL_MS) {
+    throw new ScheduleDeclarationError(
+      "SCHEDULE_BELOW_MIN_INTERVAL",
+      `schedule "${input.schedule}" fires below the ${MIN_SCHEDULE_INTERVAL_MS / 1000}s minimum — sub-minute jobs are a design error`,
+    );
   }
-  // Internal callers (triggers engine) own the "job" namespace and MAY
-  // target any service's due subject — that's the point of triggers.
+  // Internal caller only (the triggers engine) — the "job" namespace MAY
+  // target any service's due subject: that's the point of triggers. The
+  // retired `jobs.ctl.schedule.request` remote surface is gone; services
+  // declare jobs through `jobs.ctl.triggers.materialize` and the engine
+  // arms the schedule itself.
+  void targetOwner;
 
   return withSubjectLock(input.schedule_subject, async () => {
     // Terminal-once gate — a `once` mirror row that already reached
@@ -214,25 +213,10 @@ export async function declareSchedule(
       return { skipped: "terminal-once" as const };
     }
 
-    // Admin-suppression gate — infra_derived only. An owner re-declare on
-    // a `disarmed`/`paused` row is REFUSED: the admin deliberately stopped
-    // the job and only an explicit arm/resume action clears it (otherwise
-    // every service restart would resurrect disabled schedules). Trigger
-    // rows are exempt — the engine owns their lifecycle and its
-    // disarm-then-rearm refresh would deadlock against this gate; trigger
-    // suppression lives on `job_triggers.enabled` + the paused row check
-    // in dispatch/refreshTrigger.
-    if (
-      input.kind === "infra_derived" &&
-      existing !== undefined &&
-      SUPPRESSED_STATUSES.has(existing.status)
-    ) {
-      logger.warn(
-        `schedule arm suppressed — ${existing.status} on ${input.schedule_subject} (admin hold; only arm-schedule/resume-schedule clears it)`,
-        { tags: ["jobs"] },
-      );
-      return { skipped: `suppressed:${existing.status}` as const };
-    }
+    // Suppression lives on the OWNING TRIGGER (`job_triggers.enabled`
+    // soft-delete + the paused-row checks in dispatch/refreshTrigger) —
+    // every mirror is trigger-owned, so the engine is the only armer and
+    // its lifecycle checks already prevent any disabled resurrection.
 
     // Step 1 — declare. The declaration stamps its own schedule subject so
     // every fired message self-correlates (SDK middleware → jobs.result.*).
@@ -271,26 +255,25 @@ export async function declareSchedule(
       const armedAt = new Date();
       const row: Partial<JobScheduleEntity> = {
         schedule_subject: input.schedule_subject,
-        service_code: owner,
-        job_name: sm[2]!,
-        kind: input.kind,
-        lane,
+        run_as: lane,
         schedule_spec: input.schedule,
         schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",
         target_subject: input.mirror_target ?? input.target,
         status: "armed",
-        initiator: input.initiator ?? input.caller_service ?? "job",
         trigger_uuid: input.trigger_uuid === undefined ? undefined : toUUID(input.trigger_uuid),
         armed_at: armedAt,
         disarmed_at: undefined,
-        fired_at: undefined,
         expires_at: ttlMs === undefined ? undefined : new Date(armedAt.getTime() + ttlMs),
         // Deterministic first-fire mirror — `@every`/`@at` compute exactly;
         // cron stays null until the server reports its own next fire via
         // `Nats-Schedule-Next` on the first fired message (single truth).
-        next_run_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
+        next_fire_mirror_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
       };
-      const actor = input.caller_service ?? input.initiator ?? "system:primebrick-job";
+      // Honest system actor — `system:job` for engine materialization
+      // (the only armer now). `created_by` is audit plumbing: provenance
+      // lives on the `armed_by` projection (the owning trigger via
+      // trigger_uuid), never on this stamp.
+      const actor = "system:job";
       if (existing !== undefined) {
         await dal.update(
           JobScheduleEntity,
@@ -372,7 +355,7 @@ export async function disarmSchedule(
           uuid: rows[0]!.uuid,
           status: to,
           disarmed_at: new Date(),
-          next_run_at: undefined,
+          next_fire_mirror_at: undefined,
           version: rows[0]!.version,
         } as never,
         { actor, matchBy: "uuid" } as never,
@@ -399,10 +382,7 @@ export async function getScheduleRow(scheduleSubject: string): Promise<JobSchedu
 /**
  * Clear an admin suppression — `disarmed`/`paused` → `stopped` (the
  * unsuppressed not-armed state). The caller then re-arms through the
- * owning path: engine `refreshTrigger` for kind=trigger, or the
- * `jobs.ctl.schedule.rearm.<svc>` ping for infra_derived (the owner
- * re-declares with fresh payload/headers — JH cannot fabricate them).
- * Returns the updated row's kind/service for the caller's re-arm path.
+ * owning path — the engine's `refreshTrigger` on the row's trigger_uuid.
  */
 export async function unsuppressSchedule(
   scheduleSubject: string,
@@ -412,20 +392,11 @@ export async function unsuppressSchedule(
   if (!row || !SUPPRESSED_STATUSES.has(row.status)) return row;
   await getDal().update(
     JobScheduleEntity,
-    { uuid: row.uuid, status: "stopped", next_run_at: undefined, version: row.version } as never,
+    { uuid: row.uuid, status: "stopped", next_fire_mirror_at: undefined, version: row.version } as never,
     { actor, matchBy: "uuid" } as never,
   );
   logger.done(`schedule unsuppressed (stopped → awaiting re-arm): ${scheduleSubject}`, { tags: ["jobs"] });
   return { ...row, status: "stopped" } as JobScheduleEntity;
-}
-
-/** Publish the owner re-arm request — `jobs.ctl.schedule.rearm.<svc>`;
- *  the owning service re-executes its own `jobs.ctl.schedule.request`
- *  arm with fresh payload/headers. Services without a rearm handler leave
- *  the row `armed`-missing — visible drift until natural re-declare. */
-export async function requestOwnerRearm(scheduleSubject: string, serviceCode: string): Promise<void> {
-  await NatsClient.publish(`jobs.ctl.schedule.rearm.${serviceCode}`, { schedule_subject: scheduleSubject });
-  logger.done(`rearm requested to ${serviceCode} for ${scheduleSubject}`, { tags: ["jobs"] });
 }
 
 export async function dropScheduleMirror(scheduleSubject: string, actor: string): Promise<void> {
@@ -446,11 +417,13 @@ export async function dropScheduleMirror(scheduleSubject: string, actor: string)
  * Record a fire on the mirror — called by the due-forwarder on EVERY
  * dispatched schedule message.
  *   - `once`: the declaration self-purged, flip `fired` + clear
- *     `next_run_at` (without it the mirror would say `armed` forever).
- *   - `recurring`: stays `armed`; `next_run_at` takes the server's own
- *     `Nats-Schedule-Next` header (RFC3339 — cron included), the single
- *     truth for when the next fire actually happens. `"purge"` means no
- *     further fire is scheduled.
+ *     `next_fire_mirror_at` (without it the mirror would say `armed`
+ *     forever). The served `fired_at` derives from the run row — no
+ *     write here.
+ *   - `recurring`: stays `armed`; `next_fire_mirror_at` takes the
+ *     server's own `Nats-Schedule-Next` header (RFC3339 — cron
+ *     included), the single truth for when the next fire actually
+ *     happens. `"purge"` means no further fire is scheduled.
  */
 export async function markScheduleFired(scheduleSubject: string, nextFire?: Date | null): Promise<void> {
   const dal = getDal();
@@ -465,7 +438,7 @@ export async function markScheduleFired(scheduleSubject: string, nextFire?: Date
   if (row.schedule_type === "once") {
     await dal.update(
       JobScheduleEntity,
-      { uuid: row.uuid, status: "fired", fired_at: new Date(), next_run_at: undefined, version: row.version } as never,
+      { uuid: row.uuid, status: "fired", next_fire_mirror_at: undefined, version: row.version } as never,
       { actor: "system:job", matchBy: "uuid" } as never,
     );
     return;
@@ -473,7 +446,7 @@ export async function markScheduleFired(scheduleSubject: string, nextFire?: Date
   if (nextFire === undefined) return;
   await dal.update(
     JobScheduleEntity,
-    { uuid: row.uuid, next_run_at: nextFire ?? undefined, version: row.version } as never,
+    { uuid: row.uuid, next_fire_mirror_at: nextFire ?? undefined, version: row.version } as never,
     { actor: "system:job", matchBy: "uuid" } as never,
   );
 }
@@ -509,7 +482,7 @@ export interface ReconcileReport {
   purged_orphan: string[];
   /** armed row + missing declaration → row self-healed to fired/expired. */
   self_healed: { subject: string; to: "fired" | "expired" }[];
-  /** kind=trigger armed-missing → re-derived via the engine's refreshTrigger. */
+  /** armed-missing rows → re-derived via the engine's refreshTrigger. */
   trigger_rescued: string[];
   /** armed row with no live declaration → surfaced (owner re-declares). */
   armed_missing: string[];
@@ -531,9 +504,9 @@ export function getLastReconcileReport(): ReconcileReport | null {
 const TERMINAL_STATUSES = new Set(["disarmed", "stopped", "paused", "fired", "expired"]);
 
 export async function reconcileSchedules(opts?: {
-  /** kind=trigger rescue — the engine re-derives the schedule from its
-   * trigger record (`refreshTrigger`). Injected by index.ts to keep
-   * schedule-service free of the engine dependency. */
+  /** Armed-missing rescue — the engine re-derives the schedule from its
+   * owning trigger record (`refreshTrigger`). Injected by index.ts to
+   * keep schedule-service free of the engine dependency. */
   rescueTrigger?: (uuid: string) => Promise<void>;
 }): Promise<ReconcileReport> {
   const report: ReconcileReport = {
@@ -573,7 +546,6 @@ export async function reconcileSchedules(opts?: {
             {
               uuid: row.uuid,
               status: heal,
-              fired_at: heal === "fired" ? now : undefined,
               version: row.version,
             } as never,
             { actor: "system:reconcile", matchBy: "uuid" } as never,
@@ -582,7 +554,7 @@ export async function reconcileSchedules(opts?: {
         } catch (error) {
           report.errors.push({ subject, error: `self-heal to ${heal} failed: ${String(error)}` });
         }
-      } else if (row.kind === "trigger" && row.trigger_uuid && opts?.rescueTrigger) {
+      } else if (row.trigger_uuid && opts?.rescueTrigger) {
         try {
           await opts.rescueTrigger(row.trigger_uuid);
           report.trigger_rescued.push(subject);
@@ -593,11 +565,11 @@ export async function reconcileSchedules(opts?: {
       } else {
         report.armed_missing.push(subject);
         logger.warn(
-          `reconcile: row armed but declaration missing: ${subject} (kind=${row.kind}) — owner/engine must re-declare`,
+          `reconcile: row armed but declaration missing: ${subject} — the owning trigger must re-derive`,
           { tags: ["jobs"] },
         );
       }
-    } else if (row.status === "armed" && live && row.next_run_at == null) {
+    } else if (row.status === "armed" && live && row.next_fire_mirror_at == null) {
       // Backfill the next-fire mirror — `@every`/`@at` recompute
       // deterministically (same formula as arm); cron stays null: the
       // server's own `Nats-Schedule-Next` writes it on the first fire.
@@ -606,11 +578,11 @@ export async function reconcileSchedules(opts?: {
         try {
           await dal.update(
             JobScheduleEntity,
-            { uuid: row.uuid, next_run_at: next, version: row.version } as never,
+            { uuid: row.uuid, next_fire_mirror_at: next, version: row.version } as never,
             { actor: "system:reconcile", matchBy: "uuid" } as never,
           );
         } catch (error) {
-          report.errors.push({ subject, error: `next_run_at backfill failed: ${String(error)}` });
+          report.errors.push({ subject, error: `next_fire_mirror_at backfill failed: ${String(error)}` });
         }
       }
     }

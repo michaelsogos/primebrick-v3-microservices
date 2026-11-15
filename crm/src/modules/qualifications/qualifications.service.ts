@@ -9,7 +9,7 @@ import { QualificationEntity } from "../../domain/entities/qualification_entity.
 import {
   QUALIFICATION_DEFAULT_SORT,
 } from "./list-config.js";
-import { QUALIFICATION_SEARCHABLE_KEYS, QUALIFICATION_FILTERABLE_KEYS } from "./qualification.meta.js";
+import { qualificationMeta } from "./qualification.meta.js";
 
 export class QualificationsService extends DomainService<QualificationEntity & Record<string, unknown>> {
   constructor() {
@@ -17,8 +17,7 @@ export class QualificationsService extends DomainService<QualificationEntity & R
       entity: QualificationEntity,
       actor: requireActor,
       list: {
-        searchableKeys: QUALIFICATION_SEARCHABLE_KEYS,
-        filterableKeys: new Set(QUALIFICATION_FILTERABLE_KEYS),
+        meta: qualificationMeta,
         defaultSort: QUALIFICATION_DEFAULT_SORT,
       },
     });
