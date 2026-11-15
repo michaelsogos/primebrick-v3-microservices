@@ -1,80 +1,95 @@
 /**
- * Partition-maintenance infrastructure job — self-declared at boot.
+ * Partition-maintenance — a SYSTEM TRIGGER declared by this module.
  *
- * The declaration is DERIVED from entity metadata (`@PartitionField` with a
- * retention): if no partitioned entity exists nothing is armed. The
- * schedule lives in the `JOBS` JetStream stream (NATS 2.14+ ADR-51 native
- * scheduler); the fired message lands on `jobs.due.system.ai.partition-
- * maintenance` where THIS service's durable consumer runs
- * `dal.partitionMaintenance(ENTITY_REGISTRY)` — the executor is the owning
- * service itself, never primebrick-job or any shared worker.
+ * The job is declared in code (the code owns the interchange contract)
+ * and materialized onto `job.job_triggers` via `declareSystemJobs` →
+ * `jobs.ctl.triggers.materialize` on primebrick-job. The trigger row is
+ * then the declaration of record: primebrick-job's triggers engine arms
+ * the JetStream schedule, the due-forwarder republishes onto the
+ * `ai.partition_maintenance` callable below, and THIS service executes
+ * `dal.partitionMaintenance(ENTITY_REGISTRY)` inside the same process —
+ * the executor is the owning service itself, never a shared worker.
  *
- * Arm goes through `armJobSchedule` — the governed `jobs.ctl.schedule.
- * request` route on primebrick-job, the ONLY writer of `jobs.schedule.*`
- * (the raw mechanism is not exported — a direct declaration is impossible
- * by construction). primebrick-job down = arm fails: retried every 30s and
- * on `service.gateway_online` (the ecosystem restart that re-registers
- * services — JH is typically back by then). The arm is idempotent: a
- * re-arm atomically replaces the same-subject declaration.
+ * Ownership split (the materialize contract):
+ *   - code owns   → `target_subject`, `run_as`, `event_subject`,
+ *                   `payload_map`, `filter` — releases reconcile them
+ *                   delta-only
+ *   - user owns   → `schedule_spec`, `name`, enable/disable — the row's
+ *                   user-visible schedule is THE schedule (the retired
+ *                   `partition_maintenance_schedule` config channel was
+ *                   a hidden second source of truth)
  *
- * This service does NOT own the JOBS stream — `ensureStream` here would
- * race primebrick-job's authoritative config (`syncSubjects` could strip
- * subjects it just added). The durable consumer retries "stream not
- * found" until primebrick-job creates it.
+ * The declaration is DERIVED from entity metadata: no `@PartitionField`
+ * with retention → nothing is materialized and the callable is not even
+ * registered (a trigger for a job that can't run is a lie).
  *
- * The consumer is on the SYSTEM lane (`dueLaneVerify("system")`): L1
- * client-shield only, actor=system — partition retention is a super-partes
- * infrastructure process, not a user action. The execution outcome is
- * reported automatically by the SDK transport middleware on
- * `jobs.result.ai.partition-maintenance` (the fired message carries
- * `x-job-schedule-subject` — stamped by the governed arm): a returned
- * object becomes the run report, a throw becomes `failed` + nak.
+ * Materialize goes through the governed control route (primebrick-job
+ * down = the call rejects): retried every 30s and on
+ * `service.gateway_online`. The reconcile is idempotent — re-declaring
+ * the same contract is a pure read; a disabled (soft-deleted) trigger
+ * row is NEVER resurrected.
  */
-
 import {
-  NatsClient,
-  armJobSchedule,
-  dueLaneVerify,
-  extJsonStringify,
+  makeNatsRoutes,
+  declareSystemJobs,
   setProcessInterval,
   subscribeShielded,
   SERVICE_SUBJECTS,
   logger,
 } from "@primebrick/sdk";
+import { z } from "zod";
 import { getEntityPersistenceMeta } from "@primebrick/dal-pg";
 import { ENTITY_REGISTRY } from "../../domain/entities/registry.js";
 import { getDal } from "../../db/dal.js";
-import { aiConfig } from "../../config/ai-config.js";
 
 const SERVICE = "ai";
-const JOB_NAME = "partition-maintenance";
-const DUE_SUBJECT = `jobs.due.system.${SERVICE}.${JOB_NAME}`;
+const JOB_NAME = "partition_maintenance";
+const CALLABLE_SUBJECT = `${SERVICE}.${JOB_NAME}`;
+/** Seed cadence — 03:00 UTC daily. The row is user-editable afterwards. */
+const SEED_SCHEDULE = "0 3 * * *";
 const ARM_RETRY_MS = 30_000;
+
+/**
+ * `ai.partition_maintenance` — the ONE declaration of the request
+ * contract: parameterless maintenance call, `z.infer` is the request
+ * type, `z.toJSONSchema` is the census projection, `.parse()` is the
+ * mandatory runtime validation wired by the route factory. `nullish` —
+ * schedule-only triggers dispatch a null payload.
+ */
+export const PartitionMaintenanceSchema = z.object({}).loose().nullish();
+export type PartitionMaintenanceRequest = z.infer<typeof PartitionMaintenanceSchema>;
+export const PARTITION_MAINTENANCE_PAYLOAD_SCHEMA: Record<string, unknown> =
+  z.toJSONSchema(PartitionMaintenanceSchema);
 
 let armed = false;
 
-/**
- * One arm attempt — idempotent and quiet once armed. A failure is never
- * fatal to boot: the consumer below is ready regardless, and the retry
- * interval re-attempts until primebrick-job answers.
- */
-async function tryArm(scheduleSpec: string, reason: string): Promise<void> {
+/** One materialize attempt — idempotent (an unchanged contract is a pure
+ *  read). A failure is never fatal to boot: the callable route below is
+ *  ready regardless, and the retry loop re-attempts until primebrick-job
+ *  answers. */
+async function tryDeclare(reason: string): Promise<void> {
   if (armed) return;
   try {
-    await armJobSchedule(
-      {
-        name: JOB_NAME,
-        schedule: scheduleSpec,
-        target: DUE_SUBJECT,
-        payload: { kind: "infra_derived", service: SERVICE },
-      },
+    const results = await declareSystemJobs(
+      [
+        {
+          key: JOB_NAME,
+          name: "AI partition maintenance",
+          schedule_spec: SEED_SCHEDULE,
+          target_subject: CALLABLE_SUBJECT,
+          run_as: "system",
+        },
+      ],
       { timeoutMs: 3000 },
     );
     armed = true;
-    logger.done(`${JOB_NAME} schedule armed via primebrick-job (${scheduleSpec})`, { tags: ["jobs"] });
+    logger.done(
+      `${JOB_NAME} system trigger materialized (${results.map((r) => `${r.key}:${r.action}`).join(", ")})`,
+      { tags: ["jobs"] },
+    );
   } catch (err) {
     logger.warn(
-      `${JOB_NAME} arm failed (${reason}): ${err instanceof Error ? err.message : err} — retry pending`,
+      `${JOB_NAME} materialize failed (${reason}): ${err instanceof Error ? err.message : err} — retry pending`,
       { tags: ["jobs"] },
     );
   }
@@ -85,38 +100,46 @@ export async function startPartitionMaintenanceJob(): Promise<void> {
     (e) => getEntityPersistenceMeta(e).partition?.retention,
   );
   if (partitioned.length === 0) {
-    logger.info("no partitioned entities — partition-maintenance job not armed", {
+    logger.info("no partitioned entities — partition-maintenance job not declared", {
       tags: ["jobs"],
     });
     return;
   }
 
-  // Cadence is a config entry (ops can override without a redeploy);
-  // the DEFAULT remains @daily when the key is absent.
-  const scheduleSpec = aiConfig("partition_maintenance_schedule") ?? "@daily";
+  // The callable route — the actual executor, inside this process. A
+  // work item (queue `ai`): exactly one replica runs each fire. No user
+  // context rides a system-lane dispatch — `permissions: []` leaves the
+  // L1 client-shield as the only gate (primebrick-job is the publisher).
+  await makeNatsRoutes<PartitionMaintenanceRequest>(
+    [
+      {
+        subject: CALLABLE_SUBJECT,
+        queue: SERVICE,
+        permissions: [],
+        payload_schema: {
+          schema: PARTITION_MAINTENANCE_PAYLOAD_SCHEMA,
+          parse: (raw) => PartitionMaintenanceSchema.parse(raw),
+        },
+        label_key: "ai.callable.partition_maintenance.label",
+        description_key: "ai.callable.partition_maintenance.desc",
+        handler: async () => {
+          logger.info(`${JOB_NAME} fired`, { tags: ["jobs"] });
+          const report = await getDal().partitionMaintenance(ENTITY_REGISTRY);
+          logger.done(`${JOB_NAME} done`, { tags: ["jobs"] });
+          // Returned object → the transport middleware publishes it as
+          // the run report on jobs.result.ai.partition_maintenance.
+          return report;
+        },
+      },
+    ],
+    { serviceCode: SERVICE },
+  );
+  logger.done(`${JOB_NAME} callable ready on ${CALLABLE_SUBJECT}`, { tags: ["jobs"] });
 
-  // Arm now; if primebrick-job is unreachable the interval + the
+  // Materialize now; if primebrick-job is unreachable the interval + the
   // gateway_online broadcast (ecosystem restart — services re-register)
-  // keep retrying. Arm failures must not delay the consumer bind.
-  void tryArm(scheduleSpec, "boot");
-  setProcessInterval("ai-partition-arm-retry", ARM_RETRY_MS, () => tryArm(scheduleSpec, "interval"));
-  await subscribeShielded(SERVICE_SUBJECTS.GATEWAY_ONLINE, () => tryArm(scheduleSpec, "gateway_online"));
-
-  // Durable consumer — the actual executor, inside this process.
-  await NatsClient.jetstreamSubscribe({
-    stream: "JOBS",
-    durable: `exec-${SERVICE}-${JOB_NAME}`,
-    filterSubject: DUE_SUBJECT,
-    verify: dueLaneVerify("system"),
-    consumer: { ackWaitMs: 120_000, maxAckPending: 1 },
-    handler: async () => {
-      logger.info(`${JOB_NAME} fired`, { tags: ["jobs"] });
-      const report = await getDal().partitionMaintenance(ENTITY_REGISTRY);
-      logger.done(`${JOB_NAME} done: ${extJsonStringify(report)}`, { tags: ["jobs"] });
-      // Returned object → the transport middleware publishes it as the
-      // run report on jobs.result.ai.partition-maintenance.
-      return report;
-    },
-  });
-  logger.done(`${JOB_NAME} consumer ready on ${DUE_SUBJECT}`, { tags: ["jobs"] });
+  // keep retrying. Failures must not delay the callable bind above.
+  void tryDeclare("boot");
+  setProcessInterval("ai-partition-materialize-retry", ARM_RETRY_MS, () => tryDeclare("interval"));
+  await subscribeShielded(SERVICE_SUBJECTS.GATEWAY_ONLINE, () => tryDeclare("gateway_online"));
 }

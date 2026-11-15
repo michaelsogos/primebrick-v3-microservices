@@ -91,9 +91,10 @@ async function main(): Promise<void> {
       // BE pack once at startup (the BE never registers via NATS).
       await startDocsPackSubscriber(aiConfig("be_base_url") ?? "http://localhost:3001");
 
-      // Infrastructure jobs derived from entity metadata — arms the
-      // partition-maintenance schedule + durable executor when any
-      // @PartitionField entity carries a retention. No-op otherwise.
+      // System jobs derived from entity metadata — registers the
+      // partition-maintenance callable + materializes its system trigger
+      // when any @PartitionField entity carries a retention. The trigger
+      // row is the schedule of record (user-governed); no-op otherwise.
       await startPartitionMaintenanceJob();
     },
   });
