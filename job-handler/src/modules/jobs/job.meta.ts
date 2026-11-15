@@ -214,11 +214,6 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 10, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
-    // Fully suppressed — `created_by` is the canonical provenance column
-    // (resolves service actors to service_registry name + drill) and
-    // `armed_by` shows the armer. The field stays physical: armed_by /
-    // armed_ref_key calcs, filterable and searchable consume it.
-    { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20, hidden: true },
     { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 20, icon: "send", color: "sky-500", default_visible: true, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 30, filterable: false },
     {
@@ -282,16 +277,6 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "next_fire_mirror_at", label_key: F("job_schedule", "next_fire_mirror_at"), type: "datetime", order: 94, hidden: true,
     },
     {
-      // Lazy-ref wire helpers for `armed_by` — the drill entity/key ride
-      // the row so the cell can resolve its panel, but their truth is
-      // already consolidated in the armed_by badge/link UX. Never shown
-      // standalone: `hidden` suppresses them from meta, picker included.
-      key: "armed_ref_entity", label_key: F("job_schedule", "armed_ref_entity"), type: "text", order: 95, hidden: true,
-    },
-    {
-      key: "armed_ref_key", label_key: F("job_schedule", "armed_ref_key"), type: "text", order: 96, hidden: true,
-    },
-    {
       // Owning trigger — the ONE owner of every mirror row (NOT NULL).
       // Togglable detail: trails the business block rather than sitting
       // mid-sequence (its old slot was taken by the destination column).
@@ -314,15 +299,13 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
     },
     {
-      // WHO armed it. The @Calculated column resolves the live trigger
-      // name via `trigger_uuid` or the declaring service via
-      // `service_registry`/`service_code`. LAZY REF: the row itself
-      // carries the drill target — `armed_ref_entity` names the entity,
-      // `armed_ref_key` the key (trigger uid → entity sheet; service
-      // code → service panel).
+      // WHO armed it — the owning trigger, always (`trigger_uuid` NOT
+      // NULL). The @Calculated column resolves its display name and the
+      // static ref drills it by uuid — same target as the `trigger_uuid`
+      // column itself, no lazy indirection left.
       key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", kind: "calculated", audited: true,
       default_visible: true, order: 2010,
-      ref: { entity_field: "armed_ref_entity", key_field: "armed_ref_key" },
+      ref: { entity: "job_trigger", key_field: "trigger_uuid" },
       tooltip: H("job_schedule", "armed_by"), tooltip_title: HT("job_schedule", "armed_by"), tooltip_priority: "HINT",
     },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", audited: true, default_visible: true, order: 2020 },

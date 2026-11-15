@@ -78,7 +78,6 @@ const armInput = (over: Record<string, unknown> = {}) => ({
 const mirrorRow = (over: Record<string, unknown> = {}) => ({
   uuid: "row-1",
   schedule_subject: "jobs.schedule.job.trig-1",
-  service_code: "job",
   job_name: "trig",
   trigger_uuid: "00000000-0000-7000-8000-000000000001",
   run_as: "user",
@@ -108,7 +107,6 @@ describe("declareSchedule — arm protocol", () => {
       schedule_subject: "jobs.schedule.job.trig-1",
       status: "armed",
       schedule_type: "recurring",
-      service_code: "job",
     });
   });
 

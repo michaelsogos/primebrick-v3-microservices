@@ -161,7 +161,6 @@ export async function declareSchedule(
       `schedule_subject must be jobs.schedule.<owner>.<name>[.<id>], got "${input.schedule_subject}"`,
     );
   }
-  const owner = sm[1]!;
   const tm = TARGET_RE.exec(input.target);
   if (!tm) {
     throw new ScheduleDeclarationError(
@@ -256,7 +255,6 @@ export async function declareSchedule(
       const armedAt = new Date();
       const row: Partial<JobScheduleEntity> = {
         schedule_subject: input.schedule_subject,
-        service_code: owner,
         run_as: lane,
         schedule_spec: input.schedule,
         schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",

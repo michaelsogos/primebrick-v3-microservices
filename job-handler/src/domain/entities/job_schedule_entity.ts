@@ -32,12 +32,6 @@ export class JobScheduleEntity
   @Column({ nullable: false })
   schedule_subject!: string;
 
-  /** Owning service code — the namespace the schedule subject lives in
-   *  (`job` for every trigger-declared mirror today; kept as wire data
-   *  for the `armed_by` service fallback, never a second owner). */
-  @Column({ nullable: false })
-  service_code!: string;
-
   /** user | system — the identity channel the target fires under:
    *  which `jobs.due.<user|system>` lane the due message lands on. */
   @Column({ length: 10, nullable: false })
@@ -123,39 +117,22 @@ export class JobScheduleEntity
   )
   job_name?: string;
 
-  /** WHO armed this schedule — ownership, never audit. Trigger-owned
-   *  rows resolve the live trigger name through `trigger_uuid`
-   *  (rename-proof); module/system rows resolve the declaring service
-   *  through `service_registry`, falling back to the service code.
-   *  Vocabulary: a trigger, a module (service), or system — `created_by`
-   *  stays the hidden audit writer and is never consulted here. */
+  /** WHO armed this schedule — ownership, never audit. Every row is
+   *  trigger-owned (`trigger_uuid` NOT NULL): the armer IS the owning
+   *  trigger, resolved live through `trigger_uuid` (rename-proof, and
+   *  surviving the trigger's soft-delete — a disarmed orphan keeps the
+   *  identity of who armed it, same contract as `job_name`). When the
+   *  trigger row is physically gone the dead key surfaces — the
+   *  unresolved-ref → uuid convention. `created_by` stays the hidden
+   *  audit writer and is never consulted here. */
   @Calculated(
     `COALESCE(
-      (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid AND jt.deleted_at IS NULL),
-      (SELECT sr.name FROM public.service_registry sr WHERE sr.code = {self}.service_code AND sr.deleted_at IS NULL),
-      {self}.service_code
+      (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),
+      {self}.trigger_uuid::text
     )`,
     { pgType: "text", nullable: true },
   )
   armed_by?: string;
-
-  /** Lazy-ref discriminator for `armed_by` — which entity this row's
-   *  drill targets: `job_trigger` when trigger-owned, `service_registry`
-   *  when module/system-owned. Wire data for the FE, never displayed. */
-  @Calculated(
-    `CASE WHEN {self}.trigger_uuid IS NOT NULL THEN 'job_trigger' ELSE 'service_registry' END`,
-    { pgType: "text" },
-  )
-  armed_ref_entity?: string;
-
-  /** Lazy-ref key for `armed_by` — the target identifier on this row:
-   *  the trigger uid (uid-addressed entity sheet) or the service `code`
-   *  (the system endpoint is code-addressed). Wire data, never shown. */
-  @Calculated(
-    `COALESCE({self}.trigger_uuid::text, {self}.service_code)`,
-    { pgType: "text" },
-  )
-  armed_ref_key?: string;
 
 
 }
