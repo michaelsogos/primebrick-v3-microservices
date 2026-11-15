@@ -18,7 +18,7 @@ import { Filter } from "@primebrick/dal-pg";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 
-function publishTriggerChanged(uuid: unknown): void {
+export function publishTriggerChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
   // Core pub/sub, not JetStream: `jobs.ctl.*` is the control plane and must
   // stay OUTSIDE the stream capture set (a stored subject would swallow
@@ -128,17 +128,11 @@ export async function assertPayloadMapConformance(
  */
 const SYSTEM_TRIGGER_FROZEN_FIELDS = ["event_subject", "target_subject", "run_as", "payload_map", "filter"] as const;
 
-/** Canonical serialization (sorted object keys, recursive) — the
- *  jsonb fields compare structurally, so a re-ordered body that carries
- *  the SAME value is not misread as a mutation attempt. */
-function canonJson(v: unknown): string {
-  if (v === null || v === undefined || typeof v !== "object") return JSON.stringify(v ?? null);
-  if (Array.isArray(v)) return `[${v.map(canonJson).join(",")}]`;
-  return `{${Object.keys(v as Record<string, unknown>)
-    .sort()
-    .map((k) => `${JSON.stringify(k)}:${canonJson((v as Record<string, unknown>)[k])}`)
-    .join(",")}}`;
-}
+/** Re-exported for the materialize reconcile — the SAME structural
+ *  compare decides both "user tried to change it" (wire rule) and
+ *  "declaration drifted from the row" (reconcile). */
+export { canonJson } from "../../utils/canon-json.js";
+import { canonJson } from "../../utils/canon-json.js";
 
 /**
  * The system-trigger frozen-set rule — wire side.

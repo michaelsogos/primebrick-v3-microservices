@@ -17,6 +17,7 @@ import { JobAuthConfigPort } from "./adapters/auth-ports-adapter.js";
 import { jobServiceRouteHandler } from "./service-routes.js";
 import { assertDbEnv } from "@primebrick/sdk";
 import { registerScheduleRoutes } from "./controllers/nats-sub/schedule-request.js";
+import { registerSystemTriggerRoutes } from "./controllers/nats-sub/system-trigger-request.js";
 import { reconcileSchedules } from "./services/schedule-service.js";
 import { startRunRecorder, JOBS_STREAM } from "./services/run-recorder.js";
 import { startDueForwarder } from "./services/due-forwarder.js";
@@ -93,6 +94,7 @@ async function main(): Promise<void> {
       ], { allowMsgSchedules: true, syncSubjects: true });
 
       await registerScheduleRoutes();
+      await registerSystemTriggerRoutes();
       await startRunRecorder();
       await startDueForwarder();
       await startCallableCatalog();
