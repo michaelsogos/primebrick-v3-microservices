@@ -71,11 +71,16 @@ of admin-managed schedules.
   re-arm); `paused` = suppressed re-arm until resume (`enabled` untouched);
   `disarmed` = owner-level off (trigger `enabled=false` / infra sticky
   suppression — re-declares refused until explicit enable).
-- `job_runs` — execution history: `status` (`dispatched` | `succeeded` | `failed` | `lost`),
-  `duration_ms`, `fire_seq`, error fields, report (jsonb). The SDK transport
-  middleware publishes `jobs.result.<svc>.<name>` for every correlated
-  handler (`x-job-run-id` / `x-job-schedule-subject` headers); a `dispatched`
-  run that never gets a result is flipped to `lost` by the sweeper.
+- `job_runs` — execution history: `status` (`dispatched` | `succeeded` | `failed` | `lost` | `skipped`),
+  `duration_ms`, `fire_seq`, error fields, report (jsonb). `skipped` is the
+  pause/suppression audit trail: a queued due honored while its schedule is
+  no longer `armed` records a skipped run (no callable dispatch).
+  `fire_seq` is the due fire's JetStream stream sequence, stamped by the
+  due-forwarder at insert on every path (dispatched/skipped/failed). The
+  SDK transport middleware publishes `jobs.result.<svc>.<name>` for every
+  correlated handler (`x-job-run-id` / `x-job-schedule-subject` headers);
+  a `dispatched` run that never gets a result is flipped to `lost` by the
+  sweeper.
 - `config_entries` — mandatory per-service config (cadence, ports, shield refs).
   `reconcile_interval_ms` (default `300000`, `0` disables) drives the
   periodic mirror-vs-NATS reconcile; the boot-time pass always runs.
