@@ -376,7 +376,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/stop-job",
-    entity_op: { entity: "job_schedule", op: "stop", cta: { icon: "square", row_key: "schedule_subject", translation_key: "job.jobs.actions.stop", visible_on: { field: "status", values: ["armed"] } } },
+    entity_op: { entity: "job_schedule", op: "stop", cta: { icon: "square:filled", row_key: "schedule_subject", translation_key: "job.jobs.actions.stop", visible_on: { field: "status", values: ["armed"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Stop a schedule instance (admin)",
