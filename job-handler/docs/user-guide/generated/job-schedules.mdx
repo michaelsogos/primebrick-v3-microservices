@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Job Name, the Source Queue, the Kind, the Fired at, the Armed By, the Armed at, the Cadence, the Type, the Run As, the Status, the Anomaly, the Run Stats, the Next run, plus the status flags Enabled.
+Each row shows the Job Name, the Source Queue, the Kind, the Fired at, the Armed By, the Armed at, the Cadence, the Type, the Destination Event, the Run As, the Status, the Anomaly, the Run Stats, the Next run, plus the status flags Enabled.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -20,7 +20,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Cadence** | yes | yes | no |  |
 | **Trigger** | no | yes | yes |  |
 | **Type** | yes | yes | no |  |
-| **Destination Event** | no | yes | yes | The event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services. |
+| **Destination Event** | yes | yes | yes | The event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services. |
 | **Run As** | yes | yes | yes | The identity the fire executes under — `user` inherits the originator's or author's credentials, `system` runs with module privileges. |
 | **Status** | yes | yes | yes |  |
 | **Enabled** | yes | no | no |  |
@@ -36,7 +36,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 - The Cadence column is shown by default and can be sorted but not filtered.
 - The Trigger column is hidden by default and can be sorted and filtered.
 - The Type column is shown by default and can be sorted but not filtered.
-- The Destination Event column is hidden by default and can be sorted and filtered — the event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services.
+- The Destination Event column is shown by default and can be sorted and filtered — the event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services.
 - The Run As column is shown by default and can be sorted and filtered — the identity the fire executes under — `user` inherits the originator's or author's credentials, `system` runs with module privileges.
 - The Status column is shown by default and can be sorted and filtered.
 - The Enabled column is shown by default and cannot be sorted or filtered.
