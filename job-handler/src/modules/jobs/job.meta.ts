@@ -199,9 +199,11 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 30, filterable: false },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 40, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
     {
-      // NOT `filterable` — the `schedule_kind` filter preset owns this
-      // field (a sheet filter AND-ed with the preset would contradict it).
-      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 50, filterable: false,
+      // Wire-filterable — the `schedule_kind` filter preset filters on it.
+      // The filters PANEL excludes it anyway: preset-owned fields are
+      // derived out of the sheet's field list on the FE side (a sheet
+      // criterion AND-ed with the preset would contradict it).
+      key: "schedule_type", label_key: F("job_schedule", "schedule_type"), type: "badge", order: 50,
       badge: { values: {
         recurring: { label_key: V("job_schedule", "recurring"), color: "blue" },
         once: { label_key: V("job_schedule", "once"), color: "purple" },
@@ -285,7 +287,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     {
       // Universal "Eseguita il" — @Calculated latest ACTUAL run on the
       // subject (`skipped` excluded — a suppressed due never ran).
-      key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", kind: "calculated", audited: true, default_visible: true,
+      key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", kind: "calculated", audited: true, default_visible: true, order: 2000,
       tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
     },
     {
@@ -296,12 +298,12 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // `armed_ref_key` the key (trigger uid → entity sheet; service
       // code → service panel).
       key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", kind: "calculated", audited: true,
-      default_visible: true,
+      default_visible: true, order: 2010,
       ref: { entity_field: "armed_ref_entity", key_field: "armed_ref_key" },
       tooltip: H("job_schedule", "armed_by"), tooltip_title: HT("job_schedule", "armed_by"), tooltip_priority: "HINT",
     },
-    { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", audited: true, default_visible: true },
-    { key: "disarmed_at", label_key: F("job_schedule", "disarmed_at"), type: "datetime", audited: true, default_visible: false },
+    { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", audited: true, default_visible: true, order: 2020 },
+    { key: "disarmed_at", label_key: F("job_schedule", "disarmed_at"), type: "datetime", audited: true, default_visible: false, order: 2030 },
   ],
   table: {
     default_view: "table",

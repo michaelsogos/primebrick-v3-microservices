@@ -13,12 +13,10 @@ import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 import { scheduleDrift } from "../../services/schedule-service.js";
+import { jobTriggerMeta, jobScheduleMeta, jobRunMeta } from "./job.meta.js";
 import { Filter } from "@primebrick/dal-pg";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
-const RUN_FILTERABLE = new Set(["status", "service_code", "job_name", "run_as", "schedule_subject", "created_at", "updated_at"]);
-const TRIGGER_FILTERABLE = new Set(["name", "event_subject", "target_subject", "run_as", "runs", "last_run", "next_run"]);
-const SCHEDULE_FILTERABLE = new Set(["service_code", "kind", "run_as", "status", "schedule_type", "schedule_subject", "armed_by"]);
 
 function publishTriggerChanged(uuid: unknown): void {
   if (typeof uuid !== "string") return;
@@ -129,8 +127,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
       entity: JobTriggerEntity,
       actor: entityActor,
       list: {
-        searchableKeys: ["name", "event_subject", "target_subject"],
-        filterableKeys: TRIGGER_FILTERABLE,
+        meta: jobTriggerMeta,
         defaultSort: TRIGGER_DEFAULT_SORT,
       },
     });
@@ -190,8 +187,7 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
       entity: JobScheduleEntity,
       actor: entityActor,
       list: {
-        searchableKeys: ["schedule_subject", "job_name", "service_code"],
-        filterableKeys: SCHEDULE_FILTERABLE,
+        meta: jobScheduleMeta,
         defaultSort: TRIGGER_DEFAULT_SORT,
       },
     });
@@ -249,8 +245,7 @@ export class JobRunsService extends DomainService<RunT> {
       entity: JobRunEntity,
       actor: entityActor,
       list: {
-        searchableKeys: ["job_name", "service_code", "error_code"],
-        filterableKeys: RUN_FILTERABLE,
+        meta: jobRunMeta,
         defaultSort: TRIGGER_DEFAULT_SORT,
       },
     });
