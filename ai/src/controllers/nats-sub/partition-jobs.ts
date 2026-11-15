@@ -74,7 +74,7 @@ async function tryDeclare(reason: string): Promise<void> {
       [
         {
           key: JOB_NAME,
-          name: "AI partition maintenance",
+          name: "ai-partition-maintenance",
           schedule_spec: SEED_SCHEDULE,
           target_subject: CALLABLE_SUBJECT,
           run_as: "system",
