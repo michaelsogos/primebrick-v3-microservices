@@ -11,7 +11,7 @@ import { CustomerConsentEntity } from "../../domain/entities/customer_consent_en
 import {
   CUSTOMER_CONSENT_DEFAULT_SORT,
 } from "./list-config.js";
-import { CUSTOMER_CONSENT_SEARCHABLE_KEYS, CUSTOMER_CONSENT_FILTERABLE_KEYS } from "./customer_consent.meta.js";
+import { customerConsentMeta } from "./customer_consent.meta.js";
 
 export class CustomerConsentsService extends DomainService<CustomerConsentEntity & Record<string, unknown>> {
   constructor() {
@@ -19,8 +19,7 @@ export class CustomerConsentsService extends DomainService<CustomerConsentEntity
       entity: CustomerConsentEntity,
       actor: requireActor,
       list: {
-        searchableKeys: CUSTOMER_CONSENT_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CUSTOMER_CONSENT_FILTERABLE_KEYS),
+        meta: customerConsentMeta,
         defaultSort: CUSTOMER_CONSENT_DEFAULT_SORT,
       },
     });

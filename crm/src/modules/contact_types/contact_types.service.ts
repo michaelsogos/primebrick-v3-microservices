@@ -9,7 +9,7 @@ import { ContactTypeEntity } from "../../domain/entities/contact_type_entity.js"
 import {
   CONTACT_TYPE_DEFAULT_SORT,
 } from "./list-config.js";
-import { CONTACT_TYPE_SEARCHABLE_KEYS, CONTACT_TYPE_FILTERABLE_KEYS } from "./contact_type.meta.js";
+import { contactTypeMeta } from "./contact_type.meta.js";
 
 export class ContactTypesService extends DomainService<ContactTypeEntity & Record<string, unknown>> {
   constructor() {
@@ -17,8 +17,7 @@ export class ContactTypesService extends DomainService<ContactTypeEntity & Recor
       entity: ContactTypeEntity,
       actor: requireActor,
       list: {
-        searchableKeys: CONTACT_TYPE_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CONTACT_TYPE_FILTERABLE_KEYS),
+        meta: contactTypeMeta,
         defaultSort: CONTACT_TYPE_DEFAULT_SORT,
       },
     });

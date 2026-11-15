@@ -12,7 +12,7 @@ import { ValidationError } from "@primebrick/sdk";
 import { AiCerebellumEntity } from "../../domain/entities/ai_cerebellum_entity.js";
 import type { AiCerebellumDetailDto } from "./dto.js";
 import { AI_CEREBELLUM_DEFAULT_SORT } from "./list-config.js";
-import { AI_CEREBELLUM_SEARCHABLE_KEYS, AI_CEREBELLUM_FILTERABLE_KEYS } from "./ai_cerebellum.meta.js";
+import { aiCerebellumMeta } from "./ai_cerebellum.meta.js";
 import { entityActor } from "../../db/entity-repo.js";
 
 type T = AiCerebellumDetailDto & Record<string, unknown>;
@@ -23,8 +23,7 @@ export class AiCerebellumService extends DomainService<T> {
       entity: AiCerebellumEntity,
       actor: entityActor,
       list: {
-        searchableKeys: AI_CEREBELLUM_SEARCHABLE_KEYS,
-        filterableKeys: new Set(AI_CEREBELLUM_FILTERABLE_KEYS),
+        meta: aiCerebellumMeta,
         defaultSort: AI_CEREBELLUM_DEFAULT_SORT,
       },
     });

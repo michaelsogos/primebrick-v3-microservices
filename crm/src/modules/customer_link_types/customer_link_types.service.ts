@@ -9,7 +9,7 @@ import { CustomerLinkTypeEntity } from "../../domain/entities/customer_link_type
 import {
   CUSTOMER_LINK_TYPE_DEFAULT_SORT,
 } from "./list-config.js";
-import { CUSTOMER_LINK_TYPE_SEARCHABLE_KEYS, CUSTOMER_LINK_TYPE_FILTERABLE_KEYS } from "./customer_link_type.meta.js";
+import { customerLinkTypeMeta } from "./customer_link_type.meta.js";
 
 export class CustomerLinkTypesService extends DomainService<CustomerLinkTypeEntity & Record<string, unknown>> {
   constructor() {
@@ -17,8 +17,7 @@ export class CustomerLinkTypesService extends DomainService<CustomerLinkTypeEnti
       entity: CustomerLinkTypeEntity,
       actor: requireActor,
       list: {
-        searchableKeys: CUSTOMER_LINK_TYPE_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CUSTOMER_LINK_TYPE_FILTERABLE_KEYS),
+        meta: customerLinkTypeMeta,
         defaultSort: CUSTOMER_LINK_TYPE_DEFAULT_SORT,
       },
     });

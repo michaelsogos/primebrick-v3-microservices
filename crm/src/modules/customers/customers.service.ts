@@ -23,7 +23,7 @@ import { requireActor } from "@primebrick/sdk";
 
 import { CustomerEntity } from "../../domain/entities/customer_entity.js";
 import { CUSTOMER_DEFAULT_SORT } from "./list-config.js";
-import { customerMeta, CUSTOMER_SEARCHABLE_KEYS, CUSTOMER_FILTERABLE_KEYS } from "./customer.meta.js";
+import { customerMeta } from "./customer.meta.js";
 
 export class CustomersService extends DomainService<CustomerEntity & Record<string, unknown>> {
   constructor() {
@@ -32,8 +32,7 @@ export class CustomersService extends DomainService<CustomerEntity & Record<stri
       actor: requireActor,
       display: resolveDisplayTemplate(customerMeta),
       list: {
-        searchableKeys: CUSTOMER_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CUSTOMER_FILTERABLE_KEYS),
+        meta: customerMeta,
         defaultSort: CUSTOMER_DEFAULT_SORT,
         // Entity-specific shortcut param: ?status=ACTIVE|...
         extraFilters: (q) =>

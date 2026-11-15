@@ -9,7 +9,7 @@ import { CustomerContactEntity } from "../../domain/entities/customer_contact_en
 import {
   CUSTOMER_CONTACT_DEFAULT_SORT,
 } from "./list-config.js";
-import { customerContactMeta, CUSTOMER_CONTACT_SEARCHABLE_KEYS, CUSTOMER_CONTACT_FILTERABLE_KEYS } from "./customer_contact.meta.js";
+import { customerContactMeta } from "./customer_contact.meta.js";
 
 export class CustomerContactsService extends DomainService<CustomerContactEntity & Record<string, unknown>> {
   constructor() {
@@ -18,8 +18,7 @@ export class CustomerContactsService extends DomainService<CustomerContactEntity
       actor: requireActor,
       display: resolveDisplayTemplate(customerContactMeta),
       list: {
-        searchableKeys: CUSTOMER_CONTACT_SEARCHABLE_KEYS,
-        filterableKeys: new Set(CUSTOMER_CONTACT_FILTERABLE_KEYS),
+        meta: customerContactMeta,
         defaultSort: CUSTOMER_CONTACT_DEFAULT_SORT,
       },
     });

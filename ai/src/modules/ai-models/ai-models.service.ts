@@ -14,7 +14,7 @@ import { ValidationError } from "@primebrick/sdk";
 import { AiModelEntity } from "../../domain/entities/ai_model_entity.js";
 import type { AiModelDetailDto } from "./dto.js";
 import { AI_MODEL_DEFAULT_SORT } from "./list-config.js";
-import { AI_MODEL_SEARCHABLE_KEYS, AI_MODEL_FILTERABLE_KEYS } from "./ai_models.meta.js";
+import { aiModelMeta } from "./ai_models.meta.js";
 import { powerLevelFromWorkingSet } from "./power-level.js";
 import { entityActor } from "../../db/entity-repo.js";
 
@@ -26,8 +26,7 @@ export class AiModelsService extends DomainService<T> {
       entity: AiModelEntity,
       actor: entityActor,
       list: {
-        searchableKeys: AI_MODEL_SEARCHABLE_KEYS,
-        filterableKeys: new Set(AI_MODEL_FILTERABLE_KEYS),
+        meta: aiModelMeta,
         defaultSort: AI_MODEL_DEFAULT_SORT,
       },
     });

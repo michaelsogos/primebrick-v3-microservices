@@ -12,14 +12,7 @@
 import { DomainService } from "@primebrick/dal-pg";
 import { entityActor } from "../../db/entity-repo.js";
 import { EmailTemplateEntity } from "../../domain/entities/email_template_entity.js";
-
-const TEMPLATE_FILTERABLE = new Set([
-  "code",
-  "language_iso",
-  "subject",
-  "created_at",
-  "updated_at",
-]);
+import { templateMeta } from "./template.meta.js";
 
 export class TemplatesService extends DomainService<EmailTemplateEntity & Record<string, unknown>> {
   constructor() {
@@ -31,8 +24,7 @@ export class TemplatesService extends DomainService<EmailTemplateEntity & Record
       // actor).
       auditPort: { writeAudit: async () => 0n },
       list: {
-        searchableKeys: ["code", "language_iso", "subject"],
-        filterableKeys: TEMPLATE_FILTERABLE,
+        meta: templateMeta,
         defaultSort: { key: "updated_at", dir: "desc" },
       },
     });

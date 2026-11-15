@@ -17,16 +17,7 @@
 import { DomainService, type EntityListQuery } from "@primebrick/dal-pg";
 import { entityActor } from "../../db/entity-repo.js";
 import { ProviderEntity } from "../../domain/entities/provider_entity.js";
-
-const PROVIDER_FILTERABLE = new Set([
-  "provider",
-  "api_endpoint",
-  "from_email",
-  "from_name",
-  "reply_to",
-  "created_at",
-  "updated_at",
-]);
+import { providerMeta } from "./provider.meta.js";
 
 /** Strip `api_key` from a list row — the secret never leaves in bulk reads. */
 function maskListRow<T extends Record<string, unknown>>(row: T): T {
@@ -43,8 +34,7 @@ export class ProvidersService extends DomainService<ProviderEntity & Record<stri
       // trail writer (writes still stamp the Auditable columns via actor).
       auditPort: { writeAudit: async () => 0n },
       list: {
-        searchableKeys: ["provider", "api_endpoint", "from_email", "from_name", "reply_to"],
-        filterableKeys: PROVIDER_FILTERABLE,
+        meta: providerMeta,
         defaultSort: { key: "updated_at", dir: "desc" },
       },
     });
