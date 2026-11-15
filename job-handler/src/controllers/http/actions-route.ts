@@ -376,7 +376,7 @@ export const jobActionsRoutes: RpcRoute[] = [
   {
     method: "POST",
     path: "/api/v1/actions/stop-job",
-    entity_op: { entity: "job_schedule", op: "stop", cta: { icon: "square:filled", row_key: "schedule_subject", translation_key: "job.jobs.actions.stop", visible_on: { field: "status", values: ["armed"] } } },
+    entity_op: { entity: "job_schedule", op: "stop", cta: { icon: "square:filled", color: "warning", row_key: "schedule_subject", translation_key: "job.jobs.actions.stop", visible_on: { field: "status", values: ["armed"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
       summary: "Stop a schedule instance (admin)",
@@ -395,18 +395,34 @@ export const jobActionsRoutes: RpcRoute[] = [
   },
   {
     method: "POST",
-    path: "/api/v1/actions/disable-schedule",
-    entity_op: { entity: "job_schedule", op: "disable", cta: { icon: "power", color: "destructive", row_key: "schedule_subject", translation_key: "job.jobs.actions.disable", visible_on: { field: "status", values: ["armed", "stopped", "paused"] } } },
+    path: "/api/v1/actions/pause-schedule",
+    entity_op: { entity: "job_schedule", op: "pause", cta: { icon: "pause:filled", color: "warning", row_key: "schedule_subject", translation_key: "job.jobs.actions.pause", visible_on: { field: "status", values: ["armed"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
-      summary: "Disable a schedule — owner-level off (admin)",
+      summary: "Pause a schedule — suppressed until resume (admin)",
       description:
-        "Cascades to `job_triggers` soft-delete (deleted_at) — the owning trigger " +
-        "disarms on the engine's changed broadcast; only an explicit enable restores.",
+        "not soft-deleted, and every re-arm path (refresh, event-match, ctl re-declare, due-lane) " +
+        "is suppressed while `paused`. Survives restarts.",
       tags: ["jobs", "actions"],
     },
     body: scheduleSubjectBody,
-    handler: async (ctx) => disableSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx)),
+    handler: async (ctx) => {
+      await disarmSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx), "paused");
+      return { paused: true };
+    },
+  },
+  {
+    method: "POST",
+    path: "/api/v1/actions/resume-schedule",
+    entity_op: { entity: "job_schedule", op: "resume", cta: { icon: "play:filled", color: "success", row_key: "schedule_subject", translation_key: "job.jobs.actions.resume", visible_on: { field: "status", values: ["paused"] } } },
+    permissions: [Permission.AUTHENTICATED_ADMIN],
+    openapi: {
+      summary: "Resume a paused schedule (admin)",
+      description: "Clears `paused` and re-derives the owning trigger's schedule.",
+      tags: ["jobs", "actions"],
+    },
+    body: scheduleSubjectBody,
+    handler: async (ctx) => resumeSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx)),
   },
   {
     method: "POST",
@@ -425,34 +441,18 @@ export const jobActionsRoutes: RpcRoute[] = [
   },
   {
     method: "POST",
-    path: "/api/v1/actions/pause-schedule",
-    entity_op: { entity: "job_schedule", op: "pause", cta: { icon: "pause:filled", row_key: "schedule_subject", translation_key: "job.jobs.actions.pause", visible_on: { field: "status", values: ["armed"] } } },
+    path: "/api/v1/actions/disable-schedule",
+    entity_op: { entity: "job_schedule", op: "disable", cta: { icon: "power", color: "destructive", row_key: "schedule_subject", translation_key: "job.jobs.actions.disable", visible_on: { field: "status", values: ["armed", "stopped", "paused"] } } },
     permissions: [Permission.AUTHENTICATED_ADMIN],
     openapi: {
-      summary: "Pause a schedule — suppressed until resume (admin)",
+      summary: "Disable a schedule — owner-level off (admin)",
       description:
-        "not soft-deleted, and every re-arm path (refresh, event-match, ctl re-declare, due-lane) " +
-        "is suppressed while `paused`. Survives restarts.",
+        "Cascades to `job_triggers` soft-delete (deleted_at) — the owning trigger " +
+        "disarms on the engine's changed broadcast; only an explicit enable restores.",
       tags: ["jobs", "actions"],
     },
     body: scheduleSubjectBody,
-    handler: async (ctx) => {
-      await disarmSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx), "paused");
-      return { paused: true };
-    },
-  },
-  {
-    method: "POST",
-    path: "/api/v1/actions/resume-schedule",
-    entity_op: { entity: "job_schedule", op: "resume", cta: { icon: "play:filled", row_key: "schedule_subject", translation_key: "job.jobs.actions.resume", visible_on: { field: "status", values: ["paused"] } } },
-    permissions: [Permission.AUTHENTICATED_ADMIN],
-    openapi: {
-      summary: "Resume a paused schedule (admin)",
-      description: "Clears `paused` and re-derives the owning trigger's schedule.",
-      tags: ["jobs", "actions"],
-    },
-    body: scheduleSubjectBody,
-    handler: async (ctx) => resumeSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx)),
+    handler: async (ctx) => disableSchedule((ctx.body as ScheduleSubjectBody).schedule_subject, actorOf(ctx)),
   },
   // NOTE: no enable/disable-trigger routes — doctrine: DISABLE IS
   // SOFT-DELETE. Standard `delete.single`/`restore.single` do the work;
