@@ -169,6 +169,68 @@ describe("triggers-engine — event + schedule (gated timer)", () => {
   });
 });
 
+describe("triggers-engine — numeric matchFilter (ext-json bigint domain)", () => {
+  // ext-json decodes EVERY integer payload field as bigint; stored filter
+  // specs arrive as plain numbers. The operators must compare by value,
+  // not by wire boxing — a `typeof === "number"` gate used to reject them
+  // all (verified live: `gt:100000` dropped an `amount:200000` event).
+  const threshold = () =>
+    mkTrigger({
+      event_subject: "customer.updated",
+      schedule_spec: "@every 1d",
+      filter: [{ field: "amount", op: "gt", value: 100000 }],
+    });
+
+  it("gt: bigint event value beats a number threshold", async () => {
+    const { events } = await boot([threshold()]);
+    await events.get("customer.updated")!({ amount: 200000n }, userMsg);
+    expect(h.declareSchedule).toHaveBeenCalled();
+  });
+
+  it("gt: bigint under threshold still rejects (fail-closed)", async () => {
+    const { events } = await boot([threshold()]);
+    await events.get("customer.updated")!({ amount: 50n }, userMsg);
+    expect(h.declareSchedule).not.toHaveBeenCalled();
+    expect(h.disarmSchedule).toHaveBeenCalled();
+  });
+
+  it("eq: bigint vs number compares by value", async () => {
+    const { events } = await boot([
+      mkTrigger({
+        event_subject: "customer.updated",
+        schedule_spec: "@every 1d",
+        filter: [{ field: "level", op: "eq", value: 3 }],
+      }),
+    ]);
+    await events.get("customer.updated")!({ level: 3n }, userMsg);
+    expect(h.declareSchedule).toHaveBeenCalled();
+  });
+
+  it("neq: bigint equal to the filter value rejects", async () => {
+    const { events } = await boot([
+      mkTrigger({
+        event_subject: "customer.updated",
+        schedule_spec: "@every 1d",
+        filter: [{ field: "level", op: "neq", value: 3 }],
+      }),
+    ]);
+    await events.get("customer.updated")!({ level: 3n }, userMsg);
+    expect(h.declareSchedule).not.toHaveBeenCalled();
+  });
+
+  it("non-safe-integer bigint stays uncoerced — no silent truncation into a comparison", async () => {
+    const { events } = await boot([
+      mkTrigger({
+        event_subject: "customer.updated",
+        schedule_spec: "@every 1d",
+        filter: [{ field: "amount", op: "gt", value: 1 }],
+      }),
+    ]);
+    await events.get("customer.updated")!({ amount: 9007199254740993n }, userMsg);
+    expect(h.declareSchedule).not.toHaveBeenCalled();
+  });
+});
+
 describe("triggers-engine — multi-replica queue semantics", () => {
   it("event subjects subscribe on queue \"job\" — one replica per event", async () => {
     const { queues } = await boot([
