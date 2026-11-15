@@ -97,7 +97,10 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
       error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
       error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
       duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
-      fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
+      // COALESCE semantics: the forwarder-stamped due-fire seq is
+      // canonical — the report's seq fills only rows that never crossed
+      // the forwarder with one (legacy inserts, edge paths).
+      fire_seq: row.fire_seq ?? (data.fire_seq === undefined ? undefined : BigInt(data.fire_seq)),
       redelivery_count: redeliveryCount,
       report: plainJson(data.report),
       version: row.version,

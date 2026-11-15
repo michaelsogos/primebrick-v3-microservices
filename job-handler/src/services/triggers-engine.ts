@@ -71,18 +71,40 @@ function getPath(obj: unknown, path: string): unknown {
   return cur;
 }
 
+/**
+ * Numeric coercion for comparisons — ext-json delivers EVERY integer as
+ * `bigint` (canonical codec), while stored filter specs (`job_triggers.filter`
+ * jsonb) arrive as plain `number`. A `typeof` gate on "number" alone makes
+ * `gt`/`lt`/`eq` reject every integer field on real events — verified live.
+ * Non-safe-integer magnitudes stay uncoerced (precision honesty: a bigint
+ * beyond MAX_SAFE_INTEGER must not silently truncate into a comparison).
+ */
+const asNum = (v: unknown): number | undefined => {
+  if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
+  if (typeof v === "bigint") {
+    return v >= BigInt(Number.MIN_SAFE_INTEGER) && v <= BigInt(Number.MAX_SAFE_INTEGER)
+      ? Number(v)
+      : undefined;
+  }
+  return undefined;
+};
+
 function matchFilter(filters: unknown, payload: unknown): boolean {
   if (!Array.isArray(filters) || filters.length === 0) return true;
   return (filters as RuleFilter[]).every((f) => {
     const actual = getPath(payload, f.field);
+    const a = asNum(actual);
+    const b = asNum(f.value);
     switch (f.op ?? "eq") {
-      case "eq": return actual === f.value;
-      case "neq": return actual !== f.value;
+      // `eq`/`neq` keep strict equality for non-numeric operands; when both
+      // sides are numeric the comparison is by value, not by wire boxing.
+      case "eq": return a !== undefined && b !== undefined ? a === b : actual === f.value;
+      case "neq": return a !== undefined && b !== undefined ? a !== b : actual !== f.value;
       case "exists": return actual !== undefined && actual !== null;
       case "contains":
         return typeof actual === "string" && typeof f.value === "string" && actual.includes(f.value);
-      case "gt": return typeof actual === "number" && typeof f.value === "number" && actual > f.value;
-      case "lt": return typeof actual === "number" && typeof f.value === "number" && actual < f.value;
+      case "gt": return a !== undefined && b !== undefined && a > b;
+      case "lt": return a !== undefined && b !== undefined && a < b;
       default: return false;
     }
   });

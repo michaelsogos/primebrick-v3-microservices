@@ -69,6 +69,7 @@ async function insertRun(
   status: "dispatched" | "failed" | "skipped",
   errorCode?: string,
   errorDetail?: string,
+  fireSeq?: bigint,
 ): Promise<string | undefined> {
   try {
     const row = await getDal().add<JobRunEntity>(
@@ -83,6 +84,11 @@ async function insertRun(
         status,
         error_code: errorCode,
         error_detail: errorDetail?.slice(0, 2000),
+        // `fire_seq` = stream sequence of THE DUE FIRE — stamped at
+        // insert on every path (dispatched/skipped/failed-early) so the
+        // column is populated even for core-subscribed callables whose
+        // result reports carry no `m.seq`.
+        fire_seq: fireSeq,
       } as never,
       { actor: "system:job" } as never,
     );
@@ -205,12 +211,19 @@ async function freshAuthHeaders(
 async function forward(
   envelope: JobForwardEnvelope,
   lane: "user" | "system",
-  msg: { headers?: Parameters<typeof forwardAuthHeaders>[0]["headers"] },
+  msg: {
+    headers?: Parameters<typeof forwardAuthHeaders>[0]["headers"];
+    info?: { streamSequence?: number | bigint };
+  },
 ): Promise<void> {
   if (!CALLABLE_SUBJECT_RE.test(envelope.target)) {
     logger.warn(`due-forwarder: refusing invalid callable target "${envelope.target}"`, { tags: ["jobs"] });
     return;
   }
+  // The due fire's own stream sequence — the canonical `fire_seq` for
+  // every run this envelope produces.
+  const fireSeq =
+    msg.info?.streamSequence === undefined ? undefined : BigInt(msg.info.streamSequence);
   // Armed-only gate — a queued due is honored ONLY while its schedule is
   // still armed. pause/disarm/stop purge the declaration but queued dues
   // keep flowing to this consumer: honoring them would let suppressed
@@ -219,7 +232,7 @@ async function forward(
   if (envelope.schedule_subject) {
     const row = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
     if (row !== undefined && row.status !== "armed") {
-      await insertRun(envelope, lane, "skipped", `schedule ${row.status}`, `suppressed: schedule status is ${row.status}`);
+      await insertRun(envelope, lane, "skipped", `schedule ${row.status}`, `suppressed: schedule status is ${row.status}`, fireSeq);
       return;
     }
   }
@@ -231,7 +244,7 @@ async function forward(
   if (lane === "user" && actorUuid) {
     const fresh = await freshAuthHeaders(actorUuid, msg);
     if (fresh === null) {
-      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)");
+      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq);
       return;
     }
     headers = fresh;
@@ -246,7 +259,7 @@ async function forward(
   });
   // Insert the run row FIRST — its uuid rides as `x-job-run-id` so the
   // callable's transport middleware reports the real outcome back.
-  const runUuid = await insertRun(envelope, lane, "dispatched");
+  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq);
   const outHeaders: Record<string, string> = {
     ...headers,
     ...(envelope.schedule_subject
