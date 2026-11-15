@@ -15,6 +15,8 @@
 import {
   makeNatsRequestRoute,
   serviceShieldVerify,
+  scheduleSpecError,
+  MIN_SCHEDULE_INTERVAL_MS,
   logger,
 } from "@primebrick/sdk";
 import {
@@ -45,6 +47,16 @@ function validateDeclare(raw: unknown): ScheduleRequest {
   }
   if (typeof r?.schedule !== "string" || !r.schedule) {
     throw new ScheduleDeclarationError("VALIDATION_ERROR", "schedule is required");
+  }
+  const specErr = scheduleSpecError(r.schedule);
+  if (specErr === "below_min_interval") {
+    throw new ScheduleDeclarationError(
+      "SCHEDULE_BELOW_MIN_INTERVAL",
+      `schedule "${r.schedule}" fires below the ${MIN_SCHEDULE_INTERVAL_MS / 1000}s minimum — sub-minute jobs are a design error`,
+    );
+  }
+  if (specErr) {
+    throw new ScheduleDeclarationError("VALIDATION_ERROR", `invalid schedule spec "${r.schedule}"`);
   }
   if (typeof r?.target !== "string" || !r.target) {
     throw new ScheduleDeclarationError("VALIDATION_ERROR", "target is required");

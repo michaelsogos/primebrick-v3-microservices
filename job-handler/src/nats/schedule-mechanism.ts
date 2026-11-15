@@ -26,7 +26,7 @@ export interface EnsureJobScheduleOpts {
    * One schedule per subject; republishing replaces it atomically.
    */
   scheduleSubject: string;
-  /** `"@every 30s"` | `"@at 2025-12-01T09:00:00Z"` | cron expression. */
+  /** `"@every 5m"` (≥1m floor) | `"@at 2025-12-01T09:00:00Z"` | cron expression. */
   schedule: string;
   /** Subject the stored message is republished to at fire time —
    *  `jobs.due.user.*` or `jobs.due.system.*`. Must be covered by the same
@@ -105,7 +105,7 @@ export async function cancelJobSchedule(
 /** One live schedule declaration found in the stream (read via `last_by_subj`). */
 export interface JobScheduleDeclaration {
   subject: string;
-  /** `Nats-Schedule` spec — "@every 30s", cron, "@at …". */
+  /** `Nats-Schedule` spec — "@every 5m" (≥1m floor), cron, "@at …". */
   schedule: string | undefined;
   /** `Nats-Schedule-Target` — the fired republish destination. */
   target: string | undefined;

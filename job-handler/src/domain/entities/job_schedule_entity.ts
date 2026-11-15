@@ -44,7 +44,7 @@ export class JobScheduleEntity
   @Column({ length: 10, nullable: false })
   run_as!: string;
 
-  /** The schedule spec — "@every 30s", "@at …", cron. */
+  /** The schedule spec — "@every 5m" (≥1m floor), "@at …", cron. */
   @Column({ nullable: false })
   schedule_spec!: string;
 

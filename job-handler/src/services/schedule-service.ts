@@ -48,7 +48,14 @@ import {
   listJobScheduleSubjects,
   toNatsScheduleSpec,
 } from "../nats/schedule-mechanism.js";
-import { JOB_SCHEDULE_SUBJECT_HEADER, logger, NatsClient, nextScheduleFire } from "@primebrick/sdk";
+import {
+  JOB_SCHEDULE_SUBJECT_HEADER,
+  logger,
+  MIN_SCHEDULE_INTERVAL_MS,
+  NatsClient,
+  nextScheduleFire,
+  scheduleEveryMs,
+} from "@primebrick/sdk";
 import { Filter, field, toUUID } from "@primebrick/dal-pg";
 import { getDal } from "../db/dal.js";
 import { JobScheduleEntity } from "../domain/entities/job_schedule_entity.js";
@@ -168,6 +175,18 @@ export async function declareSchedule(
   }
   const lane = tm[1]! as "user" | "system";
   const targetOwner = tm[2]!;
+  // Minute floor — the engine's own invariant, independent of the
+  // write-path validation: a sub-minute spec that reached the arm path
+  // through any channel (SQL seed, stale row, unvalidated caller) must
+  // not declare. `@at`/cron are exempt by construction (one-shot; the
+  // 5-field grammar cannot go below a minute).
+  const everyMs = scheduleEveryMs(input.schedule);
+  if (everyMs !== undefined && everyMs < MIN_SCHEDULE_INTERVAL_MS) {
+    throw new ScheduleDeclarationError(
+      "SCHEDULE_BELOW_MIN_INTERVAL",
+      `schedule "${input.schedule}" fires below the ${MIN_SCHEDULE_INTERVAL_MS / 1000}s minimum — sub-minute jobs are a design error`,
+    );
+  }
   if (input.caller_service) {
     // Remote caller (a service self-declaring via jobs.ctl.schedule.request):
     // it may only declare inside its own namespace AND the fired message

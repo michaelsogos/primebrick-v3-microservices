@@ -35,6 +35,13 @@ entity registry has
   for the same spec is a successful no-op — the reply is
   `{ armed: false, skipped: "terminal-once" }` (a past `@at` would fire
   immediately on re-declare).
+- **Spec grammar** = `"@every <int><s|m|h|d>"`, `"@at <ISO-8601>"` one-shots,
+  5-field cron `m h dom mon dow` (UTC). Recurring specs floor at **one
+  minute** — `@every 30s` is rejected at every layer (field validation
+  `schedule_spec_min_interval`, the `jobs.ctl.schedule.request` route with
+  `SCHEDULE_BELOW_MIN_INTERVAL`, and the `declareSchedule` arm backstop);
+  `@at`/cron are exempt by construction (one-shot; the grammar cannot go
+  below a minute).
 - **Executor** = a durable JetStream consumer inside the domain service.
 - **Triggers** = `job.job_triggers` domain data (NOT config) — the triggers engine
   dispatches them: event+schedule gate, event-only immediate, schedule-only timer.

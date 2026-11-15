@@ -143,6 +143,20 @@ describe("declareSchedule — arm protocol", () => {
     expect(h.ensure).not.toHaveBeenCalled();
   });
 
+  it("a sub-minute @every NEVER declares — the arm-path floor backstop", async () => {
+    await expect(svc.declareSchedule(armInput({ schedule: "@every 10s" }))).rejects.toMatchObject({
+      internal_code: "SCHEDULE_BELOW_MIN_INTERVAL",
+    });
+    expect(h.ensure).not.toHaveBeenCalled();
+    // the floor boundary itself arms
+    h.get.mockResolvedValue(decl({ schedule: "@every 60s" }));
+    await svc.declareSchedule(armInput({ schedule: "@every 60s" }));
+    expect(h.ensure).toHaveBeenCalled();
+    // non-@every specs are exempt by construction (one-shot / cron minute floor)
+    h.get.mockResolvedValue(decl({ schedule: "@at 2027-06-01T00:00:00Z" }));
+    await svc.declareSchedule(armInput({ schedule: "@at 2027-06-01T00:00:00Z" }));
+  });
+
   it("ttl lands on the row as expires_at = armed_at + ttl", async () => {
     h.get.mockResolvedValue(decl());
     await svc.declareSchedule(armInput({ ttl: "1h" }));
