@@ -1,9 +1,8 @@
 /**
- * `job.job_triggers` — admin-managed business trigger declarations.
- *
- * Only BUSINESS triggers live here: infrastructure jobs (partition
- * maintenance) are derived from entity metadata, never duplicated in this
- * table. A trigger binds an optional event source and/or an optional
+ * `job.job_triggers` — the single declaration of record for EVERY
+ * scheduled job: admin-managed business triggers AND module-declared
+ * system triggers materialized at registration (`system_key` set).
+ * A trigger binds an optional event source and/or an optional
  * schedule to a callable target:
  *
  *   event + schedule → event-gated timer (match arms, non-match disarms)
@@ -61,6 +60,13 @@ export class JobTriggerEntity
   @Column({ length: 200, nullable: false })
   name!: string;
 
+  /** Stable module-owned job id — written ONCE at materialization by the
+   *  declaring service, the reconcile anchor across releases. NULL on
+   *  user-made triggers; a non-NULL value IS the system flag (`is_system`
+   *  projects it — one physical source, never a second truth). */
+  @Column({ nullable: true })
+  system_key?: string;
+
   /** Event subject to subscribe, e.g. "customer.updated". NULL when the
    *  trigger is schedule-only. */
   @Column({ nullable: true })
@@ -90,6 +96,13 @@ export class JobTriggerEntity
   /** originator | author | system — explicit opt-in, never inferred. */
   @Column({ length: 20, nullable: false })
   run_as!: string;
+
+  /** System-owned trigger — `system_key IS NOT NULL`. True rows carry a
+   *  code-owned interchange contract: event/target/run_as/payload_map/
+   *  filter are frozen (the `depends_on.set` gate on `system_key` + the
+   *  wire's frozen-set rule); `schedule_spec` and `name` stay user-owned. */
+  @Calculated(`({self}.system_key IS NOT NULL)`, { pgType: "bool" })
+  is_system?: boolean;
   // No `enabled` flag — DISABLE IS SOFT-DELETE (`deleted_at` via the
   // `Deletable` mixin). Doctrine: enable fields are a design error; the
   // soft-delete machinery gives disable + restore + audit + ELT deleted-row

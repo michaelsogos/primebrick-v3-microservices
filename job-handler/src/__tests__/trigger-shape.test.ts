@@ -21,7 +21,7 @@ vi.mock("../../services/callable-catalog.js", () => ({
   callableSubjects: async () => new Set(["emailsender.send"]),
 }));
 
-const { assertTriggerShape } = await import("../modules/jobs/jobs.service.js");
+const { assertTriggerShape, assertSystemTriggerMutable } = await import("../modules/jobs/jobs.service.js");
 
 const atFuture = `@at ${new Date(Date.now() + 3_600_000).toISOString()}`;
 const atPast = `@at ${new Date(Date.now() - 3_600_000).toISOString()}`;
@@ -124,5 +124,86 @@ describe("assertTriggerShape — update (partial bodies)", () => {
     await expect(
       assertTriggerShape({ schedule_spec: atPast }, false, loadExisting),
     ).rejects.toThrow(/schedule_spec_past/);
+  });
+});
+
+// assertSystemTriggerMutable — the wire-side frozen-set rule. The FE's
+// depends_on.set gate is UX; this hook is the fail-closed mirror: a
+// hand-crafted API payload must hit the same wall.
+describe("assertSystemTriggerMutable", () => {
+  const systemRow = {
+    uuid: "t1",
+    name: "Partition maintenance",
+    system_key: "ai.partition-maintenance",
+    event_subject: null,
+    schedule_spec: "@every 1d",
+    target_subject: "ai.partition_maintenance",
+    payload_map: { scope: { kind: "const", value: "all" } },
+    filter: [{ field: "a", op: "eq", value: 1 }],
+    run_as: "system",
+  };
+
+  it("create: rejects a body that claims a system_key", () => {
+    expect(() =>
+      assertSystemTriggerMutable({ system_key: "x.y", name: "n" }, true),
+    ).toThrow(/system_trigger_immutable/);
+  });
+
+  it("create: a user trigger without system_key passes", () => {
+    expect(() => assertSystemTriggerMutable({ name: "n" }, true)).not.toThrow();
+    expect(() => assertSystemTriggerMutable({ name: "n", system_key: null }, true)).not.toThrow();
+  });
+
+  it("update: a user row stays fully editable", () => {
+    const userRow = { ...systemRow, system_key: null };
+    expect(() =>
+      assertSystemTriggerMutable({ target_subject: "other.call" }, false, userRow),
+    ).not.toThrow();
+  });
+
+  it("update: changing a frozen field on a system row is rejected", () => {
+    for (const [field, value] of [
+      ["event_subject", "a.b.c"],
+      ["target_subject", "other.call"],
+      ["run_as", "author"],
+      ["payload_map", { x: { kind: "const", value: 1 } }],
+      ["filter", []],
+    ] as const) {
+      expect(() => assertSystemTriggerMutable({ [field]: value }, false, systemRow), field).toThrow(
+        /system_trigger_immutable/,
+      );
+    }
+  });
+
+  it("update: user-owned fields (schedule_spec, name) stay writable on system rows", () => {
+    expect(() =>
+      assertSystemTriggerMutable({ schedule_spec: "@every 4h", name: "renamed" }, false, systemRow),
+    ).not.toThrow();
+  });
+
+  it("update: a verbatim echo of a frozen value is not a mutation", () => {
+    expect(() =>
+      assertSystemTriggerMutable(
+        { target_subject: "ai.partition_maintenance", payload_map: { scope: { kind: "const", value: "all" } } },
+        false,
+        systemRow,
+      ),
+    ).not.toThrow();
+  });
+
+  it("update: key-ordered jsonb is not a false positive", () => {
+    // Same object, different key order — canonical compare must not reject.
+    expect(() =>
+      assertSystemTriggerMutable({ filter: [{ value: 1, op: "eq", field: "a" }] }, false, systemRow),
+    ).not.toThrow();
+  });
+
+  it("update: system_key itself can never be written", () => {
+    expect(() => assertSystemTriggerMutable({ system_key: "other.key" }, false, systemRow)).toThrow(
+      /system_trigger_immutable/,
+    );
+    expect(() =>
+      assertSystemTriggerMutable({ system_key: "x.y" }, false, { ...systemRow, system_key: null }),
+    ).toThrow(/system_trigger_immutable/);
   });
 });

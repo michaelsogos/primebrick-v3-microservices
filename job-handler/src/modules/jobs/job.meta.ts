@@ -83,13 +83,26 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
   display_field: "name",
   columns: [
     { key: "name", label_key: F("job_trigger", "name"), type: "text", format: "identifier", order: 10 },
-    { key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, icon: "zap", color: "amber-500", options_source: "census.emits", tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT" },
+    {
+      // @Calculated — `system_key IS NOT NULL`. The ELT-visible flag for
+      // "this row is a module-declared system trigger": the interchange
+      // fields below are code-owned on these rows (the depends_on.set
+      // gate + the wire's frozen-set rule read the same physical source).
+      key: "is_system", label_key: F("job_trigger", "is_system"), type: "boolean", order: 15, kind: "calculated",
+      tooltip: H("job_trigger", "is_system"), tooltip_title: HT("job_trigger", "is_system"), tooltip_priority: "HINT",
+    },
+    {
+      key: "event_subject", label_key: F("job_trigger", "event_subject"), type: "text", format: "nats_subject", order: 20, icon: "zap", color: "amber-500", options_source: "census.emits",
+      depends_on: { field: "system_key", disabled_when: { set: true } },
+      tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
+    },
     {
       key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 30,
       // Authoring-only — a JSON AST has no honest equality/text matcher.
       filterable: false,
       default_visible: false,
       json_schema: TRIGGER_FILTER_SCHEMA,
+      depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "filter"), tooltip_title: HT("job_trigger", "filter"), tooltip_priority: "HINT",
     },
     {
@@ -101,6 +114,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     {
       key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 50,
       icon: "send", color: "sky-500", options_source: "census.callables",
+      depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "target_subject"), tooltip_title: HT("job_trigger", "target_subject"), tooltip_priority: "HINT",
     },
     {
@@ -109,9 +123,10 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       filterable: false,
       default_visible: false, widget: "payload_map",
       json_schema: PAYLOAD_MAP_SCHEMA,
+      depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "payload_map"), tooltip_title: HT("job_trigger", "payload_map"), tooltip_priority: "HINT",
     },
-    { key: "run_as", label_key: F("job_trigger", "run_as"), type: "badge", order: 60, badge: { values: { system: { label_key: V("job_trigger", "system"), color: "#000000" }, originator: { label_key: V("job_trigger", "originator"), color: "primary" }, author: { label_key: V("job_trigger", "author"), color: "info" } } }, tooltip: H("job_trigger", "run_as"), tooltip_title: HT("job_trigger", "run_as"), tooltip_priority: "HINT" },
+    { key: "run_as", label_key: F("job_trigger", "run_as"), type: "badge", order: 60, badge: { values: { system: { label_key: V("job_trigger", "system"), color: "#000000" }, originator: { label_key: V("job_trigger", "originator"), color: "primary" }, author: { label_key: V("job_trigger", "author"), color: "info" } } }, depends_on: { field: "system_key", disabled_when: { set: true } }, tooltip: H("job_trigger", "run_as"), tooltip_title: HT("job_trigger", "run_as"), tooltip_priority: "HINT" },
     {
       // 1:N children link — the runs list filtered by this trigger's
       // schedule-mirror subject (runs record it as `schedule_subject`).
@@ -134,6 +149,15 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: false,
       null_label: { label_key: "job.entities.job_trigger.fields.next_run.states.disabled", when: { field: "deleted_at", not: null } },
       tooltip: H("job_trigger", "next_run"), tooltip_title: HT("job_trigger", "next_run"),
+    },
+    {
+      // The module's stable job id — the materialization anchor. Written
+      // once by the declaring service (never by the form — it is not in
+      // page_props.form — and never by API: the wire rejects it); NULL
+      // on user-made triggers. Togglable in the picker for audits.
+      key: "system_key", label_key: F("job_trigger", "system_key"), type: "text", format: "identifier", order: 90,
+      immutable: true, default_visible: false,
+      tooltip: H("job_trigger", "system_key"), tooltip_title: HT("job_trigger", "system_key"), tooltip_priority: "HINT",
     },
     {
       // Run outcomes over time — trigger-keyed (`row_key:"uuid"` → the

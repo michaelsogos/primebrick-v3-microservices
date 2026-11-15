@@ -117,6 +117,65 @@ export async function assertPayloadMapConformance(
   }
 }
 
+/**
+ * Code-owned interchange fields on a system trigger (`system_key` set) —
+ * source, destination, execution identity, payload shaping, event gate.
+ * This is the SAME frozen set the form's `depends_on.set` gate renders
+ * disabled; the wire is the fail-closed mirror — API writes never see
+ * the FE. `schedule_spec`/`name` stay user-owned: that is the point of
+ * the model (the user governs cadence and display, the code owns the
+ * inter-service contract).
+ */
+const SYSTEM_TRIGGER_FROZEN_FIELDS = ["event_subject", "target_subject", "run_as", "payload_map", "filter"] as const;
+
+/** Canonical serialization (sorted object keys, recursive) — the
+ *  jsonb fields compare structurally, so a re-ordered body that carries
+ *  the SAME value is not misread as a mutation attempt. */
+function canonJson(v: unknown): string {
+  if (v === null || v === undefined || typeof v !== "object") return JSON.stringify(v ?? null);
+  if (Array.isArray(v)) return `[${v.map(canonJson).join(",")}]`;
+  return `{${Object.keys(v as Record<string, unknown>)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}:${canonJson((v as Record<string, unknown>)[k])}`)
+    .join(",")}}`;
+}
+
+/**
+ * The system-trigger frozen-set rule — wire side.
+ * - CREATE: `system_key` in the body is rejected outright — system rows
+ *   are born ONLY from module materialization, never claimed via API.
+ * - UPDATE: `system_key` itself may never change (a user row cannot turn
+ *   system, a system row cannot shed or swap its identity); on a system
+ *   row, a frozen field whose value DIFFERS from the stored one is
+ *   rejected — a verbatim echo of the stored value is not a mutation.
+ * Materialization reconciles through its own path, not this hook.
+ */
+export function assertSystemTriggerMutable(
+  body: Record<string, unknown>,
+  isCreate: boolean,
+  existing?: Record<string, unknown>,
+): void {
+  const KEY = "app.common.validation.system_trigger_immutable";
+  if (isCreate) {
+    if (body["system_key"] !== undefined && body["system_key"] !== null) {
+      throw new ValidationError(`system_key: ${KEY}`);
+    }
+    return;
+  }
+  if ("system_key" in body && canonJson(body["system_key"]) !== canonJson(existing?.["system_key"])) {
+    throw new ValidationError(`system_key: ${KEY}`);
+  }
+  if (existing?.["system_key"] == null) return; // user-made row — nothing is frozen
+  const violated = SYSTEM_TRIGGER_FROZEN_FIELDS.filter(
+    (f) => f in body && canonJson(body[f]) !== canonJson(existing[f]),
+  );
+  if (violated.length > 0) {
+    throw new ValidationError(
+      violated.map((f) => `${f}: ${KEY}`).join("; "),
+    );
+  }
+}
+
 type TriggerT = JobTriggerEntity & Record<string, unknown>;
 type ScheduleT = JobScheduleEntity & Record<string, unknown>;
 type RunT = JobRunEntity & Record<string, unknown>;
@@ -149,6 +208,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
       auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_trigger"),
       hooks: {
         beforeCreate: async (body: Record<string, unknown>) => {
+          assertSystemTriggerMutable(body, true);
           await assertTriggerShape(body, true);
           await assertCallableTarget(body);
           await assertPayloadMapConformance(body);
@@ -159,6 +219,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
             const row = await this.svc.get(uuid);
             return row as Record<string, unknown> | undefined;
           };
+          assertSystemTriggerMutable(body, false, await loadExisting());
           await assertTriggerShape(body, false, loadExisting);
           await assertCallableTarget(body);
           await assertPayloadMapConformance(body, loadExisting);

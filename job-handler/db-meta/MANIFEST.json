@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-14T20:26:56.116Z",
+  "issued_at": "2026-11-15T17:58:03.181Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
@@ -19,7 +19,8 @@
     "0014_enabled_disabled_anomaly_labels": "4cc932f09372b20079a140a9bed06b8c529a4eac6a88f1538f15e030a7412f41",
     "0015_label_updates_bump_updated_at": "f7fc03e6c490d57b6885a07e1805277c5d958a799dd9ca23f6ba9311be7377e4",
     "0016_run_as_unification": "72dc8fe8192d0d7a74f3069e76e1b687935b67c443a2fc50ca907fc24c582a29",
-    "20261114202425_schedule_armed_truth": "7edb1b300a7d8a12b671566b3b8cdd404da054f780432b2c861ba6c02635877f"
+    "20261114202425_schedule_armed_truth": "7edb1b300a7d8a12b671566b3b8cdd404da054f780432b2c861ba6c02635877f",
+    "20261115100000_system_trigger_key": "36d3d8385fc74a62add52884a32b44ba01596ff81e8d724b0147e61c0c15ac3c"
   },
-  "signature": "UEdtdWGBHDe/qz6QzyMDSbMMbn1KQ0izSZhnpvgHterM6X+4bOZ6oZEovne4JJkB4oKBC4EZ3e5IWL9bfG/fDg=="
+  "signature": "uQLzhLw9hD2W289ySdSAfftIpJOtEIj0plqNwTqX4OSsgPQtwNPWqjXCkFLBFRlJ5g55moPQsyOz5DzSsb8iAw=="
 }
