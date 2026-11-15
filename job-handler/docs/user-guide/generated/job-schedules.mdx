@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Job Name, the Source Queue, the Kind, the Armed By, the Cadence, the Type, the Run As, the Status, the Anomaly, the Run Stats, the Armed at, the Next run, the Fired at, plus the status flags Enabled.
+Each row shows the Job Name, the Source Queue, the Kind, the Fired at, the Armed By, the Armed at, the Cadence, the Type, the Run As, the Status, the Anomaly, the Run Stats, the Next run, plus the status flags Enabled.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -17,7 +17,6 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Job Name** | yes | yes | yes |  |
 | **Source Queue** | yes | yes | yes | The queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues. |
 | **Kind** | yes | yes | yes |  |
-| **Armed By** | yes | yes | yes | Who or what armed this schedule — the owning trigger or the declaring module. Open the cell to inspect its record. |
 | **Cadence** | yes | yes | no |  |
 | **Trigger** | no | yes | yes |  |
 | **Type** | yes | yes | no |  |
@@ -27,17 +26,13 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **Enabled** | yes | no | no |  |
 | **Anomaly** | yes | no | no |  |
 | **Run Stats** | yes | no | no |  |
-| **Armed at** | yes | yes | yes |  |
 | **Next run** | yes | yes | yes | Next scheduled fire, mirrored from the scheduler. Empty whenever the schedule cannot run — disabled, paused, stopped, already fired or expired. |
-| **Fired at** | yes | yes | yes | When the job last actually ran — every origin counts (trigger, module, system, user). Suppressed fires are excluded: a skipped due never executed. |
 | **UUID** | no | yes | yes |  |
-| **Disarmed at** | no | yes | yes |  |
 | **Expires at** | no | yes | yes |  |
 
 - The Job Name column is shown by default and can be sorted and filtered.
 - The Source Queue column is shown by default and can be sorted and filtered — the queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues.
 - The Kind column is shown by default and can be sorted and filtered.
-- The Armed By column is shown by default and can be sorted and filtered — who or what armed this schedule — the owning trigger or the declaring module. Open the cell to inspect its record.
 - The Cadence column is shown by default and can be sorted but not filtered.
 - The Trigger column is hidden by default and can be sorted and filtered.
 - The Type column is shown by default and can be sorted but not filtered.
@@ -47,11 +42,8 @@ The page is visible with the `access.system.job.job-schedules` grant.
 - The Enabled column is shown by default and cannot be sorted or filtered.
 - The Anomaly column is shown by default and cannot be sorted or filtered.
 - The Run Stats column is shown by default and cannot be sorted or filtered.
-- The Armed at column is shown by default and can be sorted and filtered.
 - The Next run column is shown by default and can be sorted and filtered — next scheduled fire, mirrored from the scheduler. Empty whenever the schedule cannot run — disabled, paused, stopped, already fired or expired.
-- The Fired at column is shown by default and can be sorted and filtered — when the job last actually ran — every origin counts (trigger, module, system, user). Suppressed fires are excluded: a skipped due never executed.
 - The UUID column is hidden by default and can be sorted and filtered.
-- The Disarmed at column is hidden by default and can be sorted and filtered.
 - The Expires at column is hidden by default and can be sorted and filtered.
 
 ## Actions

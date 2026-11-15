@@ -196,20 +196,36 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     // armed_ref_key calcs, filterable and searchable consume it.
     { key: "service_code", label_key: F("job_schedule", "service_code"), type: "text", format: "service_code", order: 20, hidden: true },
     { key: "kind", label_key: F("job_schedule", "kind"), type: "badge", order: 30, badge: { values: { infra_derived: { label_key: V("job_schedule", "infra_derived"), color: "gray" }, trigger: { label_key: V("job_schedule", "trigger"), color: "blue" } } } },
+    // ── Extra audit stamps (entity-specific lifecycle facts) ─────────
+    // These are audited columns: a schedule's utility is not "created,
+    // therefore exists" but "created AND armed". They rank FIRST of the
+    // audit block (canonical extras band — declaration order IS the
+    // sequence: fired_at → armed_by → armed_at → disarmed_at), ahead of
+    // the standard created/updated pairs. `fired_at`/`armed_at` stay
+    // visible by default; `disarmed_at` is togglable like every audit.
+    // Semantics: `armed_at` is monotonic history (persists across disarm);
+    // `disarmed_at` is the active disarm stamp (cleared on re-arm) — both
+    // populated reads "armed at T1, disarmed at T2".
     {
-      // WHO armed it — ownership, never audit. The @Calculated column
-      // resolves the live trigger name via `trigger_uuid` or the
-      // declaring service via `service_registry`/`service_code`.
-      // LAZY REF: the row itself carries the drill target —
-      // `armed_ref_entity` names the entity, `armed_ref_key` the key
-      // (trigger uid → entity sheet; service code → service panel).
-      // `created_by` goes back to hidden audit plumbing — the legacy
-      // `trigger:`/`rule:` actor soup is purged, never read again.
-      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", order: 35, kind: "calculated",
+      // Universal "Eseguita il" — @Calculated latest ACTUAL run on the
+      // subject (`skipped` excluded — a suppressed due never ran).
+      key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", kind: "calculated", audited: true, default_visible: true,
+      tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
+    },
+    {
+      // WHO armed it. The @Calculated column resolves the live trigger
+      // name via `trigger_uuid` or the declaring service via
+      // `service_registry`/`service_code`. LAZY REF: the row itself
+      // carries the drill target — `armed_ref_entity` names the entity,
+      // `armed_ref_key` the key (trigger uid → entity sheet; service
+      // code → service panel).
+      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", kind: "calculated", audited: true,
       default_visible: true,
       ref: { entity_field: "armed_ref_entity", key_field: "armed_ref_key" },
       tooltip: H("job_schedule", "armed_by"), tooltip_title: HT("job_schedule", "armed_by"), tooltip_priority: "HINT",
     },
+    { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", audited: true, default_visible: true },
+    { key: "disarmed_at", label_key: F("job_schedule", "disarmed_at"), type: "datetime", audited: true, default_visible: false },
     { key: "schedule_spec", label_key: F("job_schedule", "schedule_spec"), type: "text", format: "schedule_spec", order: 40, filterable: false },
     {
       // Owning trigger for kind=trigger mirrors — detail page via census.
@@ -257,20 +273,12 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         ],
       },
     },
-    { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", order: 80 },
     {
       // Served next-fire — @Calculated gate on the internal NATS mirror
       // (`next_fire_mirror_at`): NULL whenever status is not executable —
       // a disabled/paused/terminal schedule has no next run.
       key: "next_run_at", label_key: F("job_schedule", "next_run_at"), type: "datetime", order: 82, kind: "calculated",
       tooltip: H("job_schedule", "next_run_at"), tooltip_title: HT("job_schedule", "next_run_at"), tooltip_priority: "HINT",
-    },
-    {
-      // Universal "Eseguita il" — @Calculated latest ACTUAL run on the
-      // subject (`skipped` excluded — a suppressed due never ran). Same
-      // truth for recurring/once, trigger/infra/user/system fires.
-      key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", order: 84, kind: "calculated",
-      tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
     },
     // updated_at is NOT declared — auto-derived like every other entity:
     // audited + canonical band order 2130, toggleable in the picker.
