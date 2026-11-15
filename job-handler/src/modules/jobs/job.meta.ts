@@ -97,7 +97,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
     },
     {
-      key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 30,
+      key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 50,
       // Authoring-only — a JSON AST has no honest equality/text matcher.
       filterable: false,
       default_visible: false,
@@ -112,7 +112,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       tooltip: H("job_trigger", "schedule_spec"), tooltip_title: HT("job_trigger", "schedule_spec"), tooltip_priority: "HINT",
     },
     {
-      key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 50,
+      key: "target_subject", label_key: F("job_trigger", "target_subject"), type: "text", format: "nats_subject", order: 30,
       icon: "send", color: "sky-500", options_source: "census.callables",
       depends_on: { field: "system_key", disabled_when: { set: true } },
       tooltip: H("job_trigger", "target_subject"), tooltip_title: HT("job_trigger", "target_subject"), tooltip_priority: "HINT",
