@@ -212,7 +212,7 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     // Virtual columns — decorated per-row by JobSchedulesService from the
     // live JetStream enumeration (external source, never queryable).
     {
-      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 72, kind: "virtual",
+      key: "live", label_key: F("job_schedule", "live"), type: "boolean", order: 72, kind: "virtual", default_visible: false,
     },
     {
       key: "drift", label_key: F("job_schedule", "drift"), type: "badge", order: 74, kind: "virtual",
