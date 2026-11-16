@@ -7,9 +7,21 @@
  * after `initDal()` ran inside `createMicroservice`, so services call it
  * inside their constructor/first use, never at module import time.
  */
-import { requireActor } from "@primebrick/sdk";
+import { requireActor, type Session } from "@primebrick/sdk";
 
 /** Actor supplier for entity-service audit stamping. */
 export function entityActor(): string {
   return requireActor();
 }
+
+/** Minimal session carrying an explicit caller identity — forwarded actors
+ *  (NATS envelopes, webhook callers) and `"system:<code>"` fallbacks ride
+ *  the same ALS slot an HTTP request resolves, so svc writes get the real
+ *  actor through the normal `requireActor` pipeline. */
+export const actorSession = (actor: string): Session => ({
+  actor,
+  roles: [],
+  idpCode: null,
+  idpOrg: null,
+  idpUsername: null,
+});
