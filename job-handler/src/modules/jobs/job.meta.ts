@@ -162,8 +162,9 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     {
       // Run outcomes over time — trigger-keyed (`row_key:"uuid"` → the
       // endpoint resolves the mirror subject server-side). Data arrives
-      // via a batch action call, not the row payload → virtual.
-      key: "run_stats", label_key: F("job_trigger", "run_stats"), type: "sparkline", order: 86, kind: "virtual",
+      // via a batch action call, not the row payload → virtual. Sits
+      // before last_run (82) — stats summary precedes the timestamps.
+      key: "run_stats", label_key: F("job_trigger", "run_stats"), type: "sparkline", order: 80, kind: "virtual",
       sparkline: {
         endpoint: "/actions/job-run-stats",
         request_field: "trigger_uuids",
