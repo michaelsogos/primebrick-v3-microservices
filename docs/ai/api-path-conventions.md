@@ -122,8 +122,9 @@ Every microservice MUST export a complete OpenAPI 3.x spec at
 `GET /api/v1/openapi.json`. The spec MUST:
 
 1. List ALL implemented routes (entity CRUD, service actions, webhooks, system).
-2. Use `operationId` in snake_case for every operation (e.g. `list_providers`,
-   `get_provider`, `create_provider`). This is used by the MCP Server for
+2. Carry a snake_case `operationId` on every operation (e.g. `list_providers`,
+   `get_provider`, `create_provider`). It is auto-derived from method + path
+   by `operationIdFor` — never hand-written. The MCP Server uses it for
    tool name generation.
 3. Include `tags` grouping operations by entity or category.
 4. Include `summary` and `description` for every operation — these are used
@@ -142,7 +143,8 @@ Every microservice MUST export a complete OpenAPI 3.x spec at
 - ❌ `/api/v1/providers` (plural entity name) — use
   `/api/v1/entities/provider` (singular)
 - ❌ Entity routes mixed with action routes under the same path prefix
-- ❌ Missing `operationId` in OpenAPI spec
+- ❌ Route without an `openapi` block — its spec entry gets no
+  `summary`/`description`/schemas (only path + method + security)
 - ❌ Missing `summary`/`description` in OpenAPI spec
 
 ## Migration record: emailsender (completed)
@@ -170,13 +172,14 @@ The `sendEmail` function is called via NATS™ (not HTTP) — no path change nee
 - AI agent MUST NOT create entity routes outside the `/api/v1/entities/` prefix.
 - AI agent MUST NOT use plural entity names in paths (always singular).
 - AI agent MUST NOT use camelCase in path segments (always snake_case).
-- AI agent MUST include `operationId`, `summary`, and `description` in every
-  OpenAPI operation.
+- AI agent MUST declare `summary` and `description` in every route's
+  `openapi` block so the emitted spec documents every operation —
+  `operationId` is auto-derived from method + path, never hand-written.
 - AI agent MUST wire the service's HTTP surface through
   `makeServiceRoutes({ info, entities, rpc })` — ONE declaration produces
   both the routers and `/api/v1/openapi.json`; the spec can never drift
-  from the registered routes. The handler's `.spec` is what
-  `scripts/build-docs-pack.ts` embeds. Never hand-compose
+  from the registered routes. The handler's `.spec` is embedded in the
+  docs pack emitted by `bun src/index.ts --emit-docs`. Never hand-compose
   `buildOpenApiSpec`/`entityCrudSpec`/`makeOpenApiHandler` separately —
   that reintroduces a second source of truth.
 - When reviewing existing code, flag any entity route that does not follow

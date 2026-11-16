@@ -186,7 +186,7 @@ Workspace dependencies use `workspace:*` (e.g.
 |---|---|---|
 | `scripts/version-sync.mjs` | repo root | `version:auto`/`prebuild` hook — keeps `version` aligned across service package.jsons |
 | `<svc>/scripts/database-patch-apply.ts` | per service | `db:migrate` — runs the dal-pg `runMigrations` engine against the service's own schema (same code path as boot) |
-| `<svc>/scripts/build-docs-pack.ts` | per service | `generate:docs` — builds `dist/docs-pack` (SDK `buildDocsPack`) |
+| `<svc>` `generate:docs`/`docs:check` scripts | per service | `bun src/index.ts --emit-docs [--check]` — builds/diffs `dist/docs-pack` via the SDK emit pipeline (no per-service script file) |
 
 ## Next steps
 
