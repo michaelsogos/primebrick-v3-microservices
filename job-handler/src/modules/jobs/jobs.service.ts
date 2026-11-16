@@ -5,7 +5,7 @@
  */
 
 import { DomainService, ValidationError, field, Filter, GroupBy, Project, Sort, type EntityServiceConfig } from "@primebrick/dal-pg";
-import { NatsClient, assertWritableConfigKey, makeMarkerAuditPort, payloadMapConformance, payloadPassthroughConformance, jobTriggerShapeIssues, logger, requireActor } from "@primebrick/sdk";
+import { NatsClient, assertWritableConfigKey, makeMarkerAuditPort, payloadMapConformance, payloadPassthroughConformance, jobTriggerShapeIssues, logger, requireActor, runWithSession, type Session } from "@primebrick/sdk";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
@@ -220,6 +220,23 @@ type TriggerT = JobTriggerEntity & Record<string, unknown>;
 type ScheduleT = JobScheduleEntity & Record<string, unknown>;
 type RunT = JobRunEntity & Record<string, unknown>;
 
+/** Synthetic session carrying the caller-declared actor — the governed door
+ *  for system-path writes: `svc` resolves `requireActor` from it exactly as
+ *  an HTTP request resolves the real session, so the write gets hooks,
+ *  audit and markers through the same pipeline as a wire write. */
+const actorSession = (actor: string): Session => ({
+  actor,
+  roles: [],
+  idpCode: null,
+  idpOrg: null,
+  idpUsername: null,
+});
+
+/** `"system"` / `"system:<code>"` writers — the hook branches on this to
+ *  skip USER-facing immutability guards (system paths own those fields),
+ *  while shape/conformance validation still runs for every writer. */
+const isSystemActor = (actor: string): boolean => actor.startsWith("system");
+
 export class JobTriggersService extends DomainService<TriggerT> {
   constructor() {
     super({
@@ -247,24 +264,34 @@ export class JobTriggersService extends DomainService<TriggerT> {
       // gateway persists markers to Redis (services own no Redis client).
       auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_trigger"),
       hooks: {
-        beforeCreate: async (body: Record<string, unknown>) => {
-          assertSystemTriggerMutable(body, true);
+        beforeCreate: async (body: Record<string, unknown>, ctx: { actor: string }) => {
+          // USER wire writes may never set system_key and must pick
+          // catalog-declared subjects; system paths (svc under a `system:*`
+          // session) own system_key by construction and must NOT gate on
+          // live-catalog liveness — a materialize cannot fail because the
+          // callable's service is momentarily down. The pure shape
+          // contract runs for every writer either way.
+          if (!isSystemActor(ctx.actor)) {
+            assertSystemTriggerMutable(body, true);
+            await assertCallableTarget(body);
+            await assertEmitSubject(body);
+            await assertPayloadMapConformance(body);
+          }
           await assertTriggerShape(body, true);
-          await assertCallableTarget(body);
-          await assertEmitSubject(body);
-          await assertPayloadMapConformance(body);
           return body;
         },
-        beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
+        beforeUpdate: async (uuid: string, body: Record<string, unknown>, ctx: { actor: string }) => {
           const loadExisting = async () => {
             const row = await this.svc.get(uuid);
             return row as Record<string, unknown> | undefined;
           };
-          assertSystemTriggerMutable(body, false, await loadExisting());
+          if (!isSystemActor(ctx.actor)) {
+            assertSystemTriggerMutable(body, false, await loadExisting());
+            await assertCallableTarget(body);
+            await assertEmitSubject(body);
+            await assertPayloadMapConformance(body, loadExisting);
+          }
           await assertTriggerShape(body, false, loadExisting);
-          await assertCallableTarget(body);
-          await assertEmitSubject(body);
-          await assertPayloadMapConformance(body, loadExisting);
           return body;
         },
         afterWrite: async (_op: string, row: Record<string, unknown>) => { publishTriggerChanged(row.uuid as string); },
@@ -312,18 +339,17 @@ export class JobTriggersService extends DomainService<TriggerT> {
     else await this.svc.restore(uuid, version);
   }
 
-  /** Materialize-insert a system trigger row — `this.dal` level by design:
-   *  the wire hooks reject `system_key` payloads, reconcile is a separate
-   *  path (see `assertSystemTriggerMutable`). The row is decl-shaped
-   *  (`null` fields), not entity-shaped — cast is internal. */
+  /** Materialize-insert a system trigger row — svc under the declared
+   *  `system:*` session: the hook's system branch admits `system_key`,
+   *  shape/conformance checks still run, audit + marker fire. */
   async insertSystemRow(row: Record<string, unknown>, actor: string): Promise<void> {
-    await this.dal.add(JobTriggerEntity, row as never, { actor } as never);
+    await runWithSession(actorSession(actor), () => this.svc.create(row));
   }
 
-  /** Optimistic-lock patch on code-owned fields — reconcile drift write.
-   *  `this.dal` level for the same reason as `insertSystemRow`. */
+  /** Optimistic-lock patch on code-owned fields — reconcile drift write,
+   *  same governed path as `insertSystemRow`. */
   async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
-    await this.dal.update(JobTriggerEntity, { uuid, version, ...patch } as never, { actor, matchBy: "uuid" } as never);
+    await runWithSession(actorSession(actor), () => this.svc.update(uuid, { ...patch, version }));
   }
 }
 
@@ -418,19 +444,21 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
   /** Declare-time mirror insert — the row is born only when the NATS
    *  declaration is already live (the caller compensates on failure). */
   async insertMirror(row: Partial<JobScheduleEntity>, actor: string): Promise<JobScheduleEntity> {
-    return (await this.dal.add(JobScheduleEntity, row as never, { actor } as never)) as JobScheduleEntity;
+    return (await runWithSession(actorSession(actor), () =>
+      this.svc.create(row as Record<string, unknown>),
+    )) as JobScheduleEntity;
   }
 
   /** Optimistic-lock patch on a mirror row — collapses disarm, unsuppress,
    *  reconcile heal/backfill, mark-fired and re-arm writes. */
   async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
-    await this.dal.update(JobScheduleEntity, { uuid, version, ...patch } as never, { actor, matchBy: "uuid" } as never);
+    await runWithSession(actorSession(actor), () => this.svc.update(uuid, { ...patch, version }));
   }
 
   /** Physical drop — the mirror is a derived artifact, not auditable
    *  state: a disarmed tombstone would list a schedule nobody can re-arm. */
   async dropMirror(uuid: string, version: number, actor: string): Promise<void> {
-    await this.dal.hardDelete(JobScheduleEntity, { uuid, version } as never, { actor, matchBy: "uuid" } as never);
+    await runWithSession(actorSession(actor), () => this.svc.purge(uuid, version));
   }
 }
 
@@ -452,7 +480,9 @@ export class JobRunsService extends DomainService<RunT> {
 
   /** Record a run row — dispatch insert or direct result insert. */
   async addRun(row: Partial<JobRunEntity>, actor: string): Promise<JobRunEntity> {
-    return (await this.dal.add(JobRunEntity, row as never, { actor } as never)) as JobRunEntity;
+    return (await runWithSession(actorSession(actor), () =>
+      this.svc.create(row as Record<string, unknown>),
+    )) as JobRunEntity;
   }
 
   /** Single run by uuid — correlate/fail reads. */
@@ -466,7 +496,7 @@ export class JobRunsService extends DomainService<RunT> {
   /** Optimistic-lock patch — status flips, duration/report correlate,
    *  sweep-to-lost. */
   async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
-    await this.dal.update(JobRunEntity, { uuid, version, ...patch } as never, { actor, matchBy: "uuid" } as never);
+    await runWithSession(actorSession(actor), () => this.svc.update(uuid, { ...patch, version }));
   }
 
   /** Dispatched runs older than the cutoff — the lost-sweep source. */
@@ -566,6 +596,21 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
     });
   }
 
+  /** The static-identity-key guard lives in the write pipeline itself —
+   *  every writer through svc hits it, not just `updateValue`'s call site. */
+  protected override buildConfig(): EntityServiceConfig<ConfigEntryT> {
+    return {
+      ...super.buildConfig(),
+      hooks: {
+        beforeUpdate: async (uuid: string, body: Record<string, unknown>) => {
+          const row = (await this.svc.get(uuid)) as { key?: string } | undefined;
+          if (row?.key) assertWritableConfigKey(row.key);
+          return body;
+        },
+      },
+    };
+  }
+
   /** All entries in the wire projection, secrets masked. */
   async listEntries(): Promise<ConfigEntryEntity[]> {
     const rows = (await this.dal.findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[];
@@ -586,7 +631,7 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  `type === "secret"` + empty value = "leave unchanged" (the FE sends
    *  the masked null back when no new secret was typed). Returns the
    *  re-read, masked row — `null` when the uuid is unknown. */
-  async updateValue(uuid: string, body: { value: unknown; version: number }, actor: string): Promise<ConfigEntryEntity | null> {
+  async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
     const target = await this.dal.find(ConfigEntryEntity, [
       Project.field(field(ConfigEntryEntity, "key")),
       Project.field(field(ConfigEntryEntity, "type")),
@@ -597,11 +642,10 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);
     if (!(target.type === "secret" && (body.value === null || body.value === ""))) {
-      await this.dal.update(
-        ConfigEntryEntity,
-        { uuid, value: body.value as string, version: Number(body.version) } as never,
-        { actor } as never,
-      );
+      // svc.update — ambient HTTP session supplies the actor; audit row +
+      // marker fire, and the beforeUpdate hook re-checks the key guard
+      // for every writer (not just this call site).
+      await this.svc.update(uuid, { value: body.value as string, version: Number(body.version) });
     }
     return this.getEntry(uuid);
   }
