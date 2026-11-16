@@ -57,6 +57,12 @@ async function main(): Promise<void> {
         process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
     },
 
+    // Shared system job — the SDK mounts `emailsender.partition_maintenance`
+    // and materializes its trigger only when the registry carries a
+    // maintained surface (@Partition / @AuditTrail / @Retention). Trigger
+    // row = the schedule of record (user-governed).
+    partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new EmailSenderAuthConfigPort(configLoader),
     apiKeyPort: () =>

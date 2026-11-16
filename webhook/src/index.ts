@@ -55,6 +55,12 @@ async function main(): Promise<void> {
         process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
     },
 
+    // Shared system job — the SDK mounts `webhook.partition_maintenance`
+    // and materializes its trigger only when the registry carries a
+    // maintained surface (@Partition / @AuditTrail / @Retention). Trigger
+    // row = the schedule of record (user-governed).
+    partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new WebhookAuthConfigPort(configLoader),
     // No CachePort here — webhook is a public DMZ ingress without Redis;
