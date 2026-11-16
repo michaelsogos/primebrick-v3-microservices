@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { createSseWriter, extJsonStringify, mapDalError, Permission, type RpcRoute } from "@primebrick/sdk";
 import { aiConfig } from "../../config/ai-config.js";
 import { HealthCheckAdapter } from "../../adapters/health-check-adapter.js";
-import { getDal } from "../../db/dal.js";
 import { orchestrate, type CallerToolDef } from "../../services/orchestrator.js";
 import type { ModelMessage } from "ai";
 import {
@@ -99,7 +98,7 @@ export const AI_ROUTES: RpcRoute[] = [
     openapi: { summary: "AI service health", description: "LLM connectivity + model info.", tags: ["ai"] },
     handler: async () => {
       const llmBaseUrl = aiConfig("llm_base_url") ?? "http://localhost:8080/v1";
-      const adapter = new HealthCheckAdapter(getDal());
+      const adapter = new HealthCheckAdapter();
       const llmHealth = await adapter.checkLlm(llmBaseUrl);
       return { ok: true, service: "ai", llm: llmHealth };
     },
