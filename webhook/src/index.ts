@@ -28,6 +28,11 @@ async function main(): Promise<void> {
     // Root level — system module: route prefix /system/webhook.
     partOf: "system",
 
+    // Module display-name key — resolved against this service's own
+    // `webhook.translations` namespace by every UI surface; fallback:
+    // raw registry `name`.
+    labelKey: "webhook.module.name",
+
     // Headless service — no nav, but it OWNS the inbound-webhook event
     // vocabulary: webhook.<service>.received is the domain signal other
     // modules (job rules, triggers) subscribe to.
