@@ -127,8 +127,8 @@ export class JobTriggerEntity
    *  gated to `status='armed'` (the same gate the served `next_run_at`
    *  column applies). The engine mirrors NATS truth into that column:
    *  `Nats-Schedule-Next` header per fire + deterministic arm-time
-   *  computation for `@every`/`@at`. NULL for disabled triggers,
-   *  event-only triggers and cron specs before their first fire. */
+   *  computation for `@every`/`@at` + a one-time UTC estimate for cron.
+   *  NULL for disabled triggers and event-only triggers. */
   @Calculated(
     `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_fire_mirror_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
     { pgType: "timestamptz", nullable: true },

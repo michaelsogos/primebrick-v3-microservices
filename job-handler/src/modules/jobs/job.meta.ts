@@ -144,8 +144,8 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
     },
     {
       // @Calculated — the armed mirror's NATS mirror, status-gated.
-      // NULL for disabled/event-only triggers and cron specs before
-      // their first fire (NATS owns cron evaluation).
+      // NULL for disabled/event-only triggers; cron shows a one-time
+      // UTC estimate until the first fire reports Nats-Schedule-Next.
       key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: false,
       null_label: { label_key: "job.entities.job_trigger.fields.next_run.states.disabled", when: { field: "deleted_at", not: null } },
       tooltip: H("job_trigger", "next_run"), tooltip_title: HT("job_trigger", "next_run"),
@@ -154,9 +154,10 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       // The module's stable job id — the materialization anchor. Written
       // once by the declaring service (never by the form — it is not in
       // page_props.form — and never by API: the wire rejects it); NULL
-      // on user-made triggers. Togglable in the picker for audits.
+      // on user-made triggers. Internal reconcile anchor — suppressed
+      // from the served meta entirely (never an user-facing surface).
       key: "system_key", label_key: F("job_trigger", "system_key"), type: "text", format: "identifier", order: 90,
-      immutable: true, default_visible: false,
+      immutable: true, hidden: true,
       tooltip: H("job_trigger", "system_key"), tooltip_title: HT("job_trigger", "system_key"), tooltip_priority: "HINT",
     },
     {

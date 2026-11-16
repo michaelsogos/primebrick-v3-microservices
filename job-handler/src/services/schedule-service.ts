@@ -55,9 +55,30 @@ import {
   nextScheduleFire,
   scheduleEveryMs,
 } from "@primebrick/sdk";
+import { Cron } from "croner";
 import { toUUID } from "@primebrick/dal-pg";
 import { JobScheduleEntity } from "../domain/entities/job_schedule_entity.js";
 import { JobSchedulesService } from "../modules/jobs/jobs.service.js";
+
+/**
+ * One-time arm-time estimate for cron specs — `nextScheduleFire` returns
+ * null for cron (NATS owns the evaluation) which left
+ * `next_fire_mirror_at` NULL until the FIRST fired message reported its
+ * own `Nats-Schedule-Next`. This seed shows the upcoming fire immediately;
+ * the server's header overwrites it on the first fire, so the single
+ * truth stays NATS-side — the estimate is a preview, never the
+ * authority. Evaluated in UTC, the NATS scheduler's clock; an
+ * unparseable spec returns undefined exactly like `nextScheduleFire`.
+ */
+function cronNextFireEstimate(spec: string, from: Date): Date | undefined {
+  const s = spec.trim();
+  if (s.startsWith("@")) return undefined;
+  try {
+    return new Cron(s, { timezone: "UTC" }).nextRun(from) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
 import { expectedDeclarationGone, scheduleDrift, TERMINAL_STATUSES } from "./schedule-drift.js";
 
 // Re-export for consumers that already bind against this module's surface
@@ -249,9 +270,12 @@ export async function declareSchedule(
         disarmed_at: undefined,
         expires_at: ttlMs === undefined ? undefined : new Date(armedAt.getTime() + ttlMs),
         // Deterministic first-fire mirror — `@every`/`@at` compute exactly;
-        // cron stays null until the server reports its own next fire via
-        // `Nats-Schedule-Next` on the first fired message (single truth).
-        next_fire_mirror_at: nextScheduleFire(input.schedule, { now: armedAt, since: armedAt }) ?? undefined,
+        // cron takes a one-time UTC estimate (the server's own
+        // `Nats-Schedule-Next` overwrites it on the first fired message —
+        // single truth stays NATS-side).
+        next_fire_mirror_at:
+          nextScheduleFire(input.schedule, { now: armedAt, since: armedAt })
+          ?? cronNextFireEstimate(input.schedule, armedAt),
       };
       // Honest system actor — `system:job` for engine materialization
       // (the only armer now). `created_by` is audit plumbing: provenance
@@ -515,9 +539,12 @@ export async function reconcileSchedules(opts?: {
       }
     } else if (row.status === "armed" && live && row.next_fire_mirror_at == null) {
       // Backfill the next-fire mirror — `@every`/`@at` recompute
-      // deterministically (same formula as arm); cron stays null: the
-      // server's own `Nats-Schedule-Next` writes it on the first fire.
-      const next = nextScheduleFire(row.schedule_spec, { now, since: row.armed_at ?? undefined });
+      // deterministically (same formula as arm); cron takes the same
+      // one-time UTC estimate as arm-time — NULL-only backfill, then the
+      // server's own `Nats-Schedule-Next` owns it from the first fire.
+      const next =
+        nextScheduleFire(row.schedule_spec, { now, since: row.armed_at ?? undefined })
+        ?? cronNextFireEstimate(row.schedule_spec, now);
       if (next !== null) {
         try {
           await schedules.patchRow(
