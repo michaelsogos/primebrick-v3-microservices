@@ -13,7 +13,7 @@ import { createHash } from "node:crypto";
 import { loadedDocFromMdx, loadedDocsFromOpenApiSpec } from "./docs-loader.js";
 import { chunkMarkdown, buildEmbeddingInput, docSourceContentHash, DOC_SOURCE_CHUNK_IDX } from "./chunking.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
-import { getDocHashes, getAllDocPaths, vectorSearch } from "./docs-kb-repository.js";
+import { getDocHashes, getAllDocPaths, vectorSearch } from "./docs-kb.service.js";
 
 const DOC_EXT = /\.(mdx|md)$/i;
 

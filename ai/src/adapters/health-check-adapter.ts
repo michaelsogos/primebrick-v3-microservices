@@ -1,13 +1,22 @@
 import type { Dal } from "@primebrick/dal-pg";
 import type { HealthCheckPort, HealthCheckResult } from "@primebrick/sdk";
 import { NatsClient } from "@primebrick/sdk";
+import { getDal } from "../db/dal.js";
 
 /**
  * Adapts dal-pg to the SDK's HealthCheckPort interface.
  * Used by HealthCheck to verify DB connectivity.
+ * The gateway resolves lazily on first use — bootstrap (`index.ts`) may
+ * inject it explicitly; callers elsewhere construct with no arguments.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  constructor(private readonly dal: Dal) {}
+  private _dal: Dal | undefined;
+  constructor(dal?: Dal) {
+    this._dal = dal;
+  }
+  private get dal(): Dal {
+    return (this._dal ??= getDal());
+  }
 
   async ping(): Promise<boolean> {
     try {

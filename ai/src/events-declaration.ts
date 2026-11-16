@@ -8,10 +8,10 @@
  * NATS `*` single-token wildcard.
  *
  * `jobs.result.ai.<job>` — JetStream result of a system-job run
- *   (controllers/nats-sub/partition-jobs.ts — the `ai.partition_maintenance`
- *   callable). The job name is a per-job token — today only
- *   `partition_maintenance`, future system jobs publish under the same
- *   template.
+ *   (the SDK-mounted `ai.partition_maintenance` callable —
+ *   createMicroservice `partitionMaintenance` option). The job name is a
+ *   per-job token — today only `partition_maintenance`, future system
+ *   jobs publish under the same template.
  */
 import type { ModuleEventsDecl } from "@primebrick/sdk";
 

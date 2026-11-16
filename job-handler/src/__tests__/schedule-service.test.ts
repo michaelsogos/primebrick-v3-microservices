@@ -13,6 +13,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const h = vi.hoisted(() => ({
   ensure: vi.fn(async (_opts?: unknown) => BigInt(7)),
@@ -22,6 +23,7 @@ const h = vi.hoisted(() => ({
   findAll: vi.fn(async () => [] as unknown[]),
   add: vi.fn(async (_entity?: unknown, _row?: unknown) => ({ uuid: "sched-row-1" })),
   update: vi.fn(async () => ({})),
+  hardDelete: vi.fn(async () => ({})),
   reset() {
     // mockReset (not mockClear) — a sticky rejected impl must not leak
     // into the next test.
@@ -39,6 +41,8 @@ const h = vi.hoisted(() => ({
     this.add.mockResolvedValue({ uuid: "sched-row-1" });
     this.update.mockReset();
     this.update.mockResolvedValue({});
+    this.hardDelete.mockReset();
+    this.hardDelete.mockResolvedValue({});
   },
 }));
 
@@ -53,9 +57,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@primebrick/sdk")>()),
   logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
 }));
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ findAll: h.findAll, add: h.add, update: h.update, delete: vi.fn(async () => ({})) }),
-}));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ findAll: h.findAll, add: h.add, update: h.update, hardDelete: h.hardDelete }, importOriginal),
+);
 
 const svc = await import("../services/schedule-service.js");
 

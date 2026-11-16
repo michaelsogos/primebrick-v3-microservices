@@ -55,9 +55,19 @@ import {
   nextScheduleFire,
   scheduleEveryMs,
 } from "@primebrick/sdk";
-import { Filter, field, toUUID } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
+import { toUUID } from "@primebrick/dal-pg";
 import { JobScheduleEntity } from "../domain/entities/job_schedule_entity.js";
+import { JobSchedulesService } from "../modules/jobs/jobs.service.js";
+import { expectedDeclarationGone, scheduleDrift, TERMINAL_STATUSES } from "./schedule-drift.js";
+
+// Re-export for consumers that already bind against this module's surface
+// (actions-route drift diagnostic). The logic lives in the leaf module
+// schedule-drift.ts — pure, no dal/nats — so JobSchedulesService can
+// import it without a circular dependency through this file.
+export { scheduleDrift, atInstant, type ScheduleDrift } from "./schedule-drift.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const schedules = new JobSchedulesService();
 
 export interface DeclareScheduleInput {
   schedule_subject: string;
@@ -127,28 +137,6 @@ export function ttlToMs(ttl: string): number | undefined {
   return Number(m[1]) * unit;
 }
 
-/** The instant a `@at <ts>` spec fires, or null when not a one-shot. */
-export function atInstant(spec: string): Date | null {
-  if (!spec.trim().startsWith("@at")) return null;
-  const at = new Date(spec.trim().slice(3).trim());
-  return Number.isNaN(at.getTime()) ? null : at;
-}
-
-/**
- * Expected absence: does the mirror allow the declaration to be gone
- * without drift? `once` whose `@at` already passed (self-purges after
- * firing), or a recurring spec past its `expires_at` (TTL self-purge).
- */
-function expectedDeclarationGone(row: JobScheduleEntity, now = new Date()): "fired" | "expired" | null {
-  if (row.schedule_type === "once") {
-    const at = atInstant(row.schedule_spec);
-    if (at && at.getTime() <= now.getTime()) return "fired";
-    return null;
-  }
-  if (row.expires_at && row.expires_at.getTime() <= now.getTime()) return "expired";
-  return null;
-}
-
 // ─── Arm / disarm — atomic protocol ─────────────────────────────────────────
 
 export async function declareSchedule(
@@ -195,11 +183,7 @@ export async function declareSchedule(
     // `@at` FIRES IMMEDIATELY at declare time (verified live: a JH
     // restart re-armed a fired trigger and the job ran a second time
     // ~250ms later). A changed spec is a new lifecycle and arms normally.
-    const dal = getDal();
-    const existingRows = await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
-      filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", input.schedule_subject)],
-    });
-    const existing = Array.isArray(existingRows) ? existingRows[0] : undefined;
+    const existing = await schedules.findBySubject(input.schedule_subject);
     if (
       input.schedule.startsWith("@at") &&
       existing !== undefined &&
@@ -275,13 +259,9 @@ export async function declareSchedule(
       // trigger_uuid), never on this stamp.
       const actor = "system:job";
       if (existing !== undefined) {
-        await dal.update(
-          JobScheduleEntity,
-          { ...row, uuid: existing.uuid, version: existing.version } as never,
-          { actor, matchBy: "uuid" } as never,
-        );
+        await schedules.patchRow(existing.uuid, existing.version, row, actor);
       } else {
-        await dal.add(JobScheduleEntity, row as never, { actor } as never);
+        await schedules.insertMirror(row, actor);
       }
     } catch (mirrorError) {
       const rest = input.schedule_subject.replace(/^jobs\.schedule\./, "");
@@ -344,21 +324,13 @@ export async function disarmSchedule(
       );
     }
 
-    const dal = getDal();
-    const rows = await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
-      filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject)],
-    });
-    if (Array.isArray(rows) && rows.length > 0) {
-      await dal.update(
-        JobScheduleEntity,
-        {
-          uuid: rows[0]!.uuid,
-          status: to,
-          disarmed_at: new Date(),
-          next_fire_mirror_at: undefined,
-          version: rows[0]!.version,
-        } as never,
-        { actor, matchBy: "uuid" } as never,
+    const row = await schedules.findBySubject(scheduleSubject);
+    if (row) {
+      await schedules.patchRow(
+        row.uuid,
+        row.version,
+        { status: to, disarmed_at: new Date(), next_fire_mirror_at: undefined },
+        actor,
       );
     }
     logger.done(`schedule ${to}: ${scheduleSubject}`, { tags: ["jobs"] });
@@ -373,10 +345,7 @@ export async function disarmSchedule(
  */
 /** Read the mirror row for a schedule subject (null when absent). */
 export async function getScheduleRow(scheduleSubject: string): Promise<JobScheduleEntity | undefined> {
-  const rows = await getDal().findAll<JobScheduleEntity>(JobScheduleEntity, null, {
-    filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject)],
-  });
-  return Array.isArray(rows) && rows.length > 0 ? (rows[0] as JobScheduleEntity) : undefined;
+  return schedules.findBySubject(scheduleSubject);
 }
 
 /**
@@ -390,27 +359,23 @@ export async function unsuppressSchedule(
 ): Promise<JobScheduleEntity | undefined> {
   const row = await getScheduleRow(scheduleSubject);
   if (!row || !SUPPRESSED_STATUSES.has(row.status)) return row;
-  await getDal().update(
-    JobScheduleEntity,
-    { uuid: row.uuid, status: "stopped", next_fire_mirror_at: undefined, version: row.version } as never,
-    { actor, matchBy: "uuid" } as never,
+  await schedules.patchRow(
+    row.uuid,
+    row.version,
+    { status: "stopped", next_fire_mirror_at: undefined },
+    actor,
   );
   logger.done(`schedule unsuppressed (stopped → awaiting re-arm): ${scheduleSubject}`, { tags: ["jobs"] });
   return { ...row, status: "stopped" } as JobScheduleEntity;
 }
 
 export async function dropScheduleMirror(scheduleSubject: string, actor: string): Promise<void> {
-  const dal = getDal();
   const row = await getScheduleRow(scheduleSubject);
   if (!row) return;
   // job_schedules has no deleted_at — the mirror is a derived artifact,
   // not auditable state: the drop is physical (job_runs keep the
   // schedule_subject text, so history stays resolvable).
-  await dal.hardDelete(
-    JobScheduleEntity,
-    { uuid: row.uuid, version: row.version } as never,
-    { actor, matchBy: "uuid" } as never,
-  );
+  await schedules.dropMirror(row.uuid, row.version, actor);
 }
 
 /**
@@ -426,28 +391,23 @@ export async function dropScheduleMirror(scheduleSubject: string, actor: string)
  *     happens. `"purge"` means no further fire is scheduled.
  */
 export async function markScheduleFired(scheduleSubject: string, nextFire?: Date | null): Promise<void> {
-  const dal = getDal();
-  const rows = await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
-    filters: [
-      Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject),
-      Filter.fieldValue(field(JobScheduleEntity, "status"), "=", "armed"),
-    ],
-  });
-  if (!Array.isArray(rows) || rows.length === 0) return;
-  const row = rows[0]!;
+  const row = await schedules.findBySubject(scheduleSubject);
+  if (!row || row.status !== "armed") return;
   if (row.schedule_type === "once") {
-    await dal.update(
-      JobScheduleEntity,
-      { uuid: row.uuid, status: "fired", next_fire_mirror_at: undefined, version: row.version } as never,
-      { actor: "system:job", matchBy: "uuid" } as never,
+    await schedules.patchRow(
+      row.uuid,
+      row.version,
+      { status: "fired", next_fire_mirror_at: undefined },
+      "system:job",
     );
     return;
   }
   if (nextFire === undefined) return;
-  await dal.update(
-    JobScheduleEntity,
-    { uuid: row.uuid, next_fire_mirror_at: nextFire ?? undefined, version: row.version } as never,
-    { actor: "system:job", matchBy: "uuid" } as never,
+  await schedules.patchRow(
+    row.uuid,
+    row.version,
+    { next_fire_mirror_at: nextFire ?? undefined },
+    "system:job",
   );
 }
 
@@ -496,13 +456,6 @@ export function getLastReconcileReport(): ReconcileReport | null {
   return lastReconcileReport;
 }
 
-/**
- * Expected-gone statuses — a live declaration on one of these is `stale`
- * drift (dangerous); absent is healthy. `stopped`/`paused`/`disarmed` are
- * deliberate absences; `fired`/`expired` are terminal lifecycle ends.
- */
-const TERMINAL_STATUSES = new Set(["disarmed", "stopped", "paused", "fired", "expired"]);
-
 export async function reconcileSchedules(opts?: {
   /** Armed-missing rescue — the engine re-derives the schedule from its
    * owning trigger record (`refreshTrigger`). Injected by index.ts to
@@ -512,8 +465,7 @@ export async function reconcileSchedules(opts?: {
   const report: ReconcileReport = {
     purged_stale: [], purged_orphan: [], self_healed: [], trigger_rescued: [], armed_missing: [], errors: [],
   };
-  const dal = getDal();
-  const rows = (await dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {})) as JobScheduleEntity[];
+  const rows = await schedules.listAllRows();
   const knownSubjects = new Set<string>();
   const now = new Date();
 
@@ -541,15 +493,7 @@ export async function reconcileSchedules(opts?: {
       const heal = expectedDeclarationGone(row, now);
       if (heal) {
         try {
-          await dal.update(
-            JobScheduleEntity,
-            {
-              uuid: row.uuid,
-              status: heal,
-              version: row.version,
-            } as never,
-            { actor: "system:reconcile", matchBy: "uuid" } as never,
-          );
+          await schedules.patchRow(row.uuid, row.version, { status: heal }, "system:reconcile");
           report.self_healed.push({ subject, to: heal });
         } catch (error) {
           report.errors.push({ subject, error: `self-heal to ${heal} failed: ${String(error)}` });
@@ -576,10 +520,11 @@ export async function reconcileSchedules(opts?: {
       const next = nextScheduleFire(row.schedule_spec, { now, since: row.armed_at ?? undefined });
       if (next !== null) {
         try {
-          await dal.update(
-            JobScheduleEntity,
-            { uuid: row.uuid, next_fire_mirror_at: next, version: row.version } as never,
-            { actor: "system:reconcile", matchBy: "uuid" } as never,
+          await schedules.patchRow(
+            row.uuid,
+            row.version,
+            { next_fire_mirror_at: next },
+            "system:reconcile",
           );
         } catch (error) {
           report.errors.push({ subject, error: `next_fire_mirror_at backfill failed: ${String(error)}` });
@@ -616,32 +561,4 @@ export async function reconcileSchedules(opts?: {
     { tags: ["jobs"] },
   );
   return report;
-}
-
-// ─── Drift surfacing (list/get decoration) ──────────────────────────────────
-
-export type ScheduleDrift = "stale" | "missing" | null;
-
-/**
- * Compute the live/drift decoration for one mirror row against the set of
- * live declaration subjects. `live === undefined` = enumeration failed —
- * drift is then unknown (left null, never guessed).
- */
-export function scheduleDrift(
-  row: { schedule_subject: string; status: string; schedule_type?: string; schedule_spec?: string; expires_at?: Date | null },
-  live: boolean | undefined,
-): { live: boolean | undefined; drift: ScheduleDrift } {
-  if (live === undefined) return { live: undefined, drift: null };
-  if (TERMINAL_STATUSES.has(row.status)) {
-    // Mirror says it must not fire; NATS still can — the dangerous drift.
-    return { live, drift: live ? "stale" : null };
-  }
-  if (row.status === "armed") {
-    if (live) return { live, drift: null };
-    // Armed with no declaration: real drift unless the absence is expected
-    // (past one-shot self-purged after firing / TTL expiry).
-    const gone = expectedDeclarationGone(row as JobScheduleEntity);
-    return { live, drift: gone === null ? "missing" : null };
-  }
-  return { live, drift: null };
 }

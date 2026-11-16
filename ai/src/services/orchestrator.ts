@@ -20,14 +20,16 @@ import { z } from "zod";
 import { getLlmModel } from "./llm-provider.js";
 import { aiConfig } from "../config/ai-config.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
-import { vectorSearch } from "./docs-kb-repository.js";
+import { vectorSearch } from "./docs-kb.service.js";
 import { buildSystemPrompt } from "./system-prompt.js";
-import {
-  insertMessage,
-} from "./conversation-repository.js";
-import { insertTelemetry } from "./telemetry-repository.js";
+import { ConversationsService } from "./conversations.service.js";
+import { TelemetryService } from "./telemetry.service.js";
 import { isRedactionEnabled, redactPii } from "./redaction.js";
 import { logger } from "@primebrick/sdk";
+
+// DomainService ctors are I/O-free — the gateway resolves lazily at use.
+const conversations = new ConversationsService();
+const telemetry = new TelemetryService();
 
 /** Caller-supplied tool definition (from GET /api/v1/system/mcp/tools). */
 export interface CallerToolDef {
@@ -196,7 +198,7 @@ export async function orchestrate(
       onStepFinish: async (event) => {
         // Persist the assistant message (text + tool calls) to ai_messages
         if (config.conversationUuid) {
-          await insertMessage({
+          await conversations.insertMessage({
             conversation_uuid: config.conversationUuid,
             role: "assistant",
             content: {
@@ -255,7 +257,7 @@ export async function orchestrate(
     });
 
     // Insert telemetry record (fire-and-forget — don't block on it).
-    void insertTelemetry({
+    void telemetry.insertTelemetry({
       conversation_uuid: config.conversationUuid,
       user_uuid: config.userUuid,
       model: modelName,
@@ -272,7 +274,7 @@ export async function orchestrate(
     callbacks.onError?.(err);
 
     // Insert telemetry record for failed requests too.
-    void insertTelemetry({
+    void telemetry.insertTelemetry({
       conversation_uuid: config.conversationUuid,
       user_uuid: config.userUuid,
       model: aiConfig("llm_model") || "unknown",

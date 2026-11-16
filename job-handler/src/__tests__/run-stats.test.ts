@@ -14,14 +14,16 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const { findAll, listRowsBySubjects } = vi.hoisted(() => ({
   findAll: vi.fn(),
   listRowsBySubjects: vi.fn(async (_subjects: string[]) => [] as unknown[]),
 }));
 
-vi.mock("../db/dal.js", () => ({ getDal: () => ({ findAll }) }));
-vi.mock("../modules/jobs/jobs.service.js", () => ({
+vi.mock("@primebrick/dal-pg", async (importOriginal) => dalPgMock({ findAll }, importOriginal));
+vi.mock("../modules/jobs/jobs.service.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../modules/jobs/jobs.service.js")>()),
   JobSchedulesService: class {
     async listRowsBySubjects(subjects: string[]) {
       return listRowsBySubjects(subjects);

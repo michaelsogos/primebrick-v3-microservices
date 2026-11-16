@@ -11,10 +11,8 @@
  */
 
 import type { ServerResponse } from "http";
-import { field, Filter, Project } from "@primebrick/dal-pg";
-import { getDal } from "../../db/dal.js";
-import { Permission, extJsonStringify, assertWritableConfigKey, type RpcRoute } from "@primebrick/sdk";
-import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
+import { Permission, extJsonStringify, type RpcRoute } from "@primebrick/sdk";
+import { ConfigEntriesService } from "../../modules/config-entries/config-entries.service.js";
 
 function sendError(
   res: ServerResponse,
@@ -56,17 +54,6 @@ export const CONFIG_ENTRIES_META = {
   ],
 };
 
-const configProjection = [
-  Project.field(field(ConfigEntryEntity, "uuid")),
-  Project.field(field(ConfigEntryEntity, "key")),
-  Project.field(field(ConfigEntryEntity, "value")),
-  Project.field(field(ConfigEntryEntity, "label_key")),
-  Project.field(field(ConfigEntryEntity, "description_key")),
-  // `version` is required on write (optimistic concurrency) — the FE must
-  // receive it to send it back.
-  Project.field(field(ConfigEntryEntity, "version")),
-];
-
 export const configEntryRoutes: RpcRoute[] = [
   {
     method: "GET",
@@ -103,7 +90,7 @@ export const configEntryRoutes: RpcRoute[] = [
         },
       },
     },
-    handler: async () => ({ config_entries: await getDal().findAll(ConfigEntryEntity, configProjection) }),
+    handler: async () => ({ config_entries: await new ConfigEntriesService().listEntries() }),
   },
   {
     method: "GET",
@@ -112,9 +99,7 @@ export const configEntryRoutes: RpcRoute[] = [
     permissions: [Permission.MODULES_CONFIG_READ_SINGLE],
     openapi: { summary: "Get a config entry by UUID", tags: ["config_entries"] },
     handler: async ({ params, res }) => {
-      const row = await getDal().find(ConfigEntryEntity, configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
-      }) as ConfigEntryEntity | null;
+      const row = await new ConfigEntriesService().getEntry(params.uuid);
       if (!row) {
         sendError(res, 404, "Config entry not found", "config-entry-not-found");
         return;
@@ -148,26 +133,13 @@ export const configEntryRoutes: RpcRoute[] = [
       }
       return entity;
     },
-    handler: async ({ params, body, user }) => {
-      const dal = getDal();
-      const b = body as Record<string, unknown>;
+    handler: async ({ params, body }) => {
       // Static-identity keys (service_code, service_base_url) are part of
-      // the deployed artifact — never runtime-editable (B3). Reject before
-      // the write; resolves the row to learn its key.
-      const target = await dal.find(ConfigEntryEntity, [Project.field(field(ConfigEntryEntity, "key"))], {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
-        throwIfNotFound: false,
-      }) as { key?: string } | null;
-      if (target?.key) assertWritableConfigKey(target.key);
-      await dal.update(
-        ConfigEntryEntity,
-        { uuid: params.uuid, value: b.value as string, version: Number(b.version) },
-        { actor: user!.id },
-      );
-      // Re-read with the projection
-      const result = await dal.find(ConfigEntryEntity, configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
-      });
+      // the deployed artifact — never runtime-editable (B3). The guard
+      // lives inside ConfigEntriesService (lookup + assertWritableConfigKey
+      // in svc's beforeUpdate hook); svc stamps the actor from the ambient
+      // HTTP session — the wire contract is unchanged.
+      const result = await new ConfigEntriesService().updateValue(params.uuid, body as { value: unknown; version: number });
       return { config_entries: result };
     },
   },

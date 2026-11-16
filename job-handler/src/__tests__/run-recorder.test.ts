@@ -10,6 +10,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const h = vi.hoisted(() => ({
   handler: null as null | ((data: unknown, meta: unknown) => Promise<void>),
@@ -27,9 +28,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => ({
   dueLaneVerify: () => async () => undefined,
   setProcessInterval: h.setProcessInterval,
 }));
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ findAll: h.findAll, add: h.add, update: h.update }),
-}));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ findAll: h.findAll, add: h.add, update: h.update }, importOriginal),
+);
 
 const svc = await import("../services/run-recorder.js");
 

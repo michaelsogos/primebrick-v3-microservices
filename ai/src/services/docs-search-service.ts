@@ -8,7 +8,7 @@
  * runs against the service's own schema.
  */
 import { getEmbeddingProvider } from "./embedding-provider.js";
-import { searchDocsKb, getDocByPath, getDocsIndex } from "./docs-search-dal.js";
+import { searchDocsKb, getDocByPath, getDocsIndex } from "./docs-search-store.js";
 
 export class DocsSearchService {
   async search(params: {

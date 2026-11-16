@@ -18,6 +18,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const h = vi.hoisted(() => {
   const cache = new Map<string, unknown>();
@@ -78,9 +79,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
     logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
   };
 });
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ add: h.addRun, findAll: h.findRuns, update: h.updateRun }),
-}));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ add: h.addRun, findAll: h.findRuns, update: h.updateRun }, importOriginal),
+);
 vi.mock("../services/schedule-service.js", () => ({
   markScheduleFired: h.markFired,
   getScheduleRow: h.getScheduleRow,

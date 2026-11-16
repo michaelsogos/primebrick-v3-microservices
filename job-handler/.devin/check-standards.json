@@ -4,7 +4,6 @@
       "allowPaths": [
         "adapters/config-repository-adapter.ts",
         "db/dal.ts",
-        "db/entity-repo.ts",
         "index.ts"
       ]
     },

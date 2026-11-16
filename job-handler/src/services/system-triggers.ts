@@ -24,12 +24,14 @@
  * reconcile itself never arms or reschedules.
  */
 
-import { newUuidV7, Filter, field } from "@primebrick/dal-pg";
+import { newUuidV7 } from "@primebrick/dal-pg";
 import { logger } from "@primebrick/sdk";
-import { getDal } from "../db/dal.js";
 import { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
 import { canonJson } from "../utils/canon-json.js";
-import { publishTriggerChanged } from "../modules/jobs/jobs.service.js";
+import { JobTriggersService, publishTriggerChanged } from "../modules/jobs/jobs.service.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const triggers = new JobTriggersService();
 
 /** Fields the declaration owns — drift on any of them means the release
  *  changed the interchange contract and the row MUST follow. The same
@@ -64,14 +66,7 @@ export interface MaterializeResult {
  *  soft-deleted system trigger is user disablement, never silently
  *  resurrected. */
 async function findBySystemKey(key: string): Promise<Record<string, unknown> | undefined> {
-  const dal = getDal();
-  const rows = await dal.findAll<JobTriggerEntity>(JobTriggerEntity, null, {
-    filters: [Filter.fieldValue(field(JobTriggerEntity, "system_key"), "=", key)],
-    deletedRecords: "INCLUDED",
-  } as never);
-  return Array.isArray(rows)
-    ? (rows[0] as unknown as Record<string, unknown> | undefined)
-    : undefined;
+  return triggers.findBySystemKey(key);
 }
 
 /**
@@ -81,14 +76,12 @@ async function findBySystemKey(key: string): Promise<Record<string, unknown> | u
  * written after insert.
  */
 async function reconcileOne(caller: string, decl: SystemJobDecl): Promise<MaterializeResult> {
-  const dal = getDal();
   const actor = `system:${caller}`;
   const row = await findBySystemKey(decl.key);
 
   if (!row) {
     const uuid = newUuidV7();
-    await dal.add(
-      JobTriggerEntity,
+    await triggers.insertSystemRow(
       {
         uuid,
         name: decl.name,
@@ -99,8 +92,8 @@ async function reconcileOne(caller: string, decl: SystemJobDecl): Promise<Materi
         payload_map: decl.payload_map ?? null,
         filter: decl.filter ?? null,
         run_as: decl.run_as,
-      } as never,
-      { actor } as never,
+      },
+      actor,
     );
     publishTriggerChanged(uuid);
     return { key: decl.key, action: "inserted", uuid };
@@ -122,14 +115,10 @@ async function reconcileOne(caller: string, decl: SystemJobDecl): Promise<Materi
   if (drifted.length === 0) return { key: decl.key, action: "unchanged", uuid };
 
   const patch = Object.fromEntries(drifted.map((f) => [f, declValues[f] ?? null]));
-  await dal.update(
-    JobTriggerEntity,
-    // `version` is the auditable write's optimistic-concurrency token —
-    // the row read above carries it, so a user edit racing the reconcile
-    // fails loudly instead of silently losing either side's write.
-    { uuid, version: row.version, ...patch } as never,
-    { actor, matchBy: "uuid" } as never,
-  );
+  // `version` is the auditable write's optimistic-concurrency token —
+  // the row read above carries it, so a user edit racing the reconcile
+  // fails loudly instead of silently losing either side's write.
+  await triggers.patchRow(uuid, row.version as number, patch, actor);
   publishTriggerChanged(uuid);
   return { key: decl.key, action: "updated", uuid, changed_fields: drifted };
 }

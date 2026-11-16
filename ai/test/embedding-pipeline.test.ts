@@ -26,7 +26,7 @@ vi.mock('../src/services/embedding-provider.js', () => ({
     embedBatch: mocks.embed_batch,
   }),
 }));
-vi.mock('../src/services/docs-kb-repository.js', () => ({
+vi.mock('../src/services/docs-kb.service.js', () => ({
   insertDocChunks: mocks.insert_doc_chunks,
   updateDocChunks: mocks.update_doc_chunks,
   getDocHashes: mocks.get_doc_hashes,

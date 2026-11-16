@@ -18,6 +18,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 import type { JobTriggerEntity } from "../domain/entities/job_trigger_entity.js";
 
 const h = vi.hoisted(() => ({
@@ -75,7 +76,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
     logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
   };
 });
-vi.mock("../db/dal.js", () => ({ getDal: () => ({ findAll: h.findAll, add: vi.fn(async () => ({})) }) }));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ findAll: h.findAll, add: vi.fn(async () => ({})) }, importOriginal),
+);
 vi.mock("../services/schedule-service.js", () => ({
   declareSchedule: h.declareSchedule,
   disarmSchedule: h.disarmSchedule,

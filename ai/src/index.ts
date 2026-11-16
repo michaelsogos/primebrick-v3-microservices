@@ -8,7 +8,6 @@ import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
 import { initDal, getDal } from "./db/dal.js";
 
 import { startDocsPackSubscriber } from "./controllers/nats-sub/docs-pack-subscriber.js";
-import { startPartitionMaintenanceJob } from "./controllers/nats-sub/partition-jobs.js";
 import { aiRouteHandler } from "./service-routes.js";
 import {
   ConfigRepositoryAdapter,
@@ -59,6 +58,12 @@ async function main(): Promise<void> {
         process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
     },
 
+    // Shared system job — the SDK mounts `ai.partition_maintenance` and
+    // materializes its trigger when the registry carries a maintained
+    // surface (@Partition / @AuditTrail / @Retention). Trigger row = the
+    // schedule of record (user-governed).
+    partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new AiAuthConfigPort(configLoader),
     // Lazy: getDal() only works after initDal ran inside createMicroservice.
@@ -91,11 +96,6 @@ async function main(): Promise<void> {
       // BE pack once at startup (the BE never registers via NATS).
       await startDocsPackSubscriber(aiConfig("be_base_url") ?? "http://localhost:3001");
 
-      // System jobs derived from entity metadata — registers the
-      // partition-maintenance callable + materializes its system trigger
-      // when any @PartitionField entity carries a retention. The trigger
-      // row is the schedule of record (user-governed); no-op otherwise.
-      await startPartitionMaintenanceJob();
     },
   });
 }

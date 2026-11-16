@@ -17,7 +17,7 @@ service follows — nothing more, nothing less.
   "private": true,
   "capabilities": ["<domain_capability>"],
   "scripts": {
-    "dev": "bun --hot src/index.ts",
+    "dev": "node ../scripts/dev-hot.mjs",
     "build": "tsc",
     "db:migrate": "bun scripts/database-patch-apply.ts",
     "generate:docs": "bun src/index.ts --emit-docs",
@@ -84,17 +84,20 @@ export const myServiceRouteHandler = makeServiceRoutes({
 
 Pass the result straight to `createMicroservice({ routeHandler })` — it
 is factory-branded. The handler carries `.spec` (the built OpenAPI doc):
-`scripts/build-docs-pack.ts` embeds `myServiceRouteHandler.spec`. A route
-that exists but isn't documented (or vice versa) is impossible by
-construction — never hand-compose `buildOpenApiSpec`/`entityCrudSpec`/
-`makeOpenApiHandler` separately.
+`myServiceRouteHandler.spec` is what the `--emit-docs` run embeds into the
+docs pack. A route that exists but isn't documented (or vice versa) is
+impossible by construction — never hand-compose
+`buildOpenApiSpec`/`entityCrudSpec`/`makeOpenApiHandler` separately.
 
-## 6. Docs pack — `scripts/build-docs-pack.ts`
+## 6. Docs pack — emitted by `--emit-docs`
 
-Copy the standard script verbatim, changing `repo`, `docsDir` (omit for
-dev-only services) and `openapi`. Build it in the deploy chain —
-`ServiceRegistrar` auto-advertises `docs_pack` when `dist/docs-pack/
-manifest.json` exists.
+No per-service script: `bun src/index.ts --emit-docs` (the `generate:docs`
+/`docs:check` scripts in §1) builds `dist/docs-pack/` — `manifest.json`,
+the committed `docs/` tree, generated page-docs (when `nav` + `fe/src`
+exist) and `openapi.json` taken from the route handler's `.spec`.
+`prebuild` runs it so the deploy image ships a fresh pack; in dev the
+boot re-emits only when the pack is stale. `ServiceRegistrar`
+auto-advertises `docs_pack` when `dist/docs-pack/manifest.json` exists.
 
 ## 7. Registration — automatic
 

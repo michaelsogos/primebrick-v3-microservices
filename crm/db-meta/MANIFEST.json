@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-15T20:22:52.071Z",
+  "issued_at": "2026-11-16T10:13:14.649Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -17,7 +17,9 @@
     "20261114125538_addcols_crm_customer_link_types": "1901ab2f3215eab10a1b0c6a81d3a8dd6d98077fc4e3bd5a5a1c57b0d05fd011",
     "20261114131000_customer_link_directional_vocabulary": "1222408937fe349dc9ee88b7b4c08188166577e6a81e556c358e65c1b427835c",
     "20261115210000_version_history_actions_dedup": "61bde5ca80774729fd7d2b65282be0b34b7fbc6d4fe74084ce3922db26f50418",
-    "20261115221000_version_history_full_dedup": "220c2deb7b6f5e52923e898f8ab69cdb548c95e1b38f50aee7ce8166a4f1e784"
+    "20261115221000_version_history_full_dedup": "220c2deb7b6f5e52923e898f8ab69cdb548c95e1b38f50aee7ce8166a4f1e784",
+    "20261116090000_partition_maintenance_callable_i18n": "533b4d0ea7c3219d78764ad774aa5bf9d226a7ca8e341b4d6f01f940e82231ae",
+    "20261116100000_audit_uuid_pk_retention": "12827e7d113f72c1c098b4db6a7cace67e70389b8b3b1f8c3fd4452ed644e8de"
   },
-  "signature": "2cQuKC45rB6Pebp+7hkSsHCYchKzM5Tk/veFQrgEPus5arQuNpt7JQ8gpV2CzhULEDU2VN57X68CFTk6FNqoDQ=="
+  "signature": "SqvJMkAfGblgFft+8fetbCD9SbGZnFsHAPdqPUtY6gpW1Gr8H7l+7Hnuky1ByCZFfCASv/5pizKoAcgs+wL/Dg=="
 }
