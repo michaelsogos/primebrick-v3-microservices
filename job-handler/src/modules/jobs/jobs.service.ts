@@ -5,12 +5,13 @@
  */
 
 import { DomainService, ValidationError, type EntityServiceConfig } from "@primebrick/dal-pg";
-import { NatsClient, makeMarkerAuditPort, payloadMapConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
+import { NatsClient, makeMarkerAuditPort, payloadMapConformance, payloadPassthroughConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
 import { entityActor } from "../../db/entity-repo.js";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
-import { callableSubjects, callablePayloadSchema, emitPayloadSchema } from "../../services/callable-catalog.js";
+import { callableSubjects, callablePayloadSchema, emitSubjects, emitDeclFor, subjectCoveredBy } from "../../services/callable-catalog.js";
+import { resolveMapKeySchemas } from "../../services/map-key-schemas.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 import { scheduleDrift } from "../../services/schedule-service.js";
 import { jobTriggerMeta, jobScheduleMeta, jobRunMeta } from "./job.meta.js";
@@ -45,6 +46,27 @@ async function assertCallableTarget(body: Record<string, unknown>): Promise<void
       `target_subject "${target}" is not a declared callable — pick a subject from census.callables`,
     );
   }
+}
+
+/**
+ * `event_subject` must resolve to a declared emit — the `census.events`
+ * vocabulary the form's combo offers. Wildcard emits cover the concrete
+ * subjects their pattern spans. A trigger bound to a subject nobody emits
+ * is a dead subscription — it can never fire, and the write hides it.
+ * Body-only check mirroring `assertCallableTarget`: the subject is
+ * re-proven whenever the write carries it.
+ */
+export async function assertEmitSubject(body: Record<string, unknown>): Promise<void> {
+  const event = body["event_subject"];
+  if (typeof event !== "string" || event.length === 0) return; // NOT NULL/shape violations surface elsewhere
+  const subjects = await emitSubjects();
+  if (subjects.has(event)) return;
+  for (const pattern of subjects) {
+    if (subjectCoveredBy(pattern, event)) return;
+  }
+  throw new ValidationError(
+    `event_subject "${event}" is not a declared emit — pick a subject from census.emits`,
+  );
 }
 
 /**
@@ -84,10 +106,26 @@ function isEmptyMap(map: unknown): boolean {
  * `payload_schema`: required destination fields must be covered (an entry,
  * or an `x_inject`/`x_semantic` annotation on the schema prop), and every
  * `const` value must satisfy the prop's portable JSON-Schema constraints.
- * An absent/empty map is verbatim passthrough — fire-time data may carry
- * the requireds, so nothing is checked. Runs after `assertCallableTarget`
- * so the subject is a known catalog entry; a schema-less callable yields
- * no contract and nothing to check against.
+ *
+ * An absent/empty map is verbatim passthrough — `applyPayloadMap` returns
+ * the event payload unchanged (a schedule-only fire dispatches `{}`).
+ * Required destination props must then be deliverable through the
+ * passthrough itself: `x_inject`/`x_semantic` props materialize at fire
+ * time; anything else must be provably present in the source emit's
+ * declared schema (required AND path-compatible). Schedule-only carries
+ * no source data at all, so uncovered requireds are undeliverable — the
+ * write is a guaranteed `parse` failure at fire time. A schema-less emit
+ * fails open per field (nothing declared to check against).
+ *
+ * `x_map_keys` declarations (e.g. `variables` keyed by the const
+ * `templateCode` pick) resolve through the owning service's public entity
+ * API via `resolveMapKeySchemas` — the same catalog rows the form's
+ * editor reads, through the governed internal client. Resolution failure
+ * fails open; the base map check still stands.
+ *
+ * Runs after `assertCallableTarget`/`assertEmitSubject` so both subjects
+ * are known catalog entries; a schema-less callable yields no contract
+ * and nothing to check against.
  */
 export async function assertPayloadMapConformance(
   body: Record<string, unknown>,
@@ -102,14 +140,23 @@ export async function assertPayloadMapConformance(
     (typeof existing?.["target_subject"] === "string" ? (existing["target_subject"] as string) : "");
   if (!subject) return; // absent target surfaces as a column error elsewhere
   const map = mapPresent ? body["payload_map"] : existing?.["payload_map"];
-  if (isEmptyMap(map)) return; // verbatim passthrough — nothing mappable to check
   const schema = await callablePayloadSchema(subject);
   if (!schema) return;
   const eventSubject =
     (typeof body.event_subject === "string" && body.event_subject) ||
     (typeof existing?.["event_subject"] === "string" ? (existing["event_subject"] as string) : "");
-  const sourceSchema = eventSubject ? await emitPayloadSchema(eventSubject) : undefined;
-  const issues = payloadMapConformance(map as Record<string, unknown>, schema, sourceSchema);
+  const emit = eventSubject ? await emitDeclFor(eventSubject) : undefined;
+  if (isEmptyMap(map)) {
+    const issues = payloadPassthroughConformance(schema, eventSubject ? emit?.schema : null);
+    if (issues.length > 0) {
+      throw new ValidationError(
+        `payload_map does not conform to ${subject} — ${issues.map((i) => `${i.path}: ${i.message}`).join("; ")}`,
+      );
+    }
+    return;
+  }
+  const mapKeySchemas = await resolveMapKeySchemas(schema, map as Record<string, unknown>);
+  const issues = payloadMapConformance(map as Record<string, unknown>, schema, emit?.schema, mapKeySchemas);
   if (issues.length > 0) {
     throw new ValidationError(
       `payload_map does not conform to ${subject} — ${issues.map((i) => `${i.path}: ${i.message}`).join("; ")}`,
@@ -205,6 +252,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
           assertSystemTriggerMutable(body, true);
           await assertTriggerShape(body, true);
           await assertCallableTarget(body);
+          await assertEmitSubject(body);
           await assertPayloadMapConformance(body);
           return body;
         },
@@ -216,6 +264,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
           assertSystemTriggerMutable(body, false, await loadExisting());
           await assertTriggerShape(body, false, loadExisting);
           await assertCallableTarget(body);
+          await assertEmitSubject(body);
           await assertPayloadMapConformance(body, loadExisting);
           return body;
         },

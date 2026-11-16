@@ -48,13 +48,13 @@ function indexPayload(p: ServiceRegisterPayload): void {
   const ev = p.endpoints?.["events"] as
     | { emits?: { subject?: string; payload_schema?: Record<string, unknown> }[] }
     | undefined;
-  const emitSubjects = new Map<string, Record<string, unknown> | undefined>();
+  const emits = new Map<string, Record<string, unknown> | undefined>();
   for (const e of ev?.emits ?? []) {
     if (typeof e?.subject === "string" && e.subject.length > 0) {
-      emitSubjects.set(e.subject, e.payload_schema);
+      emits.set(e.subject, e.payload_schema);
     }
   }
-  emitCatalog.set(p.code, emitSubjects);
+  emitCatalog.set(p.code, emits);
 }
 
 /** Census fetch over `service.registry.get` — fills the catalog from the
@@ -140,6 +140,50 @@ export async function emitPayloadSchema(
   subject: string,
 ): Promise<Record<string, unknown> | undefined> {
   return (await emitCatalogEntries()).get(subject);
+}
+
+/**
+ * Union of every emit subject declared by live services — wildcard
+ * patterns included (the form's `census.emits` combo is the same list).
+ */
+export async function emitSubjects(): Promise<Set<string>> {
+  return new Set((await emitCatalogEntries()).keys());
+}
+
+/**
+ * NATS subject coverage — `pattern` covers `subject` token-wise: `*` is
+ * exactly one token, terminal `>` takes the rest. A wildcard on the
+ * SUBJECT side is never covered by a concrete or narrower pattern — a
+ * trigger bound wider than anything declared would fire on events no
+ * service publishes.
+ */
+export function subjectCoveredBy(pattern: string, subject: string): boolean {
+  const p = pattern.split(".");
+  const s = subject.split(".");
+  for (let i = 0; i < p.length; i++) {
+    if (p[i] === ">") return true;
+    const st = s[i];
+    if (st === undefined || st === ">" || st === "*") return false;
+    if (p[i] !== "*" && p[i] !== st) return false;
+  }
+  return p.length === s.length;
+}
+
+/**
+ * The emit declaration covering `subject` — exact match first, then the
+ * first declared pattern whose wildcard span covers it. The returned
+ * `subject` is the DECLARED pattern (its schema is the source contract
+ * `path` entries and passthrough coverage check against).
+ */
+export async function emitDeclFor(
+  subject: string,
+): Promise<{ subject: string; schema?: Record<string, unknown> } | undefined> {
+  const all = await emitCatalogEntries();
+  if (all.has(subject)) return { subject, schema: all.get(subject) };
+  for (const [pattern, schema] of all) {
+    if (subjectCoveredBy(pattern, subject)) return { subject: pattern, schema };
+  }
+  return undefined;
 }
 
 /** Subscribe to lifecycle events + cold census fetch. Call once at boot,
