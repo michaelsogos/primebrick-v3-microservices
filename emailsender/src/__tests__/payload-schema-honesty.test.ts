@@ -41,6 +41,8 @@ describe("emailsender.send payload_schema", () => {
     const to = (SEND_EMAIL_PAYLOAD_SCHEMA["properties"] as Record<string, any>).to;
     expect(pathCompatible(to, { type: "array", items: { type: "string", format: "email" } })).toBe(true);
     expect(pathCompatible(to, { type: "array", items: { type: "string" } })).toBe(false);
-    expect(pathCompatible(to, { type: "string", format: "email" })).toBe(false);
+    // A scalar email source is also honest — pathCompatible's documented
+    // scalar→array promotion wraps it (`v` → `[v]`) in applyPayloadMap.
+    expect(pathCompatible(to, { type: "string", format: "email" })).toBe(true);
   });
 });
