@@ -30,9 +30,6 @@ import {
   ValidationError,
   type RpcRoute,
 } from "@primebrick/sdk";
-import { field, Filter, GroupBy, Project, Sort } from "@primebrick/dal-pg";
-import { getDal } from "../../db/dal.js";
-import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../../domain/entities/job_trigger_entity.js";
 import {
@@ -44,7 +41,12 @@ import {
   ttlToMs,
   unsuppressSchedule,
 } from "../../services/schedule-service.js";
-import { JobSchedulesService } from "../../modules/jobs/jobs.service.js";
+import { JobSchedulesService, JobTriggersService, JobRunsService } from "../../modules/jobs/jobs.service.js";
+
+/** Owning entity surfaces — module-scope (I/O-free ctors, lazy DAL). */
+const schedules = new JobSchedulesService();
+const triggersSvc = new JobTriggersService();
+const runs = new JobRunsService();
 import { refreshTrigger } from "../../services/triggers-engine.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
 
@@ -158,46 +160,7 @@ export async function runStats(body: RunStatsBody): Promise<unknown> {
     : 30 * 24 * 3_600_000; // default 30d
   const { unit } = pickBucketUnit(spanMs);
 
-  interface StatRow {
-    schedule_subject: string;
-    bucket_start: Date;
-    succeeded: bigint;
-    failed: bigint;
-    skipped: bigint;
-    lost: bigint;
-    dispatched: bigint;
-  }
-  const rows = (await getDal().findAll<JobRunEntity, StatRow>(
-    JobRunEntity,
-    [
-      Project.field(field(JobRunEntity, "schedule_subject")),
-      Project.expr("date_trunc(?::text, created_at)", "bucket_start", [unit]),
-      Project.expr("count(*) FILTER (WHERE status = 'succeeded')", "succeeded"),
-      Project.expr("count(*) FILTER (WHERE status = 'failed')", "failed"),
-      Project.expr("count(*) FILTER (WHERE status = 'skipped')", "skipped"),
-      Project.expr("count(*) FILTER (WHERE status = 'lost')", "lost"),
-      Project.expr("count(*) FILTER (WHERE status = 'dispatched')", "dispatched"),
-    ],
-    {
-      filters: [
-        Filter.expr(
-          { sql: "schedule_subject" },
-          "=",
-          { sql: "ANY(?)", params: [subjects] },
-        ),
-        Filter.expr(
-          { sql: "created_at" },
-          ">=",
-          { sql: "now() - make_interval(secs => ? / 1000.0)", params: [spanMs] },
-        ),
-      ],
-      // Group on the select alias — a parameterized date_trunc in GROUP BY
-      // binds a different `$n` than the projection's, so Postgres treats
-      // them as distinct expressions ("must appear in GROUP BY clause").
-      groupBy: [GroupBy.expr("bucket_start")],
-      sorting: [Sort.byAlias("bucket_start")],
-    },
-  )) as StatRow[];
+  const rows = await runs.statsBySchedule(unit, subjects, spanMs);
 
   // The mirror rows carry the spec + arm window the expected-fires
   // enumeration needs (run buckets alone cannot say what was owed).
@@ -274,27 +237,18 @@ function actorOf(ctx: { user?: { id?: string | null } | null }): string {
 }
 
 async function loadOwnerTrigger(triggerUuid: string, includeDeleted = false): Promise<JobTriggerEntity | undefined> {
-  const rows = (await getDal().findAll<JobTriggerEntity>(JobTriggerEntity, null, {
-    filters: [Filter.fieldValue(field(JobTriggerEntity, "uuid"), "=", triggerUuid)],
-    ...(includeDeleted ? { deletedRecords: "INCLUDED" as const } : {}),
-  })) as JobTriggerEntity[];
-  return Array.isArray(rows) ? rows[0] : undefined;
+  return (await triggersSvc.findByUuid(triggerUuid, { includeDeleted })) as JobTriggerEntity | undefined;
 }
 
 /** Flip the owning trigger's soft-delete state + re-derive via the engine.
  *  DISABLE IS SOFT-DELETE: `deleted_at` replaces the dropped `enabled`
  *  column (doctrine — enable flags are a design error). delete/restore go
- *  through the repo so `deleted_by`/audit hooks stay canonical. */
-async function setTriggerDeleted(triggerUuid: string, deleted: boolean, actor: string): Promise<void> {
+ *  through the svc — `deleted_by`, audit rows and the entity-changed
+ *  marker all stay canonical (the actor stamps via `requireActor`). */
+async function setTriggerDeleted(triggerUuid: string, deleted: boolean): Promise<void> {
   const trig = await loadOwnerTrigger(triggerUuid, deleted);
   if (!trig) throw new ValidationError(`owner trigger ${triggerUuid} not found`);
-  const dal = getDal() as unknown as {
-    delete(e: unknown, m: unknown, o: unknown): Promise<unknown>;
-    restore(e: unknown, m: unknown, o: unknown): Promise<unknown>;
-  };
-  await (deleted
-    ? dal.delete(JobTriggerEntity, { uuid: trig.uuid, version: trig.version }, { actor, matchBy: "uuid" })
-    : dal.restore(JobTriggerEntity, { uuid: trig.uuid, version: trig.version }, { actor, matchBy: "uuid" }));
+  await triggersSvc.setDeleted(trig.uuid, trig.version, deleted);
   await refreshTrigger(triggerUuid);
 }
 
@@ -322,7 +276,7 @@ async function disableSchedule(scheduleSubject: string, actor: string): Promise<
   const row = await getScheduleRow(scheduleSubject);
   if (await dropIfDeadOwner(row, actor)) return { disabled: true };
   if (row?.trigger_uuid) {
-    await setTriggerDeleted(row.trigger_uuid, true, actor);
+    await setTriggerDeleted(row.trigger_uuid, true);
     return { disabled: true };
   }
   await disarmSchedule(scheduleSubject, actor, "disarmed");
@@ -341,7 +295,7 @@ async function enableSchedule(scheduleSubject: string, actor: string): Promise<{
   }
   const row = await unsuppressSchedule(scheduleSubject, actor);
   if (row?.trigger_uuid) {
-    await setTriggerDeleted(row.trigger_uuid, false, actor);
+    await setTriggerDeleted(row.trigger_uuid, false);
   }
   return { enabled: true };
 }
@@ -360,10 +314,7 @@ async function resumeSchedule(scheduleSubject: string, actor: string): Promise<{
 }
 
 async function listSchedules(statuses: string[]): Promise<JobScheduleEntity[]> {
-  const rows = await getDal().findAll<JobScheduleEntity>(JobScheduleEntity, null, {
-    filters: [Filter.expr({ sql: "status" }, "IN", { sql: `(SELECT unnest(?::text[]))`, params: [statuses] })],
-  });
-  return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
+  return schedules.listByStatuses(statuses);
 }
 
 interface BulkReport {
@@ -559,7 +510,7 @@ export const jobActionsRoutes: RpcRoute[] = [
       tags: ["jobs", "actions"],
     },
     handler: async () => {
-      const rows = (await getDal().findAll<JobScheduleEntity>(JobScheduleEntity, null, {})) as JobScheduleEntity[];
+      const rows = await schedules.listAllRows();
       const liveSubjects = await listJobScheduleSubjects().catch(() => undefined);
       const drifted = rows
         .map((r) => {

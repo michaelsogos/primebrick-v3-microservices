@@ -21,11 +21,12 @@
  */
 
 import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, JOB_SCHEDULE_HEADERS, type AuthUser, logger } from "@primebrick/sdk";
-import { getDal } from "../db/dal.js";
-import { Filter, field } from "@primebrick/dal-pg";
-import { JobRunEntity } from "../domain/entities/job_run_entity.js";
+import { JobRunsService } from "../modules/jobs/jobs.service.js";
 import { JOBS_STREAM } from "./run-recorder.js";
 import { getScheduleRow, markScheduleFired } from "./schedule-service.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const runs = new JobRunsService();
 
 export const FORWARD_ENVELOPE_MARK = "__pb_job_forward";
 
@@ -72,8 +73,7 @@ async function insertRun(
   fireSeq?: bigint,
 ): Promise<string | undefined> {
   try {
-    const row = await getDal().add<JobRunEntity>(
-      JobRunEntity,
+    const row = await runs.addRun(
       {
         schedule_subject: envelope.schedule_subject,
         // The run executes ON the callable's service — derive it from the
@@ -89,10 +89,10 @@ async function insertRun(
         // column is populated even for core-subscribed callables whose
         // result reports carry no `m.seq`.
         fire_seq: fireSeq,
-      } as never,
-      { actor: "system:job" } as never,
+      },
+      "system:job",
     );
-    return (row as unknown as { uuid?: string })?.uuid;
+    return row?.uuid;
   } catch (err) {
     logger.warn(`due-forwarder: run record failed for ${envelope.target} (${String(err)})`, { tags: ["jobs"] });
     return undefined;
@@ -103,20 +103,17 @@ async function insertRun(
 async function failRun(runUuid: string | undefined, detail: string): Promise<void> {
   if (!runUuid) return;
   try {
-    const rows = await getDal().findAll<JobRunEntity>(JobRunEntity, null, {
-      filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", runUuid)],
-    });
-    if (!Array.isArray(rows) || rows.length === 0) return;
-    await getDal().update(
-      JobRunEntity,
+    const row = await runs.findByUuid(runUuid);
+    if (!row) return;
+    await runs.patchRow(
+      row.uuid,
+      row.version,
       {
-        uuid: rows[0]!.uuid,
         status: "failed",
         error_code: "DISPATCH_ERROR",
         error_detail: detail.slice(0, 2000),
-        version: rows[0]!.version,
-      } as never,
-      { actor: "system:job", matchBy: "uuid" } as never,
+      },
+      "system:job",
     );
   } catch (err) {
     logger.warn(`due-forwarder: run fail update failed (${String(err)})`, { tags: ["jobs"] });

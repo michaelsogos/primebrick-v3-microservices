@@ -35,9 +35,10 @@ import {
   logger,
   type JobResultMessage,
 } from "@primebrick/sdk";
-import { Filter, field } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
-import { JobRunEntity } from "../domain/entities/job_run_entity.js";
+import { JobRunsService } from "../modules/jobs/jobs.service.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const runs = new JobRunsService();
 
 export const JOBS_STREAM = "JOBS";
 
@@ -82,17 +83,13 @@ function parseTarget(target: string): { service_code: string; job_name: string; 
  * outcome is the most truthful.
  */
 async function correlateRun(data: JobResultMessage, redeliveryCount?: number): Promise<boolean> {
-  const dal = getDal();
-  const rows = await dal.findAll<JobRunEntity>(JobRunEntity, null, {
-    filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", data.run_id!)],
-  });
-  if (!Array.isArray(rows) || rows.length === 0) return false;
-  const row = rows[0]!;
+  const row = await runs.findByUuid(data.run_id!);
+  if (!row) return false;
   const isError = data.status === "failed";
-  await dal.update(
-    JobRunEntity,
+  await runs.patchRow(
+    row.uuid,
+    row.version,
     {
-      uuid: row.uuid,
       status: data.status,
       error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
       error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
@@ -103,9 +100,8 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
       fire_seq: row.fire_seq ?? (data.fire_seq === undefined ? undefined : BigInt(data.fire_seq)),
       redelivery_count: redeliveryCount,
       report: plainJson(data.report),
-      version: row.version,
-    } as never,
-    { actor: "system:job", matchBy: "uuid" } as never,
+    },
+    "system:job",
   );
   return true;
 }
@@ -117,8 +113,7 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
 async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number): Promise<void> {
   const parsed = parseTarget(data.target ?? "");
   const isError = data.status === "failed";
-  await getDal().add<JobRunEntity>(
-    JobRunEntity,
+  await runs.addRun(
     {
       schedule_subject: data.schedule_subject,
       service_code: parsed?.service_code ?? "unknown",
@@ -131,8 +126,8 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
       fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
       redelivery_count: redeliveryCount,
       report: plainJson(data.report),
-    } as never,
-    { actor: `system:${parsed?.service_code ?? "job"}` } as never,
+    },
+    `system:${parsed?.service_code ?? "job"}`,
   );
 }
 
@@ -144,26 +139,19 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
  * not a tombstone.
  */
 async function sweepLostRuns(): Promise<void> {
-  const dal = getDal();
   const cutoff = new Date(Date.now() - DISPATCH_LOST_AFTER_MS);
-  const rows = (await dal.findAll<JobRunEntity>(JobRunEntity, null, {
-    filters: [
-      Filter.fieldValue(field(JobRunEntity, "status"), "=", "dispatched"),
-      Filter.fieldValue(field(JobRunEntity, "created_at"), "<", cutoff),
-    ],
-  })) as JobRunEntity[];
+  const rows = await runs.listDispatchedBefore(cutoff);
   for (const row of rows) {
     try {
-      await dal.update(
-        JobRunEntity,
+      await runs.patchRow(
+        row.uuid,
+        row.version,
         {
-          uuid: row.uuid,
           status: "lost",
           error_code: "DISPATCH_TIMEOUT",
           error_detail: `no execution result within ${DISPATCH_LOST_AFTER_MS / 1000}s of dispatch`,
-          version: row.version,
-        } as never,
-        { actor: "system:job", matchBy: "uuid" } as never,
+        },
+        "system:job",
       );
       logger.warn(`run-recorder: run ${row.uuid} (${row.job_name}) dispatched but never reported — lost`, {
         tags: ["jobs"],

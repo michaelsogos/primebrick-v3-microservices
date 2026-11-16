@@ -4,18 +4,17 @@
  * instance reload its triggers engine without restart.
  */
 
-import { DomainService, ValidationError, type EntityServiceConfig } from "@primebrick/dal-pg";
-import { NatsClient, makeMarkerAuditPort, payloadMapConformance, payloadPassthroughConformance, jobTriggerShapeIssues, logger } from "@primebrick/sdk";
-import { entityActor } from "../../db/entity-repo.js";
+import { DomainService, ValidationError, field, Filter, GroupBy, Project, Sort, type EntityServiceConfig } from "@primebrick/dal-pg";
+import { NatsClient, assertWritableConfigKey, makeMarkerAuditPort, payloadMapConformance, payloadPassthroughConformance, jobTriggerShapeIssues, logger, requireActor } from "@primebrick/sdk";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
 import { JobRunEntity } from "../../domain/entities/job_run_entity.js";
+import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
 import { callableSubjects, callablePayloadSchema, emitSubjects, emitDeclFor, subjectCoveredBy } from "../../services/callable-catalog.js";
 import { resolveMapKeySchemas } from "../../services/map-key-schemas.js";
 import { listJobScheduleSubjects } from "../../nats/schedule-mechanism.js";
-import { scheduleDrift } from "../../services/schedule-service.js";
+import { scheduleDrift } from "../../services/schedule-drift.js";
 import { jobTriggerMeta, jobScheduleMeta, jobRunMeta } from "./job.meta.js";
-import { Filter } from "@primebrick/dal-pg";
 
 const TRIGGER_DEFAULT_SORT = { key: "updated_at", dir: "desc" as const };
 
@@ -225,7 +224,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
   constructor() {
     super({
       entity: JobTriggerEntity,
-      actor: entityActor,
+      actor: requireActor,
       list: {
         meta: jobTriggerMeta,
         defaultSort: TRIGGER_DEFAULT_SORT,
@@ -272,6 +271,60 @@ export class JobTriggersService extends DomainService<TriggerT> {
       },
     };
   }
+
+  // ─── Domain queries — the owning service's surface for non-router
+  // consumers (engine modules, action routes, system reconcile). ────────
+
+  /** Single trigger by uuid — `includeDeleted` for paths that must see
+   *  user-disabled rows (soft-delete IS the disable flag). */
+  async findByUuid(uuid: string, opts?: { includeDeleted?: boolean }): Promise<TriggerT | undefined> {
+    const rows = (await this.dal.findAll<TriggerT>(JobTriggerEntity, null, {
+      filters: [Filter.fieldValue(field(JobTriggerEntity, "uuid"), "=", uuid)],
+      ...(opts?.includeDeleted ? { deletedRecords: "INCLUDED" as const } : {}),
+    })) as TriggerT[];
+    return Array.isArray(rows) ? rows[0] : undefined;
+  }
+
+  /** Row lookup by the reconcile anchor — deleted rows INCLUDED: a
+   *  soft-deleted system trigger is user disablement, never silently
+   *  resurrected. */
+  async findBySystemKey(key: string): Promise<Record<string, unknown> | undefined> {
+    const rows = await this.dal.findAll<TriggerT>(JobTriggerEntity, null, {
+      filters: [Filter.fieldValue(field(JobTriggerEntity, "system_key"), "=", key)],
+      deletedRecords: "INCLUDED",
+    } as never);
+    return Array.isArray(rows)
+      ? (rows[0] as unknown as Record<string, unknown> | undefined)
+      : undefined;
+  }
+
+  /** Every live trigger — the engine's boot enumeration. Soft-deleted rows
+   *  are excluded by default (`deleted_at` IS the disable flag). */
+  async listLive(): Promise<TriggerT[]> {
+    return (await this.dal.findAll<TriggerT>(JobTriggerEntity, null)) as TriggerT[];
+  }
+
+  /** Flip soft-delete state — the wire-canonical path (svc): audit row +
+   *  entity-changed marker + afterWrite publish all fire; the actor stamps
+   *  through the configured `requireActor` supplier. */
+  async setDeleted(uuid: string, version: number, deleted: boolean): Promise<void> {
+    if (deleted) await this.svc.delete(uuid, version);
+    else await this.svc.restore(uuid, version);
+  }
+
+  /** Materialize-insert a system trigger row — `this.dal` level by design:
+   *  the wire hooks reject `system_key` payloads, reconcile is a separate
+   *  path (see `assertSystemTriggerMutable`). The row is decl-shaped
+   *  (`null` fields), not entity-shaped — cast is internal. */
+  async insertSystemRow(row: Record<string, unknown>, actor: string): Promise<void> {
+    await this.dal.add(JobTriggerEntity, row as never, { actor } as never);
+  }
+
+  /** Optimistic-lock patch on code-owned fields — reconcile drift write.
+   *  `this.dal` level for the same reason as `insertSystemRow`. */
+  async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
+    await this.dal.update(JobTriggerEntity, { uuid, version, ...patch } as never, { actor, matchBy: "uuid" } as never);
+  }
 }
 
 /**
@@ -289,7 +342,7 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
   constructor() {
     super({
       entity: JobScheduleEntity,
-      actor: entityActor,
+      actor: requireActor,
       list: {
         meta: jobScheduleMeta,
         defaultSort: TRIGGER_DEFAULT_SORT,
@@ -297,12 +350,9 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
     });
   }
 
-  protected override buildConfig(): EntityServiceConfig<ScheduleT> {
-    return {
-      ...super.buildConfig(),
-      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_schedule"),
-    };
-  }
+  // No auditPort: `job_schedules` is a derived mirror — NOT auditable
+  // state by design (no @AuditTrail, no `{table}_audit`); svc writes are
+  // unreachable anyway (the entity route declares it read-only).
 
   /** Decorate rows with live/drift — ONE enumeration per call. */
   private async decorate(rows: (JobScheduleEntity & Record<string, unknown>)[]): Promise<void> {
@@ -341,13 +391,54 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
     });
     return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
   }
+
+  /** Single mirror row for a schedule subject — the canonical read every
+   *  mirror mutation starts from (unique per subject). */
+  async findBySubject(scheduleSubject: string): Promise<JobScheduleEntity | undefined> {
+    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+      filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject)],
+    });
+    return Array.isArray(rows) && rows.length > 0 ? (rows[0] as JobScheduleEntity) : undefined;
+  }
+
+  /** Mirror rows whose status is in the given set — bulk suppress/resume. */
+  async listByStatuses(statuses: string[]): Promise<JobScheduleEntity[]> {
+    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+      filters: [Filter.expr({ sql: "status" }, "IN", { sql: `(SELECT unnest(?::text[]))`, params: [statuses] })],
+    });
+    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
+  }
+
+  /** Every mirror row — drift diagnostic + reconcile enumeration. */
+  async listAllRows(): Promise<JobScheduleEntity[]> {
+    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {});
+    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
+  }
+
+  /** Declare-time mirror insert — the row is born only when the NATS
+   *  declaration is already live (the caller compensates on failure). */
+  async insertMirror(row: Partial<JobScheduleEntity>, actor: string): Promise<JobScheduleEntity> {
+    return (await this.dal.add(JobScheduleEntity, row as never, { actor } as never)) as JobScheduleEntity;
+  }
+
+  /** Optimistic-lock patch on a mirror row — collapses disarm, unsuppress,
+   *  reconcile heal/backfill, mark-fired and re-arm writes. */
+  async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
+    await this.dal.update(JobScheduleEntity, { uuid, version, ...patch } as never, { actor, matchBy: "uuid" } as never);
+  }
+
+  /** Physical drop — the mirror is a derived artifact, not auditable
+   *  state: a disarmed tombstone would list a schedule nobody can re-arm. */
+  async dropMirror(uuid: string, version: number, actor: string): Promise<void> {
+    await this.dal.hardDelete(JobScheduleEntity, { uuid, version } as never, { actor, matchBy: "uuid" } as never);
+  }
 }
 
 export class JobRunsService extends DomainService<RunT> {
   constructor() {
     super({
       entity: JobRunEntity,
-      actor: entityActor,
+      actor: requireActor,
       list: {
         meta: jobRunMeta,
         defaultSort: TRIGGER_DEFAULT_SORT,
@@ -355,10 +446,163 @@ export class JobRunsService extends DomainService<RunT> {
     });
   }
 
-  protected override buildConfig(): EntityServiceConfig<RunT> {
-    return {
-      ...super.buildConfig(),
-      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_run"),
-    };
+  // No auditPort: the run row IS the audit trail (entities-route.ts) —
+  // no @AuditTrail, no `{table}_audit`; svc writes are unreachable anyway
+  // (the entity route declares the surface read-only).
+
+  /** Record a run row — dispatch insert or direct result insert. */
+  async addRun(row: Partial<JobRunEntity>, actor: string): Promise<JobRunEntity> {
+    return (await this.dal.add(JobRunEntity, row as never, { actor } as never)) as JobRunEntity;
+  }
+
+  /** Single run by uuid — correlate/fail reads. */
+  async findByUuid(uuid: string): Promise<JobRunEntity | undefined> {
+    const rows = (await this.dal.findAll<JobRunEntity>(JobRunEntity, null, {
+      filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", uuid)],
+    })) as JobRunEntity[];
+    return Array.isArray(rows) ? rows[0] : undefined;
+  }
+
+  /** Optimistic-lock patch — status flips, duration/report correlate,
+   *  sweep-to-lost. */
+  async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
+    await this.dal.update(JobRunEntity, { uuid, version, ...patch } as never, { actor, matchBy: "uuid" } as never);
+  }
+
+  /** Dispatched runs older than the cutoff — the lost-sweep source. */
+  async listDispatchedBefore(cutoff: Date): Promise<JobRunEntity[]> {
+    const rows = (await this.dal.findAll<JobRunEntity>(JobRunEntity, null, {
+      filters: [
+        Filter.fieldValue(field(JobRunEntity, "status"), "=", "dispatched"),
+        Filter.fieldValue(field(JobRunEntity, "created_at"), "<", cutoff),
+      ],
+    })) as JobRunEntity[];
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  /** Bucketed outcome counts per schedule subject — the run-stats grid's
+   *  data rows (group on the select alias: a parameterized date_trunc in
+   *  GROUP BY binds a different `$n`, so Postgres would treat them as
+   *  distinct expressions). */
+  async statsBySchedule(unit: string, subjects: string[], spanMs: number): Promise<JobRunStatRow[]> {
+    const rows = (await this.dal.findAll<JobRunEntity, JobRunStatRow>(
+      JobRunEntity,
+      [
+        Project.field(field(JobRunEntity, "schedule_subject")),
+        Project.expr("date_trunc(?::text, created_at)", "bucket_start", [unit]),
+        Project.expr("count(*) FILTER (WHERE status = 'succeeded')", "succeeded"),
+        Project.expr("count(*) FILTER (WHERE status = 'failed')", "failed"),
+        Project.expr("count(*) FILTER (WHERE status = 'skipped')", "skipped"),
+        Project.expr("count(*) FILTER (WHERE status = 'lost')", "lost"),
+        Project.expr("count(*) FILTER (WHERE status = 'dispatched')", "dispatched"),
+      ],
+      {
+        filters: [
+          Filter.expr(
+            { sql: "schedule_subject" },
+            "=",
+            { sql: "ANY(?)", params: [subjects] },
+          ),
+          Filter.expr(
+            { sql: "created_at" },
+            ">=",
+            { sql: "now() - make_interval(secs => ? / 1000.0)", params: [spanMs] },
+          ),
+        ],
+        groupBy: [GroupBy.expr("bucket_start")],
+        sorting: [Sort.byAlias("bucket_start")],
+      },
+    )) as JobRunStatRow[];
+    return Array.isArray(rows) ? rows : [];
+  }
+}
+
+/** The run-stats aggregate row shape — shared with the action route. */
+export interface JobRunStatRow {
+  schedule_subject: string;
+  bucket_start: Date;
+  succeeded: bigint;
+  failed: bigint;
+  skipped: bigint;
+  lost: bigint;
+  dispatched: bigint;
+}
+
+/**
+ * `job.config_entries` — service-owned reads/writes for the config_entry
+ * routes. Column projection + secret masking are DOMAIN shape (the BE's
+ * ConfigEntriesService.maskSecretValue semantics): `type === "secret"`
+ * never serializes a value.
+ */
+const configProjection = [
+  Project.field(field(ConfigEntryEntity, "uuid")),
+  Project.field(field(ConfigEntryEntity, "key")),
+  Project.field(field(ConfigEntryEntity, "value")),
+  Project.field(field(ConfigEntryEntity, "type")),
+  Project.field(field(ConfigEntryEntity, "type_config")),
+  Project.field(field(ConfigEntryEntity, "label_key")),
+  Project.field(field(ConfigEntryEntity, "description_key")),
+  Project.field(field(ConfigEntryEntity, "group_key")),
+  Project.field(field(ConfigEntryEntity, "reserved")),
+  // `version` is required on write (optimistic concurrency) — the FE must
+  // receive it to send it back.
+  Project.field(field(ConfigEntryEntity, "version")),
+];
+
+function maskSecretRow(row: ConfigEntryEntity): ConfigEntryEntity {
+  return row.type === "secret" ? { ...row, value: null } : row;
+}
+
+type ConfigEntryT = ConfigEntryEntity & Record<string, unknown>;
+
+export class ConfigEntriesService extends DomainService<ConfigEntryT> {
+  constructor() {
+    super({
+      entity: ConfigEntryEntity,
+      actor: requireActor,
+      // No served entity meta — the config_entry routes are custom RPC.
+      // Keys declared so a future list surface derives scope correctly.
+      list: { searchableKeys: ["key"], filterableKeys: new Set(["key", "type", "reserved"]) },
+    });
+  }
+
+  /** All entries in the wire projection, secrets masked. */
+  async listEntries(): Promise<ConfigEntryEntity[]> {
+    const rows = (await this.dal.findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[];
+    return (Array.isArray(rows) ? rows : []).map(maskSecretRow);
+  }
+
+  /** Single entry by uuid in the wire projection, secrets masked. */
+  async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
+    const row = await this.dal.find(ConfigEntryEntity, configProjection, {
+      filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+    }) as ConfigEntryEntity | null;
+    return row ? maskSecretRow(row) : row;
+  }
+
+  /** Write `value` with optimistic lock — internalizes the domain rules
+   *  the route used to hold: 404 surface, static-identity keys rejected
+   *  (`assertWritableConfigKey` — deployed-artifact identity, B3), and
+   *  `type === "secret"` + empty value = "leave unchanged" (the FE sends
+   *  the masked null back when no new secret was typed). Returns the
+   *  re-read, masked row — `null` when the uuid is unknown. */
+  async updateValue(uuid: string, body: { value: unknown; version: number }, actor: string): Promise<ConfigEntryEntity | null> {
+    const target = await this.dal.find(ConfigEntryEntity, [
+      Project.field(field(ConfigEntryEntity, "key")),
+      Project.field(field(ConfigEntryEntity, "type")),
+    ], {
+      filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+      throwIfNotFound: false,
+    }) as { key?: string; type?: string } | null;
+    if (!target?.key) return null;
+    assertWritableConfigKey(target.key);
+    if (!(target.type === "secret" && (body.value === null || body.value === ""))) {
+      await this.dal.update(
+        ConfigEntryEntity,
+        { uuid, value: body.value as string, version: Number(body.version) } as never,
+        { actor } as never,
+      );
+    }
+    return this.getEntry(uuid);
   }
 }

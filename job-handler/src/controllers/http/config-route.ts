@@ -15,15 +15,15 @@
  */
 
 import type { ServerResponse } from "http";
-import { field, Filter, Project } from "@primebrick/dal-pg";
-import { getDal } from "../../db/dal.js";
 import {
   Permission,
   extJsonStringify,
-  assertWritableConfigKey,
   type RpcRoute,
 } from "@primebrick/sdk";
-import { ConfigEntryEntity } from "../../domain/entities/config_entry_entity.js";
+import { ConfigEntriesService } from "../../modules/jobs/jobs.service.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const configEntries = new ConfigEntriesService();
 
 function sendError(
   res: ServerResponse,
@@ -67,26 +67,8 @@ export const CONFIG_ENTRIES_META = {
   ],
 };
 
-const configProjection = [
-  Project.field(field(ConfigEntryEntity, "uuid")),
-  Project.field(field(ConfigEntryEntity, "key")),
-  Project.field(field(ConfigEntryEntity, "value")),
-  Project.field(field(ConfigEntryEntity, "type")),
-  Project.field(field(ConfigEntryEntity, "type_config")),
-  Project.field(field(ConfigEntryEntity, "label_key")),
-  Project.field(field(ConfigEntryEntity, "description_key")),
-  Project.field(field(ConfigEntryEntity, "group_key")),
-  Project.field(field(ConfigEntryEntity, "reserved")),
-  // `version` is required on write (optimistic concurrency) — the FE must
-  // receive it to send it back.
-  Project.field(field(ConfigEntryEntity, "version")),
-];
-
-/** Secret masking — `type === 'secret'` never serializes a value (BE
- *  ConfigEntriesService.maskSecretValue semantics). */
-function maskRow(row: ConfigEntryEntity): ConfigEntryEntity {
-  return row.type === "secret" ? { ...row, value: null } : row;
-}
+// Column projection + secret masking live in ConfigEntriesService —
+// domain shape, not transport shaping (BE maskSecretValue semantics).
 
 export const configEntryRoutes: RpcRoute[] = [
   {
@@ -116,7 +98,7 @@ export const configEntryRoutes: RpcRoute[] = [
       },
     },
     handler: async () => ({
-      config_entries: ((await getDal().findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[]).map(maskRow),
+      config_entries: await configEntries.listEntries(),
     }),
   },
   {
@@ -126,14 +108,12 @@ export const configEntryRoutes: RpcRoute[] = [
     permissions: [Permission.MODULES_CONFIG_READ_SINGLE],
     openapi: { summary: "Get a config entry by UUID", tags: ["config_entries"] },
     handler: async ({ params, res }) => {
-      const row = await getDal().find(ConfigEntryEntity, configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
-      }) as ConfigEntryEntity | null;
+      const row = await configEntries.getEntry(params.uuid);
       if (!row) {
         sendError(res, 404, "Config entry not found", "config-entry-not-found");
         return;
       }
-      return maskRow(row);
+      return row;
     },
   },
   {
@@ -163,37 +143,19 @@ export const configEntryRoutes: RpcRoute[] = [
       return entity;
     },
     handler: async ({ params, body, user, res }) => {
-      const dal = getDal();
       const b = body as Record<string, unknown>;
-      // Static-identity keys (service_code, service_base_url) are part of
-      // the deployed artifact — never runtime-editable (B3). Reject before
-      // the write; resolves the row to learn its key.
-      const target = await dal.find(ConfigEntryEntity, [
-        Project.field(field(ConfigEntryEntity, "key")),
-        Project.field(field(ConfigEntryEntity, "type")),
-      ], {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
-        throwIfNotFound: false,
-      }) as { key?: string; type?: string } | null;
-      if (!target?.key) {
+      // Domain rules (404, static-key guard, secret-unchanged) live inside
+      // the service — the controller maps `null` to the 404 transport.
+      const result = await configEntries.updateValue(
+        params.uuid,
+        { value: b.value, version: Number(b.version) },
+        user!.id,
+      );
+      if (!result) {
         sendError(res, 404, "Config entry not found", "config-entry-not-found");
         return;
       }
-      assertWritableConfigKey(target.key);
-      // `type === 'secret'` + empty value = "leave unchanged" (FE sends the
-      // masked null back when the user didn't type a new secret).
-      if (!(target.type === "secret" && (b.value === null || b.value === ""))) {
-        await dal.update(
-          ConfigEntryEntity,
-          { uuid: params.uuid, value: b.value as string, version: Number(b.version) },
-          { actor: user!.id },
-        );
-      }
-      // Re-read with the projection
-      const result = await dal.find(ConfigEntryEntity, configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", params.uuid)],
-      });
-      return { config_entries: result ? maskRow(result as ConfigEntryEntity) : result };
+      return { config_entries: result };
     },
   },
 ];

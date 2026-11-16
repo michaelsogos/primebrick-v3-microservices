@@ -51,10 +51,12 @@ import {
   type AuthUser,
   logger,
 } from "@primebrick/sdk";
-import { Filter, field } from "@primebrick/dal-pg";
 import { callablePayloadSchema } from "./callable-catalog.js";
-import { getDal } from "../db/dal.js";
+import { JobTriggersService } from "../modules/jobs/jobs.service.js";
 import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../domain/entities/job_trigger_entity.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const triggers = new JobTriggersService();
 import { declareSchedule, disarmSchedule, dropScheduleMirror, getScheduleRow } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
 import { type RuleFilter } from "../domain/jsonb-contracts.js";
@@ -134,10 +136,7 @@ const authorLaneUsers = new Map<string, AuthUser>(); // uuid → AuthUser
 const authorLaneHeaders = new Map<string, Record<string, string>>(); // uuid → headers
 
 async function loadTrigger(uuid: string): Promise<JobTriggerEntity | undefined> {
-  const rows = (await getDal().findAll<JobTriggerEntity>(JobTriggerEntity, null, {
-    filters: [Filter.fieldValue(field(JobTriggerEntity, "uuid"), "=", uuid)],
-  })) as JobTriggerEntity[];
-  return Array.isArray(rows) ? rows[0] : undefined;
+  return (await triggers.findByUuid(uuid)) as JobTriggerEntity | undefined;
 }
 
 /**
@@ -400,16 +399,15 @@ export async function refreshTrigger(uuid: string): Promise<void> {
 }
 
 export async function startTriggersEngine(): Promise<void> {
-  const dal = getDal();
   // Soft-deleted rows are excluded by default — `deleted_at` IS the
   // disable flag, no `enabled` column exists.
-  const triggers = (await dal.findAll<JobTriggerEntity>(JobTriggerEntity, null)) as JobTriggerEntity[];
+  const liveRows = (await triggers.listLive()) as JobTriggerEntity[];
 
   // One shielded subscription per event subject (dedup) — `bindSubject`
   // fans out to `liveTriggers` at delivery time, so late-enabling a
   // trigger needs no re-subscribe when the subject is already bound.
   const bySubject = new Set<string>();
-  for (const trigger of Array.isArray(triggers) ? triggers : []) {
+  for (const trigger of liveRows) {
     liveTriggers.set(trigger.uuid, trigger);
     if (trigger.event_subject) bySubject.add(trigger.event_subject);
   }

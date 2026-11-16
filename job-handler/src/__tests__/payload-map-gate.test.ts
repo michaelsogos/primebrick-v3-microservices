@@ -16,6 +16,7 @@
  */
 import "reflect-metadata";
 import { describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 vi.mock("@primebrick/sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@primebrick/sdk")>()),
@@ -23,10 +24,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => ({
   makeMarkerAuditPort: () => ({}),
   logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
 }));
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ entityService: () => ({}), tableAuditPort: () => ({}) }),
-}));
-vi.mock("../db/entity-repo.js", () => ({ entityActor: {} }));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ entityService: () => ({}), tableAuditPort: () => ({}) }, importOriginal),
+);
 
 const CALLABLE_SCHEMA: Record<string, unknown> = {
   type: "object",
