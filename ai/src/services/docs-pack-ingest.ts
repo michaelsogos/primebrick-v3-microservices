@@ -13,7 +13,7 @@ import { logger, type DocsPackPayload } from "@primebrick/sdk";
 import { loadedDocFromMdx, loadedDocsFromOpenApiSpec, type LoadedDoc } from "./docs-loader.js";
 import { ingestLoadedDocs, type PipelineStats } from "./embedding-pipeline.js";
 import { getEmbeddingProvider } from "./embedding-provider.js";
-import { countDocs, deleteDoc, getAllDocPaths } from "./docs-kb-repository.js";
+import { countDocs, deleteDoc, getAllDocPaths } from "./docs-kb.service.js";
 
 const DOC_EXT = /\.(mdx|md)$/i;
 

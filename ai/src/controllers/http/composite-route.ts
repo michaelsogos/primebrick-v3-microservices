@@ -5,26 +5,11 @@ import { aiConfig } from "../../config/ai-config.js";
 import { HealthCheckAdapter } from "../../adapters/health-check-adapter.js";
 import { orchestrate, type CallerToolDef } from "../../services/orchestrator.js";
 import type { ModelMessage } from "ai";
-import {
-  createConversation,
-  getConversation,
-  listConversations,
-  listMessages,
-  deleteConversation,
-  updateConversationTitle,
-  insertMessage,
-} from "../../services/conversation-repository.js";
-import {
-  insertFeedback,
-  listFeedbackByUser,
-  getFeedbackStats,
-} from "../../services/feedback-repository.js";
-import {
-  getTelemetryStats,
-  listRecentTelemetry,
-} from "../../services/telemetry-repository.js";
+import { ConversationsService } from "../../services/conversations.service.js";
+import { FeedbackService } from "../../services/feedback.service.js";
+import { TelemetryService } from "../../services/telemetry.service.js";
 import { runEmbeddingPipeline } from "../../services/embedding-pipeline.js";
-import { reindexDocsPacks } from "../../services/docs-pack-reindex.js";
+import { DocsPackReindexService } from "../../services/docs-pack-reindex.service.js";
 import { getDocsIndexStatus } from "../../services/docs-index-status.js";
 import { getEmbeddingProvider } from "../../services/embedding-provider.js";
 import { checkRateLimit } from "../../services/rate-limiter.js";
@@ -51,6 +36,13 @@ import { checkRateLimit } from "../../services/rate-limiter.js";
  */
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+// DomainService ctors are I/O-free — module-scope instances are safe; the
+// gateway resolves lazily at first use (after initDal in index.ts).
+const conversations = new ConversationsService();
+const feedback = new FeedbackService();
+const telemetry = new TelemetryService();
+const reindexer = new DocsPackReindexService();
 
 interface ChatToolResult {
   tool_call_id: string;
@@ -160,11 +152,11 @@ export const AI_ROUTES: RpcRoute[] = [
       if (!conversationUuid) {
         // Create a new conversation with the first message as title
         const title = (body.message ?? "tool call").slice(0, 80) + ((body.message?.length ?? 0) > 80 ? "…" : "");
-        const conv = await createConversation({ actor: userUuid, title });
+        const conv = await conversations.createConversation({ actor: userUuid, title });
         conversationUuid = conv.uuid;
       } else {
         // Verify conversation ownership
-        const conv = await getConversation(conversationUuid, userUuid);
+        const conv = await conversations.getConversation(conversationUuid, userUuid);
         if (!conv) {
           sendError(res, 404, "Not Found", "Conversation not found or does not belong to this user.");
           return;
@@ -174,7 +166,7 @@ export const AI_ROUTES: RpcRoute[] = [
       // Persist caller-executed tool results (role "tool" rows — the loop
       // is caller-driven so only the client sees them execute).
       for (const tr of body.tool_results ?? []) {
-        await insertMessage({
+        await conversations.insertMessage({
           conversation_uuid: conversationUuid,
           role: "tool",
           content: { tool_call_id: tr.tool_call_id, tool_name: tr.tool_name, output: tr.output },
@@ -184,7 +176,7 @@ export const AI_ROUTES: RpcRoute[] = [
 
       // Persist the user's message (absent on tool-loop continuations)
       if (body.message) {
-        await insertMessage({
+        await conversations.insertMessage({
           conversation_uuid: conversationUuid,
           role: "user",
           content: { text: body.message },
@@ -253,7 +245,7 @@ export const AI_ROUTES: RpcRoute[] = [
     auth: "user",
     permissions: [Permission.AUTHENTICATED_USER],
     openapi: { summary: "List user conversations", tags: ["ai", "conversations"] },
-    handler: async ({ user }) => ({ conversations: await listConversations(user!.id) }),
+    handler: async ({ user }) => ({ conversations: await conversations.listConversations(user!.id) }),
   },
 
   {
@@ -264,7 +256,7 @@ export const AI_ROUTES: RpcRoute[] = [
     body: (raw) => raw as { title?: string },
     openapi: { summary: "Create a conversation", tags: ["ai", "conversations"], requestSchema: { type: "object", properties: { title: { type: "string" } } } },
     handler: async ({ user, body, res }) => {
-      const conv = await createConversation({ actor: user!.id, title: (body as { title?: string }).title });
+      const conv = await conversations.createConversation({ actor: user!.id, title: (body as { title?: string }).title });
       res.writeHead(201, { "Content-Type": "application/json" });
       res.end(extJsonStringify(conv));
     },
@@ -277,12 +269,12 @@ export const AI_ROUTES: RpcRoute[] = [
     permissions: [Permission.AUTHENTICATED_USER],
     openapi: { summary: "Get a conversation with its messages", tags: ["ai", "conversations"], paramSchema: { uuid: { type: "string", format: "uuid" } } },
     handler: async ({ user, params, res }) => {
-      const conv = await getConversation(params.uuid, user!.id);
+      const conv = await conversations.getConversation(params.uuid, user!.id);
       if (!conv) {
         sendError(res, 404, "Not Found", "Conversation not found or does not belong to this user.");
         return;
       }
-      const messages = await listMessages(params.uuid);
+      const messages = await conversations.listMessages(params.uuid);
       return { conversation: conv, messages };
     },
   },
@@ -304,12 +296,12 @@ export const AI_ROUTES: RpcRoute[] = [
         sendError(res, 400, "Bad Request", "Query param 'version' (int) is required for this write.");
         return;
       }
-      const conv = await getConversation(params.uuid, user!.id);
+      const conv = await conversations.getConversation(params.uuid, user!.id);
       if (!conv) {
         sendError(res, 404, "Not Found", "Conversation not found or does not belong to this user.");
         return;
       }
-      await updateConversationTitle(params.uuid, (body as { title: string }).title, version, user!.id);
+      await conversations.updateConversationTitle(params.uuid, (body as { title: string }).title, version, user!.id);
       return { ...conv, title: (body as { title: string }).title };
     },
   },
@@ -326,12 +318,12 @@ export const AI_ROUTES: RpcRoute[] = [
         sendError(res, 400, "Bad Request", "Query param 'version' (int) is required for this write.");
         return;
       }
-      const conv = await getConversation(params.uuid, user!.id);
+      const conv = await conversations.getConversation(params.uuid, user!.id);
       if (!conv) {
         sendError(res, 404, "Not Found", "Conversation not found or does not belong to this user.");
         return;
       }
-      await deleteConversation(params.uuid, version, user!.id);
+      await conversations.deleteConversation(params.uuid, version, user!.id);
       res.writeHead(204);
       res.end();
     },
@@ -351,7 +343,7 @@ export const AI_ROUTES: RpcRoute[] = [
     openapi: { summary: "Submit message feedback", tags: ["ai", "feedback"], requestSchema: { type: "object", required: ["message_uuid", "rating"], properties: { message_uuid: { type: "string", format: "uuid" }, rating: { type: "string", enum: ["up", "down"] }, comment: { type: "string" } } } },
     handler: async ({ user, body, res }) => {
       const b = body as { message_uuid: string; conversation_uuid?: string; rating: "up" | "down"; comment?: string };
-      const feedback = await insertFeedback({
+      const fbRow = await feedback.insertFeedback({
         message_uuid: b.message_uuid,
         conversation_uuid: b.conversation_uuid,
         actor: user!.id,
@@ -359,7 +351,7 @@ export const AI_ROUTES: RpcRoute[] = [
         comment: b.comment,
       });
       res.writeHead(201, { "Content-Type": "application/json" });
-      res.end(extJsonStringify(feedback));
+      res.end(extJsonStringify(fbRow));
     },
   },
 
@@ -371,8 +363,8 @@ export const AI_ROUTES: RpcRoute[] = [
     openapi: { summary: "List feedback + stats", tags: ["ai", "feedback"] },
     handler: async ({ user }) => {
       const [items, stats] = await Promise.all([
-        listFeedbackByUser(user!.id),
-        getFeedbackStats(),
+        feedback.listFeedbackByUser(user!.id),
+        feedback.getFeedbackStats(),
       ]);
       return { feedback: items, stats };
     },
@@ -386,8 +378,8 @@ export const AI_ROUTES: RpcRoute[] = [
     openapi: { summary: "AI telemetry stats (admin)", tags: ["ai", "telemetry"] },
     handler: async () => {
       const [stats, recent] = await Promise.all([
-        getTelemetryStats(),
-        listRecentTelemetry(50),
+        telemetry.getTelemetryStats(),
+        telemetry.listRecentTelemetry(50),
       ]);
       return { stats, recent };
     },
@@ -451,7 +443,7 @@ export const AI_ROUTES: RpcRoute[] = [
     handler: async ({ body, res }) => {
       const b = (body ?? {}) as { mode?: string; repo?: string };
       if ((b.mode ?? "packs") === "packs") {
-        return { results: await reindexDocsPacks({ repo: b.repo, trigger: "manual" }) };
+        return { results: await reindexer.reindexDocsPacks({ repo: b.repo, trigger: "manual" }) };
       }
       // FS pipeline is the dev fallback — production KB comes from docs packs.
       if (aiConfig("docs_fs_pipeline") !== "true") {

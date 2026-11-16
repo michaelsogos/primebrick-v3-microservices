@@ -1,24 +1,3 @@
 {
-  "violations": [
-    {
-      "file": "controllers/http/composite-route.ts",
-      "rule": "layer-repo-import",
-      "text": "} from \"../../services/conversation-repository.js\";"
-    },
-    {
-      "file": "controllers/http/composite-route.ts",
-      "rule": "layer-repo-import",
-      "text": "} from \"../../services/feedback-repository.js\";"
-    },
-    {
-      "file": "controllers/http/composite-route.ts",
-      "rule": "layer-repo-import",
-      "text": "} from \"../../services/telemetry-repository.js\";"
-    },
-    {
-      "file": "controllers/nats-sub/docs-pack-subscriber.ts",
-      "rule": "layer-repo-import",
-      "text": "import { deleteRepoDocs } from \"../../services/docs-kb-repository.js\";"
-    }
-  ]
+  "violations": []
 }
