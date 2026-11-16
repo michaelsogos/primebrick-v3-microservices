@@ -1,3 +1,5 @@
+import { extJsonStringify } from "@primebrick/sdk";
+
 /**
  * Canonical JSON serialization (sorted object keys, recursive) — the
  * jsonb fields (`payload_map`, `filter`) compare structurally, so a
@@ -6,10 +8,10 @@
  * reconcile's delta detection.
  */
 export function canonJson(v: unknown): string {
-  if (v === null || v === undefined || typeof v !== "object") return JSON.stringify(v ?? null);
+  if (v === null || v === undefined || typeof v !== "object") return extJsonStringify(v ?? null);
   if (Array.isArray(v)) return `[${v.map(canonJson).join(",")}]`;
   return `{${Object.keys(v as Record<string, unknown>)
     .sort()
-    .map((k) => `${JSON.stringify(k)}:${canonJson((v as Record<string, unknown>)[k])}`)
+    .map((k) => `${extJsonStringify(k)}:${canonJson((v as Record<string, unknown>)[k])}`)
     .join(",")}}`;
 }

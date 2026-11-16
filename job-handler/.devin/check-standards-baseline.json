@@ -114,6 +114,16 @@
       "file": "services/triggers-engine.ts",
       "rule": "dal-access",
       "text": "const dal = getDal();"
+    },
+    {
+      "file": "services/system-triggers.ts",
+      "rule": "dal-access",
+      "text": "const dal = getDal();"
+    },
+    {
+      "file": "services/system-triggers.ts",
+      "rule": "dal-access",
+      "text": "const dal = getDal();"
     }
   ]
 }
