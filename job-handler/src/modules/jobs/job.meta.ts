@@ -370,14 +370,20 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
     { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "info" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "amber" }, skipped: { label_key: V("job_run", "skipped"), color: "gray" } } } },
     {
-      // The trigger that armed the schedule this run belongs to —
-      // @Calculated on JobRunEntity (resolves schedule_subject →
-      // job_schedules.trigger_uuid → job_triggers.name). NULL on
-      // manual/immediate runs (no schedule_subject) → null_label
-      // renders "Manual". Drills by `trigger_uuid` like `armed_by`.
+      // The trigger that armed this run — friendly @Calculated name over
+      // the PHYSICAL stamped `trigger_uuid` (schedules are hard-deleted:
+      // the stamped uuid survives mirror churn, the join didn't). NULL =
+      // manual/immediate run → plain `-`, no fabricated state.
       key: "trigger", label_key: F("job_run", "trigger"), type: "ref", order: 35, kind: "calculated", default_visible: true,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
-      null_label: { label_key: "job.entities.job_run.fields.trigger.states.manual" },
+    },
+    {
+      // The owning schedule — friendly @Calculated `job_name`, drills by
+      // the row's `schedule_subject` business key: the record sheet
+      // resolves it via list lookup; a hard-deleted schedule lands on
+      // the not-found hero — the run keeps its truth.
+      key: "schedule", label_key: F("job_run", "schedule"), type: "ref", order: 36, kind: "calculated", default_visible: true,
+      ref: { entity: "job_schedule", key_field: "schedule_subject", filter_field: "schedule_subject" },
     },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },
@@ -385,18 +391,48 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "updated_at", label_key: F("job_run", "finished_at"), type: "datetime", order: 50, default_visible: true },
     { key: "duration_ms", label_key: F("job_run", "duration"), type: "number", order: 60 },
     {
-      // The ingress queue this run arrived on — a NATS subject like every
-      // sibling subject field (`format:"nats_subject"`, zap = ingress).
-      // Technical anchor: stays filterable — the trigger's `runs`
-      // reverse_ref and own-lane run correlation depend on it — while the
-      // `trigger` column is the friendly surface. NULL = manual run.
+      // SOURCE — the ingress queue this run arrived on, a NATS subject
+      // like every sibling subject field (zap = ingress). Stays
+      // filterable: the trigger's `runs` reverse_ref and own-lane run
+      // correlation depend on it. NULL = manual run → `-`.
       key: "schedule_subject", label_key: F("job_run", "schedule_subject"), type: "text", format: "nats_subject", order: 70,
-      icon: "zap", color: "amber-500", default_visible: false,
-      null_label: { label_key: "job.entities.job_run.fields.schedule_subject.states.manual" },
+      icon: "zap", color: "amber-500", default_visible: true,
+    },
+    {
+      // DESTINATION — the subject the handler consumed, stamped verbatim
+      // at write time (forwarder: `envelope.target`; direct: `data.target`).
+      // Mirrors `job_schedule.target_subject` (send = destination); NOT
+      // derivable from `job_name`, which is the mixed-derivation display
+      // field (callable verbatim on forwarded runs, parsed fragment on
+      // own-lane ones).
+      key: "target_subject", label_key: F("job_run", "target_subject"), type: "text", format: "nats_subject", order: 75,
+      icon: "send", color: "sky-500", default_visible: true,
     },
     { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 80, default_visible: true, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
-    { key: "error_code", label_key: F("job_run", "error_code"), type: "text", order: 90, default_visible: false },
-    { key: "error_detail", label_key: F("job_run", "error_detail"), type: "text", order: 100, default_visible: false },
+    {
+      // Closed failure vocabulary — writers normalize to this enum and
+      // unmapped callable codes coerce to EXECUTION_ERROR (the original
+      // code/detail survives in `error_detail`, never a raw cell).
+      key: "error_code", label_key: F("job_run", "error_code"), type: "badge", order: 90, default_visible: true,
+      badge: {
+        values: {
+          EXECUTION_ERROR: { label_key: V("job_run", "execution_error"), color: "red" },
+          HANDLER_ERROR: { label_key: V("job_run", "handler_error"), color: "red" },
+          VALIDATION_ERROR: { label_key: V("job_run", "validation_error"), color: "amber" },
+          DENIED: { label_key: V("job_run", "denied"), color: "amber" },
+          DISPATCH_ERROR: { label_key: V("job_run", "dispatch_error"), color: "red" },
+          DISPATCH_TIMEOUT: { label_key: V("job_run", "dispatch_timeout"), color: "amber" },
+          AUTH_ACTOR_UNRESOLVABLE: { label_key: V("job_run", "auth_actor_unresolvable"), color: "red" },
+          SCHEDULE_PAUSED: { label_key: V("job_run", "schedule_paused"), color: "gray" },
+          SCHEDULE_DISARMED: { label_key: V("job_run", "schedule_disarmed"), color: "gray" },
+        },
+      },
+    },
+    {
+      // Free-form detail behind the badge — never a column (not even
+      // toggleable): the run-detail sheet is its surface.
+      key: "error_detail", label_key: F("job_run", "error_detail"), type: "text", order: 100, hidden: true, filterable: false,
+    },
     { key: "redelivery_count", label_key: F("job_run", "redelivery"), type: "number", order: 110, default_visible: false },
     {
       // JetStream dedup sequence of the due fire — engine-diagnostic,
@@ -408,9 +444,9 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       key: "report", label_key: F("job_run", "report"), type: "text", format: "json", order: 130, default_visible: false, filterable: false,
     },
     {
-      // Owning trigger uuid — @Calculated through the mirror; exists only
-      // as the `trigger` column's drill key, never a surface.
-      key: "trigger_uuid", label_key: F("job_run", "trigger_uuid"), type: "text", order: 140, kind: "calculated", hidden: true,
+      // Owning trigger uuid — PHYSICAL, stamped at write time; exists
+      // only as the `trigger` column's drill key, never a surface.
+      key: "trigger_uuid", label_key: F("job_run", "trigger_uuid"), type: "ref", order: 140, hidden: true,
     },
   ],
   table: {

@@ -248,12 +248,38 @@ describe("due-forwarder — run-result correlation", () => {
 
   it("a suppressed due keeps fire_seq on the skipped row", async () => {
     const handler = await handlerFor("system");
-    h.getScheduleRow.mockResolvedValue({ status: "paused" } as never);
+    h.getScheduleRow.mockResolvedValue({ status: "paused", trigger_uuid: "trig-9" } as never);
     await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 42 } });
     expect(recorded()[0]).toMatchObject({
       status: "skipped",
+      // `schedule ${status}` interpolations are normalized to the closed
+      // enum — a badge column can never carry a raw string.
+      error_code: "SCHEDULE_PAUSED",
       error_detail: "suppressed: schedule status is paused",
+      trigger_uuid: "trig-9",
       fire_seq: 42n,
+    });
+  });
+
+  it("a suppressed disarmed schedule maps to its own enum code", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "disarmed" } as never);
+    await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 7 } });
+    expect(recorded()[0]).toMatchObject({ status: "skipped", error_code: "SCHEDULE_DISARMED" });
+  });
+
+  it("dispatched rows stamp lineage: trigger_uuid + target_subject", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "armed", trigger_uuid: "trig-9" } as never);
+
+    await handler(envelope(), emptyMsg());
+
+    // trigger_uuid = stamped at fire time (survives schedule churn);
+    // target_subject = the consumed callable verbatim (envelope.target).
+    expect(recorded()[0]).toMatchObject({
+      status: "dispatched",
+      trigger_uuid: "trig-9",
+      target_subject: "emailsender.send",
     });
   });
 

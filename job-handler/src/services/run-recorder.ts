@@ -36,6 +36,7 @@ import {
   type JobResultMessage,
 } from "@primebrick/sdk";
 import { JobRunsService } from "../modules/jobs/jobs.service.js";
+import { getScheduleRow } from "./schedule-service.js";
 
 /** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
 const runs = new JobRunsService();
@@ -61,6 +62,35 @@ function plainJson<T>(v: T): T {
 
 /** JH-internal trampoline outcomes — the forwarder records these itself. */
 const FORWARD_TARGET_RE = /^jobs\.due\.(?:user|system)\.job\.forward\./;
+
+/**
+ * Closed `error_code` vocabulary — the union JH stamps plus the SDK
+ * transport's contract codes (`job-contract.ts`). A callable may report
+ * any string: outside this set the run normalizes to `EXECUTION_ERROR`
+ * and the original code is preserved at the head of `error_detail`, so
+ * the badge enum can never render a raw/unmapped value.
+ */
+const KNOWN_ERROR_CODES = new Set([
+  "EXECUTION_ERROR",
+  "HANDLER_ERROR",
+  "DENIED",
+  "VALIDATION_ERROR",
+  "DISPATCH_ERROR",
+  "DISPATCH_TIMEOUT",
+  "AUTH_ACTOR_UNRESOLVABLE",
+  "SCHEDULE_PAUSED",
+  "SCHEDULE_DISARMED",
+]);
+
+function normalizeError(code: string | undefined, detail: string | undefined): { code: string; detail: string } {
+  if (code === undefined || KNOWN_ERROR_CODES.has(code)) {
+    return { code: code ?? "EXECUTION_ERROR", detail: (detail ?? "").slice(0, 2000) };
+  }
+  return {
+    code: "EXECUTION_ERROR",
+    detail: `reported error_code: ${code}${detail ? ` — ${detail}` : ""}`.slice(0, 2000),
+  };
+}
 
 /**
  * Derive `{ service_code, job_name, run_as }` from the consumed subject
@@ -89,13 +119,14 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
   const row = await runs.findByUuid(data.run_id!);
   if (!row) return false;
   const isError = data.status === "failed";
+  const err = isError ? normalizeError(data.error_code, data.error_detail) : undefined;
   await runs.patchRow(
     row.uuid,
     row.version,
     {
       status: data.status,
-      error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
-      error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
+      error_code: err?.code,
+      error_detail: err?.detail,
       duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       // COALESCE semantics: the forwarder-stamped due-fire seq is
       // canonical — the report's seq fills only rows that never crossed
@@ -116,14 +147,22 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
 async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number): Promise<void> {
   const parsed = parseTarget(data.target ?? "");
   const isError = data.status === "failed";
+  const err = isError ? normalizeError(data.error_code, data.error_detail) : undefined;
+  // Best-effort lineage: own-lane runs bypass the forwarder, so the
+  // trigger stamp comes from the live mirror row when one still exists.
+  const scheduleRow = data.schedule_subject
+    ? await getScheduleRow(data.schedule_subject).catch(() => undefined)
+    : undefined;
   await runs.addRun(
     {
       schedule_subject: data.schedule_subject,
+      trigger_uuid: scheduleRow?.trigger_uuid,
       job_name: parsed?.job_name ?? data.target ?? "unknown",
+      target_subject: data.target,
       run_as: parsed?.run_as ?? "system",
       status: data.status,
-      error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
-      error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
+      error_code: err?.code,
+      error_detail: err?.detail,
       duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
       redelivery_count: redeliveryCount,

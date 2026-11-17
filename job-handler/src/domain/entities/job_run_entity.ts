@@ -29,25 +29,39 @@ export class JobRunEntity
   @Column({ nullable: true })
   schedule_subject?: string;
 
-  /** Owning trigger uuid — resolved through the schedule mirror
-   *  (`job_schedules.trigger_uuid` is NOT NULL). NULL for manual/immediate
-   *  runs (`schedule_subject IS NULL`). */
-  @Calculated(
-    `(SELECT js.trigger_uuid FROM job.job_schedules js WHERE js.schedule_subject = {self}.schedule_subject)`,
-    { pgType: "uuid", nullable: true },
-  )
+  /** Owning trigger uuid — STAMPED at write time from the armed schedule
+   *  row (or its subject lookup), so the lineage survives the schedule's
+   *  own lifecycle: schedules are hard-deleted rows, triggers are not.
+   *  NULL for manual/immediate runs and own-lane consumers whose mirror
+   *  never touched a `job_trigger`. */
+  @Column({ pgType: "uuid", nullable: true })
   trigger_uuid?: string;
 
-  /** Owning trigger display name — joins through the mirror; NULL on
-   *  manual runs. */
+  /** Owning trigger display name — joins `job_triggers` on the stamped
+   *  uuid (NOT through the ephemeral schedule mirror). NULL on manual
+   *  runs. */
   @Calculated(
-    `(SELECT t.name FROM job.job_triggers t WHERE t.uuid = (SELECT js.trigger_uuid FROM job.job_schedules js WHERE js.schedule_subject = {self}.schedule_subject))`,
+    `(SELECT t.name FROM job.job_triggers t WHERE t.uuid = {self}.trigger_uuid)`,
     { pgType: "text", nullable: true },
   )
   trigger?: string;
 
+  /** Owning schedule identity for the record drill — the schedule's
+   *  business key IS the subject (schedules carry no name field);
+   *  alias of `schedule_subject` so the meta can declare a `ref` column
+   *  without colliding with the `nats_subject` source column. */
+  @Calculated(`({self}.schedule_subject)`, { pgType: "text", nullable: true })
+  schedule?: string;
+
   @Column({ nullable: false })
   job_name!: string;
+
+  /** Destination subject this run was dispatched to — the governed
+   *  callable (`envelope.target`, e.g. `emailsender.send`) or, on own-lane
+   *  consumers, the due subject the handler reported consuming
+   *  (`data.target`). NULL on pre-column rows that can't be backfilled. */
+  @Column({ nullable: true })
+  target_subject?: string;
 
   /** user | system — the identity channel this run fired under. */
   @Column({ length: 10, nullable: false })
@@ -63,7 +77,9 @@ export class JobRunEntity
   @Column({ jsType: "bigint", nullable: true })
   fire_seq?: bigint;
 
-  /** RFC-style error code on failure (e.g. "401", "RBAC_PERMISSION_DENIED"). */
+  /** Failure cause from the CLOSED enum vocabulary — writers normalize
+   *  at insert time (unmapped callable codes coerce to EXECUTION_ERROR,
+   *  the original code/detail survives in `error_detail`). */
   @Column({ nullable: true })
   error_code?: string;
 

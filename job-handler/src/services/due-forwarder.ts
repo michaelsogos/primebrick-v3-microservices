@@ -71,12 +71,15 @@ async function insertRun(
   errorCode?: string,
   errorDetail?: string,
   fireSeq?: bigint,
+  triggerUuid?: string,
 ): Promise<string | undefined> {
   try {
     const row = await runs.addRun(
       {
         schedule_subject: envelope.schedule_subject,
+        trigger_uuid: triggerUuid,
         job_name: envelope.target,
+        target_subject: envelope.target,
         run_as: lane,
         status,
         error_code: errorCode,
@@ -223,10 +226,11 @@ async function forward(
   // keep flowing to this consumer: honoring them would let suppressed
   // schedules keep executing. `skipped` runs are the audit trail — no
   // dead-letter queue needed (this IS the conservation layer).
+  let scheduleRow: Awaited<ReturnType<typeof getScheduleRow>>;
   if (envelope.schedule_subject) {
-    const row = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
-    if (row !== undefined && row.status !== "armed") {
-      await insertRun(envelope, lane, "skipped", `schedule ${row.status}`, `suppressed: schedule status is ${row.status}`, fireSeq);
+    scheduleRow = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
+    if (scheduleRow !== undefined && scheduleRow.status !== "armed") {
+      await insertRun(envelope, lane, "skipped", `SCHEDULE_${scheduleRow.status.toUpperCase()}`, `suppressed: schedule status is ${scheduleRow.status}`, fireSeq, scheduleRow.trigger_uuid);
       return;
     }
   }
@@ -238,7 +242,7 @@ async function forward(
   if (lane === "user" && actorUuid) {
     const fresh = await freshAuthHeaders(actorUuid, msg);
     if (fresh === null) {
-      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq);
+      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq, scheduleRow?.trigger_uuid);
       return;
     }
     headers = fresh;
@@ -253,7 +257,7 @@ async function forward(
   });
   // Insert the run row FIRST — its uuid rides as `x-job-run-id` so the
   // callable's transport middleware reports the real outcome back.
-  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq);
+  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq, scheduleRow?.trigger_uuid);
   const outHeaders: Record<string, string> = {
     ...headers,
     ...(envelope.schedule_subject

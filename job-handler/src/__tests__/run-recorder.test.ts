@@ -19,6 +19,8 @@ const h = vi.hoisted(() => ({
   update: vi.fn(async (_entity?: unknown, _row?: unknown, _o?: unknown) => ({})),
   jetstreamSubscribe: vi.fn(),
   setProcessInterval: vi.fn(),
+  // No live schedule mirror by default — lineage lookup is best-effort.
+  getScheduleRow: vi.fn(async (_subject?: unknown) => null as unknown),
 }));
 
 vi.mock("@primebrick/sdk", async (importOriginal) => ({
@@ -31,6 +33,10 @@ vi.mock("@primebrick/sdk", async (importOriginal) => ({
 vi.mock("@primebrick/dal-pg", async (importOriginal) =>
   dalPgMock({ findAll: h.findAll, add: h.add, update: h.update }, importOriginal),
 );
+vi.mock("../services/schedule-service.js", () => ({
+  getScheduleRow: h.getScheduleRow,
+  markScheduleFired: vi.fn(),
+}));
 
 const svc = await import("../services/run-recorder.js");
 
@@ -42,6 +48,7 @@ beforeEach(() => {
   h.jetstreamSubscribe.mockReset().mockImplementation(async (opts: { handler: unknown }) => {
     h.handler = opts.handler as typeof h.handler;
   });
+  h.getScheduleRow.mockReset().mockResolvedValue(null);
 });
 
 async function start() {
@@ -70,6 +77,9 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     expect(row).toMatchObject({
       schedule_subject: "jobs.schedule.ai.partition-maintenance",
       job_name: "partition-maintenance",
+      // The wire target is stamped verbatim — the column reports what the
+      // handler consumed, not the parsed display fragment.
+      target_subject: "jobs.due.system.ai.partition-maintenance",
       run_as: "system",
       status: "succeeded",
       duration_ms: 43n,
@@ -78,6 +88,41 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     // service_code is dropped — `created_by` owns executor provenance.
     expect(row).not.toHaveProperty("service_code");
     expect(row.report).toEqual({ maintenance_ran: true });
+  });
+
+  it("stamps trigger_uuid from the live schedule row when one resolves", async () => {
+    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7" } as never);
+    const handler = await start();
+    await handler(
+      {
+        status: "succeeded",
+        schedule_subject: "jobs.schedule.ai.partition-maintenance",
+        target: "jobs.due.system.ai.partition-maintenance",
+      },
+      meta,
+    );
+    expect(h.getScheduleRow).toHaveBeenCalledWith("jobs.schedule.ai.partition-maintenance");
+    expect((h.add.mock.calls[0]![1] as Record<string, unknown>).trigger_uuid).toBe("trig-7");
+  });
+
+  it("an unknown callable error_code coerces to EXECUTION_ERROR preserving the original", async () => {
+    const handler = await start();
+    await handler(
+      {
+        status: "failed",
+        schedule_subject: "jobs.schedule.ai.partition-maintenance",
+        target: "jobs.due.system.ai.partition-maintenance",
+        error_code: "PG_DEADLOCK_X9",
+        error_detail: "serialization failure",
+      },
+      meta,
+    );
+    const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
+    // The enum is closed — unmapped codes never reach the badge column;
+    // the original wire code survives at the head of error_detail.
+    expect(row.error_code).toBe("EXECUTION_ERROR");
+    expect(row.error_detail).toContain("PG_DEADLOCK_X9");
+    expect(row.error_detail).toContain("serialization failure");
   });
 
   it("a failed result lands error fields verbatim", async () => {

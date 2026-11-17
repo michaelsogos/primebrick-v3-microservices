@@ -56,29 +56,75 @@ describe("jobServiceRouteHandler construction", () => {
     expect(col("next_run")?.hideable).not.toBe(false);
   });
 
-  it("job_run — service_code dropped, trigger projected, subject anatomy aligned", async () => {
+  it("job_run — stamped lineage, source+destination subjects, closed error badge", async () => {
     const { jobEntityDecls } = await import("../controllers/http/entities-route.js");
     const run = jobEntityDecls.find((d) => d.entityName === "job_run");
     const keys = run?.meta?.columns?.map((c) => c.key) ?? [];
     expect(keys).not.toContain("service_code");
     const col = (key: string) => run?.meta?.columns?.find((c) => c.key === key);
-    // Friendly calculated ref — visible, drills to job_trigger by trigger_uuid.
+    // Friendly calculated ref — visible, drills to job_trigger by the
+    // PHYSICAL stamped trigger_uuid (schedules are hard-deleted; the
+    // stamped uuid survives mirror churn).
     expect(col("trigger")).toMatchObject({
       type: "ref",
       kind: "calculated",
       default_visible: true,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     });
-    // Raw drill key — `hidden:true` strips it from served meta entirely
-    // (row payload only, like `next_fire_mirror_at` on schedules).
+    // The owning schedule — calculated friendly name, business-key drill
+    // on `schedule_subject` (record sheet resolves via list lookup).
+    expect(col("schedule")).toMatchObject({
+      type: "ref",
+      kind: "calculated",
+      default_visible: true,
+      ref: { entity: "job_schedule", key_field: "schedule_subject", filter_field: "schedule_subject" },
+    });
+    // Raw drill keys — `hidden:true` strips them from served meta
+    // entirely (row payload only, like `next_fire_mirror_at`).
     expect(keys).not.toContain("trigger_uuid");
-    // Source subject — same anatomy as every sibling subject field.
+    // SOURCE — same anatomy as every sibling ingress subject field.
     expect(col("schedule_subject")).toMatchObject({
       type: "text",
       format: "nats_subject",
       icon: "zap",
-      default_visible: false,
+      default_visible: true,
     });
+    // Ordinary NULLs render "-", never a destructive label.
+    expect(col("schedule_subject")?.null_label).toBeUndefined();
+    expect(col("trigger")?.null_label).toBeUndefined();
+    // DESTINATION — stamped at write time, mirrors schedule target anatomy.
+    expect(col("target_subject")).toMatchObject({
+      type: "text",
+      format: "nats_subject",
+      icon: "send",
+      color: "sky-500",
+      default_visible: true,
+    });
+    // error_code is a CLOSED badge enum — every item mapped+colored,
+    // raw values can never render for a status-like column.
+    const ec = col("error_code");
+    expect(ec).toMatchObject({ type: "badge", default_visible: true });
+    const badgeValues = ec?.badge?.values ?? {};
+    expect(Object.keys(badgeValues).sort()).toEqual(
+      [
+        "EXECUTION_ERROR",
+        "HANDLER_ERROR",
+        "VALIDATION_ERROR",
+        "DENIED",
+        "DISPATCH_ERROR",
+        "DISPATCH_TIMEOUT",
+        "AUTH_ACTOR_UNRESOLVABLE",
+        "SCHEDULE_PAUSED",
+        "SCHEDULE_DISARMED",
+      ].sort(),
+    );
+    for (const v of Object.values(badgeValues)) {
+      expect(v.label_key).toMatch(/^job\.entities\.job_run\.status\./);
+      expect(v.color).toBeTruthy();
+    }
+    // error_detail never surfaces as a column — hidden, non-toggleable;
+    // the run-detail sheet is its only surface.
+    expect(keys).not.toContain("error_detail");
     // Newly surfaced engine fields — hidden by default, never filterable.
     for (const key of ["fire_seq", "report"] as const) {
       expect(col(key)).toMatchObject({ default_visible: false, filterable: false });

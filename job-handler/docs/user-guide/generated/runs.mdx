@@ -6,7 +6,7 @@ entity: job_run
 
 List, search and manage all job runs.
 
-Each row shows the Job Name, the Status, the Trigger, the Started at, the Finished at, the Duration, the Run As.
+Each row shows the Job Name, the Status, the Trigger, the Job Schedule, the Started at, the Finished at, the Duration, the Source Queue, the Destination Event, the Run As, the Error Code.
 
 The page is visible with the `access.system.job.runs` grant.
 
@@ -17,11 +17,12 @@ The page is visible with the `access.system.job.runs` grant.
 | **Job Name** | yes | yes | yes |  |
 | **Status** | yes | yes | yes |  |
 | **Trigger** | yes | yes | yes |  |
+| **Job Schedule** | yes | yes | yes |  |
 | **Duration** | yes | yes | yes |  |
-| **Source Queue** | no | yes | yes |  |
+| **Source Queue** | yes | yes | yes |  |
+| **Destination Event** | yes | yes | yes |  |
 | **Run As** | yes | yes | yes |  |
-| **Error Code** | no | yes | yes |  |
-| **Error Detail** | no | yes | yes |  |
+| **Error Code** | yes | yes | yes |  |
 | **Redeliveries** | no | yes | yes |  |
 | **Fire #** | no | yes | no |  |
 | **Report** | no | yes | no |  |
@@ -30,11 +31,12 @@ The page is visible with the `access.system.job.runs` grant.
 - The Job Name column is shown by default and can be sorted and filtered.
 - The Status column is shown by default and can be sorted and filtered.
 - The Trigger column is shown by default and can be sorted and filtered.
+- The Job Schedule column is shown by default and can be sorted and filtered.
 - The Duration column is shown by default and can be sorted and filtered.
-- The Source Queue column is hidden by default and can be sorted and filtered.
+- The Source Queue column is shown by default and can be sorted and filtered.
+- The Destination Event column is shown by default and can be sorted and filtered.
 - The Run As column is shown by default and can be sorted and filtered.
-- The Error Code column is hidden by default and can be sorted and filtered.
-- The Error Detail column is hidden by default and can be sorted and filtered.
+- The Error Code column is shown by default and can be sorted and filtered.
 - The Redeliveries column is hidden by default and can be sorted and filtered.
 - The Fire # column is hidden by default and can be sorted but not filtered.
 - The Report column is hidden by default and can be sorted but not filtered.
