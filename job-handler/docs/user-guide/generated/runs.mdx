@@ -6,7 +6,7 @@ entity: job_run
 
 List, search and manage all job runs.
 
-Each row shows the Job Name, the Status, the Trigger, the Job Schedule, the Started at, the Finished at, the Duration, the Source Queue, the Destination Event, the Run As, the Error Code.
+Each row shows the Job Name, the Status, the Started at, the Finished at, the Duration, the Error Code, the Redeliveries, the Fire #, the Report.
 
 The page is visible with the `access.system.job.runs` grant.
 
@@ -16,30 +16,30 @@ The page is visible with the `access.system.job.runs` grant.
 |--------|---------|----------|------------|-------|
 | **Job Name** | yes | yes | yes |  |
 | **Status** | yes | yes | yes |  |
-| **Trigger** | yes | yes | yes |  |
-| **Job Schedule** | yes | yes | yes |  |
+| **Trigger** | no | yes | yes |  |
+| **Scheduler** | no | yes | yes |  |
 | **Duration** | yes | yes | yes |  |
-| **Source Queue** | yes | yes | yes |  |
-| **Destination Event** | yes | yes | yes |  |
-| **Run As** | yes | yes | yes |  |
+| **Source Queue** | no | yes | yes |  |
+| **Destination Event** | no | yes | yes |  |
+| **Run As** | no | yes | yes |  |
 | **Error Code** | yes | yes | yes |  |
-| **Redeliveries** | no | yes | yes |  |
-| **Fire #** | no | yes | no |  |
-| **Report** | no | yes | no |  |
+| **Redeliveries** | yes | yes | yes |  |
+| **Fire #** | yes | yes | no |  |
+| **Report** | yes | yes | no |  |
 | **UUID** | no | yes | yes |  |
 
 - The Job Name column is shown by default and can be sorted and filtered.
 - The Status column is shown by default and can be sorted and filtered.
-- The Trigger column is shown by default and can be sorted and filtered.
-- The Job Schedule column is shown by default and can be sorted and filtered.
+- The Trigger column is hidden by default and can be sorted and filtered.
+- The Scheduler column is hidden by default and can be sorted and filtered.
 - The Duration column is shown by default and can be sorted and filtered.
-- The Source Queue column is shown by default and can be sorted and filtered.
-- The Destination Event column is shown by default and can be sorted and filtered.
-- The Run As column is shown by default and can be sorted and filtered.
+- The Source Queue column is hidden by default and can be sorted and filtered.
+- The Destination Event column is hidden by default and can be sorted and filtered.
+- The Run As column is hidden by default and can be sorted and filtered.
 - The Error Code column is shown by default and can be sorted and filtered.
-- The Redeliveries column is hidden by default and can be sorted and filtered.
-- The Fire # column is hidden by default and can be sorted but not filtered.
-- The Report column is hidden by default and can be sorted but not filtered.
+- The Redeliveries column is shown by default and can be sorted and filtered.
+- The Fire # column is shown by default and can be sorted but not filtered.
+- The Report column is shown by default and can be sorted but not filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 
 ## Actions

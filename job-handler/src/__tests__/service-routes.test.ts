@@ -62,13 +62,13 @@ describe("jobServiceRouteHandler construction", () => {
     const keys = run?.meta?.columns?.map((c) => c.key) ?? [];
     expect(keys).not.toContain("service_code");
     const col = (key: string) => run?.meta?.columns?.find((c) => c.key === key);
-    // Friendly calculated ref — visible, drills to job_trigger by the
-    // PHYSICAL stamped trigger_uuid (schedules are hard-deleted; the
-    // stamped uuid survives mirror churn).
+    // Friendly calculated ref — toggleable but off the default surface,
+    // drills to job_trigger by the PHYSICAL stamped trigger_uuid
+    // (schedules are hard-deleted; the stamped uuid survives mirror churn).
     expect(col("trigger")).toMatchObject({
       type: "ref",
       kind: "calculated",
-      default_visible: true,
+      default_visible: false,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     });
     // The owning schedule — calculated friendly name, uuid-ref drill on
@@ -76,19 +76,20 @@ describe("jobServiceRouteHandler construction", () => {
     expect(col("schedule")).toMatchObject({
       type: "ref",
       kind: "calculated",
-      default_visible: true,
+      default_visible: false,
       ref: { entity: "job_schedule", key_field: "schedule_uuid" },
     });
     // Raw drill keys — `hidden:true` strips them from served meta
     // entirely (row payload only, like `next_fire_mirror_at`).
     expect(keys).not.toContain("trigger_uuid");
     expect(keys).not.toContain("schedule_uuid");
-    // SOURCE — same anatomy as every sibling ingress subject field.
+    // SOURCE — same anatomy as every sibling ingress subject field;
+    // toggleable but off the default surface (lineage, not outcome data).
     expect(col("schedule_subject")).toMatchObject({
       type: "text",
       format: "nats_subject",
       icon: "zap",
-      default_visible: true,
+      default_visible: false,
     });
     // Ordinary NULLs render "-", never a destructive label.
     expect(col("schedule_subject")?.null_label).toBeUndefined();
@@ -99,7 +100,7 @@ describe("jobServiceRouteHandler construction", () => {
       format: "nats_subject",
       icon: "send",
       color: "sky-500",
-      default_visible: true,
+      default_visible: false,
     });
     // error_code is a CLOSED badge enum — every item mapped+colored,
     // raw values can never render for a status-like column.
@@ -126,16 +127,33 @@ describe("jobServiceRouteHandler construction", () => {
     // error_detail never surfaces as a column — hidden, non-toggleable;
     // the run-detail sheet is its only surface.
     expect(keys).not.toContain("error_detail");
-    // Newly surfaced engine fields — hidden by default, never filterable.
+    // Engine fields are the execution-count + outcome columns — visible
+    // by default, never filterable (diagnostic seq / free-form payload).
     for (const key of ["fire_seq", "report"] as const) {
-      expect(col(key)).toMatchObject({ default_visible: false, filterable: false });
+      expect(col(key)).toMatchObject({ default_visible: true, filterable: false });
+    }
+    // Lineage columns stay toggleable but off the default surface.
+    for (const key of ["trigger", "schedule", "run_as"] as const) {
+      expect(col(key)?.default_visible).toBe(false);
     }
     // Outcome preset owns `status`; default sort is dispatch-instant desc.
+    // Monitor-first order: sent (default) → succeeded → failed aggregate
+    // (IN failed,lost,skipped) → all.
     const preset = run?.meta?.table?.filter_presets?.find((p) => p.id === "outcome");
-    expect(preset).toMatchObject({ display: "button_group", default_option: "all" });
-    expect(preset?.options.map((o) => o.id).sort()).toEqual(
-      ["all", "dispatched", "failed", "lost", "skipped", "succeeded"].sort(),
+    expect(preset).toMatchObject({ display: "button_group", default_option: "sent" });
+    expect(preset?.options.map((o) => o.id)).toEqual(
+      ["sent", "succeeded", "failed", "all"],
     );
+    const opt = (id: string) => preset?.options.find((o) => o.id === id);
+    expect(opt("sent")).toMatchObject({
+      icon: "play:filled",
+      where: [{ field: "status", op: "=", value: "dispatched" }],
+    });
+    expect(opt("failed")).toMatchObject({
+      icon: "triangle-exclamation-point",
+      where: [{ field: "status", op: "IN", value: ["failed", "lost", "skipped"] }],
+    });
+    expect(opt("succeeded")?.icon).toBe("circle-check");
     expect(run?.meta?.table?.default_sort).toEqual({ key: "created_at", dir: "desc" });
   });
 

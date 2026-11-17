@@ -374,7 +374,9 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // the PHYSICAL stamped `trigger_uuid` (schedules are hard-deleted:
       // the stamped uuid survives mirror churn, the join didn't). NULL =
       // manual/immediate run → plain `-`, no fabricated state.
-      key: "trigger", label_key: F("job_run", "trigger"), type: "ref", order: 35, kind: "calculated", default_visible: true,
+      // Toggleable but off the default surface — the default grid is the
+      // outcome-monitor nine (name/status/timing/counters/report).
+      key: "trigger", label_key: F("job_run", "trigger"), type: "ref", order: 35, kind: "calculated", default_visible: false,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     },
     {
@@ -383,7 +385,8 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // uuid-ref anatomy as `armed_by` → record sheet GET by uuid; a
       // hard-deleted schedule lands on the not-found hero while the
       // subject column keeps the raw truth). NULL → "-".
-      key: "schedule", label_key: F("job_run", "schedule"), type: "ref", order: 36, kind: "calculated", default_visible: true,
+      // Toggleable but off the default surface, like `trigger`.
+      key: "schedule", label_key: F("job_run", "schedule"), type: "ref", order: 36, kind: "calculated", default_visible: false,
       ref: { entity: "job_schedule", key_field: "schedule_uuid" },
     },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
@@ -396,8 +399,9 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // like every sibling subject field (zap = ingress). Stays
       // filterable: the trigger's `runs` reverse_ref and own-lane run
       // correlation depend on it. NULL = manual run → `-`.
+      // Toggleable but off the default surface (lineage, not outcome data).
       key: "schedule_subject", label_key: F("job_run", "schedule_subject"), type: "text", format: "nats_subject", order: 70,
-      icon: "zap", color: "amber-500", default_visible: true,
+      icon: "zap", color: "amber-500", default_visible: false,
     },
     {
       // DESTINATION — the subject the handler consumed, stamped verbatim
@@ -406,10 +410,11 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // derivable from `job_name`, which is the mixed-derivation display
       // field (callable verbatim on forwarded runs, parsed fragment on
       // own-lane ones).
+      // Toggleable but off the default surface (lineage, not outcome data).
       key: "target_subject", label_key: F("job_run", "target_subject"), type: "text", format: "nats_subject", order: 75,
-      icon: "send", color: "sky-500", default_visible: true,
+      icon: "send", color: "sky-500", default_visible: false,
     },
-    { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 80, default_visible: true, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
+    { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 80, default_visible: false, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
     {
       // Closed failure vocabulary — writers normalize to this enum and
       // unmapped callable codes coerce to EXECUTION_ERROR (the original
@@ -434,15 +439,17 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // toggleable): the run-detail sheet is its surface.
       key: "error_detail", label_key: F("job_run", "error_detail"), type: "text", order: 100, hidden: true, filterable: false,
     },
-    { key: "redelivery_count", label_key: F("job_run", "redelivery"), type: "number", order: 110, default_visible: false },
+    { key: "redelivery_count", label_key: F("job_run", "redelivery"), type: "number", order: 110, default_visible: true },
     {
-      // JetStream dedup sequence of the due fire — engine-diagnostic,
-      // not a user-facing surface: stays out of both sheet and filters.
-      key: "fire_seq", label_key: F("job_run", "fire_seq"), type: "number", order: 120, default_visible: false, filterable: false,
+      // JetStream dedup sequence of the due fire — the execution-count
+      // column ("Fire #"/"Esecuzione n."). Not a matcher: filterable stays
+      // off, it is a diagnostic seq not a criteria.
+      key: "fire_seq", label_key: F("job_run", "fire_seq"), type: "number", order: 120, default_visible: true, filterable: false,
     },
     {
-      // Free-form executor report (jsonb) — writer, not a matcher.
-      key: "report", label_key: F("job_run", "report"), type: "text", format: "json", order: 130, default_visible: false, filterable: false,
+      // Free-form executor report (jsonb) — the "Esito"/outcome column;
+      // a writer, not a matcher.
+      key: "report", label_key: F("job_run", "report"), type: "text", format: "json", order: 130, default_visible: true, filterable: false,
     },
     {
       // Owning trigger uuid — PHYSICAL, stamped at write time; exists
@@ -469,44 +476,35 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
         id: "outcome",
         display: "button_group",
         label_key: "job.entities.job_run.presets.outcome.label",
-        default_option: "all",
+        // `sent` first and DEFAULT — the monitor lands on what is still
+        // queued, then drills into outcomes.
+        default_option: "sent",
         options: [
           // Option labels reuse `status.*` — the same words the badge
           // already says; only the tooltips are preset-owned copy.
           {
+            // `dispatched` rows — sent to the queue, awaiting a handler.
+            id: "sent",
+            label_key: V("job_run", "dispatched"),
+            icon: "play:filled",
+            tooltip_key: "job.entities.job_run.presets.outcome.sent_tip",
+            where: [{ field: "status", op: "=", value: "dispatched" }],
+          },
+          {
             id: "succeeded",
             label_key: V("job_run", "succeeded"),
-            icon: "check",
+            icon: "circle-check",
             tooltip_key: "job.entities.job_run.presets.outcome.succeeded_tip",
             where: [{ field: "status", op: "=", value: "succeeded" }],
           },
           {
+            // Failure aggregate — lost (never reported) and skipped
+            // (suppressed) belong to the same problem bucket.
             id: "failed",
             label_key: V("job_run", "failed"),
-            icon: "x",
+            icon: "triangle-exclamation-point",
             tooltip_key: "job.entities.job_run.presets.outcome.failed_tip",
-            where: [{ field: "status", op: "=", value: "failed" }],
-          },
-          {
-            id: "dispatched",
-            label_key: V("job_run", "dispatched"),
-            icon: "clock",
-            tooltip_key: "job.entities.job_run.presets.outcome.dispatched_tip",
-            where: [{ field: "status", op: "=", value: "dispatched" }],
-          },
-          {
-            id: "skipped",
-            label_key: V("job_run", "skipped"),
-            icon: "skip-forward",
-            tooltip_key: "job.entities.job_run.presets.outcome.skipped_tip",
-            where: [{ field: "status", op: "=", value: "skipped" }],
-          },
-          {
-            id: "lost",
-            label_key: V("job_run", "lost"),
-            icon: "ghost",
-            tooltip_key: "job.entities.job_run.presets.outcome.lost_tip",
-            where: [{ field: "status", op: "=", value: "lost" }],
+            where: [{ field: "status", op: "IN", value: ["failed", "lost", "skipped"] }],
           },
           {
             id: "all",
