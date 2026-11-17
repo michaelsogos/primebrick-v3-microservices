@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-16T22:20:53.442Z",
+  "issued_at": "2026-11-17T20:57:17.072Z",
   "patches": {
     "0001_initial_schema_webhook": "bf4dd142785e3094ea4e3bdebcdb87b1a5d9f469fdf3395e188fd0f423ad1344",
     "0002_seed_webhook_config": "08d871ade3a47770fbaca39fab4954dd8a8082535f58956c1742158c3e857858",
@@ -12,7 +12,8 @@
     "20261111190000_uuid_pk_v7_rewrite": "8e240e0de4ce14b31c8d2e22b1162a99b1cc8cd37340246867f4e51e1d67e919",
     "20261114002000_translations_language_check": "173fcd1dd9c78382ff58fd26068f61ecef27397e8500923a2d23c1ba8939b00a",
     "20261205000000_i18n_key_snake_cleanup": "725d714be7c4430cbe2d890dae7879ebfc90f228368604e5180ea2be3972a354",
-    "20261206000000_webhook_module_name_i18n": "1cabd2bc05fb7ef8f8207a8f52ebc5af720ba14b71ae7343c5b4264610f9ea54"
+    "20261206000000_webhook_module_name_i18n": "1cabd2bc05fb7ef8f8207a8f52ebc5af720ba14b71ae7343c5b4264610f9ea54",
+    "20261208000000_i18n_segregation_config_keys": "7993b8af114e9ddf2f3f36baf130676e6402f121c6b7abf7936bae0d8f74f35c"
   },
-  "signature": "N0vvOoF+h/ExCYc2TrEwyyGa7IN8WNIR6s+CzV31dlf2HtpudJBSAXo+ndOV1PDyCbGkG01iHKHGbROFUpWoBg=="
+  "signature": "tcOEg2HrYk8kMBirG6EJGVn9POFTIb8YkdqmyWfCUZjrXVI+LYxGUqsJZrcQXqOZ0e59bFC0IACZ7l4CzguYAg=="
 }
