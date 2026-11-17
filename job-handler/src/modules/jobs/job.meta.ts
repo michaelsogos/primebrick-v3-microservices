@@ -24,6 +24,7 @@ import { JobTriggerEntity, JobScheduleEntity, JobRunEntity } from "../../domain/
 import { TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../../domain/entities/job_trigger_entity.js";
 
 const UPDATED_DESC = { key: "updated_at", dir: "desc" as const };
+const CREATED_DESC = { key: "created_at", dir: "desc" as const };
 const F = (e: string, c: string) => `job.entities.${e}.fields.${c}`;
 const V = (e: string, v: string) => `job.entities.${e}.status.${v}`;
 const H = (e: string, c: string) => `job.entities.${e}.hints.${c}`;
@@ -367,23 +368,117 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   display_field: "job_name",
   columns: [
     { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
-    { key: "service_code", label_key: F("job_run", "service_code"), type: "text", format: "service_code", order: 20 },
-    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "gray" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "orange" }, skipped: { label_key: V("job_run", "skipped"), color: "amber" } } } },
-    { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 35, default_visible: false, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
+    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "info" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "amber" }, skipped: { label_key: V("job_run", "skipped"), color: "gray" } } } },
+    {
+      // The trigger that armed the schedule this run belongs to —
+      // @Calculated on JobRunEntity (resolves schedule_subject →
+      // job_schedules.trigger_uuid → job_triggers.name). NULL on
+      // manual/immediate runs (no schedule_subject) → null_label
+      // renders "Manual". Drills by `trigger_uuid` like `armed_by`.
+      key: "trigger", label_key: F("job_run", "trigger"), type: "ref", order: 35, kind: "calculated", default_visible: true,
+      ref: { entity: "job_trigger", key_field: "trigger_uuid" },
+      null_label: { label_key: "job.entities.job_run.fields.trigger.states.manual" },
+    },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },
-    {
-      // The schedule that fired this run — links to the schedules list
-      // filtered by subject (schedules have no detail route).
-      key: "schedule_subject", label_key: F("job_run", "schedule_subject"), type: "ref", order: 45,
-      ref: { entity: "job_schedule", route: "list", filter_field: "schedule_subject" },
-    },
     // updated_at is the finish/last-seen instant — relabeled, kept visible (derived default hides audit cols)
     { key: "updated_at", label_key: F("job_run", "finished_at"), type: "datetime", order: 50, default_visible: true },
     { key: "duration_ms", label_key: F("job_run", "duration"), type: "number", order: 60 },
-    { key: "error_code", label_key: F("job_run", "error_code"), type: "text", order: 70, default_visible: false },
-    { key: "error_detail", label_key: F("job_run", "error_detail"), type: "text", order: 80, default_visible: false },
-    { key: "redelivery_count", label_key: F("job_run", "redelivery"), type: "number", order: 90, default_visible: false },
+    {
+      // The ingress queue this run arrived on — a NATS subject like every
+      // sibling subject field (`format:"nats_subject"`, zap = ingress).
+      // Technical anchor: stays filterable — the trigger's `runs`
+      // reverse_ref and own-lane run correlation depend on it — while the
+      // `trigger` column is the friendly surface. NULL = manual run.
+      key: "schedule_subject", label_key: F("job_run", "schedule_subject"), type: "text", format: "nats_subject", order: 70,
+      icon: "zap", color: "amber-500", default_visible: false,
+      null_label: { label_key: "job.entities.job_run.fields.schedule_subject.states.manual" },
+    },
+    { key: "run_as", label_key: F("job_run", "run_as"), type: "badge", order: 80, default_visible: true, badge: { values: { user: { label_key: V("job_run", "user"), color: "primary" }, system: { label_key: V("job_run", "system"), color: "#000000" } } } },
+    { key: "error_code", label_key: F("job_run", "error_code"), type: "text", order: 90, default_visible: false },
+    { key: "error_detail", label_key: F("job_run", "error_detail"), type: "text", order: 100, default_visible: false },
+    { key: "redelivery_count", label_key: F("job_run", "redelivery"), type: "number", order: 110, default_visible: false },
+    {
+      // JetStream dedup sequence of the due fire — engine-diagnostic,
+      // not a user-facing surface: stays out of both sheet and filters.
+      key: "fire_seq", label_key: F("job_run", "fire_seq"), type: "number", order: 120, default_visible: false, filterable: false,
+    },
+    {
+      // Free-form executor report (jsonb) — writer, not a matcher.
+      key: "report", label_key: F("job_run", "report"), type: "text", format: "json", order: 130, default_visible: false, filterable: false,
+    },
+    {
+      // Owning trigger uuid — @Calculated through the mirror; exists only
+      // as the `trigger` column's drill key, never a surface.
+      key: "trigger_uuid", label_key: F("job_run", "trigger_uuid"), type: "text", order: 140, kind: "calculated", hidden: true,
+    },
   ],
-  table: { default_view: "table", default_sort: UPDATED_DESC, default_page_size: 25, page_size_options: [10, 25, 50] },
+  table: {
+    default_view: "table",
+    // Dispatch instant first — a long-running `dispatched` row stays on
+    // top instead of sinking behind finished rows (monitoring semantic).
+    default_sort: CREATED_DESC,
+    default_page_size: 25,
+    page_size_options: [10, 25, 50],
+    // Outcome selector in the toolbar — owns the `status` field (it
+    // leaves the filter sheet, like `schedule_kind` owns `schedule_type`).
+    filter_presets: [
+      {
+        id: "outcome",
+        display: "button_group",
+        label_key: "job.entities.job_run.presets.outcome.label",
+        default_option: "all",
+        options: [
+          // Option labels reuse `status.*` — the same words the badge
+          // already says; only the tooltips are preset-owned copy.
+          {
+            id: "succeeded",
+            label_key: V("job_run", "succeeded"),
+            icon: "check",
+            tooltip_key: "job.entities.job_run.presets.outcome.succeeded_tip",
+            where: [{ field: "status", op: "=", value: "succeeded" }],
+          },
+          {
+            id: "failed",
+            label_key: V("job_run", "failed"),
+            icon: "x",
+            tooltip_key: "job.entities.job_run.presets.outcome.failed_tip",
+            where: [{ field: "status", op: "=", value: "failed" }],
+          },
+          {
+            id: "dispatched",
+            label_key: V("job_run", "dispatched"),
+            icon: "clock",
+            tooltip_key: "job.entities.job_run.presets.outcome.dispatched_tip",
+            where: [{ field: "status", op: "=", value: "dispatched" }],
+          },
+          {
+            id: "skipped",
+            label_key: V("job_run", "skipped"),
+            icon: "skip-forward",
+            tooltip_key: "job.entities.job_run.presets.outcome.skipped_tip",
+            where: [{ field: "status", op: "=", value: "skipped" }],
+          },
+          {
+            id: "lost",
+            label_key: V("job_run", "lost"),
+            icon: "ghost",
+            tooltip_key: "job.entities.job_run.presets.outcome.lost_tip",
+            where: [{ field: "status", op: "=", value: "lost" }],
+          },
+          {
+            id: "all",
+            label_key: "job.entities.job_run.presets.outcome.all",
+            icon: "list-clock",
+            tooltip_key: "job.entities.job_run.presets.outcome.all_tip",
+            where: [],
+          },
+        ],
+      },
+    ],
+    // Read-only entity — every row op gates on `meta.actions`, and no
+    // write op exists → the actions column is suppressed entirely. The
+    // run's detail surface is the canonical `entity.record` sheet,
+    // reached automatically when a ref cell resolves a run elsewhere.
+  },
 }, JobRunEntity);

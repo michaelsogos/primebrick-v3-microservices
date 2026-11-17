@@ -56,6 +56,42 @@ describe("jobServiceRouteHandler construction", () => {
     expect(col("next_run")?.hideable).not.toBe(false);
   });
 
+  it("job_run — service_code dropped, trigger projected, subject anatomy aligned", async () => {
+    const { jobEntityDecls } = await import("../controllers/http/entities-route.js");
+    const run = jobEntityDecls.find((d) => d.entityName === "job_run");
+    const keys = run?.meta?.columns?.map((c) => c.key) ?? [];
+    expect(keys).not.toContain("service_code");
+    const col = (key: string) => run?.meta?.columns?.find((c) => c.key === key);
+    // Friendly calculated ref — visible, drills to job_trigger by trigger_uuid.
+    expect(col("trigger")).toMatchObject({
+      type: "ref",
+      kind: "calculated",
+      default_visible: true,
+      ref: { entity: "job_trigger", key_field: "trigger_uuid" },
+    });
+    // Raw drill key — `hidden:true` strips it from served meta entirely
+    // (row payload only, like `next_fire_mirror_at` on schedules).
+    expect(keys).not.toContain("trigger_uuid");
+    // Source subject — same anatomy as every sibling subject field.
+    expect(col("schedule_subject")).toMatchObject({
+      type: "text",
+      format: "nats_subject",
+      icon: "zap",
+      default_visible: false,
+    });
+    // Newly surfaced engine fields — hidden by default, never filterable.
+    for (const key of ["fire_seq", "report"] as const) {
+      expect(col(key)).toMatchObject({ default_visible: false, filterable: false });
+    }
+    // Outcome preset owns `status`; default sort is dispatch-instant desc.
+    const preset = run?.meta?.table?.filter_presets?.find((p) => p.id === "outcome");
+    expect(preset).toMatchObject({ display: "button_group", default_option: "all" });
+    expect(preset?.options.map((o) => o.id).sort()).toEqual(
+      ["all", "dispatched", "failed", "lost", "skipped", "succeeded"].sort(),
+    );
+    expect(run?.meta?.table?.default_sort).toEqual({ key: "created_at", dir: "desc" });
+  });
+
   it("rejects a divergent semantic icon/color pair at construction", async () => {
     const { makeEntityRouter } = await import("@primebrick/sdk");
     const bad = () =>

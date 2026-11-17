@@ -217,16 +217,18 @@ describe("due-forwarder — run-result correlation", () => {
     expect(published()[0].headers["x-job-run-id"]).toBe("run-uuid-42");
   });
 
-  it("dispatched run rows carry the callable's service code, not JH's", async () => {
+  it("dispatched run rows carry the full callable, never a service_code", async () => {
     const handler = await handlerFor("system");
 
     await handler(envelope(), emptyMsg());
 
+    // Executor provenance = the callable namespace inside `job_name`;
+    // `created_by` stays the writer (system:job). No second truth.
     expect(recorded()[0]).toMatchObject({
-      service_code: "emailsender",
       job_name: "emailsender.send",
       status: "dispatched",
     });
+    expect(recorded()[0]).not.toHaveProperty("service_code");
   });
 
   it("marks a one-shot schedule fired after the dispatch attempt", async () => {

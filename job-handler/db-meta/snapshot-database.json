@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T20:24:25.532Z",
+  "generatedAt": "2026-11-17T12:34:46.954Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -260,32 +260,6 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "service_code": {
-          "name": "service_code",
-          "ordinalPosition": 4,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "kind": {
-          "name": "kind",
-          "ordinalPosition": 6,
-          "dataType": "varchar",
-          "typname": "varchar",
-          "typeOid": 1043,
-          "typcategory": "S",
-          "formatType": "character varying(30)",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
-        },
         "run_as": {
           "name": "run_as",
           "ordinalPosition": 7,
@@ -348,7 +322,7 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
+          "isNullable": false,
           "isPrimaryKey": false
         },
         "armed_at": {
@@ -455,19 +429,6 @@
           "isNullable": false,
           "isPrimaryKey": false
         },
-        "fired_at": {
-          "name": "fired_at",
-          "ordinalPosition": 21,
-          "dataType": "timestamptz",
-          "typname": "timestamptz",
-          "typeOid": 1184,
-          "typcategory": "D",
-          "formatType": "timestamp with time zone",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
-        },
         "expires_at": {
           "name": "expires_at",
           "ordinalPosition": 22,
@@ -481,8 +442,8 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "next_run_at": {
-          "name": "next_run_at",
+        "next_fire_mirror_at": {
+          "name": "next_fire_mirror_at",
           "ordinalPosition": 23,
           "dataType": "timestamptz",
           "typname": "timestamptz",
@@ -504,15 +465,6 @@
             "schedule_subject"
           ],
           "definition": "CREATE UNIQUE INDEX job_schedules_subject_uq ON job.job_schedules USING btree (schedule_subject)"
-        },
-        {
-          "name": "job_schedules_service_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "service_code"
-          ],
-          "definition": "CREATE INDEX job_schedules_service_idx ON job.job_schedules USING btree (service_code)"
         },
         {
           "name": "job_schedules_status_idx",
@@ -554,19 +506,6 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "service_code": {
-          "name": "service_code",
-          "ordinalPosition": 4,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
           "isPrimaryKey": false
         },
         "job_name": {
@@ -981,6 +920,19 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "system_key": {
+          "name": "system_key",
+          "ordinalPosition": 19,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -992,6 +944,16 @@
             "name"
           ],
           "definition": "CREATE UNIQUE INDEX job_triggers_name_uq ON job.job_triggers USING btree (name)"
+        },
+        {
+          "name": "job_triggers_system_key_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "system_key"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX job_triggers_system_key_uq ON job.job_triggers USING btree (system_key) WHERE (deleted_at IS NULL)"
         }
       ]
     }

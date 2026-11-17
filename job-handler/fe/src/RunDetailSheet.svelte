@@ -16,15 +16,12 @@
   type JobRun = {
     uuid: string;
     schedule_subject: string;
-    service_code: string;
     job_name: string;
-    lane: string;
     status: string;
     error_code?: string | null;
     error_detail?: string | null;
     duration_ms?: number | string | null;
     redelivery_count?: number | null;
-    initiator?: string | null;
     created_at?: string | null;
     updated_at?: string | null;
   };
@@ -106,16 +103,8 @@
       <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt class="text-muted-foreground">{t(F('job_name'))}</dt>
         <dd class="font-medium">{run.job_name}</dd>
-        <dt class="text-muted-foreground">{t(F('service_code'))}</dt>
-        <dd class="font-medium">{run.service_code}</dd>
         <dt class="text-muted-foreground">{t(F('schedule_subject'))}</dt>
         <dd class="font-mono text-xs">{run.schedule_subject}</dd>
-        <dt class="text-muted-foreground">{t(F('lane'))}</dt>
-        <dd>{run.lane}</dd>
-        {#if run.initiator}
-          <dt class="text-muted-foreground">{t(F('initiator'))}</dt>
-          <dd>{run.initiator}</dd>
-        {/if}
         <dt class="text-muted-foreground">{t(F('started_at'))}</dt>
         <dd>{run.created_at ?? '—'}</dd>
         <dt class="text-muted-foreground">{t(F('finished_at'))}</dt>

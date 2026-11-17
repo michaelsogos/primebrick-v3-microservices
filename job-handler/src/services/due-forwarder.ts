@@ -76,9 +76,6 @@ async function insertRun(
     const row = await runs.addRun(
       {
         schedule_subject: envelope.schedule_subject,
-        // The run executes ON the callable's service — derive it from the
-        // target's first token (`emailsender.send` → `emailsender`).
-        service_code: envelope.target.split(".")[0]!,
         job_name: envelope.target,
         run_as: lane,
         status,

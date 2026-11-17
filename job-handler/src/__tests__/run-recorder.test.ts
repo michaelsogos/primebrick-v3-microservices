@@ -69,13 +69,14 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
     expect(row).toMatchObject({
       schedule_subject: "jobs.schedule.ai.partition-maintenance",
-      service_code: "ai",
       job_name: "partition-maintenance",
       run_as: "system",
       status: "succeeded",
       duration_ms: 43n,
       fire_seq: 881n,
     });
+    // service_code is dropped — `created_by` owns executor provenance.
+    expect(row).not.toHaveProperty("service_code");
     expect(row.report).toEqual({ maintenance_ran: true });
   });
 

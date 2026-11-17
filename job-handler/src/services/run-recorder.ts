@@ -67,6 +67,9 @@ const FORWARD_TARGET_RE = /^jobs\.due\.(?:user|system)\.job\.forward\./;
  * the result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
  * strips the lane prefix, plain callable subjects (`emailsender.send`)
  * parse directly. `run_as` is `system` unless the due subject says `user`.
+ * `service_code` never lands on a row — it only stamps the `created_by`
+ * actor (`system:<svc>` = own-lane self-recording), same provenance
+ * contract schedules use.
  */
 function parseTarget(target: string): { service_code: string; job_name: string; run_as: "user" | "system" } | null {
   const due = /^jobs\.due\.(user|system)\.([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
@@ -116,7 +119,6 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
   await runs.addRun(
     {
       schedule_subject: data.schedule_subject,
-      service_code: parsed?.service_code ?? "unknown",
       job_name: parsed?.job_name ?? data.target ?? "unknown",
       run_as: parsed?.run_as ?? "system",
       status: data.status,

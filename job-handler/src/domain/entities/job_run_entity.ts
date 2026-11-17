@@ -12,6 +12,7 @@ import {
   Key,
   Unique,
   Column,
+  Calculated,
   type UUID,
   EntityBase,
   Auditable,
@@ -28,8 +29,22 @@ export class JobRunEntity
   @Column({ nullable: true })
   schedule_subject?: string;
 
-  @Column({ nullable: false })
-  service_code!: string;
+  /** Owning trigger uuid — resolved through the schedule mirror
+   *  (`job_schedules.trigger_uuid` is NOT NULL). NULL for manual/immediate
+   *  runs (`schedule_subject IS NULL`). */
+  @Calculated(
+    `(SELECT js.trigger_uuid FROM job.job_schedules js WHERE js.schedule_subject = {self}.schedule_subject)`,
+    { pgType: "uuid", nullable: true },
+  )
+  trigger_uuid?: string;
+
+  /** Owning trigger display name — joins through the mirror; NULL on
+   *  manual runs. */
+  @Calculated(
+    `(SELECT t.name FROM job.job_triggers t WHERE t.uuid = (SELECT js.trigger_uuid FROM job.job_schedules js WHERE js.schedule_subject = {self}.schedule_subject))`,
+    { pgType: "text", nullable: true },
+  )
+  trigger?: string;
 
   @Column({ nullable: false })
   job_name!: string;
