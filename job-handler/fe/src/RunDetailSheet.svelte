@@ -48,7 +48,7 @@
       ctx.notify({
         impact: 'MEDIUM',
         message: e instanceof Error ? e.message : String(e),
-        scope: 'job.runDetail',
+        scope: t('job.entities.job_run.singular'),
         toast: true,
       });
     }
