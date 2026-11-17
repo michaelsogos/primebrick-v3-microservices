@@ -21,7 +21,7 @@ import { AI_EVENTS } from "./events-declaration.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "ai",
-    serviceDisplayName: "AI Assistants Manager",
+    serviceDisplayName: "AI Assistants Management",
     labelKey: "ai.module.name",
     serviceDescription: "AI chat microservice with RAG knowledge base",
     icon: "sparkles",

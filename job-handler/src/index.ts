@@ -28,7 +28,7 @@ import { JOB_EVENTS } from "./events-declaration.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "job",
-    serviceDisplayName: "Process Manager",
+    serviceDisplayName: "Process Management",
     serviceDescription:
       "Jobs orchestration — sole writer of jobs.schedule.*, triggers engine over job_triggers, run-history tap on jobs.result.>",
     icon: "list-clock",
