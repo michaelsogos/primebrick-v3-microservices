@@ -88,7 +88,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       // "this row is a module-declared system trigger": the interchange
       // fields below are code-owned on these rows (the depends_on.set
       // gate + the wire's frozen-set rule read the same physical source).
-      key: "is_system", label_key: F("job_trigger", "is_system"), type: "boolean", order: 15, kind: "calculated",
+      key: "is_system", label_key: F("job_trigger", "is_system"), type: "boolean", order: 15, kind: "calculated", default_visible: false,
       tooltip: H("job_trigger", "is_system"), tooltip_title: HT("job_trigger", "is_system"), tooltip_priority: "HINT",
     },
     {
@@ -146,7 +146,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       // @Calculated — the armed mirror's NATS mirror, status-gated.
       // NULL for disabled/event-only triggers; cron shows a one-time
       // UTC estimate until the first fire reports Nats-Schedule-Next.
-      key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: false,
+      key: "next_run", label_key: F("job_trigger", "next_run"), type: "datetime", order: 84, kind: "calculated", default_visible: true,
       null_label: { label_key: "job.entities.job_trigger.fields.next_run.states.disabled", when: { field: "deleted_at", not: null } },
       tooltip: H("job_trigger", "next_run"), tooltip_title: HT("job_trigger", "next_run"),
     },

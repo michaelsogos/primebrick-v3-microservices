@@ -46,6 +46,16 @@ describe("jobServiceRouteHandler construction", () => {
     }
   });
 
+  it("job_trigger column defaults — is_system hidden-but-toggleable, next_run visible", async () => {
+    const { jobEntityDecls } = await import("../controllers/http/entities-route.js");
+    const trigger = jobEntityDecls.find((d) => d.entityName === "job_trigger");
+    const col = (key: string) => trigger?.meta?.columns?.find((c) => c.key === key);
+    expect(col("is_system")?.default_visible).toBe(false);
+    expect(col("is_system")?.hideable).not.toBe(false);
+    expect(col("next_run")?.default_visible).toBe(true);
+    expect(col("next_run")?.hideable).not.toBe(false);
+  });
+
   it("rejects a divergent semantic icon/color pair at construction", async () => {
     const { makeEntityRouter } = await import("@primebrick/sdk");
     const bad = () =>
