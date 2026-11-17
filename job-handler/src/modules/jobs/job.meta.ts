@@ -486,7 +486,7 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
             // `dispatched` rows — sent to the queue, awaiting a handler.
             id: "sent",
             label_key: V("job_run", "dispatched"),
-            icon: "play:filled",
+            icon: "play",
             tooltip_key: "job.entities.job_run.presets.outcome.sent_tip",
             where: [{ field: "status", op: "=", value: "dispatched" }],
           },

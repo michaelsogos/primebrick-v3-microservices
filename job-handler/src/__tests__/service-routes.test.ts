@@ -146,7 +146,7 @@ describe("jobServiceRouteHandler construction", () => {
     );
     const opt = (id: string) => preset?.options.find((o) => o.id === id);
     expect(opt("sent")).toMatchObject({
-      icon: "play:filled",
+      icon: "play",
       where: [{ field: "status", op: "=", value: "dispatched" }],
     });
     expect(opt("failed")).toMatchObject({
