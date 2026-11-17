@@ -36,7 +36,6 @@
   },
   "i18n_namespaces": [
     "app",
-    "system",
     "boilerplate"
   ],
   "i18n_key_ref_exempt": [

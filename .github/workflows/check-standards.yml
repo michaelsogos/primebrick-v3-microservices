@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [ai, crm, emailsender, job-handler, webhook]
+        service: [ai, boilerplate, crm, emailsender, job-handler, webhook]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

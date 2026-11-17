@@ -35,7 +35,6 @@
   },
   "i18n_namespaces": [
     "app",
-    "system",
     "crm"
   ],
   "i18n_sql_exempt": [
