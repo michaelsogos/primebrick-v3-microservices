@@ -71,17 +71,18 @@ describe("jobServiceRouteHandler construction", () => {
       default_visible: true,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     });
-    // The owning schedule — calculated friendly name, business-key drill
-    // on `schedule_subject` (record sheet resolves via list lookup).
+    // The owning schedule — calculated friendly name, uuid-ref drill on
+    // the stamped `schedule_uuid` (same anatomy as `armed_by`).
     expect(col("schedule")).toMatchObject({
       type: "ref",
       kind: "calculated",
       default_visible: true,
-      ref: { entity: "job_schedule", key_field: "schedule_subject", filter_field: "schedule_subject" },
+      ref: { entity: "job_schedule", key_field: "schedule_uuid" },
     });
     // Raw drill keys — `hidden:true` strips them from served meta
     // entirely (row payload only, like `next_fire_mirror_at`).
     expect(keys).not.toContain("trigger_uuid");
+    expect(keys).not.toContain("schedule_uuid");
     // SOURCE — same anatomy as every sibling ingress subject field.
     expect(col("schedule_subject")).toMatchObject({
       type: "text",

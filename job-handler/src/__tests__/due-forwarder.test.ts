@@ -261,6 +261,16 @@ describe("due-forwarder — run-result correlation", () => {
     });
   });
 
+  it("stamps schedule_uuid + trigger_uuid from the armed schedule row", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "paused", trigger_uuid: "trig-9", uuid: "sched-5" } as never);
+    await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 43 } });
+    expect(recorded()[0]).toMatchObject({
+      trigger_uuid: "trig-9",
+      schedule_uuid: "sched-5",
+    });
+  });
+
   it("a suppressed disarmed schedule maps to its own enum code", async () => {
     const handler = await handlerFor("system");
     h.getScheduleRow.mockResolvedValue({ status: "disarmed" } as never);
@@ -268,17 +278,18 @@ describe("due-forwarder — run-result correlation", () => {
     expect(recorded()[0]).toMatchObject({ status: "skipped", error_code: "SCHEDULE_DISARMED" });
   });
 
-  it("dispatched rows stamp lineage: trigger_uuid + target_subject", async () => {
+  it("dispatched rows stamp lineage: trigger_uuid + schedule_uuid + target_subject", async () => {
     const handler = await handlerFor("system");
-    h.getScheduleRow.mockResolvedValue({ status: "armed", trigger_uuid: "trig-9" } as never);
+    h.getScheduleRow.mockResolvedValue({ status: "armed", trigger_uuid: "trig-9", uuid: "sched-5" } as never);
 
     await handler(envelope(), emptyMsg());
 
-    // trigger_uuid = stamped at fire time (survives schedule churn);
-    // target_subject = the consumed callable verbatim (envelope.target).
+    // trigger_uuid/schedule_uuid = stamped at fire time (survive schedule
+    // churn); target_subject = the consumed callable (envelope.target).
     expect(recorded()[0]).toMatchObject({
       status: "dispatched",
       trigger_uuid: "trig-9",
+      schedule_uuid: "sched-5",
       target_subject: "emailsender.send",
     });
   });

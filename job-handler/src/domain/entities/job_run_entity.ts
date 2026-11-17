@@ -46,11 +46,22 @@ export class JobRunEntity
   )
   trigger?: string;
 
-  /** Owning schedule identity for the record drill — the schedule's
-   *  business key IS the subject (schedules carry no name field);
-   *  alias of `schedule_subject` so the meta can declare a `ref` column
-   *  without colliding with the `nats_subject` source column. */
-  @Calculated(`({self}.schedule_subject)`, { pgType: "text", nullable: true })
+  /** Owning schedule uuid — STAMPED at write time from the armed
+   *  schedule row (forwarder) or the live subject lookup (own-lane
+   *  recorder). Schedules are hard-deleted: a dangling uuid drills to
+   *  the not-found hero while `schedule_subject` keeps the raw arrival
+   *  truth. NULL for manual/immediate runs. */
+  @Column({ pgType: "uuid", nullable: true })
+  schedule_uuid?: string;
+
+  /** Owning schedule display name — the SAME name the schedule record
+   *  sheet shows (its `display_field` resolves to the armer trigger's
+   *  name), joined through the stamped uuid — never the arrival
+   *  subject. NULL when the schedule row is gone. */
+  @Calculated(
+    `(SELECT jt.name FROM job.job_schedules js JOIN job.job_triggers jt ON jt.uuid = js.trigger_uuid WHERE js.uuid = {self}.schedule_uuid)`,
+    { pgType: "text", nullable: true },
+  )
   schedule?: string;
 
   @Column({ nullable: false })

@@ -90,8 +90,8 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     expect(row.report).toEqual({ maintenance_ran: true });
   });
 
-  it("stamps trigger_uuid from the live schedule row when one resolves", async () => {
-    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7" } as never);
+  it("stamps trigger_uuid + schedule_uuid from the live schedule row when one resolves", async () => {
+    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7", uuid: "sched-3" } as never);
     const handler = await start();
     await handler(
       {
@@ -102,7 +102,9 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
       meta,
     );
     expect(h.getScheduleRow).toHaveBeenCalledWith("jobs.schedule.ai.partition-maintenance");
-    expect((h.add.mock.calls[0]![1] as Record<string, unknown>).trigger_uuid).toBe("trig-7");
+    const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
+    expect(row.trigger_uuid).toBe("trig-7");
+    expect(row.schedule_uuid).toBe("sched-3");
   });
 
   it("an unknown callable error_code coerces to EXECUTION_ERROR preserving the original", async () => {

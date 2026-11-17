@@ -71,13 +71,14 @@ async function insertRun(
   errorCode?: string,
   errorDetail?: string,
   fireSeq?: bigint,
-  triggerUuid?: string,
+  scheduleRow?: { uuid?: string; trigger_uuid?: string },
 ): Promise<string | undefined> {
   try {
     const row = await runs.addRun(
       {
         schedule_subject: envelope.schedule_subject,
-        trigger_uuid: triggerUuid,
+        schedule_uuid: scheduleRow?.uuid,
+        trigger_uuid: scheduleRow?.trigger_uuid,
         job_name: envelope.target,
         target_subject: envelope.target,
         run_as: lane,
@@ -230,7 +231,7 @@ async function forward(
   if (envelope.schedule_subject) {
     scheduleRow = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
     if (scheduleRow !== undefined && scheduleRow.status !== "armed") {
-      await insertRun(envelope, lane, "skipped", `SCHEDULE_${scheduleRow.status.toUpperCase()}`, `suppressed: schedule status is ${scheduleRow.status}`, fireSeq, scheduleRow.trigger_uuid);
+      await insertRun(envelope, lane, "skipped", `SCHEDULE_${scheduleRow.status.toUpperCase()}`, `suppressed: schedule status is ${scheduleRow.status}`, fireSeq, scheduleRow);
       return;
     }
   }
@@ -242,7 +243,7 @@ async function forward(
   if (lane === "user" && actorUuid) {
     const fresh = await freshAuthHeaders(actorUuid, msg);
     if (fresh === null) {
-      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq, scheduleRow?.trigger_uuid);
+      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq, scheduleRow);
       return;
     }
     headers = fresh;
@@ -257,7 +258,7 @@ async function forward(
   });
   // Insert the run row FIRST — its uuid rides as `x-job-run-id` so the
   // callable's transport middleware reports the real outcome back.
-  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq, scheduleRow?.trigger_uuid);
+  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq, scheduleRow);
   const outHeaders: Record<string, string> = {
     ...headers,
     ...(envelope.schedule_subject

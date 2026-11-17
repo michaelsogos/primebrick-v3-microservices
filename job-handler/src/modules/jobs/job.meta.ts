@@ -378,12 +378,13 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     },
     {
-      // The owning schedule — friendly @Calculated `job_name`, drills by
-      // the row's `schedule_subject` business key: the record sheet
-      // resolves it via list lookup; a hard-deleted schedule lands on
-      // the not-found hero — the run keeps its truth.
+      // The owning schedule — friendly @Calculated display name, drills
+      // to job_schedule by the PHYSICAL stamped `schedule_uuid` (same
+      // uuid-ref anatomy as `armed_by` → record sheet GET by uuid; a
+      // hard-deleted schedule lands on the not-found hero while the
+      // subject column keeps the raw truth). NULL → "-".
       key: "schedule", label_key: F("job_run", "schedule"), type: "ref", order: 36, kind: "calculated", default_visible: true,
-      ref: { entity: "job_schedule", key_field: "schedule_subject", filter_field: "schedule_subject" },
+      ref: { entity: "job_schedule", key_field: "schedule_uuid" },
     },
     // created_at is semantically the run's start instant — relabeled, kept visible (derived default hides audit cols)
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },
@@ -447,6 +448,11 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // Owning trigger uuid — PHYSICAL, stamped at write time; exists
       // only as the `trigger` column's drill key, never a surface.
       key: "trigger_uuid", label_key: F("job_run", "trigger_uuid"), type: "ref", order: 140, hidden: true,
+    },
+    {
+      // Owning schedule uuid — PHYSICAL, stamped at write time; exists
+      // only as the `schedule` column's drill key, never a surface.
+      key: "schedule_uuid", label_key: F("job_run", "schedule_uuid"), type: "ref", order: 141, hidden: true,
     },
   ],
   table: {

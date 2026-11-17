@@ -156,6 +156,7 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
   await runs.addRun(
     {
       schedule_subject: data.schedule_subject,
+      schedule_uuid: scheduleRow?.uuid,
       trigger_uuid: scheduleRow?.trigger_uuid,
       job_name: parsed?.job_name ?? data.target ?? "unknown",
       target_subject: data.target,
