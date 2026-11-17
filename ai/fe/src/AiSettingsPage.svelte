@@ -246,7 +246,7 @@
     } else {
       notify({
         impact: 'MEDIUM',
-        messageKey: 'system.entities.list.deleteFailed',
+        messageKey: 'app.common.delete_failed',
         scope: 'AI Model',
         detail: `Delete failed (${resp.status})`,
         toast: true,
@@ -268,7 +268,7 @@
     if (!ok) {
       notify({
         impact: 'MEDIUM',
-        messageKey: 'system.entities.list.restoreFailed',
+        messageKey: 'app.common.restore_failed',
         scope: 'AI Model',
         detail: 'Restore failed',
         toast: true,
@@ -419,7 +419,7 @@
                 <TriangleAlert class="size-20 text-warning" />
               </div>
               <div class="text-sm font-medium text-muted-foreground">
-                {$t('system.entities.list.no_records')}
+                {$t('app.entities.list.no_records')}
               </div>
             </div>
           </div>

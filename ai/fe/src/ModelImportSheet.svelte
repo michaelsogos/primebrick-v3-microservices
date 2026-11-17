@@ -323,7 +323,7 @@
       if (!res.ok) throw new Error(`Create failed (${res.status})`);
       ctx.notify({
         impact: 'NONE',
-        message: `${hit.name} — ${t('system.entities.ai_model.added')}`,
+        message: `${hit.name} — ${t('ai.entities.ai_model.added')}`,
         scope: 'AI Model',
         toast: true,
       });
@@ -332,7 +332,7 @@
     } catch (err) {
       ctx.notify({
         impact: 'MEDIUM',
-        messageKey: 'system.entities.ai_model.add_failed',
+        messageKey: 'ai.entities.ai_model.add_failed',
         scope: 'AI Model',
         detail: err instanceof Error ? err.message : 'Add model failed',
         toast: true,
@@ -348,12 +348,12 @@
     <Download class="size-4" />
   {/snippet}
   {#snippet title()}
-    <span>{t('system.entities.ai_model.add_model')}</span>
+    <span>{t('ai.entities.ai_model.add_model')}</span>
   {/snippet}
 
   <div class="space-y-3">
     <p class="text-xs text-muted-foreground">
-      {t('system.entities.ai_model.add_model_hint')}
+      {t('ai.entities.ai_model.add_model_hint')}
     </p>
     <!-- Sort order (server-side) -->
     <div class="flex flex-wrap items-center gap-1" data-testid="ai-model-import-sort">
@@ -369,7 +369,7 @@
               : 'border-transparent text-muted-foreground/50 hover:text-muted-foreground',
           ]}
         >
-          {t(`system.entities.ai_model.sort_${s}`)}
+          {t(`ai.entities.ai_model.sort_${s}`)}
         </button>
       {/each}
     </div>
@@ -399,8 +399,8 @@
       labelField="name"
       display="custom"
       loading={searching}
-      placeholder={t('system.entities.ai_model.search_hf')}
-      searchPlaceholder={t('system.entities.ai_model.search_hf')}
+      placeholder={t('ai.entities.ai_model.search_hf')}
+      searchPlaceholder={t('ai.entities.ai_model.search_hf')}
       {onSearchInput}
       onLoadMore={loadMore}
       {loadingMore}
@@ -417,7 +417,7 @@
           {#if hit.est_download_mb !== null}
             <span
               class="flex items-center gap-1"
-              title={t('system.entities.ai_model.fields.download_size_mb')}
+              title={t('ai.entities.ai_model.fields.download_size_mb')}
             >
               <Download class="size-3" />{#if !measured.has(hit.id)}~{/if}{formatMB(hit.est_download_mb)}
             </span>
@@ -440,7 +440,7 @@
       <!-- dtype selector -->
       <div class="space-y-1.5">
         <label class="text-xs font-medium text-muted-foreground" for="ai-model-import-dtype">
-          {t('system.entities.ai_model.fields.dtype')}
+          {t('ai.entities.ai_model.fields.dtype')}
         </label>
         {#if variantsLoading}
           <div class="flex items-center gap-2 text-xs text-muted-foreground">
@@ -476,19 +476,19 @@
           <div class="flex items-center justify-between px-1 py-1">
             <span
               class="flex items-center gap-1.5 text-sm font-semibold"
-              title={t('system.entities.ai_model.fields.download_size_mb')}
+              title={t('ai.entities.ai_model.fields.download_size_mb')}
             >
               <Download class="size-4 text-muted-foreground" />
               {formatMB(selectedVariant.download_mb)}
             </span>
             <span
               class="flex items-center gap-1.5 text-sm font-semibold"
-              title={t('system.entities.ai_model.fields.vram_mb')}
+              title={t('ai.entities.ai_model.fields.vram_mb')}
             >
               <MemoryStick class="size-4 text-muted-foreground" />
               {formatMB(selectedVariant.download_mb)}
             </span>
-            <ScoreGauge value={powerLevel} label={t('system.entities.ai_model.fields.power_level')} size={32} />
+            <ScoreGauge value={powerLevel} label={t('ai.entities.ai_model.fields.power_level')} size={32} />
           </div>
           <a
             class="flex items-center justify-center gap-1.5 rounded-md py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
@@ -498,7 +498,7 @@
             data-testid="ai-model-import-hf-link"
           >
             <HuggingFaceIcon class="size-3.5" />
-            {t('system.entities.ai_model.view_on_hf')}
+            {t('ai.entities.ai_model.view_on_hf')}
             <ExternalLink class="size-3" />
           </a>
         </div>
@@ -506,44 +506,44 @@
 
       <!-- Model default params (same fields as the cerebellum form) -->
       <div class="grid grid-cols-2 gap-3">
-        <SliderField size="sm" id="import-temperature" bind:value={temperature} label={t('system.entities.ai_model.fields.temperature')} defaultValue={0} min={0} max={2} step={0.1} decimals={1} data-testid="ai-model-import-temperature" />
-        <SliderField size="sm" id="import-top-p" bind:value={top_p} label={t('system.entities.ai_model.fields.top_p')} defaultValue={hfTopP ?? 0.9} min={0.01} max={1} step={0.01} decimals={2} data-testid="ai-model-import-top-p" />
-        <SliderField size="sm" id="import-max-tokens" bind:value={max_tokens} label={t('system.entities.ai_model.fields.max_tokens')} defaultValue={256} steps={[128, 256, 512, 1024, 2048, 4096, 8192]} data-testid="ai-model-import-max-tokens" />
-        <SliderField size="sm" id="import-rep-penalty" bind:value={repetition_penalty} label={t('system.entities.ai_model.fields.repetition_penalty')} defaultValue={hfRepPenalty ?? 1.1} min={1} max={2} step={0.01} decimals={2} data-testid="ai-model-import-repetition-penalty" />
+        <SliderField size="sm" id="import-temperature" bind:value={temperature} label={t('ai.entities.ai_model.fields.temperature')} defaultValue={0} min={0} max={2} step={0.1} decimals={1} data-testid="ai-model-import-temperature" />
+        <SliderField size="sm" id="import-top-p" bind:value={top_p} label={t('ai.entities.ai_model.fields.top_p')} defaultValue={hfTopP ?? 0.9} min={0.01} max={1} step={0.01} decimals={2} data-testid="ai-model-import-top-p" />
+        <SliderField size="sm" id="import-max-tokens" bind:value={max_tokens} label={t('ai.entities.ai_model.fields.max_tokens')} defaultValue={256} steps={[128, 256, 512, 1024, 2048, 4096, 8192]} data-testid="ai-model-import-max-tokens" />
+        <SliderField size="sm" id="import-rep-penalty" bind:value={repetition_penalty} label={t('ai.entities.ai_model.fields.repetition_penalty')} defaultValue={hfRepPenalty ?? 1.1} min={1} max={2} step={0.01} decimals={2} data-testid="ai-model-import-repetition-penalty" />
       </div>
 
       <SwitchField
         size="sm"
         id="import-thinking"
         bind:checked={enable_thinking}
-        label={t('system.entities.ai_model.fields.enable_thinking')}
+        label={t('ai.entities.ai_model.fields.enable_thinking')}
         data-testid="ai-model-import-thinking"
       />
 
-      <SelectableFieldset label={t('system.entities.ai_cerebellum.fields.execution_config')}>
+      <SelectableFieldset label={t('ai.entities.ai_cerebellum.fields.execution_config')}>
         <div class="grid grid-cols-2 gap-3">
           <SwitchField
             size="sm"
             id="import-kv-cache"
             bind:checked={kv_cache_reuse}
-            label={t('system.entities.ai_cerebellum.fields.kv_cache_reuse')}
+            label={t('ai.entities.ai_cerebellum.fields.kv_cache_reuse')}
             data-testid="ai-model-import-kv-cache-reuse"
           />
           <SwitchField
             size="sm"
             id="import-sliding-window"
             bind:checked={sliding_window}
-            label={t('system.entities.ai_cerebellum.fields.sliding_window')}
+            label={t('ai.entities.ai_cerebellum.fields.sliding_window')}
             data-testid="ai-model-import-sliding-window"
           />
           <SwitchField
             size="sm"
             id="import-intent-detection"
             bind:checked={intent_detection}
-            label={t('system.entities.ai_cerebellum.fields.intent_detection')}
+            label={t('ai.entities.ai_cerebellum.fields.intent_detection')}
             data-testid="ai-model-import-intent-detection"
           />
-          <SliderField size="sm" id="import-max-history" bind:value={max_history_turns} label={t('system.entities.ai_cerebellum.fields.max_history_turns')} defaultValue={6} min={1} max={16} step={1} data-testid="ai-model-import-max-history-turns" />
+          <SliderField size="sm" id="import-max-history" bind:value={max_history_turns} label={t('ai.entities.ai_cerebellum.fields.max_history_turns')} defaultValue={6} min={1} max={16} step={1} data-testid="ai-model-import-max-history-turns" />
         </div>
       </SelectableFieldset>
     {/if}
@@ -558,7 +558,7 @@
         onclick={addModel}
         data-testid="ai-model-import-add"
       >
-        {t('system.entities.ai_model.add_model')}
+        {t('ai.entities.ai_model.add_model')}
       </Button>
     </SheetPanelFooter>
   {/snippet}

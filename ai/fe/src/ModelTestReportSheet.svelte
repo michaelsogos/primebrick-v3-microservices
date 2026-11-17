@@ -53,11 +53,11 @@
     return v === null ? '—' : v.toFixed(1);
   }
 
-  const scoreKey = 'system.entities.ai_model.test_report.score';
-  const qualityKey = 'system.entities.ai_model.test_report.quality';
-  const speedKey = 'system.entities.ai_model.fields.speed';
-  const passedKey = 'system.entities.ai_model.test_report.passed';
-  const avgKey = 'system.entities.ai_model.speed.avg_response';
+  const scoreKey = 'ai.entities.ai_model.test_report.score';
+  const qualityKey = 'ai.entities.ai_model.test_report.quality';
+  const speedKey = 'ai.entities.ai_model.fields.speed';
+  const passedKey = 'ai.entities.ai_model.test_report.passed';
+  const avgKey = 'ai.entities.ai_model.speed.avg_response';
 </script>
 
 <SheetPanelLayout contentClass="p-0" onClose={ctx.sheet.close}>
@@ -66,7 +66,7 @@
   {/snippet}
 
   {#snippet title()}
-    {t('system.entities.ai_model.test_report.title')}
+    {t('ai.entities.ai_model.test_report.title')}
   {/snippet}
 
   <div data-testid={`ai-model-test-sheet-${modelVariantKey(model)}`}>

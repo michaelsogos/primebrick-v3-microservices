@@ -42,5 +42,8 @@
     "app",
     "system",
     "ai"
+  ],
+  "i18n_key_ref_exempt": [
+    "0002_seed_config.sql"
   ]
 }

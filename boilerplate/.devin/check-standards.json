@@ -38,5 +38,8 @@
     "app",
     "system",
     "boilerplate"
+  ],
+  "i18n_key_ref_exempt": [
+    "20261116900000_seed_boilerplate_config.sql"
   ]
 }

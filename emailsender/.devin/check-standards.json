@@ -42,5 +42,8 @@
   "i18n_sql_exempt": [
     "20261025015000_templates_pages.sql",
     "20261105030000_callable_send_help_keys.sql"
+  ],
+  "i18n_key_ref_exempt": [
+    "0002_seed_config.sql"
   ]
 }

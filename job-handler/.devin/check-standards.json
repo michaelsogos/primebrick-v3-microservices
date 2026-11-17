@@ -42,5 +42,9 @@
     "0004_job_translations.sql",
     "0005_job_entity_labels.sql",
     "0012_job_rule_form.sql"
+  ],
+  "i18n_key_ref_exempt": [
+    "0002_seed_config.sql",
+    "20261207110000_gateway_public_secret_config.sql"
   ]
 }
