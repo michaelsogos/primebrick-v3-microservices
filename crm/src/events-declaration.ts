@@ -121,8 +121,8 @@ const ENTITY_SECTION = z.object({
 });
 
 const CUSTOMER_CHANGED = z.object({
-  event: EVENT_ENVELOPE,
-  entity: ENTITY_SECTION,
+  event: EVENT_ENVELOPE.meta({ x_label_key: "app.entity_events.event" }),
+  entity: ENTITY_SECTION.meta({ x_label_key: "app.entity_events.entity" }),
   change: z.object({
     kind: z
       .enum(["created", "updated", "deleted"])
@@ -131,7 +131,7 @@ const CUSTOMER_CHANGED = z.object({
       .array(z.string())
       .meta({ description: "Column names that changed (updates only)." })
       .optional(),
-  }),
+  }).meta({ x_label_key: "crm.events.fields.change" }),
 });
 const CUSTOMER_CHANGED_SCHEMA = z.toJSONSchema(CUSTOMER_CHANGED);
 
@@ -145,9 +145,9 @@ const ACCOUNT_MANAGER = z.object({
 const ACCOUNT_MANAGER_SCHEMA = z.toJSONSchema(ACCOUNT_MANAGER);
 
 const CUSTOMER_HIGH_VALUE = z.object({
-  event: EVENT_ENVELOPE,
-  entity: ENTITY_SECTION,
-  account_manager: ACCOUNT_MANAGER.optional(),
+  event: EVENT_ENVELOPE.meta({ x_label_key: "app.entity_events.event" }),
+  entity: ENTITY_SECTION.meta({ x_label_key: "app.entity_events.entity" }),
+  account_manager: ACCOUNT_MANAGER.optional().meta({ x_label_key: "crm.events.fields.account_manager" }),
   trigger: z.object({
     metric: z
       .enum(["annual_revenue", "deal_amount", "orders_count"])
@@ -155,14 +155,14 @@ const CUSTOMER_HIGH_VALUE = z.object({
     amount: z.number().meta({ description: "Observed value that crossed." }),
     currency: z.string().meta({ description: "ISO 4217 (EUR, USD…)." }).optional(),
     threshold: z.number().meta({ description: "Configured high-value threshold that was crossed." }),
-  }),
+  }).meta({ x_label_key: "crm.events.fields.trigger" }),
 });
 const CUSTOMER_HIGH_VALUE_SCHEMA = z.toJSONSchema(CUSTOMER_HIGH_VALUE);
 
 const CUSTOMER_PAYOUT = z.object({
-  event: EVENT_ENVELOPE,
-  entity: ENTITY_SECTION,
-  account_manager: ACCOUNT_MANAGER.optional(),
+  event: EVENT_ENVELOPE.meta({ x_label_key: "app.entity_events.event" }),
+  entity: ENTITY_SECTION.meta({ x_label_key: "app.entity_events.entity" }),
+  account_manager: ACCOUNT_MANAGER.optional().meta({ x_label_key: "crm.events.fields.account_manager" }),
   payout: z.object({
     amount: z.number().meta({ description: "Payout amount." }),
     currency: z.enum(["EUR", "USD", "GBP"]).meta({ description: "ISO 4217 payout currency." }),
@@ -172,7 +172,7 @@ const CUSTOMER_PAYOUT = z.object({
       .meta({ description: "ISO 8601 payment due date." })
       .optional(),
     reference: z.string().meta({ description: "External payout reference." }).optional(),
-  }),
+  }).meta({ x_label_key: "crm.events.fields.payout" }),
 });
 const CUSTOMER_PAYOUT_SCHEMA = z.toJSONSchema(CUSTOMER_PAYOUT);
 
