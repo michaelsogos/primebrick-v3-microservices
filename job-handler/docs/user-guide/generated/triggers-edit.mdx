@@ -50,16 +50,16 @@ The **Listening Event** field offers these declared published event subjects:
 - `crm.customer_high_value` — **High-value customer** — Semantic event — sales logic decided this customer crossed the high-value threshold. Carries the customer, the account manager and the trigger details
 - `crm.customer_payout` — **Customer payout** — Fires when a payout is recorded for a customer — carries the customer, the account manager and the payout details
 - `webhook.*.received`
-- `jobs.ctl.triggers.changed` — **Triggers changed** — Fired when the job trigger set changes — `jobs` domain, `ctl` control channel, `triggers` resource, `changed` verb. The triggers engine re-arms schedules on it
 - `jobs.result.ai.*`
+- `jobs.ctl.triggers.changed` — **Triggers changed** — Fired when the job trigger set changes — `jobs` domain, `ctl` control channel, `triggers` resource, `changed` verb. The triggers engine re-arms schedules on it
 - `emailsender.response.*`
 
 The **Destination Event** field offers these declared callable work subjects:
 
 - `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
 - `crm.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
-- `job.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
 - `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
+- `job.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
 - `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 
 ## Actions

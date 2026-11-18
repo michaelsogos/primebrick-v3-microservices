@@ -177,13 +177,19 @@ enforced at the write path (API upsert validation).
 - The numeric **kind** is never authored — `pg_type` is derived from the
   entity class (`int8` → bigint/0 decimals, `float*`/`numeric` → full
   precision). Declare `type:"number"` only.
-- `uom` declares unit semantics — fixed Intl unit
-  (`uom:{kind:'custom', unit:'millisecond'}` → `"24 ms"`), per-row code
-  (`{kind:'currency', field}` / `{kind:'custom', field, source}`), fixed
-  suffix (`{kind:'custom', symbol}`), or `{kind:'percent'}`. `unit` MUST
-  be an `Intl.supportedValuesOf('unit')` identifier — arbitrary codes go
-  in `symbol`. `field` names a physical sibling column of the entity.
-- Canonical example: `job_run.duration_ms` → `uom:{kind:'custom',
+- `uom` declares unit semantics — `kind` carries the macro-category from
+  `UNIT_CATEGORIES` (`@primebrick/core` — the hardcoded CLDR census:
+  `time`, `length`, `mass`, `volume`, `area`, `temperature`, `digital`,
+  `angle`). Shapes: fixed Intl unit (`uom:{kind:'time',
+  unit:'millisecond'}` → `"24 ms"`), per-row code inside a category
+  (`{kind:'length', field}` — the category IS the picker vocabulary),
+  `currency` (`{kind:'currency', field}` — sibling ISO column), custom
+  non-standard vocabularies (`{kind:'custom', field, source}` per-row, or
+  `{kind:'custom', symbol}` fixed suffix), or `{kind:'percent'}`. `unit`
+  MUST be sanctioned ∩ category — `withColumnConstraints` throws at boot;
+  arbitrary codes go in `custom.symbol`. `field` names a physical sibling
+  column of the entity.
+- Canonical example: `job_run.duration_ms` → `uom:{kind:'time',
   unit:'millisecond'}` in `job-handler/src/modules/jobs/job.meta.ts`.
 
 ## Package versioning
