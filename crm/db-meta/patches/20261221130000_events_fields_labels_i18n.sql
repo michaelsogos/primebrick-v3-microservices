@@ -36,4 +36,5 @@ VALUES
   (uuidv7(), 'crm.events.fields.account_manager', 'fr-FR', 'Account manager', now(), 'migration-events-fields-i18n', now(), 'migration-events-fields-i18n', 1),
   (uuidv7(), 'crm.events.fields.account_manager', 'es-ES', 'Account manager', now(), 'migration-events-fields-i18n', now(), 'migration-events-fields-i18n', 1),
   (uuidv7(), 'crm.events.fields.account_manager', 'de-DE', 'Account-Manager', now(), 'migration-events-fields-i18n', now(), 'migration-events-fields-i18n', 1),
-  (uuidv7(), 'crm.events.fields.account_manager', 'pt-PT', 'Gestor de conta', now(), 'migration-events-fields-i18n', now(), 'migration-events-fields-i18n', 1);
+  (uuidv7(), 'crm.events.fields.account_manager', 'pt-PT', 'Gestor de conta', now(), 'migration-events-fields-i18n', now(), 'migration-events-fields-i18n', 1)
+ON CONFLICT DO NOTHING;
