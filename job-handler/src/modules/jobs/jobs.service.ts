@@ -483,11 +483,8 @@ export class JobRunsService extends DomainService<RunT> {
 
   /** Single run by uuid — correlate/fail reads. */
   async findByUuid(uuid: string): Promise<JobRunEntity | undefined> {
-    const row = await this.svc.find<JobRunEntity>(null, {
-      filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", uuid)],
-      throwIfNotFound: false,
-    });
-    return row ?? undefined;
+    const row = await this.svc.get(uuid, { throwIfNotFound: false });
+    return (row as JobRunEntity | null) ?? undefined;
   }
 
   /** Optimistic-lock patch — status flips, duration/report correlate,
