@@ -34,13 +34,12 @@ export class CrmTranslationsService extends DomainService<CrmTranslationT> {
   /** Merged `key → label` dict for `locale`, or null when neither source
    *  yields one. */
   async dict(locale: string): Promise<Record<string, string> | null> {
-    const rows = (await this.dal.findAll(
-      CrmTranslationEntity as never,
+    const rows = await this.svc.query<{ dict: Record<string, string> | null }>(
       [Project.expr("jsonb_object_agg(key, value)", "dict")],
       {
         filters: [Filter.fieldValue(field(CrmTranslationEntity as never, "language"), "=", locale)],
       },
-    )) as { dict: Record<string, string> | null }[];
+    );
     const moduleDict = rows[0]?.dict ?? null;
     const systemDict = await callNats<Record<string, string> | null>(
       SYSTEM_DICT_GET_SUBJECT,

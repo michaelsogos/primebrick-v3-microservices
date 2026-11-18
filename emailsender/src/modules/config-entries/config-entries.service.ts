@@ -57,16 +57,18 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
 
   /** All entries in the wire projection. */
   async listEntries(): Promise<ConfigEntryEntity[]> {
-    const rows = (await this.dal.findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[];
+    const rows = await this.svc.query<ConfigEntryEntity>(configProjection);
     return Array.isArray(rows) ? rows : [];
   }
 
   /** Single entry by uuid in the wire projection. */
   async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
-    return (await this.dal.find(ConfigEntryEntity, configProjection, {
-      filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-      throwIfNotFound: false,
-    })) as ConfigEntryEntity | null;
+    return (
+      (await this.svc.query<ConfigEntryEntity>(configProjection, {
+        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+        throwIfNotFound: false,
+      }))[0] ?? null
+    );
   }
 
   /** Write `value` with optimistic lock — internalizes the domain rules
@@ -74,14 +76,7 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  (`assertWritableConfigKey` — deployed-artifact identity). Returns the
    *  re-read row — `null` when the uuid is unknown. */
   async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
-    const target = (await this.dal.find(
-      ConfigEntryEntity,
-      [Project.field(field(ConfigEntryEntity, "key"))],
-      {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-        throwIfNotFound: false,
-      },
-    )) as { key?: string } | null;
+    const target = (await this.svc.get(uuid)) as { key?: string } | null;
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);
     // svc.update — the ambient HTTP session supplies the actor; the

@@ -3,7 +3,7 @@ import { logger, runWithSession } from "@primebrick/sdk";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../controllers/nats-sub/types.js";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
-import { DomainService, Filter, field, NotFoundError } from "@primebrick/dal-pg";
+import { DomainService, Filter, field, NotFoundError, MultipleRowsError } from "@primebrick/dal-pg";
 import { actorSession, entityActor } from "../db/entity-repo.js";
 
 export class EmailService extends DomainService<SenderLogEntity & Record<string, unknown>> {
@@ -30,7 +30,6 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
     // The forwarded actor (NATS envelope) or the system fallback ride ALS —
     // svc writes stamp it on sender_log via the normal actor pipeline.
     return runWithSession(actorSession(actorId ?? "system:emailsender"), async () => {
-      const dal = this.dal;
       let configUuid: string | null = null;
     // Hoist rendered content + template uuid outside the try block so they are
     // available in the catch block for the failure-path sender_log row. Without
@@ -48,9 +47,12 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
       // existing error shape.
       let config: ProviderEntity;
       try {
-        config = await dal.find(ProviderEntity, null, {
+        const providers = await this.svcFor(ProviderEntity).query<ProviderEntity>(null, {
           filters: [Filter.fieldValue(field(ProviderEntity, "provider"), "=", "brevo")],
-        }) as ProviderEntity;
+        });
+        if (providers.length === 0) throw new NotFoundError("No provider found for brevo");
+        if (providers.length > 1) throw new MultipleRowsError("Multiple providers found for brevo");
+        config = providers[0]!;
         configUuid = config.uuid;
       } catch (err) {
         if (err instanceof NotFoundError) {
@@ -70,12 +72,15 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
       // entity/DB columns are snake_case.
       let template: EmailTemplateEntity;
       try {
-        template = await dal.find(EmailTemplateEntity, null, {
+        const templates = await this.svcFor(EmailTemplateEntity).query<EmailTemplateEntity>(null, {
           filters: [
             Filter.fieldValue(field(EmailTemplateEntity, "code"), "=", request.templateCode),
             Filter.fieldValue(field(EmailTemplateEntity, "language_iso"), "=", request.languageIso),
           ],
-        }) as EmailTemplateEntity;
+        });
+        if (templates.length === 0) throw new NotFoundError(`Template not found: ${request.templateCode}`);
+        if (templates.length > 1) throw new MultipleRowsError(`Multiple templates found: ${request.templateCode}`);
+        template = templates[0]!;
       } catch (err) {
         if (err instanceof NotFoundError) {
           throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);

@@ -10,13 +10,13 @@ import { getDal } from "../db/dal.js";
  * inject it explicitly; callers elsewhere construct with no arguments.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  private _dal: Dal | undefined;
+  private probe: Dal | undefined;
   constructor(dal?: Dal) {
-    this._dal = dal;
+    this.probe = dal;
   }
   async ping(): Promise<boolean> {
     try {
-      await (this._dal ?? getDal()).serverVersion();
+      await (this.probe ?? getDal()).serverVersion();
       return true;
     } catch {
       return false;

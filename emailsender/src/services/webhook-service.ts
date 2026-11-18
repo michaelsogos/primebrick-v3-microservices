@@ -64,13 +64,10 @@ export class WebhookService extends DomainService<SenderLogEntity & Record<strin
     const status = BrevoClient.mapStatus(event);
     const errorMessage = data.reason || undefined;
 
-    const dal = this.dal;
-
     // Ordering guard — read the current status (+uuid for the follow-up
     // svc.update match); a strictly-lower-rank incoming event is
     // out-of-order and must not regress the log.
-    const current = await dal.find(
-      SenderLogEntity,
+    const current = (await this.svc.query<{ uuid: string; status: string }>(
       [Project.field(field(SenderLogEntity, "uuid")), Project.field(field(SenderLogEntity, "status"))],
       {
         filters: [
@@ -78,7 +75,7 @@ export class WebhookService extends DomainService<SenderLogEntity & Record<strin
         ],
         throwIfNotFound: false,
       },
-    ) as { uuid: string; status: string } | null;
+    ))[0] ?? null;
     if (!current) {
       // Same contract as the old matchBy update: a webhook for an unknown
       // message-id surfaces as NotFoundError instead of silently passing.
