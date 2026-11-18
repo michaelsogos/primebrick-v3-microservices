@@ -82,7 +82,8 @@ describe("CRM_EVENTS declaration", () => {
     // emitted_by accepts `system:<code>` tokens — `format:"actor_token"`
     // satisfies the `*_by` honesty hint without the uuid lie.
     expect(env.emitted_by.format).toBe("actor_token");
-    expect(env.emitted_at.type).toBe("integer");
+    expect(env.emitted_at.type).toBe("string");
+    expect(env.emitted_at.format).toBe("date-time");
     expect(env.action.type).toBe("string");
     expect(env.entity.type).toBe("string");
     expect(env.uuid.format).toBe("uuid");

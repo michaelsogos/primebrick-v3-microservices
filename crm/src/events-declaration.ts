@@ -103,7 +103,7 @@ const EVENT_ENVELOPE = z.object({
   schema: z.literal(2),
   service: z.string(),
   subject: z.string().meta({ description: "The NATS subject this event was published on — self-describing." }),
-  emitted_at: z.number().int().meta({ description: "Epoch ms of the emission." }),
+  emitted_at: z.iso.datetime().meta({ description: "RFC 3339 timestamp of the emission." }),
   emitted_by: z.string().meta({
     format: "actor_token",
     description: "Actor token — user uuid or `system:<code>`.",
