@@ -56,7 +56,7 @@ describe("CRM_EVENTS declaration", () => {
   });
 
   it("preferred_locale carries the lang contract — languageIso-class targets pair with it alone", () => {
-    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "crm.customer_changed")!
+    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "events.crm.customer.on.changed")!
       .payload_schema as Record<string, any>;
     const locale = schema.properties.customer.properties.preferred_locale;
     expect(locale.format).toBe("lang");
@@ -76,7 +76,7 @@ describe("CRM_EVENTS declaration", () => {
   });
 
   it("changed_by carries actor semantics — audit-shaped targets pair honestly", () => {
-    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "crm.customer_changed")!
+    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "events.crm.customer.on.changed")!
       .payload_schema as Record<string, any>;
     const changedBy = schema.properties.change.properties.changed_by;
     expect(changedBy.x_semantic).toBe("actor.uuid");

@@ -4,19 +4,25 @@
  * access-filtered: it is a domain vocabulary, not a route surface).
  *
  * The CRM module owns the customer domain, so its event vocabulary is
- * customer-shaped. Two layers by design:
+ * customer-shaped. Subjects follow the domain-event convention
+ * `events.<svc>.<entity>.on.<name>` — the `.on.` marker keeps semantic
+ * names out of the uuid slot, and the whole subtree stays under
+ * `events.crm.customer.>` (one binding covers lifecycle + semantics).
+ * Two layers by design:
  *
- *   crm.customer_changed    — FACT: a customer row changed (snapshot +
- *                             change metadata). CRUD stays dumb: it says
- *                             "something changed", nothing more.
- *   crm.customer_high_value — SEMANTIC: sales logic decided this customer
- *                             crossed the high-value threshold. Rules hang
- *                             off meaning, not off CRUD diffs — the
- *                             "what counts as high value" business rule
- *                             lives here once, not inside every rule's
- *                             filter expression.
- *   crm.customer_payout     — SEMANTIC: a payout was recorded for the
- *                             customer.
+ *   events.crm.customer.on.changed    — FACT: a customer row changed
+ *                                       (snapshot + change metadata).
+ *                                       CRUD stays dumb: it says
+ *                                       "something changed", nothing more.
+ *   events.crm.customer.on.high_value — SEMANTIC: sales logic decided this
+ *                                       customer crossed the high-value
+ *                                       threshold. Rules hang off meaning,
+ *                                       not off CRUD diffs — the "what
+ *                                       counts as high value" business
+ *                                       rule lives here once, not inside
+ *                                       every rule's filter expression.
+ *   events.crm.customer.on.payout     — SEMANTIC: a payout was recorded
+ *                                       for the customer.
  *
  * Every emit carries a `payload_schema` — that is what lets the rule
  * form's payload_map offer real `$.` path suggestions (the event payload
@@ -158,21 +164,21 @@ const CUSTOMER_PAYOUT_SCHEMA = z.toJSONSchema(CUSTOMER_PAYOUT);
 export const CRM_EVENTS: ModuleEventsDecl = {
   emits: [
     {
-      subject: "crm.customer_changed",
+      subject: "events.crm.customer.on.changed",
       label_key: "crm.events.customer_changed.label",
       description_key: "crm.events.customer_changed.desc",
       payload_schema: CUSTOMER_CHANGED_SCHEMA,
       entity: { key: "customer", entity: "customer", table: "customers" },
     },
     {
-      subject: "crm.customer_high_value",
+      subject: "events.crm.customer.on.high_value",
       label_key: "crm.events.customer_high_value.label",
       description_key: "crm.events.customer_high_value.desc",
       payload_schema: CUSTOMER_HIGH_VALUE_SCHEMA,
       entity: { key: "customer", entity: "customer", table: "customers" },
     },
     {
-      subject: "crm.customer_payout",
+      subject: "events.crm.customer.on.payout",
       label_key: "crm.events.customer_payout.label",
       description_key: "crm.events.customer_payout.desc",
       payload_schema: CUSTOMER_PAYOUT_SCHEMA,

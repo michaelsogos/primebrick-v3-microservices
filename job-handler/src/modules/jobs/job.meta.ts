@@ -98,7 +98,7 @@ export const jobTriggerMeta: EntityMeta = withColumnConstraints({
       tooltip: H("job_trigger", "event_subject"), tooltip_title: HT("job_trigger", "event_subject"), tooltip_priority: "HINT",
     },
     {
-      key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "json", order: 50,
+      key: "filter", label_key: F("job_trigger", "filter"), type: "text", format: "rule_filter", order: 50,
       // Authoring-only — a JSON AST has no honest equality/text matcher.
       filterable: false,
       default_visible: false,

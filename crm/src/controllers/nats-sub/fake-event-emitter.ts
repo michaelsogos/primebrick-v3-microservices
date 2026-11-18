@@ -32,9 +32,9 @@ const EMIT_FAKE_SUBJECT = "crm.emit_fake_event";
 
 /** Closed subject vocabulary — only this module's declared emits. */
 const FAKEABLE_EVENTS = [
-  "crm.customer_changed",
-  "crm.customer_high_value",
-  "crm.customer_payout",
+  "events.crm.customer.on.changed",
+  "events.crm.customer.on.high_value",
+  "events.crm.customer.on.payout",
 ] as const;
 type FakeableEvent = (typeof FAKEABLE_EVENTS)[number];
 
@@ -83,7 +83,7 @@ const FAKE_ACCOUNT_MANAGER = {
 function cannedPayload(event: FakeableEvent): Record<string, unknown> {
   const now = new Date().toISOString();
   switch (event) {
-    case "crm.customer_changed":
+    case "events.crm.customer.on.changed":
       return {
         customer: { ...FAKE_CUSTOMER },
         change: {
@@ -93,7 +93,7 @@ function cannedPayload(event: FakeableEvent): Record<string, unknown> {
           changed_at: now,
         },
       };
-    case "crm.customer_high_value":
+    case "events.crm.customer.on.high_value":
       return {
         customer: { ...FAKE_CUSTOMER },
         account_manager: { ...FAKE_ACCOUNT_MANAGER },
@@ -104,7 +104,7 @@ function cannedPayload(event: FakeableEvent): Record<string, unknown> {
           threshold: 100000,
         },
       };
-    case "crm.customer_payout":
+    case "events.crm.customer.on.payout":
       return {
         customer: { ...FAKE_CUSTOMER },
         account_manager: { ...FAKE_ACCOUNT_MANAGER },

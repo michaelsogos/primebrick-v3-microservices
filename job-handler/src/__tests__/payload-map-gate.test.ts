@@ -65,7 +65,7 @@ const UNCOVERING_EMIT_SCHEMA: Record<string, unknown> = {
 };
 
 const EMITS = new Map<string, Record<string, unknown> | undefined>([
-  ["crm.customer_changed", COVERING_EMIT_SCHEMA],
+  ["events.crm.customer.on.changed", COVERING_EMIT_SCHEMA],
   ["e2e.draft.fired", UNCOVERING_EMIT_SCHEMA],
   ["emailsender.response.*", undefined], // schema-less wildcard emit
 ]);
@@ -103,7 +103,7 @@ describe("assertEmitSubject", () => {
   });
 
   it("accepts an exactly-declared emit", async () => {
-    await expect(assertEmitSubject({ event_subject: "crm.customer_changed" })).resolves.toBeUndefined();
+    await expect(assertEmitSubject({ event_subject: "events.crm.customer.on.changed" })).resolves.toBeUndefined();
   });
 
   it("accepts a concrete subject covered by a wildcard emit", async () => {
@@ -134,7 +134,7 @@ describe("assertPayloadMapConformance — empty map (passthrough)", () => {
     await expect(
       assertPayloadMapConformance({
         target_subject: "emailsender.send",
-        event_subject: "crm.customer_changed",
+        event_subject: "events.crm.customer.on.changed",
         payload_map: {},
       }),
     ).resolves.toBeUndefined();
