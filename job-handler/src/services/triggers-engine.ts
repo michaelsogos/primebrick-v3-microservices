@@ -39,6 +39,7 @@
 
 import {
   NatsClient,
+  ENTITY_EVENTS_STREAM,
   subscribeShielded,
   forwardAuthHeaders,
   forwardedActor,
@@ -52,6 +53,7 @@ import {
   logger,
 } from "@primebrick/sdk";
 import { callablePayloadSchema } from "./callable-catalog.js";
+import type { MsgHdrs } from "@nats-io/transport-node";
 import { JobTriggersService } from "../modules/jobs/jobs.service.js";
 import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../domain/entities/job_trigger_entity.js";
 
@@ -336,6 +338,40 @@ async function armTimer(trigger: JobTriggerEntity): Promise<void> {
 async function bindSubject(subject: string): Promise<void> {
   if (boundSubjects.has(subject)) return;
   boundSubjects.add(subject);
+  // Fan-out is liveTriggers-resolution at delivery, and ISOLATED per
+  // trigger: a thrown dispatch is caught and logged here — it must never
+  // reject the handler. Under the JetStream durable binding (events.*)
+  // a rejection would nak → redeliver → re-fire the sibling triggers
+  // that already succeeded (duplicate runs). Failed triggers on that
+  // event are logged-and-lost until per-run idempotency lands.
+  const dispatch = (payload: unknown, msg: { headers?: MsgHdrs }) =>
+    Promise.all(
+      [...liveTriggers.values()]
+        .filter((t) => t.event_subject === subject)
+        .map((t) =>
+          onEvent(t.uuid, payload, msg).catch((err) =>
+            logger.error(`trigger ${t.uuid} dispatch failed on ${subject}`, {
+              err: err instanceof Error ? err.message : String(err),
+              tags: ["jobs"],
+            }),
+          ),
+        ),
+    ).then(() => {});
+
+  if (subject.startsWith("events.")) {
+    // ENTITY_EVENTS lane — DURABLE pull consumer. One durable per bound
+    // subject; JH replicas share the work through the same durable name
+    // (pull consumers split deliveries like a queue group). Durable name
+    // sanitizes `.`/`>` — illegal chars in consumer names.
+    await NatsClient.jetstreamSubscribe({
+      stream: ENTITY_EVENTS_STREAM,
+      durable: `jh-${subject.replace(/[.>*]+/g, "-").replace(/-$/, "")}`,
+      filterSubject: subject,
+      handler: (payload, msg) => dispatch(payload, msg),
+    });
+    logger.done(`trigger subscription bound on ${subject} (durable=ENTITY_EVENTS)`, { tags: ["jobs"] });
+    return;
+  }
   // Queue "job" — WORK subject: when multiple JH replicas run, NATS
   // delivers each event to exactly ONE member (verified empirically:
   // queued subscribers split deliveries; unqueued ones all receive a
@@ -343,14 +379,7 @@ async function bindSubject(subject: string): Promise<void> {
   // `jobs.ctl.triggers.changed` below stays unqueued on purpose: the
   // reload is a broadcast every replica must see to keep liveTriggers
   // consistent.
-  await subscribeShielded(subject, (payload, msg) =>
-    Promise.all(
-      [...liveTriggers.values()]
-        .filter((t) => t.event_subject === subject)
-        .map((t) => onEvent(t.uuid, payload, msg)),
-    ).then(() => {}),
-    { queue: "job" },
-  );
+  await subscribeShielded(subject, (payload, msg) => dispatch(payload, msg), { queue: "job" });
   logger.done(`trigger subscription bound on ${subject} (queue=job)`, { tags: ["jobs"] });
 }
 
