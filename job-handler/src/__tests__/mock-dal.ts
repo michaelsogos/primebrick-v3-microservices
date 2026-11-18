@@ -3,12 +3,13 @@
  * surfaces of the DAL singleton:
  *
  *   1. `getDal()` — the bootstrap accessor (db/dal.ts re-exports it).
- *   2. `DomainService` — `this.dal` is a PROTECTED getter that internally
- *      calls `getDal()` through a relative import inside the package —
- *      mocking the package entry cannot intercept it, so the factory
- *      exports a subclass whose `dal` getter returns the stub. Services
- *      under test (`extends DomainService`) then hit the stub on every
- *      `this.dal.*` AND `this.svc.*` (svc resolves `this.dal.entityService`).
+ *   2. `DomainService` — `this.svc` is a PROTECTED getter resolved lazily
+ *      via the private `this.dal` (whose `getDal()` call happens through
+ *      a relative import inside the package — mocking the package entry
+ *      cannot intercept it). The factory therefore exports a subclass
+ *      whose `svc` getter builds the real composed service over the
+ *      stubbed repo: `this.svc.*` ops exercise the REAL pipeline
+ *      (hooks, actor ctx, audit binding) and land on the stubbed verbs.
  *
  * The stub doubles as the `repo` behind `entityService`, so `svc.*` ops
  * exercise the REAL service pipeline (hooks, actor ctx, audit binding)
@@ -37,8 +38,11 @@ export async function dalPgMock(
     ...stub,
   };
   class MockDomainService<T extends Record<string, unknown>> extends real.DomainService<T> {
-    protected override get dal(): never {
-      return full as never;
+    private _mockSvc: unknown;
+    protected override get svc(): never {
+      return (this._mockSvc ??= (full.entityService as (c: unknown) => unknown)(
+        this.buildConfig(),
+      )) as never;
     }
   }
   return {

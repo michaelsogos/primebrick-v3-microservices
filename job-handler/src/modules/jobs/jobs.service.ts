@@ -4,7 +4,7 @@
  * instance reload its triggers engine without restart.
  */
 
-import { DomainService, ValidationError, field, Filter, GroupBy, Project, Sort, type EntityServiceConfig } from "@primebrick/dal-pg";
+import { DomainService, ValidationError, field, Filter, GroupBy, makeTableAuditPort, Project, Sort, type EntityServiceConfig } from "@primebrick/dal-pg";
 import { NatsClient, assertWritableConfigKey, makeMarkerAuditPort, payloadMapConformance, payloadPassthroughConformance, jobTriggerShapeIssues, logger, requireActor, runWithSession, type Session } from "@primebrick/sdk";
 import { JobTriggerEntity } from "../../domain/entities/job_trigger_entity.js";
 import { JobScheduleEntity } from "../../domain/entities/job_schedule_entity.js";
@@ -262,7 +262,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
       ...super.buildConfig(),
       // Collaboration: audit write + entity-changed marker on NATS — the
       // gateway persists markers to Redis (services own no Redis client).
-      auditPort: makeMarkerAuditPort(this.dal.tableAuditPort(), "job_trigger"),
+      auditPort: (repo) => makeMarkerAuditPort(makeTableAuditPort(repo), "job_trigger"),
       hooks: {
         beforeCreate: async (body: Record<string, unknown>, ctx: { actor: string }) => {
           // USER wire writes may never set system_key and must pick
@@ -305,30 +305,28 @@ export class JobTriggersService extends DomainService<TriggerT> {
   /** Single trigger by uuid — `includeDeleted` for paths that must see
    *  user-disabled rows (soft-delete IS the disable flag). */
   async findByUuid(uuid: string, opts?: { includeDeleted?: boolean }): Promise<TriggerT | undefined> {
-    const rows = (await this.dal.findAll<TriggerT>(JobTriggerEntity, null, {
+    const rows = await this.svc.query<TriggerT>(null, {
       filters: [Filter.fieldValue(field(JobTriggerEntity, "uuid"), "=", uuid)],
       ...(opts?.includeDeleted ? { deletedRecords: "INCLUDED" as const } : {}),
-    })) as TriggerT[];
-    return Array.isArray(rows) ? rows[0] : undefined;
+    });
+    return rows[0];
   }
 
   /** Row lookup by the reconcile anchor — deleted rows INCLUDED: a
    *  soft-deleted system trigger is user disablement, never silently
    *  resurrected. */
   async findBySystemKey(key: string): Promise<Record<string, unknown> | undefined> {
-    const rows = await this.dal.findAll<TriggerT>(JobTriggerEntity, null, {
+    const rows = await this.svc.query<TriggerT>(null, {
       filters: [Filter.fieldValue(field(JobTriggerEntity, "system_key"), "=", key)],
       deletedRecords: "INCLUDED",
-    } as never);
-    return Array.isArray(rows)
-      ? (rows[0] as unknown as Record<string, unknown> | undefined)
-      : undefined;
+    });
+    return rows[0] as unknown as Record<string, unknown> | undefined;
   }
 
   /** Every live trigger — the engine's boot enumeration. Soft-deleted rows
    *  are excluded by default (`deleted_at` IS the disable flag). */
   async listLive(): Promise<TriggerT[]> {
-    return (await this.dal.findAll<TriggerT>(JobTriggerEntity, null)) as TriggerT[];
+    return this.svc.query<TriggerT>(null);
   }
 
   /** Flip soft-delete state — the wire-canonical path (svc): audit row +
@@ -406,7 +404,7 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
    *  run-stats expected-fire enumeration reads (no live/drift decoration:
    *  this read feeds arithmetic, not the list surface). */
   async listRowsBySubjects(scheduleSubjects: string[]): Promise<JobScheduleEntity[]> {
-    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+    return this.svc.query<JobScheduleEntity>(null, {
       filters: [
         Filter.expr(
           { sql: "schedule_subject" },
@@ -415,30 +413,27 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
         ),
       ],
     });
-    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
   }
 
   /** Single mirror row for a schedule subject — the canonical read every
    *  mirror mutation starts from (unique per subject). */
   async findBySubject(scheduleSubject: string): Promise<JobScheduleEntity | undefined> {
-    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+    const rows = await this.svc.query<JobScheduleEntity>(null, {
       filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject)],
     });
-    return Array.isArray(rows) && rows.length > 0 ? (rows[0] as JobScheduleEntity) : undefined;
+    return rows[0];
   }
 
   /** Mirror rows whose status is in the given set — bulk suppress/resume. */
   async listByStatuses(statuses: string[]): Promise<JobScheduleEntity[]> {
-    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {
+    return this.svc.query<JobScheduleEntity>(null, {
       filters: [Filter.expr({ sql: "status" }, "IN", { sql: `(SELECT unnest(?::text[]))`, params: [statuses] })],
     });
-    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
   }
 
   /** Every mirror row — drift diagnostic + reconcile enumeration. */
   async listAllRows(): Promise<JobScheduleEntity[]> {
-    const rows = await this.dal.findAll<JobScheduleEntity>(JobScheduleEntity, null, {});
-    return Array.isArray(rows) ? (rows as JobScheduleEntity[]) : [];
+    return this.svc.query<JobScheduleEntity>(null, {});
   }
 
   /** Declare-time mirror insert — the row is born only when the NATS
@@ -487,10 +482,10 @@ export class JobRunsService extends DomainService<RunT> {
 
   /** Single run by uuid — correlate/fail reads. */
   async findByUuid(uuid: string): Promise<JobRunEntity | undefined> {
-    const rows = (await this.dal.findAll<JobRunEntity>(JobRunEntity, null, {
+    const rows = await this.svc.query<JobRunEntity>(null, {
       filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", uuid)],
-    })) as JobRunEntity[];
-    return Array.isArray(rows) ? rows[0] : undefined;
+    });
+    return rows[0];
   }
 
   /** Optimistic-lock patch — status flips, duration/report correlate,
@@ -501,13 +496,12 @@ export class JobRunsService extends DomainService<RunT> {
 
   /** Dispatched runs older than the cutoff — the lost-sweep source. */
   async listDispatchedBefore(cutoff: Date): Promise<JobRunEntity[]> {
-    const rows = (await this.dal.findAll<JobRunEntity>(JobRunEntity, null, {
+    return this.svc.query<JobRunEntity>(null, {
       filters: [
         Filter.fieldValue(field(JobRunEntity, "status"), "=", "dispatched"),
         Filter.fieldValue(field(JobRunEntity, "created_at"), "<", cutoff),
       ],
-    })) as JobRunEntity[];
-    return Array.isArray(rows) ? rows : [];
+    });
   }
 
   /** Bucketed outcome counts per schedule subject — the run-stats grid's
@@ -515,8 +509,7 @@ export class JobRunsService extends DomainService<RunT> {
    *  GROUP BY binds a different `$n`, so Postgres would treat them as
    *  distinct expressions). */
   async statsBySchedule(unit: string, subjects: string[], spanMs: number): Promise<JobRunStatRow[]> {
-    const rows = (await this.dal.findAll<JobRunEntity, JobRunStatRow>(
-      JobRunEntity,
+    const rows = await this.svc.query<JobRunStatRow>(
       [
         Project.field(field(JobRunEntity, "schedule_subject")),
         Project.expr("date_trunc(?::text, created_at)", "bucket_start", [unit]),
@@ -542,8 +535,8 @@ export class JobRunsService extends DomainService<RunT> {
         groupBy: [GroupBy.expr("bucket_start")],
         sorting: [Sort.byAlias("bucket_start")],
       },
-    )) as JobRunStatRow[];
-    return Array.isArray(rows) ? rows : [];
+    );
+    return rows;
   }
 }
 
@@ -613,16 +606,16 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
 
   /** All entries in the wire projection, secrets masked. */
   async listEntries(): Promise<ConfigEntryEntity[]> {
-    const rows = (await this.dal.findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[];
-    return (Array.isArray(rows) ? rows : []).map(maskSecretRow);
+    const rows = await this.svc.query<ConfigEntryEntity>(configProjection);
+    return rows.map(maskSecretRow);
   }
 
   /** Single entry by uuid in the wire projection, secrets masked. */
   async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
-    const row = await this.dal.find(ConfigEntryEntity, configProjection, {
+    const [row] = await this.svc.query<ConfigEntryEntity>(configProjection, {
       filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-    }) as ConfigEntryEntity | null;
-    return row ? maskSecretRow(row) : row;
+    });
+    return row ? maskSecretRow(row) : null;
   }
 
   /** Write `value` with optimistic lock — internalizes the domain rules
@@ -632,13 +625,12 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  the masked null back when no new secret was typed). Returns the
    *  re-read, masked row — `null` when the uuid is unknown. */
   async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
-    const target = await this.dal.find(ConfigEntryEntity, [
+    const [target] = await this.svc.query<{ key?: string; type?: string }>([
       Project.field(field(ConfigEntryEntity, "key")),
       Project.field(field(ConfigEntryEntity, "type")),
     ], {
       filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-      throwIfNotFound: false,
-    }) as { key?: string; type?: string } | null;
+    });
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);
     if (!(target.type === "secret" && (body.value === null || body.value === ""))) {
