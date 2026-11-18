@@ -25,6 +25,7 @@ import {
   Permission,
   logger,
   forwardAuthHeaders,
+  forwardedActor,
 } from "@primebrick/sdk";
 import { z } from "zod";
 
@@ -80,22 +81,33 @@ const FAKE_ACCOUNT_MANAGER = {
   display_name: "E2E Verify Admin",
 } as const;
 
-function cannedPayload(event: FakeableEvent): Record<string, unknown> {
+function cannedPayload(event: FakeableEvent, emittedBy: string): Record<string, unknown> {
   const now = new Date().toISOString();
+  const envelope = {
+    schema: 2,
+    service: "crm",
+    subject: event,
+    emitted_at: Date.now(),
+    emitted_by: emittedBy,
+    action: event.split(".").pop() as string,
+    entity: "customer",
+    uuid: FAKE_CUSTOMER.uuid,
+  };
+  const entity = { after: { ...FAKE_CUSTOMER } };
   switch (event) {
     case "events.crm.customer.on.changed":
       return {
-        customer: { ...FAKE_CUSTOMER },
+        event: envelope,
+        entity,
         change: {
           kind: "updated",
           changed_fields: ["status"],
-          changed_by: FAKE_ACCOUNT_MANAGER.uuid,
-          changed_at: now,
         },
       };
     case "events.crm.customer.on.high_value":
       return {
-        customer: { ...FAKE_CUSTOMER },
+        event: envelope,
+        entity,
         account_manager: { ...FAKE_ACCOUNT_MANAGER },
         trigger: {
           metric: "annual_revenue",
@@ -106,7 +118,8 @@ function cannedPayload(event: FakeableEvent): Record<string, unknown> {
       };
     case "events.crm.customer.on.payout":
       return {
-        customer: { ...FAKE_CUSTOMER },
+        event: envelope,
+        entity,
         account_manager: { ...FAKE_ACCOUNT_MANAGER },
         payout: {
           amount: 4200,
@@ -160,10 +173,12 @@ export async function subscribeFakeEventEmitter(): Promise<void> {
         label_key: "crm.callable.emit_fake_event.label",
         description_key: "crm.callable.emit_fake_event.desc",
         handler: async ({ request, msg }) => {
-          const payload = applyOverrides(cannedPayload(request.event), request.overrides);
-          // Verbatim auth forwarding — user-lane rules arm on this event
-          // only while the caller's context rides along.
-          await NatsClient.publish(request.event, payload, forwardAuthHeaders(msg));
+          const emittedBy = forwardedActor(msg).actor_uuid ?? "system:crm";
+          const payload = applyOverrides(cannedPayload(request.event, emittedBy), request.overrides);
+          // Durable publish — domain events land on ENTITY_EVENTS like
+          // real emits; auth headers ride along verbatim so user-lane
+          // rules arm on this event only with the caller's context.
+          await NatsClient.jetstreamPublish(request.event, payload, forwardAuthHeaders(msg));
           return { published: request.event, payload };
         },
       },

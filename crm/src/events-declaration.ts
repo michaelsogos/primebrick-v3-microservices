@@ -47,8 +47,8 @@ import { LANG_RE, type ModuleEventsDecl } from "@primebrick/sdk";
 /** The customer projection every CRM event embeds — mirrors
  *  `CustomerEntity`'s public fields PLUS the canonical children resolved
  *  at emit time. `email`/`phone` are DERIVED from the default
- *  EMAIL/VOICE `customer_contacts` rows (the paths `$.customer.email` /
- *  `$.customer.phone` keep working — rules never chase the sub-array);
+ *  EMAIL/VOICE `customer_contacts` rows (the paths `$.entity.after.email` /
+ *  `$.entity.after.phone` keep working — rules never chase the sub-array);
  *  `legal_address`/`account` come from the legal `local_addresses` row
  *  and the legal `customer_accounts` datasheet. */
 const LEGAL_ADDRESS_SNAPSHOT = z.object({
@@ -96,8 +96,33 @@ const CUSTOMER_SNAPSHOT = z.object({
 });
 const CUSTOMER_SNAPSHOT_SCHEMA = z.toJSONSchema(CUSTOMER_SNAPSHOT);
 
+/** The shared event envelope (wire `schema:2`) — who/what/when/where on
+ *  every domain event. `emitted_by` is an actor TOKEN (uuid OR
+ *  `system:<code>`), so `actor_token` is the honest format. */
+const EVENT_ENVELOPE = z.object({
+  schema: z.literal(2),
+  service: z.string(),
+  subject: z.string().meta({ description: "The NATS subject this event was published on — self-describing." }),
+  emitted_at: z.number().int().meta({ format: "unix_ms", description: "Epoch ms of the emission." }),
+  emitted_by: z.string().meta({
+    format: "actor_token",
+    description: "Actor token — user uuid or `system:<code>`.",
+  }),
+  action: z.string().meta({ description: "Event verb — the semantic name for `on.*` subjects." }),
+  entity: z.string().optional().meta({ description: "API entity name the event is about." }),
+  uuid: z.string().uuid().optional().meta({ description: "Row uuid the event is about." }),
+  version: z.number().int().optional().meta({ description: "Row version after the write." }),
+  batch: z.string().optional().meta({ description: "Shared id correlating a multi-row op." }),
+});
+const ENTITY_SECTION = z.object({
+  after: CUSTOMER_SNAPSHOT.meta({
+    description: "Current customer state — the snapshot this event reports.",
+  }),
+});
+
 const CUSTOMER_CHANGED = z.object({
-  customer: CUSTOMER_SNAPSHOT,
+  event: EVENT_ENVELOPE,
+  entity: ENTITY_SECTION,
   change: z.object({
     kind: z
       .enum(["created", "updated", "deleted"])
@@ -105,18 +130,6 @@ const CUSTOMER_CHANGED = z.object({
     changed_fields: z
       .array(z.string())
       .meta({ description: "Column names that changed (updates only)." })
-      .optional(),
-    changed_by: z
-      .string()
-      .uuid()
-      .meta({
-        x_semantic: "actor.uuid",
-        description: "Actor uuid that performed the write.",
-      })
-      .optional(),
-    changed_at: z
-      .iso.datetime()
-      .meta({ description: "ISO 8601 instant of the write." })
       .optional(),
   }),
 });
@@ -132,7 +145,8 @@ const ACCOUNT_MANAGER = z.object({
 const ACCOUNT_MANAGER_SCHEMA = z.toJSONSchema(ACCOUNT_MANAGER);
 
 const CUSTOMER_HIGH_VALUE = z.object({
-  customer: CUSTOMER_SNAPSHOT,
+  event: EVENT_ENVELOPE,
+  entity: ENTITY_SECTION,
   account_manager: ACCOUNT_MANAGER.optional(),
   trigger: z.object({
     metric: z
@@ -146,7 +160,8 @@ const CUSTOMER_HIGH_VALUE = z.object({
 const CUSTOMER_HIGH_VALUE_SCHEMA = z.toJSONSchema(CUSTOMER_HIGH_VALUE);
 
 const CUSTOMER_PAYOUT = z.object({
-  customer: CUSTOMER_SNAPSHOT,
+  event: EVENT_ENVELOPE,
+  entity: ENTITY_SECTION,
   account_manager: ACCOUNT_MANAGER.optional(),
   payout: z.object({
     amount: z.number().meta({ description: "Payout amount." }),
