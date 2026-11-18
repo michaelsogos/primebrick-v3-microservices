@@ -43,7 +43,7 @@ export class FeedbackService extends DomainService<FeedbackT> {
       entity: AiFeedbackEntity as never,
       actor: entityActor,
       // Feedback is RPC-served, not meta-served.
-      list: { searchableKeys: [], filterableKeys: new Set() },
+      list: { searchableKeys: [], filterableKeys: new Set(["created_by"]) },
     });
   }
 
@@ -81,25 +81,28 @@ export class FeedbackService extends DomainService<FeedbackT> {
     messageUuid: string,
     actor: string,
   ): Promise<FeedbackRow | null> {
-    const row = await this.dal.find(AiFeedbackEntity, FB_FIELDS, {
+    const row = (await this.svc.query<FeedbackRow>(FB_FIELDS, {
       filters: [
         Filter.fieldValue(field(AiFeedbackEntity, "message_uuid"), "=", messageUuid),
         Filter.fieldValue(field(AiFeedbackEntity, "created_by"), "=", actor),
       ],
       throwIfNotFound: false,
-    });
-    return (row as FeedbackRow | null) ?? null;
+    }))[0];
+    return row ?? null;
   }
 
   async listFeedbackByUser(
     actor: string,
     limit: number = 50,
   ): Promise<FeedbackRow[]> {
-    const page = await this.dal.findByPage(AiFeedbackEntity, 1, limit, FB_FIELDS, {
-      filters: [Filter.fieldValue(field(AiFeedbackEntity, "created_by"), "=", actor)],
-      sorting: [Sort.by(field(AiFeedbackEntity, "created_at"), "DESC")],
+    const r = await this.svc.list({
+      filters: [{ field: "created_by", op: "=", value: actor }],
+      sort_key: "created_at",
+      sort_dir: "desc",
+      page: 1,
+      page_size: limit,
     });
-    return page.entities as FeedbackRow[];
+    return r.rows as unknown as FeedbackRow[];
   }
 
   async getFeedbackStats(): Promise<{
@@ -107,12 +110,12 @@ export class FeedbackService extends DomainService<FeedbackT> {
     up: bigint;
     down: bigint;
   }> {
-    const rows = await this.dal.findAll(AiFeedbackEntity, [
+    const rows = await this.svc.query<{ total: bigint; up: bigint; down: bigint }>([
       Project.expr("COUNT(*)", "total"),
       Project.expr("COUNT(*) FILTER (WHERE rating = 'up')", "up"),
       Project.expr("COUNT(*) FILTER (WHERE rating = 'down')", "down"),
     ]);
-    const row = (rows as { total: bigint; up: bigint; down: bigint }[])[0]!;
+    const row = rows[0]!;
     return { total: row.total, up: row.up, down: row.down };
   }
 }

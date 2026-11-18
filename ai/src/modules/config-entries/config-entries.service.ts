@@ -69,16 +69,17 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
 
   /** All entries in the wire projection, secrets masked. */
   async listEntries(): Promise<ConfigEntryEntity[]> {
-    const rows = (await this.dal.findAll(ConfigEntryEntity, configProjection)) as ConfigEntryEntity[];
+    const rows = await this.svc.query<ConfigEntryEntity>(configProjection);
     return (Array.isArray(rows) ? rows : []).map(maskSecretRow);
   }
 
   /** Single entry by uuid in the wire projection, secrets masked. */
   async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
-    const row = (await this.dal.find(ConfigEntryEntity, configProjection, {
-      filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-      throwIfNotFound: false,
-    })) as ConfigEntryEntity | null;
+    const row =
+      (await this.svc.query<ConfigEntryEntity>(configProjection, {
+        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+        throwIfNotFound: false,
+      }))[0] ?? null;
     return row ? maskSecretRow(row) : row;
   }
 
@@ -88,17 +89,7 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  sends the masked null back when no new secret was typed). Returns
    *  the re-read, masked row — `null` when the uuid is unknown. */
   async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
-    const target = (await this.dal.find(
-      ConfigEntryEntity,
-      [
-        Project.field(field(ConfigEntryEntity, "key")),
-        Project.field(field(ConfigEntryEntity, "type")),
-      ],
-      {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-        throwIfNotFound: false,
-      },
-    )) as { key?: string; type?: string } | null;
+    const target = (await this.svc.get(uuid)) as { key?: string; type?: string } | null;
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);
     if (!(target.type === "secret" && (body.value === null || body.value === ""))) {

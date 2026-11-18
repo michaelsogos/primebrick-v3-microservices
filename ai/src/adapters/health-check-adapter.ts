@@ -14,13 +14,9 @@ export class HealthCheckAdapter implements HealthCheckPort {
   constructor(dal?: Dal) {
     this._dal = dal;
   }
-  private get dal(): Dal {
-    return (this._dal ??= getDal());
-  }
-
   async ping(): Promise<boolean> {
     try {
-      await this.dal.serverVersion();
+      await (this._dal ?? getDal()).serverVersion();
       return true;
     } catch {
       return false;

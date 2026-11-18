@@ -95,7 +95,7 @@ export class TelemetryService extends DomainService<TelemetryT> {
   }
 
   async getTelemetryStats(): Promise<TelemetryStats> {
-    const rows = (await this.dal.findAll(AiTelemetryEntity, [
+    const rows = (await this.svc.query<Record<string, string>>([
       Project.expr("COUNT(*)::text", "total_requests"),
       Project.expr("COUNT(*) FILTER (WHERE success)::text", "successful"),
       Project.expr("COUNT(*) FILTER (WHERE NOT success)::text", "failed"),
@@ -104,7 +104,7 @@ export class TelemetryService extends DomainService<TelemetryT> {
       Project.expr("COALESCE(AVG(latency_ms), 0)::text", "avg_latency_ms"),
       Project.expr("COALESCE(SUM(tool_calls), 0)::text", "total_tool_calls"),
       Project.expr("COALESCE(SUM(rag_hits), 0)::text", "total_rag_hits"),
-    ])) as Record<string, string>[];
+    ]));
     const row = rows[0] ?? {};
     return {
       total_requests: BigInt(row.total_requests ?? 0),
@@ -119,11 +119,12 @@ export class TelemetryService extends DomainService<TelemetryT> {
   }
 
   async listRecentTelemetry(limit: number = 50): Promise<TelemetryRow[]> {
-    // findByPage(page=1) — FindOptions has no bare `limit`; top-N goes
-    // through the paginated path.
-    const page = await this.dal.findByPage(AiTelemetryEntity, 1, limit, [...TELEMETRY_FIELDS], {
-      sorting: [Sort.by(field(AiTelemetryEntity, "created_at"), "DESC")],
+    const r = await this.svc.list({
+      sort_key: "created_at",
+      sort_dir: "desc",
+      page: 1,
+      page_size: limit,
     });
-    return page.entities as TelemetryRow[];
+    return r.rows as unknown as TelemetryRow[];
   }
 }

@@ -12,7 +12,7 @@
  *     resolve the actor from ALS — callers pass `actor` explicitly and
  *     the method wraps `runWithSession(actorSession(actor))`.
  *   - `commitStamped`/`insertMessage`/`deleteConversation` stay on the
- *     declared tx seams (`this.dal.beginTransaction()` / `transaction`):
+ *     declared tx seams (`svc.beginTransaction()` / `svc.transaction`):
  *     `ref()`-bound watermarks and the 3-entity cascade CANNOT be
  *     expressed through svc — repo ops inside the tx carry the actor
  *     explicitly (the sanctioned seam contract).
@@ -38,7 +38,7 @@
  * No DB-level FK exists (impossible on a partitioned parent) — the
  * cascade below IS the referential integrity.
  */
-import { DomainService, field, Filter, Project, Sort, type Dal } from "@primebrick/dal-pg";
+import { DomainService, field, Filter, Project, Sort, type DeferredTransaction } from "@primebrick/dal-pg";
 import { runWithSession } from "@primebrick/sdk";
 import { actorSession, entityActor } from "../db/entity-repo.js";
 import { AiConversationEntity } from "../domain/entities/ai_conversation_entity.js";
@@ -71,7 +71,7 @@ export interface MessageRow {
 const CONV_FIELDS = ["uuid", "created_by", "title", "last_seen_at", "created_at", "updated_at", "version"] as const;
 const MSG_FIELDS = ["uuid", "conversation_uuid", "role", "content", "tokens_in", "tokens_out", "created_at"] as const;
 
-type DeferredTx = ReturnType<Dal["beginTransaction"]>;
+type DeferredTx = DeferredTransaction;
 
 type ConversationsT = AiConversationEntity & Record<string, unknown>;
 
@@ -81,7 +81,7 @@ export class ConversationsService extends DomainService<ConversationsT> {
       entity: AiConversationEntity as never,
       actor: entityActor,
       // Conversations are RPC-served, not meta-served.
-      list: { searchableKeys: [], filterableKeys: new Set() },
+      list: { searchableKeys: [], filterableKeys: new Set(["created_by"]) },
     });
   }
 
@@ -101,23 +101,26 @@ export class ConversationsService extends DomainService<ConversationsT> {
   }
 
   async getConversation(uuid: string, actor: string): Promise<ConversationRow | null> {
-    const row = await this.dal.find(AiConversationEntity, CONV_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiConversationEntity, k) })), {
+    const row = (await this.svc.query<ConversationRow>(CONV_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiConversationEntity, k) })), {
       filters: [
         Filter.fieldValue(field(AiConversationEntity, "uuid"), "=", uuid),
         Filter.fieldValue(field(AiConversationEntity, "created_by"), "=", actor),
       ],
       throwIfNotFound: false,
-    });
-    return (row as ConversationRow | null) ?? null;
+    }))[0];
+    return row ?? null;
   }
 
   async listConversations(actor: string, limit: number = 50): Promise<ConversationRow[]> {
-    const page = await this.dal.findByPage(AiConversationEntity, 1, limit, CONV_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiConversationEntity, k) })), {
-      filters: [Filter.fieldValue(field(AiConversationEntity, "created_by"), "=", actor)],
+    const r = await this.svc.list({
+      filters: [{ field: "created_by", op: "=", value: actor }],
       // Activity ordering: the watermark, not the audit stamp.
-      sorting: [Sort.by(field(AiConversationEntity, "last_seen_at"), "DESC")],
+      sort_key: "last_seen_at",
+      sort_dir: "desc",
+      page: 1,
+      page_size: limit,
     });
-    return page.entities as ConversationRow[];
+    return r.rows as unknown as ConversationRow[];
   }
 
   /**
@@ -127,9 +130,7 @@ export class ConversationsService extends DomainService<ConversationsT> {
    * the caller retries. Never reach for `version` without this read.
    */
   private async readConversationForStamp(conversationUuid: string) {
-    const conv = await this.dal.findByUUID<AiConversationEntity>(AiConversationEntity, conversationUuid);
-    if (!conv) throw new Error(`Conversation ${conversationUuid} not found`);
-    return conv;
+    return await this.svc.get(conversationUuid);
   }
 
   /**
@@ -147,7 +148,7 @@ export class ConversationsService extends DomainService<ConversationsT> {
     const MAX_ATTEMPTS = 3;
     for (let attempt = 0; ; attempt++) {
       const conv = conversationUuid ? await this.readConversationForStamp(conversationUuid) : undefined;
-      const tx = this.dal.beginTransaction();
+      const tx = this.svc.beginTransaction();
       const { result } = build(tx, conv?.version);
       try {
         await tx.commit();
@@ -172,7 +173,7 @@ export class ConversationsService extends DomainService<ConversationsT> {
     // partitioned parent — this transaction IS the referential integrity.
     // DECLARED TX SEAM: 3-entity cascade — svc cannot express it; repo ops
     // carry `{ actor }` explicitly.
-    await this.dal.transaction(async (repo) => {
+    await this.svc.transaction(async (repo) => {
       const feedback = await repo.findAll(AiFeedbackEntity, [
         Project.field(field(AiFeedbackEntity, "uuid")),
         Project.field(field(AiFeedbackEntity, "version")),
@@ -228,9 +229,9 @@ export class ConversationsService extends DomainService<ConversationsT> {
   }
 
   async listMessages(conversationUuid: string): Promise<MessageRow[]> {
-    return await this.dal.findAll(AiMessageEntity, MSG_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiMessageEntity, k) })), {
+    return await this.svcFor(AiMessageEntity).query<MessageRow>(MSG_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiMessageEntity, k) })), {
       filters: [Filter.fieldValue(field(AiMessageEntity, "conversation_uuid"), "=", conversationUuid)],
       sorting: [Sort.by(field(AiMessageEntity, "created_at"), "ASC")],
-    }) as MessageRow[];
+    });
   }
 }
