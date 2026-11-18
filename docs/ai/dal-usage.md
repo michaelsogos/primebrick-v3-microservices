@@ -14,15 +14,22 @@ Database access has a two-step convention:
   `getDal(config)` from `@primebrick/dal-pg`).
 - **`getDal()`** — the singleton accessor; usable ONLY inside the declared
   seam list (`.devin/check-standards.json` → `dal-access.allowPaths`:
-  `db/dal.ts`, `db/entity-repo.ts`, `adapters/config-repository-adapter.ts`,
-  `index.ts`). Everywhere else data access comes from `DomainService`
-  inheritance (`this.dal`/`this.svc`), never a `getDal()` call — the
-  linter fails the build on it.
+  `db/dal.ts`, `index.ts`). Everywhere else data access comes from
+  `DomainService` inheritance (`this.svc`/`this.svcFor`), never a
+  `getDal()` call — the linter fails the build on it.
+- **`dalInfra()`** — the canonical infra-only door exported by `db/dal.ts`
+  (same singleton, named for role). Health probes, config-repository
+  adapters, vector-KB internals and other repo-level seams call
+  `dalInfra()`, never `getDal()` — so a `getDal(` call outside the two
+  allowlisted files is a `dal-access` violation with zero declared
+  exceptions.
 
 Canonical shape (live in BE and every US): worker services extend
-`DomainService<TEntity>` from `@primebrick/dal-pg` — lazy `this.dal`/
-`this.svc` seams, I/O-free constructors (the dal resolves at first use,
-never at module import or router-mount time). There are no
+`DomainService<TEntity>` from `@primebrick/dal-pg` — lazy `this.svc`/
+`this.svcFor` seams, I/O-free constructors (the dal resolves at first use,
+never at module import or router-mount time). `this.dal`/`this._dal` (and
+aliases like `const dal = this.dal`) are banned in consumers outright —
+`dal-member-access` (unsuppressible). There are no
 `*_dal.ts`/`*-repo.ts`/`*-repository.ts` wrapper files and none may be
 created — module files that own entity access are named `*-service.ts`
 honestly; `layer-repo-import` flags `controllers/` importing any
@@ -32,27 +39,45 @@ Consumers (services, modules, controllers-via-services) MUST:
 - extend `DomainService<TEntity>` for entity-bound work — `this.svc`
   (the `EntityService` write pipeline: hooks, actor stamping, audit-port
   resolution, optimistic lock, marker publish) is the ONLY write path;
-- read through `this.dal` — `findAll`, `find`, `findByPage`,
-  `findByUUID`, `count`, `vectorSearch`, `serverVersion` (a successful
-  call IS the health probe — there is no `ping()`);
-- run multi-statement atomic work through `this.dal.transaction(txRepo
-  => …)` — the callback receives a tx-scoped `Repository`, NEVER a raw
-  client; repo write calls inside it carry `{ actor }` explicitly (the
-  runtime actor guard is fail-closed on `@AuditTrail` entities);
+- read through the governed `svc` doors — each carries ONE contract:
+  - `svc.get(uuid, options?)` — by-uuid canonical read: full row +
+    display-name joins, `NotFoundError` by default;
+    `{throwIfNotFound:false}` → `null`, `{deletedRecords:"INCLUDED"}` →
+    reaches soft-deleted rows, `{displayJoins:false}` → lean entity-only
+    read (hot paths);
+  - `svc.exists(options?)` — boolean `SELECT EXISTS(SELECT 1 …)` probe
+    (short-circuit, no row materialized) for "does it exist?" questions;
+  - `svc.find(fields?, options?)` — ONE row, code-authored projections
+    (`Project.field`/`Project.expr`) and arbitrary `FindOptions` filters;
+    `LIMIT 1` + `throwIfNotFound` semantics;
+  - `svc.query(fields?, options?)` — multi-row code-authored reads the
+    wire contract cannot express: aggregates (`COUNT(*) FILTER …`),
+    `groupBy`/`having`, joins, `IN` lists, `Filter.expr`;
+  - `svc.list(query)` — the wire/paginated door: sanitized
+    `EntityListQuery` (searchable/filterable/sortable allowlists derive
+    from entity meta) — NEVER for internal reads;
+  - foreign entities go through `this.svcFor(OtherEntity)` — same doors,
+    same governance;
+- run multi-statement atomic work through `svc.transaction(txRepo => …)`
+  — the callback receives a tx-scoped `Repository`, NEVER a raw client;
+  deferred transaction/CTE workflows use `svc.beginTransaction(options?)`
+  (`Deferred.ref()` + CTE binding). Repo write calls inside a tx carry
+  `{ actor }` explicitly (the runtime actor guard is fail-closed on
+  `@AuditTrail` entities);
 - forward explicit callers (NATS envelopes, webhook actors) via
   `runWithSession(actorSession(actor), …)` — `actorSession` lives in
-  `db/entity-repo.ts`; outside a session `requireActor` throws by design.
+  `db/entity-repo.ts` where present; outside a session `requireActor`
+  throws by design.
 - receive `Dal` (type-only — the constructor is not exported) /
   `Repository` via parameters or the inherited accessor — never
   construct their own connection.
 
 Consumers MUST NOT — NO EXCEPTIONS, EVER:
-- call any write verb on the dal/repository accessor: `add`, `update`,
-  `delete`, `restore`, `hardDelete`, `truncate`, `addMany`,
-  `updateMany`, `deleteMany`, `restoreMany`, `hardDeleteMany`,
-  `upsert` — entity writes go through `this.svc` or the owning
-  DomainService; `svc.bulkUpdate`/`bulkPurge` cover the bulk shapes
-  (`dal-member-write` — unsuppressible);
+- touch `this.dal`/`this._dal` or any alias of it — reads AND writes
+  (`dal-member-access` — unsuppressible). Every entity access goes
+  through `this.svc`/`this.svcFor`; `svc.bulkUpdate`/`bulkPurge` cover
+  the bulk shapes (`dal-member-write` remains in force for write verbs
+  on any repo accessor);
 - construct `new Dal(` — `Dal` is exported `type`-only by dal-pg; the
   singleton is owned by `initDal` (`dal-construct` — unsuppressible);
 - call `getDal()`/`initDal()`/`resetDal()` or import them outside
@@ -72,9 +97,10 @@ Consumers MUST NOT — NO EXCEPTIONS, EVER:
 
 ## Library authoring (enforced by visibility)
 
-- `src/db/` exists for the infra layer only (`dal.ts` gateway,
-  `entity-repo.ts` actor helpers). Application code importing infra
-  internals outside the declared seams is a violation.
+- `src/db/` exists for the infra layer only (`dal.ts` gateway —
+  including the `dalInfra()` infra door — `entity-repo.ts` actor
+  helpers where present). Application code importing infra internals
+  outside the declared seams is a violation.
 - TS visibility: infra internals stay `private`/module-local; `Dal`
   is a type-only export — `new Dal(` cannot even be imported. New
   helpers that would leak `pg` types must NOT be exported from public
@@ -82,12 +108,14 @@ Consumers MUST NOT — NO EXCEPTIONS, EVER:
 - Lint/CI check: `pnpm check:standards` (wired into `prebuild` +
   `test`) fails the build on `pg` imports, `getPool()`, `.query(`,
   `new Pool(`, `withClient`, `upsert`, raw SQL literals,
-  `new Repository(`, `new Dal(`, dal write verbs, `getDal`/imports
-  outside allowPaths, `client|pool.ping(` and
+  `new Repository(`, `new Dal(`, dal write verbs, `this.dal`/`this._dal`
+  member access or aliases, `getDal`/`initDal`/`resetDal` calls or
+  imports outside allowPaths, `client|pool.ping(` and
   `JSON.stringify`/`JSON.parse` in `src/**`.
 - Exemption model: the data-access rules (`dal-access`,
-  `dal-construct`, `dal-member-write`, `pg-import`, `pg-pool`,
-  `raw-query`, `raw-sql`, `getPool`) are **default-on in the consumer
+  `dal-construct`, `dal-member-access`, `dal-member-write`, `pg-import`,
+  `pg-pool`, `raw-query`, `raw-sql`, `getPool`) are **default-on in the
+  consumer
   profile and cannot be silenced inline** — `standards-exempt` comments
   do not apply to them. The only seams that exist are the ones declared
   in `.devin/check-standards.json` `allowPaths` — reviewable repo
