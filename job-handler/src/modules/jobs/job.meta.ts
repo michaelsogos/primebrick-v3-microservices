@@ -393,7 +393,10 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     { key: "created_at", label_key: F("job_run", "started_at"), type: "datetime", order: 40, default_visible: true },
     // updated_at is the finish/last-seen instant — relabeled, kept visible (derived default hides audit cols)
     { key: "updated_at", label_key: F("job_run", "finished_at"), type: "datetime", order: 50, default_visible: true },
-    { key: "duration_ms", label_key: F("job_run", "duration"), type: "number", order: 60 },
+    // duration_ms — canonical milliseconds; the unit is FIXED so it declares
+    // an Intl-sanctioned `uom.unit` (no sibling code column): the cell renders
+    // `style:"unit"` — "24 ms" in every locale.
+    { key: "duration_ms", label_key: F("job_run", "duration"), type: "number", uom: { kind: "custom", unit: "millisecond" }, order: 60 },
     {
       // SOURCE — the ingress queue this run arrived on, a NATS subject
       // like every sibling subject field (zap = ingress). Stays

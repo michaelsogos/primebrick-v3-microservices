@@ -170,6 +170,22 @@ over field-by-field rebuilding.
 These are type conversions, not data-quality enforcement. Data quality is
 enforced at the write path (API upsert validation).
 
+### Numeric columns in `*.meta.ts`
+
+- `type:"number"` cells always render locale-formatted + right-aligned —
+  separators and decimals are derived, never a custom formatter.
+- The numeric **kind** is never authored — `pg_type` is derived from the
+  entity class (`int8` → bigint/0 decimals, `float*`/`numeric` → full
+  precision). Declare `type:"number"` only.
+- `uom` declares unit semantics — fixed Intl unit
+  (`uom:{kind:'custom', unit:'millisecond'}` → `"24 ms"`), per-row code
+  (`{kind:'currency', field}` / `{kind:'custom', field, source}`), fixed
+  suffix (`{kind:'custom', symbol}`), or `{kind:'percent'}`. `unit` MUST
+  be an `Intl.supportedValuesOf('unit')` identifier — arbitrary codes go
+  in `symbol`. `field` names a physical sibling column of the entity.
+- Canonical example: `job_run.duration_ms` → `uom:{kind:'custom',
+  unit:'millisecond'}` in `job-handler/src/modules/jobs/job.meta.ts`.
+
 ## Package versioning
 
 All package versions in `package.json` MUST be pinned to exact versions
