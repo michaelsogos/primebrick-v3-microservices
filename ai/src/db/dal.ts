@@ -13,9 +13,9 @@
  * enforced by assertDbEnv — the first schema is the owned one (`ai`).
  */
 import { getDal, type Dal } from "@primebrick/dal-pg";
-import { assertDbEnv } from "@primebrick/sdk";
+import { assertDbEnv, wireEntityEventEmission } from "@primebrick/sdk";
 
-export function initDal(): void {
+export async function initDal(): Promise<void> {
   const { url, schemas } = assertDbEnv();
 
   getDal({
@@ -25,6 +25,8 @@ export function initDal(): void {
     statementTimeoutMs: 30000,
     applicationName: "primebrick-ai",
   });
+
+  await wireEntityEventEmission(getDal(), "ai");
 }
 
 export { getDal } from "@primebrick/dal-pg";

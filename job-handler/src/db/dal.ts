@@ -4,9 +4,9 @@
  * enforced by assertDbEnv — the first schema is the owned one (`job`).
  */
 import { getDal, type Dal } from "@primebrick/dal-pg";
-import { assertDbEnv } from "@primebrick/sdk";
+import { assertDbEnv, wireEntityEventEmission } from "@primebrick/sdk";
 
-export function initDal(): void {
+export async function initDal(): Promise<void> {
   const { url, schemas } = assertDbEnv();
 
   getDal({
@@ -16,6 +16,8 @@ export function initDal(): void {
     statementTimeoutMs: 30000,
     applicationName: "primebrick-job",
   });
+
+  await wireEntityEventEmission(getDal(), "job");
 }
 
 export { getDal } from "@primebrick/dal-pg";
