@@ -418,10 +418,11 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
   /** Single mirror row for a schedule subject — the canonical read every
    *  mirror mutation starts from (unique per subject). */
   async findBySubject(scheduleSubject: string): Promise<JobScheduleEntity | undefined> {
-    const rows = await this.svc.query<JobScheduleEntity>(null, {
+    const row = await this.svc.find<JobScheduleEntity>(null, {
       filters: [Filter.fieldValue(field(JobScheduleEntity, "schedule_subject"), "=", scheduleSubject)],
+      throwIfNotFound: false,
     });
-    return rows[0];
+    return row ?? undefined;
   }
 
   /** Mirror rows whose status is in the given set — bulk suppress/resume. */
@@ -482,10 +483,11 @@ export class JobRunsService extends DomainService<RunT> {
 
   /** Single run by uuid — correlate/fail reads. */
   async findByUuid(uuid: string): Promise<JobRunEntity | undefined> {
-    const rows = await this.svc.query<JobRunEntity>(null, {
+    const row = await this.svc.find<JobRunEntity>(null, {
       filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", uuid)],
+      throwIfNotFound: false,
     });
-    return rows[0];
+    return row ?? undefined;
   }
 
   /** Optimistic-lock patch — status flips, duration/report correlate,
@@ -612,8 +614,9 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
 
   /** Single entry by uuid in the wire projection, secrets masked. */
   async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
-    const [row] = await this.svc.query<ConfigEntryEntity>(configProjection, {
+    const row = await this.svc.find<ConfigEntryEntity>(configProjection, {
       filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+      throwIfNotFound: false,
     });
     return row ? maskSecretRow(row) : null;
   }
@@ -625,11 +628,12 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  the masked null back when no new secret was typed). Returns the
    *  re-read, masked row — `null` when the uuid is unknown. */
   async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
-    const [target] = await this.svc.query<{ key?: string; type?: string }>([
+    const target = await this.svc.find<{ key?: string; type?: string }>([
       Project.field(field(ConfigEntryEntity, "key")),
       Project.field(field(ConfigEntryEntity, "type")),
     ], {
       filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+      throwIfNotFound: false,
     });
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);

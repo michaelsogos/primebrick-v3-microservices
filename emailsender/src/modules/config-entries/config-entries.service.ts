@@ -63,12 +63,10 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
 
   /** Single entry by uuid in the wire projection. */
   async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
-    return (
-      (await this.svc.query<ConfigEntryEntity>(configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-        throwIfNotFound: false,
-      }))[0] ?? null
-    );
+    return this.svc.find<ConfigEntryEntity>(configProjection, {
+      filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+      throwIfNotFound: false,
+    });
   }
 
   /** Write `value` with optimistic lock — internalizes the domain rules

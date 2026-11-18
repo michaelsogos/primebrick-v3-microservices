@@ -3,7 +3,7 @@ import { logger, runWithSession } from "@primebrick/sdk";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../controllers/nats-sub/types.js";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
-import { DomainService, Filter, field, NotFoundError, MultipleRowsError } from "@primebrick/dal-pg";
+import { DomainService, Filter, field, NotFoundError } from "@primebrick/dal-pg";
 import { actorSession, entityActor } from "../db/entity-repo.js";
 
 export class EmailService extends DomainService<SenderLogEntity & Record<string, unknown>> {
@@ -47,12 +47,9 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
       // existing error shape.
       let config: ProviderEntity;
       try {
-        const providers = await this.svcFor(ProviderEntity).query<ProviderEntity>(null, {
+        config = (await this.svcFor(ProviderEntity).find<ProviderEntity>(null, {
           filters: [Filter.fieldValue(field(ProviderEntity, "provider"), "=", "brevo")],
-        });
-        if (providers.length === 0) throw new NotFoundError("No provider found for brevo");
-        if (providers.length > 1) throw new MultipleRowsError("Multiple providers found for brevo");
-        config = providers[0]!;
+        }))!;
         configUuid = config.uuid;
       } catch (err) {
         if (err instanceof NotFoundError) {
@@ -72,15 +69,12 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
       // entity/DB columns are snake_case.
       let template: EmailTemplateEntity;
       try {
-        const templates = await this.svcFor(EmailTemplateEntity).query<EmailTemplateEntity>(null, {
+        template = (await this.svcFor(EmailTemplateEntity).find<EmailTemplateEntity>(null, {
           filters: [
             Filter.fieldValue(field(EmailTemplateEntity, "code"), "=", request.templateCode),
             Filter.fieldValue(field(EmailTemplateEntity, "language_iso"), "=", request.languageIso),
           ],
-        });
-        if (templates.length === 0) throw new NotFoundError(`Template not found: ${request.templateCode}`);
-        if (templates.length > 1) throw new MultipleRowsError(`Multiple templates found: ${request.templateCode}`);
-        template = templates[0]!;
+        }))!;
       } catch (err) {
         if (err instanceof NotFoundError) {
           throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);

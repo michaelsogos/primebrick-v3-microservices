@@ -75,11 +75,10 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
 
   /** Single entry by uuid in the wire projection, secrets masked. */
   async getEntry(uuid: string): Promise<ConfigEntryEntity | null> {
-    const row =
-      (await this.svc.query<ConfigEntryEntity>(configProjection, {
-        filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
-        throwIfNotFound: false,
-      }))[0] ?? null;
+    const row = await this.svc.find<ConfigEntryEntity>(configProjection, {
+      filters: [Filter.fieldValue(field(ConfigEntryEntity, "uuid"), "=", uuid)],
+      throwIfNotFound: false,
+    });
     return row ? maskSecretRow(row) : row;
   }
 

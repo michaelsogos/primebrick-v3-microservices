@@ -101,14 +101,13 @@ export class ConversationsService extends DomainService<ConversationsT> {
   }
 
   async getConversation(uuid: string, actor: string): Promise<ConversationRow | null> {
-    const row = (await this.svc.query<ConversationRow>(CONV_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiConversationEntity, k) })), {
+    return this.svc.find<ConversationRow>(CONV_FIELDS.map((k) => ({ kind: "field" as const, field: field(AiConversationEntity, k) })), {
       filters: [
         Filter.fieldValue(field(AiConversationEntity, "uuid"), "=", uuid),
         Filter.fieldValue(field(AiConversationEntity, "created_by"), "=", actor),
       ],
       throwIfNotFound: false,
-    }))[0];
-    return row ?? null;
+    });
   }
 
   async listConversations(actor: string, limit: number = 50): Promise<ConversationRow[]> {

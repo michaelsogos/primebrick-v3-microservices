@@ -81,14 +81,13 @@ export class FeedbackService extends DomainService<FeedbackT> {
     messageUuid: string,
     actor: string,
   ): Promise<FeedbackRow | null> {
-    const row = (await this.svc.query<FeedbackRow>(FB_FIELDS, {
+    return this.svc.find<FeedbackRow>(FB_FIELDS, {
       filters: [
         Filter.fieldValue(field(AiFeedbackEntity, "message_uuid"), "=", messageUuid),
         Filter.fieldValue(field(AiFeedbackEntity, "created_by"), "=", actor),
       ],
       throwIfNotFound: false,
-    }))[0];
-    return row ?? null;
+    });
   }
 
   async listFeedbackByUser(
