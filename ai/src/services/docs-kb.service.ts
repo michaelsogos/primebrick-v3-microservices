@@ -11,7 +11,7 @@
  * meaningless for regenerable rows).
  */
 import { field, Filter, Project } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
+import { dalInfra } from "../db/dal.js";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 
 export interface DocsKbRow {
@@ -56,13 +56,13 @@ const KB_PROJECTIONS = [
 /** Bulk-insert NEW chunks — caller guarantees no (repo,path,chunk_idx) conflicts. */
 export async function insertDocChunks(rows: DocChunkWrite[]): Promise<void> {
   if (rows.length === 0) return;
-  await getDal().addMany(DocsKbEntity, rows, {});
+  await dalInfra().addMany(DocsKbEntity, rows, {});
 }
 
 /** Bulk-update chunks whose content_hash changed — re-embed path (physical update, never upsert). */
 export async function updateDocChunks(rows: DocChunkWrite[]): Promise<void> {
   if (rows.length === 0) return;
-  await getDal().updateMany(
+  await dalInfra().updateMany(
     DocsKbEntity,
     rows.map((r) => ({
       repo: r.repo,
@@ -84,7 +84,7 @@ export async function updateDocChunks(rows: DocChunkWrite[]): Promise<void> {
  * Used to detect which docs have changed and need re-embedding.
  */
 export async function getDocHashes(repo: string, path: string): Promise<Map<number, string>> {
-  const rows = (await getDal().findAll<
+  const rows = (await dalInfra().findAll<
     DocsKbEntity,
     { chunk_idx: number; content_hash: string }
   >(DocsKbEntity, [Project.field(field(DocsKbEntity, "chunk_idx")), Project.field(field(DocsKbEntity, "content_hash"))], {
@@ -104,7 +104,7 @@ export async function getDocHashes(repo: string, path: string): Promise<Map<numb
  */
 export async function deleteStaleChunks(repo: string, path: string, validChunkIndices: number[]): Promise<void> {
   const valid = new Set(validChunkIndices);
-  const stale = (await getDal().findAll<DocsKbEntity, { chunk_idx: number }>(
+  const stale = (await dalInfra().findAll<DocsKbEntity, { chunk_idx: number }>(
     DocsKbEntity,
     [Project.field(field(DocsKbEntity, "chunk_idx"))],
     {
@@ -118,12 +118,12 @@ export async function deleteStaleChunks(repo: string, path: string, validChunkIn
     .filter((r) => !valid.has(r.chunk_idx))
     .map((r) => ({ repo, path, chunk_idx: r.chunk_idx }));
   if (matches.length === 0) return;
-  await getDal().hardDeleteMany(DocsKbEntity, matches, { matchBy: [...CHUNK_MATCH_BY] });
+  await dalInfra().hardDeleteMany(DocsKbEntity, matches, { matchBy: [...CHUNK_MATCH_BY] });
 }
 
 /** Get all distinct (repo, path) pairs in docs_kb — detect docs deleted from source. */
 export async function getAllDocPaths(): Promise<Array<{ repo: string; path: string }>> {
-  return (await getDal().findAll<DocsKbEntity, { repo: string; path: string }>(
+  return (await dalInfra().findAll<DocsKbEntity, { repo: string; path: string }>(
     DocsKbEntity,
     [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path"))],
     { groupBy: [field(DocsKbEntity, "repo"), field(DocsKbEntity, "path")] },
@@ -132,7 +132,7 @@ export async function getAllDocPaths(): Promise<Array<{ repo: string; path: stri
 
 /** Physically delete all chunks of a (repo, path) — doc removed from source. */
 export async function deleteDoc(repo: string, path: string): Promise<void> {
-  const matches = (await getDal().findAll<DocsKbEntity, { chunk_idx: number }>(
+  const matches = (await dalInfra().findAll<DocsKbEntity, { chunk_idx: number }>(
     DocsKbEntity,
     [Project.field(field(DocsKbEntity, "chunk_idx"))],
     {
@@ -143,7 +143,7 @@ export async function deleteDoc(repo: string, path: string): Promise<void> {
     },
   )) as Array<{ chunk_idx: number }>;
   if (matches.length === 0) return;
-  await getDal().hardDeleteMany(
+  await dalInfra().hardDeleteMany(
     DocsKbEntity,
     matches.map((r) => ({ repo, path, chunk_idx: r.chunk_idx })),
     { matchBy: [...CHUNK_MATCH_BY] },
@@ -152,13 +152,13 @@ export async function deleteDoc(repo: string, path: string): Promise<void> {
 
 /** Physically delete every doc of one repo — service unregister cleans the KB. */
 export async function deleteRepoDocs(repo: string): Promise<number> {
-  const matches = (await getDal().findAll<DocsKbEntity, { chunk_idx: number; path: string }>(
+  const matches = (await dalInfra().findAll<DocsKbEntity, { chunk_idx: number; path: string }>(
     DocsKbEntity,
     [Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "chunk_idx"))],
     { filters: [Filter.fieldValue(field(DocsKbEntity, "repo"), "=", repo)] },
   )) as Array<{ path: string; chunk_idx: number }>;
   if (matches.length === 0) return 0;
-  const res = await getDal().hardDeleteMany(
+  const res = await dalInfra().hardDeleteMany(
     DocsKbEntity,
     matches.map((r) => ({ repo, path: r.path, chunk_idx: r.chunk_idx })),
     { matchBy: [...CHUNK_MATCH_BY] },
@@ -172,7 +172,7 @@ export async function deleteRepoDocs(repo: string): Promise<number> {
  * metadata, so the schema-domain guard still applies.
  */
 export async function truncateDocsKb(): Promise<void> {
-  await getDal().truncate(DocsKbEntity);
+  await dalInfra().truncate(DocsKbEntity);
 }
 
 /**
@@ -190,7 +190,7 @@ export async function vectorSearch(
   topK: number = 4,
   repoFilter?: string,
 ): Promise<SearchResult[]> {
-  return (await getDal().vectorSearch<DocsKbEntity, DocsKbRow>(
+  return (await dalInfra().vectorSearch<DocsKbEntity, DocsKbRow>(
     DocsKbEntity,
     field(DocsKbEntity, "embedding"),
     queryEmbedding,
@@ -208,5 +208,5 @@ export async function vectorSearch(
 
 /** Count total chunks in docs_kb. */
 export async function countDocs(): Promise<number> {
-  return Number(await getDal().count(DocsKbEntity));
+  return Number(await dalInfra().count(DocsKbEntity));
 }

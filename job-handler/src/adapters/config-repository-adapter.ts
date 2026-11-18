@@ -1,4 +1,4 @@
-import { getDal } from "@primebrick/dal-pg";
+import { dalInfra } from "../db/dal.js";
 import type { ConfigRepositoryPort } from "@primebrick/sdk";
 import { ConfigEntryEntity } from "../domain/entities/config_entry_entity.js";
 
@@ -8,7 +8,7 @@ import { ConfigEntryEntity } from "../domain/entities/config_entry_entity.js";
  */
 export class ConfigRepositoryAdapter implements ConfigRepositoryPort {
   async findAll(): Promise<Array<{ key: string; value: string | null }>> {
-    const dal = getDal();
+    const dal = dalInfra();
     const rows = await dal.findAll<ConfigEntryEntity>(ConfigEntryEntity, null, {
     });
     if (!Array.isArray(rows)) return [];

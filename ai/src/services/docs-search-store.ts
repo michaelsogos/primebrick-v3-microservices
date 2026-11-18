@@ -19,7 +19,7 @@
  * above OpenAPI endpoint records for the same similarity, so procedural
  * questions surface manual pages instead of raw API listings.
  */
-import { getDal } from "../db/dal.js";
+import { dalInfra } from "../db/dal.js";
 import { extJsonParse } from "@primebrick/sdk";
 import { field, Filter, Project, type FilterExpr } from "@primebrick/dal-pg";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
@@ -118,7 +118,7 @@ export async function searchDocsKb(
   if (opts.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", opts.repo));
   if (opts.path_prefix) filters.push(Filter.fieldValue(field(DocsKbEntity, "path"), "LIKE", `${opts.path_prefix}%`));
 
-  const rows = await getDal().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), opts.embedding, {
+  const rows = await dalInfra().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), opts.embedding, {
     topK: limit,
     fields: [...KB_FIELDS],
     filters,
@@ -195,7 +195,7 @@ async function expandDocGraph(
 
   // DISTINCT ON (path) … ORDER BY path, distance — expressed as a filtered
   // vectorSearch + JS keep-best-per-path (identical winner semantics).
-  const rows = await getDal().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), embedding, {
+  const rows = await dalInfra().vectorSearch<DocsKbEntity, SearchRow>(DocsKbEntity, field(DocsKbEntity, "embedding"), embedding, {
     topK: GRAPH_ROW_BUDGET,
     fields: [...KB_FIELDS],
     filters: [
@@ -247,7 +247,7 @@ export interface DocsIndexRepo {
 }
 
 export async function getDocsIndex(): Promise<DocsIndexRepo[]> {
-  const rows = (await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
+  const rows = (await dalInfra().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "content" | "metadata">>(
     DocsKbEntity,
     [
       Project.field(field(DocsKbEntity, "repo")),
@@ -323,7 +323,7 @@ export async function getDocByPath(
   const filters: FilterExpr[] = [Filter.fieldValue(field(DocsKbEntity, "path"), "=", params.path)];
   if (params.repo) filters.push(Filter.fieldValue(field(DocsKbEntity, "repo"), "=", params.repo));
 
-  const rows = await getDal().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata">>(
+  const rows = await dalInfra().findAll<DocsKbEntity, Pick<DocsKbEntity, "repo" | "path" | "title" | "chunk_idx" | "content" | "metadata">>(
     DocsKbEntity,
     [Project.field(field(DocsKbEntity, "repo")), Project.field(field(DocsKbEntity, "path")), Project.field(field(DocsKbEntity, "title")), Project.field(field(DocsKbEntity, "chunk_idx")), Project.field(field(DocsKbEntity, "content")), Project.field(field(DocsKbEntity, "metadata"))],
     {

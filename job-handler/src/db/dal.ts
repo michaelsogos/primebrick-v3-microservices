@@ -3,7 +3,7 @@
  * The env contract (DATABASE_URL + DATABASE_SCHEMA, nothing else) is
  * enforced by assertDbEnv — the first schema is the owned one (`job`).
  */
-import { getDal } from "@primebrick/dal-pg";
+import { getDal, type Dal } from "@primebrick/dal-pg";
 import { assertDbEnv } from "@primebrick/sdk";
 
 export function initDal(): void {
@@ -19,3 +19,14 @@ export function initDal(): void {
 }
 
 export { getDal } from "@primebrick/dal-pg";
+
+/**
+ * `dalInfra()` — the canonical infra-only door to the Dal singleton
+ * (health probes, config adapters, boot wiring). Same instance as
+ * `getDal()` — named for role so lint can pin `getDal|initDal|resetDal`
+ * to db/ + index.ts alone: a consumer calling getDal() directly is a
+ * `dal-access` violation, a seam calling dalInfra() is declared infra.
+ */
+export function dalInfra(): Dal {
+  return getDal();
+}

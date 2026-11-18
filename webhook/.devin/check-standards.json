@@ -2,7 +2,6 @@
   "rules": {
     "dal-access": {
       "allowPaths": [
-        "adapters/config-repository-adapter.ts",
         "db/dal.ts",
         "index.ts"
       ]

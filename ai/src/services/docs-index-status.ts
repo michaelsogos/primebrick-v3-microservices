@@ -7,7 +7,7 @@
  * DSL projections) — no raw pool access.
  */
 import { field, Filter, Project, Sort } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
+import { dalInfra } from "../db/dal.js";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 import { DocsIngestLogEntity } from "../domain/entities/docs_ingest_log_entity.js";
 import { DocsPackReindexService } from "./docs-pack-reindex.service.js";
@@ -29,7 +29,7 @@ export interface DocsIndexStatus {
 }
 
 export async function getDocsIndexStatus(opts: { probe?: boolean } = {}): Promise<DocsIndexStatus> {
-  const dal = getDal();
+  const dal = dalInfra();
 
   // Aggregates are INT8 → bigint on the DAL parser and stay bigint on the
   // wire: the rpc-router serializes with extJsonStringify and the FE decodes

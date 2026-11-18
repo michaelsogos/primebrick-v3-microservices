@@ -1,7 +1,7 @@
 import type { Dal } from "@primebrick/dal-pg";
 import type { HealthCheckPort, HealthCheckResult } from "@primebrick/sdk";
 import { NatsClient } from "@primebrick/sdk";
-import { getDal } from "../db/dal.js";
+import { dalInfra } from "../db/dal.js";
 
 /**
  * Adapts dal-pg to the SDK's HealthCheckPort interface.
@@ -16,7 +16,7 @@ export class HealthCheckAdapter implements HealthCheckPort {
   }
   async ping(): Promise<boolean> {
     try {
-      await (this.probe ?? getDal()).serverVersion();
+      await (this.probe ?? dalInfra()).serverVersion();
       return true;
     } catch {
       return false;
