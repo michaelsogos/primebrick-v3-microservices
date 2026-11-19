@@ -28,6 +28,11 @@ async function main(): Promise<void> {
     // Root level — system module: route prefix /system/webhook.
     partOf: "system",
 
+    // Module display-name key — resolved against this service's own
+    // `webhook.translations` namespace by every UI surface; fallback:
+    // raw registry `name`.
+    labelKey: "webhook.module.name",
+
     // Headless service — no nav, but it OWNS the inbound-webhook event
     // vocabulary: webhook.<service>.received is the domain signal other
     // modules (job rules, triggers) subscribe to.
@@ -54,6 +59,12 @@ async function main(): Promise<void> {
       allowedTrust:
         process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
     },
+
+    // Shared system job — the SDK mounts `webhook.partition_maintenance`
+    // and materializes its trigger only when the registry carries a
+    // maintained surface (@Partition / @AuditTrail / @Retention). Trigger
+    // row = the schedule of record (user-governed).
+    partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new WebhookAuthConfigPort(configLoader),

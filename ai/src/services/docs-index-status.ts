@@ -7,10 +7,10 @@
  * DSL projections) — no raw pool access.
  */
 import { field, Filter, Project, Sort } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
+import { dalInfra } from "../db/dal.js";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 import { DocsIngestLogEntity } from "../domain/entities/docs_ingest_log_entity.js";
-import { pullAllPacks } from "./docs-pack-reindex.js";
+import { DocsPackReindexService } from "./docs-pack-reindex.service.js";
 import { computeDocsDrift, runSearchProbes } from "./docs-drift.js";
 
 export interface DocsIndexStatus {
@@ -29,7 +29,7 @@ export interface DocsIndexStatus {
 }
 
 export async function getDocsIndexStatus(opts: { probe?: boolean } = {}): Promise<DocsIndexStatus> {
-  const dal = getDal();
+  const dal = dalInfra();
 
   // Aggregates are INT8 → bigint on the DAL parser and stay bigint on the
   // wire: the rpc-router serializes with extJsonStringify and the FE decodes
@@ -62,7 +62,7 @@ export async function getDocsIndexStatus(opts: { probe?: boolean } = {}): Promis
     Project.expr("pg_total_relation_size('ai.docs_kb')", "total_bytes"),
   ]));
 
-  const packs = await pullAllPacks();
+  const packs = await new DocsPackReindexService().pullAllPacks();
   const drift = await Promise.all(
     packs.map(async (p) => {
       if (!p.payload) return { service: p.service, error: p.error };

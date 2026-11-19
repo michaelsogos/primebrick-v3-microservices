@@ -11,11 +11,11 @@ import type { HealthCheckResult } from "@primebrick/sdk";
  * health check in the HealthCheck constructor.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  constructor(private readonly dal: Dal) {}
+  constructor(private readonly probe: Dal) {}
 
   async ping(): Promise<boolean> {
     try {
-      await this.dal.serverVersion();
+      await this.probe.serverVersion();
       return true;
     } catch {
       return false;

@@ -12,6 +12,7 @@ import {
   Key,
   Unique,
   Column,
+  Calculated,
   type UUID,
   EntityBase,
   Auditable,
@@ -28,11 +29,57 @@ export class JobRunEntity
   @Column({ nullable: true })
   schedule_subject?: string;
 
-  @Column({ nullable: false })
-  service_code!: string;
+  /** Owning trigger uuid — STAMPED at write time from the armed schedule
+   *  row or the trampoline subject tail (`jobs.due.<lane>.job.forward.
+   *  <uuid>`), so the lineage survives the schedule's own lifecycle:
+   *  schedules are hard-deleted rows, triggers are not. NOT NULL —
+   *  every run derives from a trigger; a dispatch that cannot prove its
+   *  trigger lineage is never recorded. */
+  @Column({ pgType: "uuid", nullable: false })
+  trigger_uuid!: string;
 
-  @Column({ nullable: false })
-  job_name!: string;
+  /** Owning trigger display name — the run's job identity, resolved
+   *  live through `trigger_uuid` (rename relabels history by design:
+   *  name is identity, not provenance; the join survives soft-delete).
+   *  A physically-gone trigger surfaces the dead uuid — the
+   *  unresolved-ref → uuid convention, never "-". */
+  @Calculated(
+    `COALESCE(
+      (SELECT t.name FROM job.job_triggers t WHERE t.uuid = {self}.trigger_uuid),
+      {self}.trigger_uuid::text
+    )`,
+    { pgType: "text", nullable: true },
+  )
+  trigger?: string;
+
+  /** Owning schedule uuid — STAMPED at write time from the armed
+   *  schedule row (forwarder) or the live subject lookup (own-lane
+   *  recorder). Schedules are hard-deleted: a dangling uuid drills to
+   *  the not-found hero while `schedule_subject` keeps the raw arrival
+   *  truth. NULL for immediate fires (no schedule mirror). */
+  @Column({ pgType: "uuid", nullable: true })
+  schedule_uuid?: string;
+
+  /** Owning schedule display — the schedule's identity IS its owning
+   *  trigger's name (resolved transitively through `js.trigger_uuid` —
+   *  schedules carry no name column of their own), joined through the
+   *  stamped uuid — never the arrival subject. NULL when the schedule
+   *  row is gone. */
+  @Calculated(
+    `(SELECT jt.name
+       FROM job.job_schedules js
+       JOIN job.job_triggers jt ON jt.uuid = js.trigger_uuid
+      WHERE js.uuid = {self}.schedule_uuid)`,
+    { pgType: "text", nullable: true },
+  )
+  schedule?: string;
+
+  /** Destination subject this run was dispatched to — the governed
+   *  callable (`envelope.target`, e.g. `emailsender.send`) or, on own-lane
+   *  consumers, the due subject the handler reported consuming
+   *  (`data.target`). NULL on pre-column rows that can't be backfilled. */
+  @Column({ nullable: true })
+  target_subject?: string;
 
   /** user | system — the identity channel this run fired under. */
   @Column({ length: 10, nullable: false })
@@ -48,7 +95,9 @@ export class JobRunEntity
   @Column({ jsType: "bigint", nullable: true })
   fire_seq?: bigint;
 
-  /** RFC-style error code on failure (e.g. "401", "RBAC_PERMISSION_DENIED"). */
+  /** Failure cause from the CLOSED enum vocabulary — writers normalize
+   *  at insert time (unmapped callable codes coerce to EXECUTION_ERROR,
+   *  the original code/detail survives in `error_detail`). */
   @Column({ nullable: true })
   error_code?: string;
 

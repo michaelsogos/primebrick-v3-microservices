@@ -38,7 +38,7 @@
   const rows = $derived((ctx.sheet.props['rows'] ?? []) as readonly AiCerebellum[]);
   const onCreated = $derived(ctx.sheet.props['onCreated'] as (() => void) | undefined);
 
-  const fieldNs = 'system.entities.ai_cerebellum.fields';
+  const fieldNs = 'ai.entities.ai_cerebellum.fields';
 
   let assistant_key = $state('');
   let model_id = $state('');
@@ -169,7 +169,7 @@
   {/snippet}
 
   {#snippet title()}
-    {t('system.entities.ai_cerebellum.title')}
+    {t('ai.entities.ai_cerebellum.title')}
   {/snippet}
 
   <div class="space-y-4 p-4" data-testid="ai-cerebellum-panel">
@@ -227,14 +227,14 @@
       {#if model_id && dtypeOptions.length > 0}
         <div class="space-y-1.5">
           <label class="text-xs font-medium text-muted-foreground" for="cerebellum-dtype">
-            {t('system.entities.ai_model.fields.dtype')}
+            {t('ai.entities.ai_model.fields.dtype')}
           </label>
           <ComboSelect
             id="cerebellum-dtype"
             mode="single"
             bind:value={dtype}
             options={dtypeOptions}
-            placeholder={t('system.entities.ai_model.fields.dtype')}
+            placeholder={t('ai.entities.ai_model.fields.dtype')}
             searchable={false}
             data-testid="ai-cerebellum-dtype"
           />

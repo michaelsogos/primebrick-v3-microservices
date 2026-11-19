@@ -18,7 +18,8 @@ import {
   Column,
   Entity,
   Key,
-  PartitionField,
+  Partition,
+  Retention,
   type IAuditableEntity,
   type UUID,
   EntityBase,
@@ -43,7 +44,8 @@ export class AiConversationEntity
    * partitions older than the inactivity window, and the retention job
    * purges the partition's child rows set-based before the drop.
    */
-  @PartitionField({ interval: "1 month", retention: "6 months" })
+  @Partition({ interval: "1 month" })
+  @Retention("6 months")
   @Column({ nullable: false, jsType: "instant" })
   last_seen_at!: Date;
 

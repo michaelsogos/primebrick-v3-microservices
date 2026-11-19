@@ -1,8 +1,8 @@
-import { getDal } from "../db/dal.js";
-import { logger } from "@primebrick/sdk";
+import { logger, runWithSession } from "@primebrick/sdk";
 import { BrevoClient } from "../providers/brevo.js";
 import { SenderLogEntity } from "../domain/entities/sender_log_entity.js";
-import { Project, field, Filter } from "@primebrick/dal-pg";
+import { DomainService, NotFoundError, Project, field, Filter } from "@primebrick/dal-pg";
+import { actorSession, entityActor } from "../db/entity-repo.js";
 
 /**
  * Monotonic status rank — Brevo events arrive out-of-order, so a
@@ -22,10 +22,20 @@ const STATUS_RANK: Record<string, number> = {
   failed: 5,
 };
 
-export class WebhookService {
+export class WebhookService extends DomainService<SenderLogEntity & Record<string, unknown>> {
   // No BrevoClient instance needed — webhook handling only uses
   // BrevoClient.mapStatus() which is a static pure function.
   // The Brevo API key is not needed for webhook payload processing.
+
+  constructor() {
+    super({
+      entity: SenderLogEntity,
+      actor: entityActor,
+      // No list meta — sender_log is internal telemetry, never served to
+      // FE; empty searchableKeys = no search surface.
+      list: { searchableKeys: [], filterableKeys: new Set() },
+    });
+  }
 
   async handleWebhook(provider: string, payload: unknown, actorId?: string): Promise<void> {
     if (provider !== "brevo") {
@@ -54,21 +64,24 @@ export class WebhookService {
     const status = BrevoClient.mapStatus(event);
     const errorMessage = data.reason || undefined;
 
-    const dal = getDal();
-
-    // Ordering guard — read the current status; a strictly-lower-rank
-    // incoming event is out-of-order and must not regress the log.
-    const current = await dal.find(
-      SenderLogEntity,
-      [Project.field(field(SenderLogEntity, "status"))],
+    // Ordering guard — read the current status (+uuid for the follow-up
+    // svc.update match); a strictly-lower-rank incoming event is
+    // out-of-order and must not regress the log.
+    const current = await this.svc.find<{ uuid: string; status: string }>(
+      [Project.field(field(SenderLogEntity, "uuid")), Project.field(field(SenderLogEntity, "status"))],
       {
         filters: [
           Filter.fieldValue(field(SenderLogEntity, "provider_message_id"), "=", providerMessageId),
         ],
         throwIfNotFound: false,
       },
-    ) as { status: string } | null;
-    if (current) {
+    );
+    if (!current) {
+      // Same contract as the old matchBy update: a webhook for an unknown
+      // message-id surfaces as NotFoundError instead of silently passing.
+      throw new NotFoundError(`sender_log row not found for provider_message_id ${providerMessageId}`);
+    }
+    {
       const incomingRank = STATUS_RANK[status] ?? 0;
       const currentRank = STATUS_RANK[current.status] ?? 0;
       if (incomingRank < currentRank) {
@@ -78,21 +91,18 @@ export class WebhookService {
         );
         return;
       }
-    }
 
-    // Update the communication log by provider_message_id using matchBy.
-    // SenderLogEntity is non-auditable (no @AuditableField), so
-    // no actor is required. status_changed_at is stamped explicitly.
-    await dal.update(
-      SenderLogEntity,
-      {
-        provider_message_id: providerMessageId,
-        status,
-        status_changed_at: new Date(),
-        error_message: errorMessage,
-      },
-      { matchBy: "provider_message_id" },
-    );
+      // Update the communication log through svc — SenderLogEntity is
+      // non-auditable so no version is required; the caller identity
+      // (actorId, api-key caller) or the system fallback rides ALS.
+      await runWithSession(actorSession(actorId ?? "system:emailsender"), async () => {
+        await this.svc.update(current.uuid, {
+          status,
+          status_changed_at: new Date(),
+          error_message: errorMessage,
+        });
+      });
+    }
 
     logger.debug(`Updated communication log for message ${providerMessageId}: ${status}`, { tags: ["webhook-service"] });
   }

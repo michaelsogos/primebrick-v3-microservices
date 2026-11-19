@@ -25,6 +25,7 @@ These files help humans and agents collaborate consistently on the
 | [`docs-sync-on-close.md`](./docs-sync-on-close.md) | Sync Docs on GitFlow Close |
 | [`docs-user-pages.md`](./docs-user-pages.md) | End-User Page Structure (docs/user-guide) |
 | [`file-operations.md`](./file-operations.md) | File Operations |
+| [`i18n-namespace-segregation.md`](./i18n-namespace-segregation.md) | i18n Namespace Segregation — a module cites only `app.*` + `{schema}.*`; `system`/`custom`/foreign ns forbidden |
 | [`internal-client.md`](./internal-client.md) | Internal HTTP Client (mandatory) |
 | [`logging-telemetry.md`](./logging-telemetry.md) | Logging & Telemetry |
 | [`package-versioning.md`](./package-versioning.md) | Fixed Package Versions (No Ranges) |

@@ -28,7 +28,7 @@ import { JOB_EVENTS } from "./events-declaration.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "job",
-    serviceDisplayName: "Process Manager",
+    serviceDisplayName: "Process Management",
     serviceDescription:
       "Jobs orchestration — sole writer of jobs.schedule.*, triggers engine over job_triggers, run-history tap on jobs.result.>",
     icon: "list-clock",
@@ -74,6 +74,12 @@ async function main(): Promise<void> {
       allowedTrust:
         process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
     },
+
+    // Shared system job — the SDK mounts `job.partition_maintenance` and
+    // materializes its trigger only when the registry carries a maintained
+    // surface (@Partition / @AuditTrail / @Retention). Trigger row = the
+    // schedule of record (user-governed).
+    partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new JobAuthConfigPort(configLoader),

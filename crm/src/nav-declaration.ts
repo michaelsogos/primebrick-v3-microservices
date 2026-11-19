@@ -65,7 +65,6 @@ export const CRM_NAV: ModuleNavDeclaration = {
       kind: "create",
       entity: "customer",
       label_key: "app.common.new",
-      icon: "plus",
       component_url: "/svc/crm/api/v1/module-assets/crm-pages.js",
       component_format: "esm-mount",
     },

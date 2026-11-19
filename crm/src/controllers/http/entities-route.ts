@@ -14,19 +14,12 @@
  * only (rows are written by domain flows that compute `seal`).
  */
 import {
-  Filter,
-  Project,
-  field,
-  getDal,
-} from "@primebrick/dal-pg";
-import {
-  callNats,
   Permission,
   type EntityRouteDecl,
   type EntityServiceLike,
 } from "@primebrick/sdk";
 
-import { CrmTranslationEntity } from "../../domain/entities/crm_translation_entity.js";
+import { CrmTranslationsService } from "../../modules/shared/crm-translations.service.js";
 import { CustomersService } from "../../modules/customers/customers.service.js";
 import { customerMeta } from "../../modules/customers/customer.meta.js";
 import {
@@ -188,40 +181,10 @@ const CustomerContactUpdateWrite = entityOnlyWriteBody(CustomerContactUpdateBody
 const CustomerLinkCreateWrite = entityOnlyWriteBody(CustomerLinkCreateBodySchema);
 const CustomerLinkUpdateWrite = entityOnlyWriteBody(CustomerLinkUpdateBodySchema);
 
-/**
- * Export `dictResolver` — merges two label sources:
- *   - `crm.entities.*` from `crm.translations` via the DAL Repository
- *     (module reads its own schema);
- *   - `system.common.*` from the governed `system.dict.get` NATS route —
- *     `system.translations` is BE-owned and no US may read it under schema
- *     sovereignty. Shared columns (uid/audit/common system fields) cite
- *     `system.common.fields.*` label keys.
- * `null` on a missing module dict lets the export pipeline fall back to
- * humanized keys; a missing TABLE is a provisioning failure and fails loud.
- * A failed system-dict call degrades to the module dict only — system keys
- * humanize, never throw the export away.
- */
-const SYSTEM_DICT_GET_SUBJECT = "system.dict.get";
-
-async function crmDict(locale: string): Promise<Record<string, string> | null> {
-  const rows = (await getDal().findAll(
-    CrmTranslationEntity as never,
-    [Project.expr("jsonb_object_agg(key, value)", "dict")],
-    {
-      filters: [Filter.fieldValue(field(CrmTranslationEntity as never, "language"), "=", locale)],
-    },
-  )) as { dict: Record<string, string> | null }[];
-  const moduleDict = rows[0]?.dict ?? null;
-  const systemDict = await callNats<Record<string, string> | null>(
-    SYSTEM_DICT_GET_SUBJECT,
-    { module: "system", language: locale },
-    { timeoutMs: 3000 },
-  ).catch(() => null);
-  if (moduleDict == null && systemDict == null) return null;
-  // Module keys win on collision — namespace rule makes overlap impossible
-  // by construction, but own-schema labels take precedence by convention.
-  return { ...(systemDict ?? {}), ...(moduleDict ?? {}) };
-}
+/** Export `dictResolver` — delegates to CrmTranslationsService, which owns
+ *  the module-dict read (`crm.translations`) and the governed
+ *  `system.dict.get` merge. Transport file carries no dal access. */
+const crmDict = (locale: string) => new CrmTranslationsService().dict(locale);
 
 /** Entity declarations — makeServiceRoutes derives BOTH the CRUD routers
  *  and their OpenAPI path blocks from this single config set. */

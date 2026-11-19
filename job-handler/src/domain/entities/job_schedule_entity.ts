@@ -83,8 +83,10 @@ export class JobScheduleEntity
   expires_at?: Date;
 
   /** Engine-maintained next fire (mirror of NATS truth, never interpreted
-   *  by us): computed at arm for `@every`/`@at`, then overwritten per fire
-   *  by the server's own `Nats-Schedule-Next` header — cron included.
+   *  by us): computed at arm for `@every`/`@at`, a one-time UTC estimate
+   *  seeds cron so the first fire is visible before it happens, then the
+   *  server's own `Nats-Schedule-Next` header overwrites it per fire —
+   *  the estimate is a preview, never the authority.
    *  Internal write target only — the served field is `next_run_at`,
    *  which gates this mirror by status. */
   @Column({ nullable: true, jsType: "instant" })
@@ -100,31 +102,14 @@ export class JobScheduleEntity
   )
   next_run_at?: Date;
 
-  /** The scheduled job's name — the authored job identity. Trigger-owned
-   *  mirrors inherit the trigger's display (`job_triggers.name` via
-   *  `trigger_uuid`): the job the trigger declares IS what this schedule
-   *  runs, and its name survives the trigger's deletion — same contract
-   *  as the `trigger_uuid` ref display join (no `deleted_at` filter).
-   *  Service-owned rows keep the callable tail of `target_subject`
-   *  (`jobs.due.<lane>.<svc>.<name>` → `<name>`; a plain callable subject
-   *  stays whole — same parse run-recorder applies). */
-  @Calculated(
-    `COALESCE(
-      (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),
-      regexp_replace({self}.target_subject, '^jobs\\.due\\.[^.]+\\.[^.]+\\.', '')
-    )`,
-    { pgType: "text" },
-  )
-  job_name?: string;
-
-  /** WHO armed this schedule — ownership, never audit. Every row is
-   *  trigger-owned (`trigger_uuid` NOT NULL): the armer IS the owning
-   *  trigger, resolved live through `trigger_uuid` (rename-proof, and
-   *  surviving the trigger's soft-delete — a disarmed orphan keeps the
-   *  identity of who armed it, same contract as `job_name`). When the
-   *  trigger row is physically gone the dead key surfaces — the
-   *  unresolved-ref → uuid convention. `created_by` stays the hidden
-   *  audit writer and is never consulted here. */
+  /** The owning trigger — the ONE owner of every mirror row
+   *  (`trigger_uuid` NOT NULL), resolved live through the FK: the
+   *  schedule's identity IS the trigger's display name, never a stamped
+   *  copy (a trigger rename relabels every view without a re-arm, and
+   *  the join survives the trigger's soft-delete). When the trigger row
+   *  is physically gone the dead key surfaces — the unresolved-ref →
+   *  uuid convention. `created_by` stays the hidden audit writer and is
+   *  never consulted here. */
   @Calculated(
     `COALESCE(
       (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),
@@ -132,7 +117,7 @@ export class JobScheduleEntity
     )`,
     { pgType: "text", nullable: true },
   )
-  armed_by?: string;
+  trigger?: string;
 
 
 }

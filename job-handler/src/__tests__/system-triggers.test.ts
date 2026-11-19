@@ -12,6 +12,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const h = vi.hoisted(() => ({
   findAll: vi.fn(async (..._args: unknown[]) => [] as unknown[]),
@@ -29,10 +30,11 @@ const h = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ findAll: h.findAll, add: h.add, update: h.update }),
-}));
-vi.mock("../modules/jobs/jobs.service.js", () => ({
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ findAll: h.findAll, add: h.add, update: h.update }, importOriginal),
+);
+vi.mock("../modules/jobs/jobs.service.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../modules/jobs/jobs.service.js")>()),
   publishTriggerChanged: h.publishChanged,
 }));
 vi.mock("@primebrick/sdk", async (importOriginal) => ({

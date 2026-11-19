@@ -20,7 +20,7 @@ import {
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "emailsender",
-    serviceDisplayName: "Email Manager",
+    serviceDisplayName: "Communications Management",
     labelKey: "emailsender.module.name",
     serviceDescription: "Email sending microservice",
     icon: "mail",
@@ -56,6 +56,12 @@ async function main(): Promise<void> {
       allowedTrust:
         process.env.NODE_ENV === "production" ? ["release"] : ["dev", "release"],
     },
+
+    // Shared system job — the SDK mounts `emailsender.partition_maintenance`
+    // and materializes its trigger only when the registry carries a
+    // maintained surface (@Partition / @AuditTrail / @Retention). Trigger
+    // row = the schedule of record (user-governed).
+    partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new EmailSenderAuthConfigPort(configLoader),

@@ -1,15 +1,22 @@
 import Handlebars from "handlebars";
-import { logger } from "@primebrick/sdk";
-import { getDal } from "../db/dal.js";
+import { logger, runWithSession } from "@primebrick/sdk";
 import { BrevoClient, type BrevoEmailRequest } from "../providers/brevo.js";
 import type { SendEmailRequest, SendEmailResponse } from "../controllers/nats-sub/types.js";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../domain/entities/registry.js";
-import { Filter, field, NotFoundError } from "@primebrick/dal-pg";
+import { DomainService, Filter, field, NotFoundError } from "@primebrick/dal-pg";
+import { actorSession, entityActor } from "../db/entity-repo.js";
 
-export class EmailService {
+export class EmailService extends DomainService<SenderLogEntity & Record<string, unknown>> {
   private brevoClient: BrevoClient | null = null;
 
   constructor(brevoClient?: BrevoClient) {
+    super({
+      entity: SenderLogEntity,
+      actor: entityActor,
+      // No list meta — sender_log is internal telemetry, never served to
+      // FE; empty searchableKeys = no search surface.
+      list: { searchableKeys: [], filterableKeys: new Set() },
+    });
     if (brevoClient) {
       this.brevoClient = brevoClient;
     }
@@ -20,8 +27,10 @@ export class EmailService {
   }
 
   async sendEmail(request: SendEmailRequest, actorId?: string): Promise<SendEmailResponse> {
-    const dal = getDal();
-    let configUuid: string | null = null;
+    // The forwarded actor (NATS envelope) or the system fallback ride ALS —
+    // svc writes stamp it on sender_log via the normal actor pipeline.
+    return runWithSession(actorSession(actorId ?? "system:emailsender"), async () => {
+      let configUuid: string | null = null;
     // Hoist rendered content + template uuid outside the try block so they are
     // available in the catch block for the failure-path sender_log row. Without
     // this, a failed Brevo send logs a row with no `interpolated_sent_message`,
@@ -38,9 +47,9 @@ export class EmailService {
       // existing error shape.
       let config: ProviderEntity;
       try {
-        config = await dal.find(ProviderEntity, null, {
+        config = (await this.svcFor(ProviderEntity).find<ProviderEntity>(null, {
           filters: [Filter.fieldValue(field(ProviderEntity, "provider"), "=", "brevo")],
-        }) as ProviderEntity;
+        }))!;
         configUuid = config.uuid;
       } catch (err) {
         if (err instanceof NotFoundError) {
@@ -60,12 +69,12 @@ export class EmailService {
       // entity/DB columns are snake_case.
       let template: EmailTemplateEntity;
       try {
-        template = await dal.find(EmailTemplateEntity, null, {
+        template = (await this.svcFor(EmailTemplateEntity).find<EmailTemplateEntity>(null, {
           filters: [
             Filter.fieldValue(field(EmailTemplateEntity, "code"), "=", request.templateCode),
             Filter.fieldValue(field(EmailTemplateEntity, "language_iso"), "=", request.languageIso),
           ],
-        }) as EmailTemplateEntity;
+        }))!;
       } catch (err) {
         if (err instanceof NotFoundError) {
           throw new Error(`Template not found: ${request.templateCode} (${request.languageIso})`);
@@ -103,23 +112,19 @@ export class EmailService {
       const brevoResponse = await client.sendEmail(brevoRequest);
 
       // Log the communication (success)
-      const logRow = await dal.add<SenderLogEntity>(
-        SenderLogEntity,
-        {
-          entity_uuid: request.entityUuid ?? null,
-          type: "email",
-          provider_message_id: brevoResponse.messageId,
-          provider_uuid: config.uuid,
-          status: "sent",
-          template_uuid: template.uuid,
-          senders: { from: config.from_email },
-          recipients: { to: request.to, cc: request.cc, bcc: request.bcc },
-          interpolated_sent_message: htmlContent || textContent,
-          sent_at: new Date(),
-          status_changed_at: new Date(),
-        },
-        {},
-      );
+      const logRow = await this.svc.create({
+        entity_uuid: request.entityUuid ?? null,
+        type: "email",
+        provider_message_id: brevoResponse.messageId,
+        provider_uuid: config.uuid,
+        status: "sent",
+        template_uuid: template.uuid,
+        senders: { from: config.from_email },
+        recipients: { to: request.to, cc: request.cc, bcc: request.bcc },
+        interpolated_sent_message: htmlContent || textContent,
+        sent_at: new Date(),
+        status_changed_at: new Date(),
+      });
 
       return {
         requestId: request.requestId,
@@ -137,22 +142,18 @@ export class EmailService {
       // Brevo is faked/down. They stay null only if the failure happened
       // before rendering (e.g. provider/template not found).
       try {
-        await dal.add<SenderLogEntity>(
-          SenderLogEntity,
-          {
-            entity_uuid: request.entityUuid ?? null,
-            type: "email",
-            provider_uuid: configUuid,
-            status: "failed",
-            template_uuid: templateUuid,
-            senders: {},
-            recipients: { to: request.to },
-            interpolated_sent_message: renderedHtml || renderedText,
-            error_message: error instanceof Error ? error.message : "Unknown error",
-            status_changed_at: new Date(),
-          },
-          {},
-        );
+        await this.svc.create({
+          entity_uuid: request.entityUuid ?? null,
+          type: "email",
+          provider_uuid: configUuid,
+          status: "failed",
+          template_uuid: templateUuid,
+          senders: {},
+          recipients: { to: request.to },
+          interpolated_sent_message: renderedHtml || renderedText,
+          error_message: error instanceof Error ? error.message : "Unknown error",
+          status_changed_at: new Date(),
+        });
       } catch (logError) {
         logger.error("Error logging failed email", { tags: ["email-service"], error: logError });
       }
@@ -163,5 +164,6 @@ export class EmailService {
         error: error instanceof Error ? error.message : "Unknown error",
       };
     }
+    });
   }
 }

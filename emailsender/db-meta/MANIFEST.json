@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-13T23:17:45.307Z",
+  "issued_at": "2026-11-18T06:55:03.927Z",
   "patches": {
     "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
     "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
@@ -10,7 +10,11 @@
     "0005_uuidv7_defaults": "1f347f5d0b070706d62ff79d1f536ae8582dde7028d153950e669a7b98545529",
     "0006_uuid_pk_swap": "8b6229b7e16a5779b7b94c793c2eadb3809473d207b956b9a82728fb53d725a8",
     "0007_uuid_v4_to_v7_rewrite": "e4259e06e23a727b7572644c6810fe0cd71eb4f099c457d2c4724c4acd5251e3",
-    "0008_translations_language_check": "89f9a2e23154fb3a45398cac64da2eea7e3f90db2d0d68802acc09913382ee2f"
+    "0008_translations_language_check": "89f9a2e23154fb3a45398cac64da2eea7e3f90db2d0d68802acc09913382ee2f",
+    "20261208000000_i18n_segregation_config_keys": "e0b95c93dda6c3d5243102c4a3af14640ffe5c196490a7711fd90c821f880420",
+    "20261209000000_module_name_rename_it": "22355eb0ae5d890cbf85e8cdb08ef1cf8168dde2372241ccf50dfc0f98f5a9c6",
+    "20261209010000_module_name_rename_langs": "56d00493e2f31202aac7da89218838096d950c780d842831db3b55a09241ee74",
+    "20261209020000_module_name_rename_communications": "07c42a3395f915e8b7313ffe549f783c85f467f1df5841cf2a4b2f68a2e7bf5a"
   },
-  "signature": "To8ZsHcwwbEQiX1EQsog7SJ1t5YNyXho8aX7hDllfdtrInnGlBORyWYCTN08TbhkobvUJ+ki4W5AEe01pLKlCQ=="
+  "signature": "H71ZUmc3JFfV2fTHw+Vt5czzumX1ObDVcLfIcX1wDa0T3t4pW5BWToYYJgwh3c2j/BQUIuZ/caZP7aWcxCh9CQ=="
 }

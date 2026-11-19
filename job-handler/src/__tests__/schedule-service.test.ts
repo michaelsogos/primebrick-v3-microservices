@@ -13,6 +13,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const h = vi.hoisted(() => ({
   ensure: vi.fn(async (_opts?: unknown) => BigInt(7)),
@@ -22,6 +23,7 @@ const h = vi.hoisted(() => ({
   findAll: vi.fn(async () => [] as unknown[]),
   add: vi.fn(async (_entity?: unknown, _row?: unknown) => ({ uuid: "sched-row-1" })),
   update: vi.fn(async () => ({})),
+  hardDelete: vi.fn(async () => ({})),
   reset() {
     // mockReset (not mockClear) — a sticky rejected impl must not leak
     // into the next test.
@@ -39,6 +41,8 @@ const h = vi.hoisted(() => ({
     this.add.mockResolvedValue({ uuid: "sched-row-1" });
     this.update.mockReset();
     this.update.mockResolvedValue({});
+    this.hardDelete.mockReset();
+    this.hardDelete.mockResolvedValue({});
   },
 }));
 
@@ -53,9 +57,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@primebrick/sdk")>()),
   logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
 }));
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ findAll: h.findAll, add: h.add, update: h.update, delete: vi.fn(async () => ({})) }),
-}));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ findAll: h.findAll, add: h.add, update: h.update, hardDelete: h.hardDelete }, importOriginal),
+);
 
 const svc = await import("../services/schedule-service.js");
 
@@ -78,7 +82,6 @@ const armInput = (over: Record<string, unknown> = {}) => ({
 const mirrorRow = (over: Record<string, unknown> = {}) => ({
   uuid: "row-1",
   schedule_subject: "jobs.schedule.job.trig-1",
-  job_name: "trig",
   trigger_uuid: "00000000-0000-7000-8000-000000000001",
   run_as: "user",
   schedule_spec: "@every 1d",
@@ -105,9 +108,21 @@ describe("declareSchedule — arm protocol", () => {
     const row = h.add.mock.calls[0]![1] as unknown as Record<string, unknown>;
     expect(row).toMatchObject({
       schedule_subject: "jobs.schedule.job.trig-1",
+      trigger_uuid: "00000000-0000-7000-8000-000000000001",
       status: "armed",
       schedule_type: "recurring",
     });
+    expect(row).not.toHaveProperty("name");
+  });
+
+  it("a missing/empty trigger_uuid NEVER declares — every mirror is trigger-owned", async () => {
+    await expect(
+      svc.declareSchedule(armInput({ trigger_uuid: undefined })),
+    ).rejects.toMatchObject({ internal_code: "MISSING_TRIGGER_UUID" });
+    await expect(
+      svc.declareSchedule(armInput({ trigger_uuid: "" })),
+    ).rejects.toMatchObject({ internal_code: "MISSING_TRIGGER_UUID" });
+    expect(h.ensure).not.toHaveBeenCalled();
   });
 
   it("a declaration that stores but loses its schedule headers → ARM_VERIFY_FAILED", async () => {

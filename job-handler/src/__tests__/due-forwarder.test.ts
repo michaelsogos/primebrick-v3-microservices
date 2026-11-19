@@ -18,6 +18,7 @@
  */
 import "reflect-metadata";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { dalPgMock } from "./mock-dal.js";
 
 const h = vi.hoisted(() => {
   const cache = new Map<string, unknown>();
@@ -78,9 +79,9 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
     logger: { done: () => {}, warn: () => {}, info: () => {}, error: () => {}, debug: () => {} },
   };
 });
-vi.mock("../db/dal.js", () => ({
-  getDal: () => ({ add: h.addRun, findAll: h.findRuns, update: h.updateRun }),
-}));
+vi.mock("@primebrick/dal-pg", async (importOriginal) =>
+  dalPgMock({ add: h.addRun, findAll: h.findRuns, update: h.updateRun }, importOriginal),
+);
 vi.mock("../services/schedule-service.js", () => ({
   markScheduleFired: h.markFired,
   getScheduleRow: h.getScheduleRow,
@@ -119,8 +120,14 @@ async function handlerFor(lane: Lane): Promise<SubOpts["handler"]> {
  *  above still indexes the same object — support both on one shape. */
 const hdrs = (o: Record<string, string>) =>
   Object.assign({}, o, { get: (k: string) => o[k] });
-const userMsg = (uuid: string) => ({ headers: hdrs({ "x-user-id": uuid, "x-user-locale": "en-GB" }) });
-const emptyMsg = () => ({ headers: hdrs({}) });
+/** Fixture trigger uuid — rides the trampoline subject tail, the only
+ *  lineage proof a due message needs. */
+const TRIG_UUID = "00000000-0000-7000-8000-000000000001";
+const userMsg = (uuid: string) => ({
+  subject: `jobs.due.user.job.forward.${TRIG_UUID}`,
+  headers: hdrs({ "x-user-id": uuid, "x-user-locale": "en-GB" }),
+});
+const emptyMsg = () => ({ subject: `jobs.due.system.job.forward.${TRIG_UUID}`, headers: hdrs({}) });
 
 const published = () =>
   h.publish.mock.calls.map((c) => ({ subject: c[0] as string, payload: c[1], headers: c[2] as Record<string, string> }));
@@ -131,6 +138,7 @@ const recorded = () => h.addRun.mock.calls.map((c) => c[1] as Record<string, unk
 const corr = {
   "x-job-schedule-subject": "jobs.schedule.job.trig",
   "x-job-run-id": "run-uuid-1",
+  "x-job-trigger-id": TRIG_UUID,
 };
 
 beforeEach(() => h.reset());
@@ -188,7 +196,9 @@ describe("due-forwarder — user lane auth checkpoint", () => {
 
     expect(h.publish).not.toHaveBeenCalled();
     expect(recorded()).toEqual([
-      expect.objectContaining({ status: "failed", error_code: "AUTH_ACTOR_UNRESOLVABLE" }),
+      // Even refused fires carry trigger lineage — the trampoline tail
+      // proves the dispatch was trigger-originated.
+      expect.objectContaining({ status: "failed", error_code: "AUTH_ACTOR_UNRESOLVABLE", trigger_uuid: TRIG_UUID }),
     ]);
   });
 
@@ -216,16 +226,40 @@ describe("due-forwarder — run-result correlation", () => {
     expect(published()[0].headers["x-job-run-id"]).toBe("run-uuid-42");
   });
 
-  it("dispatched run rows carry the callable's service code, not JH's", async () => {
+  it("dispatched run rows resolve trigger_uuid from the trampoline subject tail", async () => {
     const handler = await handlerFor("system");
 
     await handler(envelope(), emptyMsg());
 
+    // `trigger_uuid` = the dispatch lineage proof (the trampoline tail IS
+    // the trigger); the consumed callable lands on `target_subject` —
+    // never the other way around. No `name` column exists to stamp.
     expect(recorded()[0]).toMatchObject({
-      service_code: "emailsender",
-      job_name: "emailsender.send",
+      trigger_uuid: TRIG_UUID,
+      target_subject: "emailsender.send",
       status: "dispatched",
     });
+    expect(recorded()[0]).not.toHaveProperty("name");
+    expect(recorded()[0]).not.toHaveProperty("service_code");
+  });
+
+  it("the armed mirror's trigger_uuid wins over the trampoline tail — and stamps the header", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "armed", trigger_uuid: "trig-9" } as never);
+
+    await handler(envelope(), emptyMsg());
+
+    expect(recorded()[0].trigger_uuid).toBe("trig-9");
+    expect(published()[0].headers["x-job-trigger-id"]).toBe("trig-9");
+  });
+
+  it("an immediate dispatch resolves trigger_uuid from the subject tail and stamps the header", async () => {
+    const handler = await handlerFor("system");
+
+    await handler(envelope({ schedule_subject: undefined }), emptyMsg());
+
+    expect(recorded()[0].trigger_uuid).toBe(TRIG_UUID);
+    expect(published()[0].headers["x-job-trigger-id"]).toBe(TRIG_UUID);
   });
 
   it("marks a one-shot schedule fired after the dispatch attempt", async () => {
@@ -245,12 +279,49 @@ describe("due-forwarder — run-result correlation", () => {
 
   it("a suppressed due keeps fire_seq on the skipped row", async () => {
     const handler = await handlerFor("system");
-    h.getScheduleRow.mockResolvedValue({ status: "paused" } as never);
+    h.getScheduleRow.mockResolvedValue({ status: "paused", trigger_uuid: "trig-9" } as never);
     await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 42 } });
     expect(recorded()[0]).toMatchObject({
       status: "skipped",
+      // `schedule ${status}` interpolations are normalized to the closed
+      // enum — a badge column can never carry a raw string.
+      error_code: "SCHEDULE_PAUSED",
       error_detail: "suppressed: schedule status is paused",
+      trigger_uuid: "trig-9",
       fire_seq: 42n,
+    });
+  });
+
+  it("stamps schedule_uuid + trigger_uuid from the armed schedule row", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "paused", trigger_uuid: "trig-9", uuid: "sched-5" } as never);
+    await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 43 } });
+    expect(recorded()[0]).toMatchObject({
+      trigger_uuid: "trig-9",
+      schedule_uuid: "sched-5",
+    });
+  });
+
+  it("a suppressed disarmed schedule maps to its own enum code", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "disarmed" } as never);
+    await handler(envelope(), { headers: hdrs({}), info: { streamSequence: 7 } });
+    expect(recorded()[0]).toMatchObject({ status: "skipped", error_code: "SCHEDULE_DISARMED" });
+  });
+
+  it("dispatched rows stamp lineage: trigger_uuid + schedule_uuid + target_subject", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "armed", trigger_uuid: "trig-9", uuid: "sched-5" } as never);
+
+    await handler(envelope(), emptyMsg());
+
+    // trigger_uuid/schedule_uuid = stamped at fire time (survive schedule
+    // churn); target_subject = the consumed callable (envelope.target).
+    expect(recorded()[0]).toMatchObject({
+      status: "dispatched",
+      trigger_uuid: "trig-9",
+      schedule_uuid: "sched-5",
+      target_subject: "emailsender.send",
     });
   });
 

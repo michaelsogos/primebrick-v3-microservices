@@ -2,7 +2,6 @@
   "rules": {
     "dal-access": {
       "allowPaths": [
-        "adapters/config-repository-adapter.ts",
         "db/dal.ts",
         "index.ts"
       ]
@@ -35,11 +34,13 @@
   },
   "i18n_namespaces": [
     "app",
-    "system",
     "crm"
   ],
   "i18n_sql_exempt": [
     "0003_crm_translations.sql"
+  ],
+  "i18n_key_ref_exempt": [
+    "0002_seed_config.sql"
   ],
   "seed_audit_exempt": [
     "20261107180000_seed_dictionaries.sql",

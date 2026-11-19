@@ -56,9 +56,10 @@ describe("CRM_EVENTS declaration", () => {
   });
 
   it("preferred_locale carries the lang contract — languageIso-class targets pair with it alone", () => {
-    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "crm.customer_changed")!
+    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "events.crm.customer.on.changed")!
       .payload_schema as Record<string, any>;
-    const locale = schema.properties.customer.properties.preferred_locale;
+    const snapshot = schema.properties.entity.properties.after.properties;
+    const locale = snapshot.preferred_locale;
     expect(locale.format).toBe("lang");
     const languageIso = { type: "string", format: "lang" };
     expect(pathCompatible(languageIso, locale)).toBe(true);
@@ -67,20 +68,29 @@ describe("CRM_EVENTS declaration", () => {
       { type: "string" },
       { type: "string", format: "uuid" },
       { type: "array", items: { type: "string" } },
-      schema.properties.customer.properties.display_name,
+      snapshot.display_name,
       schema.properties.change.properties.changed_fields,
-      schema.properties.change.properties.changed_by,
     ]) {
       expect(pathCompatible(languageIso, source as Record<string, unknown>)).toBe(false);
     }
   });
 
-  it("changed_by carries actor semantics — audit-shaped targets pair honestly", () => {
-    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "crm.customer_changed")!
+  it("the envelope carries who/when — emitted_by is an honest actor token, not a uuid", () => {
+    const schema = CRM_EVENTS.emits!.find((e) => e.subject === "events.crm.customer.on.changed")!
       .payload_schema as Record<string, any>;
-    const changedBy = schema.properties.change.properties.changed_by;
-    expect(changedBy.x_semantic).toBe("actor.uuid");
-    expect(pathCompatible({ type: "string", format: "uuid" }, changedBy)).toBe(true);
-    expect(pathCompatible({ type: "string", x_semantic: "actor.uuid" }, changedBy)).toBe(true);
+    const env = schema.properties.event.properties;
+    // emitted_by accepts `system:<code>` tokens — `format:"actor_token"`
+    // satisfies the `*_by` honesty hint without the uuid lie.
+    expect(env.emitted_by.format).toBe("actor_token");
+    expect(env.emitted_at.type).toBe("string");
+    expect(env.emitted_at.format).toBe("date-time");
+    expect(env.action.type).toBe("string");
+    expect(env.entity.type).toBe("string");
+    expect(env.uuid.format).toBe("uuid");
+    // Customer state moved under `entity.after` — the old flat
+    // `customer`/`change.changed_by`/`changed_at` shape is gone.
+    expect(schema.properties.customer).toBeUndefined();
+    expect(schema.properties.change.properties.changed_by).toBeUndefined();
+    expect(schema.properties.entity.properties.after).toBeDefined();
   });
 });

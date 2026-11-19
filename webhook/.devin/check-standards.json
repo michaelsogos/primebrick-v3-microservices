@@ -2,7 +2,6 @@
   "rules": {
     "dal-access": {
       "allowPaths": [
-        "adapters/config-repository-adapter.ts",
         "db/dal.ts",
         "index.ts"
       ]
@@ -35,7 +34,11 @@
   },
   "i18n_namespaces": [
     "app",
-    "system",
     "webhook"
+  ],
+  "i18n_key_ref_exempt": [
+    "0002_seed_webhook_config.sql",
+    "0003_seed_gateway_secret.sql",
+    "0004_seed_be_base_url.sql"
   ]
 }

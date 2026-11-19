@@ -170,6 +170,28 @@ over field-by-field rebuilding.
 These are type conversions, not data-quality enforcement. Data quality is
 enforced at the write path (API upsert validation).
 
+### Numeric columns in `*.meta.ts`
+
+- `type:"number"` cells always render locale-formatted + right-aligned —
+  separators and decimals are derived, never a custom formatter.
+- The numeric **kind** is never authored — `pg_type` is derived from the
+  entity class (`int8` → bigint/0 decimals, `float*`/`numeric` → full
+  precision). Declare `type:"number"` only.
+- `uom` declares unit semantics — `kind` carries the macro-category from
+  `UNIT_CATEGORIES` (`@primebrick/core` — the hardcoded CLDR census:
+  `time`, `length`, `mass`, `volume`, `area`, `temperature`, `digital`,
+  `angle`). Shapes: fixed Intl unit (`uom:{kind:'time',
+  unit:'millisecond'}` → `"24 ms"`), per-row code inside a category
+  (`{kind:'length', field}` — the category IS the picker vocabulary),
+  `currency` (`{kind:'currency', field}` — sibling ISO column), custom
+  non-standard vocabularies (`{kind:'custom', field, source}` per-row, or
+  `{kind:'custom', symbol}` fixed suffix), or `{kind:'percent'}`. `unit`
+  MUST be sanctioned ∩ category — `withColumnConstraints` throws at boot;
+  arbitrary codes go in `custom.symbol`. `field` names a physical sibling
+  column of the entity.
+- Canonical example: `job_run.duration_ms` → `uom:{kind:'time',
+  unit:'millisecond'}` in `job-handler/src/modules/jobs/job.meta.ts`.
+
 ## Package versioning
 
 All package versions in `package.json` MUST be pinned to exact versions
@@ -186,7 +208,7 @@ Workspace dependencies use `workspace:*` (e.g.
 |---|---|---|
 | `scripts/version-sync.mjs` | repo root | `version:auto`/`prebuild` hook — keeps `version` aligned across service package.jsons |
 | `<svc>/scripts/database-patch-apply.ts` | per service | `db:migrate` — runs the dal-pg `runMigrations` engine against the service's own schema (same code path as boot) |
-| `<svc>/scripts/build-docs-pack.ts` | per service | `generate:docs` — builds `dist/docs-pack` (SDK `buildDocsPack`) |
+| `<svc>` `generate:docs`/`docs:check` scripts | per service | `bun src/index.ts --emit-docs [--check]` — builds/diffs `dist/docs-pack` via the SDK emit pipeline (no per-service script file) |
 
 ## Next steps
 

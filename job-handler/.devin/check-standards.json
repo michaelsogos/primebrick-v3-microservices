@@ -2,9 +2,7 @@
   "rules": {
     "dal-access": {
       "allowPaths": [
-        "adapters/config-repository-adapter.ts",
         "db/dal.ts",
-        "db/entity-repo.ts",
         "index.ts"
       ]
     },
@@ -36,12 +34,15 @@
   },
   "i18n_namespaces": [
     "app",
-    "system",
     "job"
   ],
   "i18n_sql_exempt": [
     "0004_job_translations.sql",
     "0005_job_entity_labels.sql",
     "0012_job_rule_form.sql"
+  ],
+  "i18n_key_ref_exempt": [
+    "0002_seed_config.sql",
+    "20261207110000_gateway_public_secret_config.sql"
   ]
 }

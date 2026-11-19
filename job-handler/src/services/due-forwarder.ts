@@ -20,12 +20,14 @@
  * callable will then deny it — that IS the governance).
  */
 
-import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, JOB_SCHEDULE_HEADERS, type AuthUser, logger } from "@primebrick/sdk";
-import { getDal } from "../db/dal.js";
-import { Filter, field } from "@primebrick/dal-pg";
-import { JobRunEntity } from "../domain/entities/job_run_entity.js";
+import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_TRIGGER_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, JOB_SCHEDULE_HEADERS, type AuthUser, logger } from "@primebrick/sdk";
+import { trampolineTriggerUuid } from "../domain/entities/job_trigger_entity.js";
+import { JobRunsService } from "../modules/jobs/jobs.service.js";
 import { JOBS_STREAM } from "./run-recorder.js";
 import { getScheduleRow, markScheduleFired } from "./schedule-service.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const runs = new JobRunsService();
 
 export const FORWARD_ENVELOPE_MARK = "__pb_job_forward";
 
@@ -70,16 +72,20 @@ async function insertRun(
   errorCode?: string,
   errorDetail?: string,
   fireSeq?: bigint,
+  scheduleRow?: { uuid?: string; trigger_uuid?: string },
+  triggerUuid?: string,
 ): Promise<string | undefined> {
   try {
-    const row = await getDal().add<JobRunEntity>(
-      JobRunEntity,
+    const row = await runs.addRun(
       {
         schedule_subject: envelope.schedule_subject,
-        // The run executes ON the callable's service — derive it from the
-        // target's first token (`emailsender.send` → `emailsender`).
-        service_code: envelope.target.split(".")[0]!,
-        job_name: envelope.target,
+        schedule_uuid: scheduleRow?.uuid,
+        // The armed mirror's stamp wins where one exists (authoritative);
+        // the trampoline subject tail is the trigger's own proof of
+        // dispatch — every message on `job.forward.<uuid>` is trigger-
+        // originated by grammar, so immediate fires resolve too.
+        trigger_uuid: scheduleRow?.trigger_uuid ?? triggerUuid,
+        target_subject: envelope.target,
         run_as: lane,
         status,
         error_code: errorCode,
@@ -89,10 +95,10 @@ async function insertRun(
         // column is populated even for core-subscribed callables whose
         // result reports carry no `m.seq`.
         fire_seq: fireSeq,
-      } as never,
-      { actor: "system:job" } as never,
+      },
+      "system:job",
     );
-    return (row as unknown as { uuid?: string })?.uuid;
+    return row?.uuid;
   } catch (err) {
     logger.warn(`due-forwarder: run record failed for ${envelope.target} (${String(err)})`, { tags: ["jobs"] });
     return undefined;
@@ -103,20 +109,17 @@ async function insertRun(
 async function failRun(runUuid: string | undefined, detail: string): Promise<void> {
   if (!runUuid) return;
   try {
-    const rows = await getDal().findAll<JobRunEntity>(JobRunEntity, null, {
-      filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", runUuid)],
-    });
-    if (!Array.isArray(rows) || rows.length === 0) return;
-    await getDal().update(
-      JobRunEntity,
+    const row = await runs.findByUuid(runUuid);
+    if (!row) return;
+    await runs.patchRow(
+      row.uuid,
+      row.version,
       {
-        uuid: rows[0]!.uuid,
         status: "failed",
         error_code: "DISPATCH_ERROR",
         error_detail: detail.slice(0, 2000),
-        version: rows[0]!.version,
-      } as never,
-      { actor: "system:job", matchBy: "uuid" } as never,
+      },
+      "system:job",
     );
   } catch (err) {
     logger.warn(`due-forwarder: run fail update failed (${String(err)})`, { tags: ["jobs"] });
@@ -212,6 +215,7 @@ async function forward(
   envelope: JobForwardEnvelope,
   lane: "user" | "system",
   msg: {
+    subject?: string;
     headers?: Parameters<typeof forwardAuthHeaders>[0]["headers"];
     info?: { streamSequence?: number | bigint };
   },
@@ -224,15 +228,19 @@ async function forward(
   // every run this envelope produces.
   const fireSeq =
     msg.info?.streamSequence === undefined ? undefined : BigInt(msg.info.streamSequence);
+  // The trampoline subject tail IS the trigger uuid — every dispatch on
+  // `job.forward.<uuid>` is trigger-originated by grammar.
+  const trampolineUuid = msg.subject === undefined ? undefined : trampolineTriggerUuid(msg.subject);
   // Armed-only gate — a queued due is honored ONLY while its schedule is
   // still armed. pause/disarm/stop purge the declaration but queued dues
   // keep flowing to this consumer: honoring them would let suppressed
   // schedules keep executing. `skipped` runs are the audit trail — no
   // dead-letter queue needed (this IS the conservation layer).
+  let scheduleRow: Awaited<ReturnType<typeof getScheduleRow>>;
   if (envelope.schedule_subject) {
-    const row = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
-    if (row !== undefined && row.status !== "armed") {
-      await insertRun(envelope, lane, "skipped", `schedule ${row.status}`, `suppressed: schedule status is ${row.status}`, fireSeq);
+    scheduleRow = await getScheduleRow(envelope.schedule_subject).catch(() => undefined);
+    if (scheduleRow !== undefined && scheduleRow.status !== "armed") {
+      await insertRun(envelope, lane, "skipped", `SCHEDULE_${scheduleRow.status.toUpperCase()}`, `suppressed: schedule status is ${scheduleRow.status}`, fireSeq, scheduleRow, trampolineUuid);
       return;
     }
   }
@@ -244,7 +252,7 @@ async function forward(
   if (lane === "user" && actorUuid) {
     const fresh = await freshAuthHeaders(actorUuid, msg);
     if (fresh === null) {
-      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq);
+      await insertRun(envelope, lane, "failed", "AUTH_ACTOR_UNRESOLVABLE", "auth actor unresolvable (deleted/disabled)", fireSeq, scheduleRow, trampolineUuid);
       return;
     }
     headers = fresh;
@@ -259,13 +267,15 @@ async function forward(
   });
   // Insert the run row FIRST — its uuid rides as `x-job-run-id` so the
   // callable's transport middleware reports the real outcome back.
-  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq);
+  const runUuid = await insertRun(envelope, lane, "dispatched", undefined, undefined, fireSeq, scheduleRow, trampolineUuid);
+  const triggerUuid = scheduleRow?.trigger_uuid ?? trampolineUuid;
   const outHeaders: Record<string, string> = {
     ...headers,
     ...(envelope.schedule_subject
       ? { [JOB_SCHEDULE_SUBJECT_HEADER]: envelope.schedule_subject }
       : {}),
     ...(runUuid ? { [JOB_RUN_ID_HEADER]: runUuid } : {}),
+    ...(triggerUuid ? { [JOB_TRIGGER_ID_HEADER]: triggerUuid } : {}),
   };
   let dispatchError: string | undefined;
   try {

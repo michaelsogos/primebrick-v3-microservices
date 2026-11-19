@@ -6,11 +6,11 @@ import type { HealthCheckPort } from "@primebrick/sdk";
  * Used by HealthCheck to verify DB connectivity.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  constructor(private readonly dal: Dal) {}
+  constructor(private readonly probe: Dal) {}
 
   async ping(): Promise<boolean> {
     try {
-      await this.dal.serverVersion();
+      await this.probe.serverVersion();
       return true;
     } catch {
       return false;

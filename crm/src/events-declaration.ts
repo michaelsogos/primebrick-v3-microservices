@@ -4,19 +4,25 @@
  * access-filtered: it is a domain vocabulary, not a route surface).
  *
  * The CRM module owns the customer domain, so its event vocabulary is
- * customer-shaped. Two layers by design:
+ * customer-shaped. Subjects follow the domain-event convention
+ * `events.<svc>.<entity>.on.<name>` — the `.on.` marker keeps semantic
+ * names out of the uuid slot, and the whole subtree stays under
+ * `events.crm.customer.>` (one binding covers lifecycle + semantics).
+ * Two layers by design:
  *
- *   crm.customer_changed    — FACT: a customer row changed (snapshot +
- *                             change metadata). CRUD stays dumb: it says
- *                             "something changed", nothing more.
- *   crm.customer_high_value — SEMANTIC: sales logic decided this customer
- *                             crossed the high-value threshold. Rules hang
- *                             off meaning, not off CRUD diffs — the
- *                             "what counts as high value" business rule
- *                             lives here once, not inside every rule's
- *                             filter expression.
- *   crm.customer_payout     — SEMANTIC: a payout was recorded for the
- *                             customer.
+ *   events.crm.customer.on.changed    — FACT: a customer row changed
+ *                                       (snapshot + change metadata).
+ *                                       CRUD stays dumb: it says
+ *                                       "something changed", nothing more.
+ *   events.crm.customer.on.high_value — SEMANTIC: sales logic decided this
+ *                                       customer crossed the high-value
+ *                                       threshold. Rules hang off meaning,
+ *                                       not off CRUD diffs — the "what
+ *                                       counts as high value" business
+ *                                       rule lives here once, not inside
+ *                                       every rule's filter expression.
+ *   events.crm.customer.on.payout     — SEMANTIC: a payout was recorded
+ *                                       for the customer.
  *
  * Every emit carries a `payload_schema` — that is what lets the rule
  * form's payload_map offer real `$.` path suggestions (the event payload
@@ -41,8 +47,8 @@ import { LANG_RE, type ModuleEventsDecl } from "@primebrick/sdk";
 /** The customer projection every CRM event embeds — mirrors
  *  `CustomerEntity`'s public fields PLUS the canonical children resolved
  *  at emit time. `email`/`phone` are DERIVED from the default
- *  EMAIL/VOICE `customer_contacts` rows (the paths `$.customer.email` /
- *  `$.customer.phone` keep working — rules never chase the sub-array);
+ *  EMAIL/VOICE `customer_contacts` rows (the paths `$.entity.after.email` /
+ *  `$.entity.after.phone` keep working — rules never chase the sub-array);
  *  `legal_address`/`account` come from the legal `local_addresses` row
  *  and the legal `customer_accounts` datasheet. */
 const LEGAL_ADDRESS_SNAPSHOT = z.object({
@@ -90,8 +96,33 @@ const CUSTOMER_SNAPSHOT = z.object({
 });
 const CUSTOMER_SNAPSHOT_SCHEMA = z.toJSONSchema(CUSTOMER_SNAPSHOT);
 
+/** The shared event envelope (wire `schema:2`) — who/what/when/where on
+ *  every domain event. `emitted_by` is an actor TOKEN (uuid OR
+ *  `system:<code>`), so `actor_token` is the honest format. */
+const EVENT_ENVELOPE = z.object({
+  schema: z.literal(2),
+  service: z.string(),
+  subject: z.string().meta({ description: "The NATS subject this event was published on — self-describing." }),
+  emitted_at: z.iso.datetime().meta({ description: "RFC 3339 timestamp of the emission." }),
+  emitted_by: z.string().meta({
+    format: "actor_token",
+    description: "Actor token — user uuid or `system:<code>`.",
+  }),
+  action: z.string().meta({ description: "Event verb — the semantic name for `on.*` subjects." }),
+  entity: z.string().optional().meta({ description: "API entity name the event is about." }),
+  uuid: z.string().uuid().optional().meta({ description: "Row uuid the event is about." }),
+  version: z.number().int().optional().meta({ description: "Row version after the write." }),
+  batch: z.string().optional().meta({ description: "Shared id correlating a multi-row op." }),
+});
+const ENTITY_SECTION = z.object({
+  after: CUSTOMER_SNAPSHOT.meta({
+    description: "Current customer state — the snapshot this event reports.",
+  }),
+});
+
 const CUSTOMER_CHANGED = z.object({
-  customer: CUSTOMER_SNAPSHOT,
+  event: EVENT_ENVELOPE.meta({ x_label_key: "app.entity_events.event" }),
+  entity: ENTITY_SECTION.meta({ x_label_key: "app.entity_events.entity" }),
   change: z.object({
     kind: z
       .enum(["created", "updated", "deleted"])
@@ -100,19 +131,7 @@ const CUSTOMER_CHANGED = z.object({
       .array(z.string())
       .meta({ description: "Column names that changed (updates only)." })
       .optional(),
-    changed_by: z
-      .string()
-      .uuid()
-      .meta({
-        x_semantic: "actor.uuid",
-        description: "Actor uuid that performed the write.",
-      })
-      .optional(),
-    changed_at: z
-      .iso.datetime()
-      .meta({ description: "ISO 8601 instant of the write." })
-      .optional(),
-  }),
+  }).meta({ x_label_key: "crm.events.fields.change" }),
 });
 const CUSTOMER_CHANGED_SCHEMA = z.toJSONSchema(CUSTOMER_CHANGED);
 
@@ -126,8 +145,9 @@ const ACCOUNT_MANAGER = z.object({
 const ACCOUNT_MANAGER_SCHEMA = z.toJSONSchema(ACCOUNT_MANAGER);
 
 const CUSTOMER_HIGH_VALUE = z.object({
-  customer: CUSTOMER_SNAPSHOT,
-  account_manager: ACCOUNT_MANAGER.optional(),
+  event: EVENT_ENVELOPE.meta({ x_label_key: "app.entity_events.event" }),
+  entity: ENTITY_SECTION.meta({ x_label_key: "app.entity_events.entity" }),
+  account_manager: ACCOUNT_MANAGER.optional().meta({ x_label_key: "crm.events.fields.account_manager" }),
   trigger: z.object({
     metric: z
       .enum(["annual_revenue", "deal_amount", "orders_count"])
@@ -135,13 +155,14 @@ const CUSTOMER_HIGH_VALUE = z.object({
     amount: z.number().meta({ description: "Observed value that crossed." }),
     currency: z.string().meta({ description: "ISO 4217 (EUR, USD…)." }).optional(),
     threshold: z.number().meta({ description: "Configured high-value threshold that was crossed." }),
-  }),
+  }).meta({ x_label_key: "crm.events.fields.trigger" }),
 });
 const CUSTOMER_HIGH_VALUE_SCHEMA = z.toJSONSchema(CUSTOMER_HIGH_VALUE);
 
 const CUSTOMER_PAYOUT = z.object({
-  customer: CUSTOMER_SNAPSHOT,
-  account_manager: ACCOUNT_MANAGER.optional(),
+  event: EVENT_ENVELOPE.meta({ x_label_key: "app.entity_events.event" }),
+  entity: ENTITY_SECTION.meta({ x_label_key: "app.entity_events.entity" }),
+  account_manager: ACCOUNT_MANAGER.optional().meta({ x_label_key: "crm.events.fields.account_manager" }),
   payout: z.object({
     amount: z.number().meta({ description: "Payout amount." }),
     currency: z.enum(["EUR", "USD", "GBP"]).meta({ description: "ISO 4217 payout currency." }),
@@ -151,28 +172,28 @@ const CUSTOMER_PAYOUT = z.object({
       .meta({ description: "ISO 8601 payment due date." })
       .optional(),
     reference: z.string().meta({ description: "External payout reference." }).optional(),
-  }),
+  }).meta({ x_label_key: "crm.events.fields.payout" }),
 });
 const CUSTOMER_PAYOUT_SCHEMA = z.toJSONSchema(CUSTOMER_PAYOUT);
 
 export const CRM_EVENTS: ModuleEventsDecl = {
   emits: [
     {
-      subject: "crm.customer_changed",
+      subject: "events.crm.customer.on.changed",
       label_key: "crm.events.customer_changed.label",
       description_key: "crm.events.customer_changed.desc",
       payload_schema: CUSTOMER_CHANGED_SCHEMA,
       entity: { key: "customer", entity: "customer", table: "customers" },
     },
     {
-      subject: "crm.customer_high_value",
+      subject: "events.crm.customer.on.high_value",
       label_key: "crm.events.customer_high_value.label",
       description_key: "crm.events.customer_high_value.desc",
       payload_schema: CUSTOMER_HIGH_VALUE_SCHEMA,
       entity: { key: "customer", entity: "customer", table: "customers" },
     },
     {
-      subject: "crm.customer_payout",
+      subject: "events.crm.customer.on.payout",
       label_key: "crm.events.customer_payout.label",
       description_key: "crm.events.customer_payout.desc",
       payload_schema: CUSTOMER_PAYOUT_SCHEMA,

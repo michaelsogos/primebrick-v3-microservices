@@ -6,7 +6,7 @@ entity: job_schedule
 
 List, search and manage all job schedules.
 
-Each row shows the Job Name, the Source Queue, the Destination Event, the Cadence, the Type, the Run As, the Status, the Anomaly, the Run Stats, the Next run, the Fired at, the Armed By, the Armed at.
+Each row shows the Trigger, the Source Queue, the Destination Event, the Cadence, the Type, the Run As, the Status, the Anomaly, the Run Stats, the Next run, the Fired at, the Armed at.
 
 The page is visible with the `access.system.job.job-schedules` grant.
 
@@ -14,7 +14,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Job Name** | yes | yes | yes |  |
+| **Trigger** | yes | yes | yes | Who or what armed this schedule — the owning trigger or the declaring module. Open the cell to inspect its record. |
 | **Source Queue** | yes | yes | yes | The queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues. |
 | **Destination Event** | yes | yes | yes | The event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services. |
 | **Cadence** | yes | yes | no |  |
@@ -29,7 +29,7 @@ The page is visible with the `access.system.job.job-schedules` grant.
 | **UUID** | no | yes | yes |  |
 | **Expires at** | no | yes | yes |  |
 
-- The Job Name column is shown by default and can be sorted and filtered.
+- The Trigger column is shown by default and can be sorted and filtered — who or what armed this schedule — the owning trigger or the declaring module. Open the cell to inspect its record.
 - The Source Queue column is shown by default and can be sorted and filtered — the queue this schedule is armed on — the scheduler picks up due work here. Schedules created by the system listen on service-owned queues.
 - The Destination Event column is shown by default and can be sorted and filtered — the event fired when the schedule comes due: the operation the run performs (e.g. send an email). Available destinations depend on the active services.
 - The Cadence column is shown by default and can be sorted but not filtered.

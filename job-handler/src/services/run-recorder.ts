@@ -35,9 +35,11 @@ import {
   logger,
   type JobResultMessage,
 } from "@primebrick/sdk";
-import { Filter, field } from "@primebrick/dal-pg";
-import { getDal } from "../db/dal.js";
-import { JobRunEntity } from "../domain/entities/job_run_entity.js";
+import { JobRunsService } from "../modules/jobs/jobs.service.js";
+import { getScheduleRow } from "./schedule-service.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const runs = new JobRunsService();
 
 export const JOBS_STREAM = "JOBS";
 
@@ -62,16 +64,48 @@ function plainJson<T>(v: T): T {
 const FORWARD_TARGET_RE = /^jobs\.due\.(?:user|system)\.job\.forward\./;
 
 /**
- * Derive `{ service_code, job_name, run_as }` from the consumed subject
- * the result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
- * strips the lane prefix, plain callable subjects (`emailsender.send`)
- * parse directly. `run_as` is `system` unless the due subject says `user`.
+ * Closed `error_code` vocabulary — the union JH stamps plus the SDK
+ * transport's contract codes (`job-contract.ts`). A callable may report
+ * any string: outside this set the run normalizes to `EXECUTION_ERROR`
+ * and the original code is preserved at the head of `error_detail`, so
+ * the badge enum can never render a raw/unmapped value.
  */
-function parseTarget(target: string): { service_code: string; job_name: string; run_as: "user" | "system" } | null {
+const KNOWN_ERROR_CODES = new Set([
+  "EXECUTION_ERROR",
+  "HANDLER_ERROR",
+  "DENIED",
+  "VALIDATION_ERROR",
+  "DISPATCH_ERROR",
+  "DISPATCH_TIMEOUT",
+  "AUTH_ACTOR_UNRESOLVABLE",
+  "SCHEDULE_PAUSED",
+  "SCHEDULE_DISARMED",
+]);
+
+function normalizeError(code: string | undefined, detail: string | undefined): { code: string; detail: string } {
+  if (code === undefined || KNOWN_ERROR_CODES.has(code)) {
+    return { code: code ?? "EXECUTION_ERROR", detail: (detail ?? "").slice(0, 2000) };
+  }
+  return {
+    code: "EXECUTION_ERROR",
+    detail: `reported error_code: ${code}${detail ? ` — ${detail}` : ""}`.slice(0, 2000),
+  };
+}
+
+/**
+ * Derive `{ service_code, run_as }` from the consumed subject the
+ * result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
+ * strips the lane prefix, plain callable subjects (`emailsender.send`)
+ * parse directly. `run_as` is `system` unless the due subject says
+ * `user`. `service_code` never lands on a row — it only stamps the
+ * `created_by` actor (`system:<svc>` = own-lane self-recording), same
+ * provenance contract schedules use.
+ */
+function parseTarget(target: string): { service_code: string; run_as: "user" | "system" } | null {
   const due = /^jobs\.due\.(user|system)\.([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (due) return { service_code: due[2]!, job_name: due[3]!, run_as: due[1]! as "user" | "system" };
+  if (due) return { service_code: due[2]!, run_as: due[1]! as "user" | "system" };
   const plain = /^([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (plain) return { service_code: plain[1]!, job_name: target, run_as: "system" };
+  if (plain) return { service_code: plain[1]!, run_as: "system" };
   return null;
 }
 
@@ -82,20 +116,17 @@ function parseTarget(target: string): { service_code: string; job_name: string; 
  * outcome is the most truthful.
  */
 async function correlateRun(data: JobResultMessage, redeliveryCount?: number): Promise<boolean> {
-  const dal = getDal();
-  const rows = await dal.findAll<JobRunEntity>(JobRunEntity, null, {
-    filters: [Filter.fieldValue(field(JobRunEntity, "uuid"), "=", data.run_id!)],
-  });
-  if (!Array.isArray(rows) || rows.length === 0) return false;
-  const row = rows[0]!;
+  const row = await runs.findByUuid(data.run_id!);
+  if (!row) return false;
   const isError = data.status === "failed";
-  await dal.update(
-    JobRunEntity,
+  const err = isError ? normalizeError(data.error_code, data.error_detail) : undefined;
+  await runs.patchRow(
+    row.uuid,
+    row.version,
     {
-      uuid: row.uuid,
       status: data.status,
-      error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
-      error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
+      error_code: err?.code,
+      error_detail: err?.detail,
       duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       // COALESCE semantics: the forwarder-stamped due-fire seq is
       // canonical — the report's seq fills only rows that never crossed
@@ -103,9 +134,8 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
       fire_seq: row.fire_seq ?? (data.fire_seq === undefined ? undefined : BigInt(data.fire_seq)),
       redelivery_count: redeliveryCount,
       report: plainJson(data.report),
-      version: row.version,
-    } as never,
-    { actor: "system:job", matchBy: "uuid" } as never,
+    },
+    "system:job",
   );
   return true;
 }
@@ -113,26 +143,42 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
 /**
  * INSERT a completed row for an execution that never crossed the
  * forwarder — own-lane due consumers correlate by `schedule_subject`.
+ * Every run derives from a trigger: the forward-stamped `trigger_uuid`
+ * first, the live mirror's FK second. A result that can prove neither
+ * ran outside dispatch lineage — warn and drop instead of recording an
+ * unlinked row.
  */
 async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number): Promise<void> {
   const parsed = parseTarget(data.target ?? "");
   const isError = data.status === "failed";
-  await getDal().add<JobRunEntity>(
-    JobRunEntity,
+  const err = isError ? normalizeError(data.error_code, data.error_detail) : undefined;
+  const scheduleRow = data.schedule_subject
+    ? await getScheduleRow(data.schedule_subject).catch(() => undefined)
+    : undefined;
+  const triggerUuid = data.trigger_uuid ?? scheduleRow?.trigger_uuid;
+  if (triggerUuid === undefined) {
+    logger.warn(
+      `run-recorder: unresolvable trigger lineage for result on "${data.target ?? "unknown"}" (schedule_subject=${data.schedule_subject ?? "-"}) — dropped`,
+      { tags: ["jobs"] },
+    );
+    return;
+  }
+  await runs.addRun(
     {
       schedule_subject: data.schedule_subject,
-      service_code: parsed?.service_code ?? "unknown",
-      job_name: parsed?.job_name ?? data.target ?? "unknown",
+      schedule_uuid: scheduleRow?.uuid,
+      trigger_uuid: triggerUuid,
+      target_subject: data.target,
       run_as: parsed?.run_as ?? "system",
       status: data.status,
-      error_code: isError ? (data.error_code ?? "EXECUTION_ERROR") : undefined,
-      error_detail: isError ? (data.error_detail ?? "").slice(0, 2000) : undefined,
+      error_code: err?.code,
+      error_detail: err?.detail,
       duration_ms: data.duration_ms === undefined ? undefined : BigInt(data.duration_ms),
       fire_seq: data.fire_seq === undefined ? undefined : BigInt(data.fire_seq),
       redelivery_count: redeliveryCount,
       report: plainJson(data.report),
-    } as never,
-    { actor: `system:${parsed?.service_code ?? "job"}` } as never,
+    },
+    `system:${parsed?.service_code ?? "job"}`,
   );
 }
 
@@ -144,28 +190,21 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
  * not a tombstone.
  */
 async function sweepLostRuns(): Promise<void> {
-  const dal = getDal();
   const cutoff = new Date(Date.now() - DISPATCH_LOST_AFTER_MS);
-  const rows = (await dal.findAll<JobRunEntity>(JobRunEntity, null, {
-    filters: [
-      Filter.fieldValue(field(JobRunEntity, "status"), "=", "dispatched"),
-      Filter.fieldValue(field(JobRunEntity, "created_at"), "<", cutoff),
-    ],
-  })) as JobRunEntity[];
+  const rows = await runs.listDispatchedBefore(cutoff);
   for (const row of rows) {
     try {
-      await dal.update(
-        JobRunEntity,
+      await runs.patchRow(
+        row.uuid,
+        row.version,
         {
-          uuid: row.uuid,
           status: "lost",
           error_code: "DISPATCH_TIMEOUT",
           error_detail: `no execution result within ${DISPATCH_LOST_AFTER_MS / 1000}s of dispatch`,
-          version: row.version,
-        } as never,
-        { actor: "system:job", matchBy: "uuid" } as never,
+        },
+        "system:job",
       );
-      logger.warn(`run-recorder: run ${row.uuid} (${row.job_name}) dispatched but never reported — lost`, {
+      logger.warn(`run-recorder: run ${row.uuid} (${row.trigger ?? row.trigger_uuid}) dispatched but never reported — lost`, {
         tags: ["jobs"],
       });
     } catch (err) {
@@ -188,7 +227,7 @@ export async function startRunRecorder(): Promise<void> {
         const correlated = await correlateRun(data, meta.info?.redeliveryCount);
         if (correlated) return;
         logger.warn(
-          `run-recorder: result for unknown run_id ${data.run_id} on "${meta.subject}" — recording unlinked`,
+          `run-recorder: result for unknown run_id ${data.run_id} on "${meta.subject}" — falling back to trigger lineage`,
           { tags: ["jobs"] },
         );
       }

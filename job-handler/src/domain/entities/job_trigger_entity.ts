@@ -48,6 +48,22 @@ import { RuleFilter } from "../jsonb-contracts.js";
  */
 export const TRIGGER_SCHEDULE_SUBJECT_PREFIX = "jobs.schedule.job.";
 
+/**
+ * Forward-trampoline grammar — `jobs.due.<lane>.job.forward.<trigger_uuid>`.
+ * The trigger uuid IS the subject tail: JH owns both the publisher
+ * (triggers-engine) and the consumer (due-forwarder), so dispatch lineage
+ * rides the subject itself — no envelope field, no redundancy. Single
+ * source for the convention: builder and parser live together.
+ */
+export function trampolineSubject(lane: "user" | "system", triggerUuid: string): string {
+  return `jobs.due.${lane}.job.forward.${triggerUuid}`;
+}
+
+/** Inverse of {@link trampolineSubject} — the trigger uuid a due arrived on. */
+export function trampolineTriggerUuid(subject: string): string | undefined {
+  return /^jobs\.due\.(?:user|system)\.job\.forward\.([0-9a-fA-F-]{36})$/.exec(subject)?.[1];
+}
+
 @Entity("job_triggers", "job")
 @AuditTrail()
 export class JobTriggerEntity
@@ -127,8 +143,8 @@ export class JobTriggerEntity
    *  gated to `status='armed'` (the same gate the served `next_run_at`
    *  column applies). The engine mirrors NATS truth into that column:
    *  `Nats-Schedule-Next` header per fire + deterministic arm-time
-   *  computation for `@every`/`@at`. NULL for disabled triggers,
-   *  event-only triggers and cron specs before their first fire. */
+   *  computation for `@every`/`@at` + a one-time UTC estimate for cron.
+   *  NULL for disabled triggers and event-only triggers. */
   @Calculated(
     `CASE WHEN {self}.deleted_at IS NULL THEN (SELECT js.next_fire_mirror_at FROM job.job_schedules js WHERE js.schedule_subject = '${TRIGGER_SCHEDULE_SUBJECT_PREFIX}' || {self}.uuid::text AND js.status = 'armed') END`,
     { pgType: "timestamptz", nullable: true },

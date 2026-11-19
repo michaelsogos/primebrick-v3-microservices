@@ -1,0 +1,68 @@
+---
+title: Boilerplate Service
+description: "Clone-source template for new Primebrick microservices — real boot code behind a hard guard, test entity, config surface, docs and CI defaults."
+---
+
+# Boilerplate Service
+
+`boilerplate` is the **clone source for new microservices** in this monorepo. It is not a service: it is the smallest complete service shape, kept buildable and testable so a `cp -r boilerplate <new-svc>` clone starts governed from the first commit.
+
+- **Package:** `primebrick-boilerplate`
+- **Service code:** `boilerplate` (rename everywhere on clone)
+- **Runtime:** Bun (`pnpm dev` → `dev-hot`; `bun dist/index.js` in production)
+- **Database:** `boilerplate` schema — `config_entries`, `translations`, `test_items`
+
+## Why it cannot boot
+
+`src/index.ts` opens `main()` with a **guard**: without `--emit-docs` in argv it logs a standard error and `process.exit(1)`. Booting the template would register a phantom `boilerplate` module into the live service registry. The guard lets `--emit-docs` pass so the template's own `pnpm test` / `docs:check` prove its routes compile for real.
+
+## Clone procedure
+
+```bash
+cp -r boilerplate <new-svc>          # plain copy — no git metadata inside
+cd <new-svc>
+# rename <boilerplate> → <new-svc> everywhere:
+#   package.json name, .env DATABASE_SCHEMA, src/index.ts serviceName +
+#   displayName + schema + applicationName, entities' @Entity schema token,
+#   db-meta patches (schema + seed values + filenames), .devin
+#   i18n_namespaces, service-routes serverUrl port, docs/dev-guide/index.mdx
+# pick a free http_port (taken: 3003-3007 — next free 3009+)
+# regenerate + sign db-meta against your schema:
+#   pnpm db:meta:compare   # entity snapshot → unsigned patch + manifest refresh
+#   primebrick-db sign --db-meta db-meta --key @<dev-keyfile> --key-id <id>
+# delete the guard block at the top of main() in src/index.ts
+pnpm install && pnpm test            # standards + docs:check + vitest
+pnpm dev                             # boots for real — /test routes live
+```
+
+See `docs/dev-guide/adding-a-service.mdx` for the full registration checklist (nav, capabilities, partOf, FE chunks).
+
+## What ships inside
+
+| Surface | Path | Notes |
+|---------|------|-------|
+| Entity CRUD | `/api/v1/entities/test_item/*` | `TestItemsService` (DomainService) behind `makeEntityRouter` |
+| RPC test | `GET /api/v1/actions/test-ping` | hello-world probe — proves the cloned service serves |
+| RPC test | `POST /api/v1/actions/test-echo` | body-validated echo — write-route shape |
+| Config entries | `/api/v1/entities/config_entry/*` | `ConfigEntriesService` — the standard module config surface |
+
+## Canonical layout
+
+```
+src/
+  index.ts                  # createMicroservice boot + boilerplate guard
+  service-routes.ts         # ONE makeServiceRoutes declaration (routes + spec)
+  events-declaration.ts     # emitted-subject vocabulary (empty on template)
+  adapters/                 # ports: config repo, health, auth config
+  controllers/http/         # entities-route + RPC route tables (transport only)
+  controllers/nats-sub/     # NATS subscribers (empty on template)
+  db/                       # dal.ts gateway + entity-repo seam helpers
+  domain/entities/          # @Entity classes + ENTITY_REGISTRY
+  modules/<domain>/         # DomainService + entity meta per domain
+  services/                 # non-entity domain services (empty on template)
+  __tests__/                # vitest — construction/spec contracts, no DB
+db-meta/                    # signed patches + keys.json + snapshots
+scripts/                    # database-patch-apply / -compare wrappers
+docs/dev-guide/             # this page — one index.mdx minimum
+.devin/check-standards.json # governed seams (dal-access allowPaths)
+```

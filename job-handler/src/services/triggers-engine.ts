@@ -39,6 +39,7 @@
 
 import {
   NatsClient,
+  ENTITY_EVENTS_STREAM,
   subscribeShielded,
   forwardAuthHeaders,
   forwardedActor,
@@ -51,10 +52,13 @@ import {
   type AuthUser,
   logger,
 } from "@primebrick/sdk";
-import { Filter, field } from "@primebrick/dal-pg";
 import { callablePayloadSchema } from "./callable-catalog.js";
-import { getDal } from "../db/dal.js";
-import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../domain/entities/job_trigger_entity.js";
+import type { MsgHdrs } from "@nats-io/transport-node";
+import { JobTriggersService } from "../modules/jobs/jobs.service.js";
+import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX, trampolineSubject } from "../domain/entities/job_trigger_entity.js";
+
+/** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
+const triggers = new JobTriggersService();
 import { declareSchedule, disarmSchedule, dropScheduleMirror, getScheduleRow } from "./schedule-service.js";
 import { FORWARD_ENVELOPE_MARK, type JobForwardEnvelope } from "./due-forwarder.js";
 import { type RuleFilter } from "../domain/jsonb-contracts.js";
@@ -117,8 +121,8 @@ function triggerScheduleSubject(trigger: JobTriggerEntity): string {
   return `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}${trigger.uuid}`;
 }
 
-function trampolineSubject(lane: Lane, trigger: JobTriggerEntity): string {
-  return `jobs.due.${lane}.job.forward.${trigger.uuid}`;
+function forwardSubject(lane: Lane, trigger: JobTriggerEntity): string {
+  return trampolineSubject(lane, trigger.uuid);
 }
 
 /** Live trigger state — the subscription is permanent, the map is the switch. */
@@ -134,10 +138,7 @@ const authorLaneUsers = new Map<string, AuthUser>(); // uuid → AuthUser
 const authorLaneHeaders = new Map<string, Record<string, string>>(); // uuid → headers
 
 async function loadTrigger(uuid: string): Promise<JobTriggerEntity | undefined> {
-  const rows = (await getDal().findAll<JobTriggerEntity>(JobTriggerEntity, null, {
-    filters: [Filter.fieldValue(field(JobTriggerEntity, "uuid"), "=", uuid)],
-  })) as JobTriggerEntity[];
-  return Array.isArray(rows) ? rows[0] : undefined;
+  return (await triggers.findByUuid(uuid)) as JobTriggerEntity | undefined;
 }
 
 /**
@@ -278,7 +279,7 @@ async function dispatch(
     await declareSchedule({
       schedule_subject: triggerScheduleSubject(trigger),
       schedule: trigger.schedule_spec,
-      target: trampolineSubject(auth.lane, trigger),
+      target: forwardSubject(auth.lane, trigger),
       trigger_uuid: trigger.uuid,
       payload: envelope,
       mirror_target: trigger.target_subject,
@@ -289,7 +290,7 @@ async function dispatch(
     // forwarder already consumes. jetstreamPublish, not core publish:
     // the trampoline subject is stream-captured — only a PubAck proves
     // the fire was durably stored; a core publish can silently drop.
-    await NatsClient.jetstreamPublish(trampolineSubject(auth.lane, trigger), envelope, auth.headers);
+    await NatsClient.jetstreamPublish(forwardSubject(auth.lane, trigger), envelope, auth.headers);
   }
 }
 
@@ -337,6 +338,40 @@ async function armTimer(trigger: JobTriggerEntity): Promise<void> {
 async function bindSubject(subject: string): Promise<void> {
   if (boundSubjects.has(subject)) return;
   boundSubjects.add(subject);
+  // Fan-out is liveTriggers-resolution at delivery, and ISOLATED per
+  // trigger: a thrown dispatch is caught and logged here — it must never
+  // reject the handler. Under the JetStream durable binding (events.*)
+  // a rejection would nak → redeliver → re-fire the sibling triggers
+  // that already succeeded (duplicate runs). Failed triggers on that
+  // event are logged-and-lost until per-run idempotency lands.
+  const dispatch = (payload: unknown, msg: { headers?: MsgHdrs }) =>
+    Promise.all(
+      [...liveTriggers.values()]
+        .filter((t) => t.event_subject === subject)
+        .map((t) =>
+          onEvent(t.uuid, payload, msg).catch((err) =>
+            logger.error(`trigger ${t.uuid} dispatch failed on ${subject}`, {
+              err: err instanceof Error ? err.message : String(err),
+              tags: ["jobs"],
+            }),
+          ),
+        ),
+    ).then(() => {});
+
+  if (subject.startsWith("events.")) {
+    // ENTITY_EVENTS lane — DURABLE pull consumer. One durable per bound
+    // subject; JH replicas share the work through the same durable name
+    // (pull consumers split deliveries like a queue group). Durable name
+    // sanitizes `.`/`>` — illegal chars in consumer names.
+    await NatsClient.jetstreamSubscribe({
+      stream: ENTITY_EVENTS_STREAM,
+      durable: `jh-${subject.replace(/[.>*]+/g, "-").replace(/-$/, "")}`,
+      filterSubject: subject,
+      handler: (payload, msg) => dispatch(payload, msg),
+    });
+    logger.done(`trigger subscription bound on ${subject} (durable=ENTITY_EVENTS)`, { tags: ["jobs"] });
+    return;
+  }
   // Queue "job" — WORK subject: when multiple JH replicas run, NATS
   // delivers each event to exactly ONE member (verified empirically:
   // queued subscribers split deliveries; unqueued ones all receive a
@@ -344,14 +379,7 @@ async function bindSubject(subject: string): Promise<void> {
   // `jobs.ctl.triggers.changed` below stays unqueued on purpose: the
   // reload is a broadcast every replica must see to keep liveTriggers
   // consistent.
-  await subscribeShielded(subject, (payload, msg) =>
-    Promise.all(
-      [...liveTriggers.values()]
-        .filter((t) => t.event_subject === subject)
-        .map((t) => onEvent(t.uuid, payload, msg)),
-    ).then(() => {}),
-    { queue: "job" },
-  );
+  await subscribeShielded(subject, (payload, msg) => dispatch(payload, msg), { queue: "job" });
   logger.done(`trigger subscription bound on ${subject} (queue=job)`, { tags: ["jobs"] });
 }
 
@@ -400,16 +428,15 @@ export async function refreshTrigger(uuid: string): Promise<void> {
 }
 
 export async function startTriggersEngine(): Promise<void> {
-  const dal = getDal();
   // Soft-deleted rows are excluded by default — `deleted_at` IS the
   // disable flag, no `enabled` column exists.
-  const triggers = (await dal.findAll<JobTriggerEntity>(JobTriggerEntity, null)) as JobTriggerEntity[];
+  const liveRows = (await triggers.listLive()) as JobTriggerEntity[];
 
   // One shielded subscription per event subject (dedup) — `bindSubject`
   // fans out to `liveTriggers` at delivery time, so late-enabling a
   // trigger needs no re-subscribe when the subject is already bound.
   const bySubject = new Set<string>();
-  for (const trigger of Array.isArray(triggers) ? triggers : []) {
+  for (const trigger of liveRows) {
     liveTriggers.set(trigger.uuid, trigger);
     if (trigger.event_subject) bySubject.add(trigger.event_subject);
   }

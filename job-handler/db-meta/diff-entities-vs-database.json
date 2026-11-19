@@ -1,39 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-14T20:24:25.588Z",
+  "generatedAt": "2026-11-19T10:48:53.913Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
-  "tables": {
-    "job.job_schedules": {
-      "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [
-        "next_run_at"
-      ],
-      "likelyRenames": [
-        {
-          "databaseColumn": "fired_at",
-          "entityColumn": "next_fire_mirror_at",
-          "matchTier": 2,
-          "matchRule": "compatible_type_ordinal_delta_2",
-          "reasons": [
-            "compatible_type:timestamptz",
-            "ordinal_delta_2"
-          ],
-          "suggestedSql": "ALTER TABLE \"job\".\"job_schedules\" RENAME COLUMN \"fired_at\" TO \"next_fire_mirror_at\";"
-        }
-      ],
-      "typeMismatches": [],
-      "nullabilityMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [
-        "job_schedules_subject_uq",
-        "job_schedules_service_idx",
-        "job_schedules_status_idx"
-      ],
-      "indexMismatches": [],
-      "onlyInEntityForeignKeys": [],
-      "onlyInDatabaseForeignKeys": [],
-      "foreignKeyMismatches": []
-    }
-  }
+  "tables": {}
 }
