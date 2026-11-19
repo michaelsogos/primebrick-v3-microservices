@@ -102,31 +102,22 @@ export class JobScheduleEntity
   )
   next_run_at?: Date;
 
-  /** The scheduled job's name — the authored job identity. Trigger-owned
-   *  mirrors inherit the trigger's display (`job_triggers.name` via
-   *  `trigger_uuid`): the job the trigger declares IS what this schedule
-   *  runs, and its name survives the trigger's deletion — same contract
-   *  as the `trigger_uuid` ref display join (no `deleted_at` filter).
-   *  Service-owned rows keep the callable tail of `target_subject`
-   *  (`jobs.due.<lane>.<svc>.<name>` → `<name>`; a plain callable subject
-   *  stays whole — same parse run-recorder applies). */
-  @Calculated(
-    `COALESCE(
-      (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),
-      regexp_replace({self}.target_subject, '^jobs\\.due\\.[^.]+\\.[^.]+\\.', '')
-    )`,
-    { pgType: "text" },
-  )
-  job_name?: string;
+  /** The declared job identity — REQUIRED in the arm contract
+   *  (`DeclareScheduleInput.name`), stamped at arm time. Every mirror is
+   *  trigger-owned, so the armer copies `job_triggers.name` verbatim; a
+   *  re-arm overwrites it with the trigger's then-current name, a
+   *  trigger rename never rewrites history until the next arm. */
+  @Column({ nullable: false })
+  name!: string;
 
   /** WHO armed this schedule — ownership, never audit. Every row is
    *  trigger-owned (`trigger_uuid` NOT NULL): the armer IS the owning
    *  trigger, resolved live through `trigger_uuid` (rename-proof, and
    *  surviving the trigger's soft-delete — a disarmed orphan keeps the
-   *  identity of who armed it, same contract as `job_name`). When the
-   *  trigger row is physically gone the dead key surfaces — the
-   *  unresolved-ref → uuid convention. `created_by` stays the hidden
-   *  audit writer and is never consulted here. */
+   *  identity of who armed it). When the trigger row is physically gone
+   *  the dead key surfaces — the unresolved-ref → uuid convention.
+   *  `created_by` stays the hidden audit writer and is never consulted
+   *  here. */
   @Calculated(
     `COALESCE(
       (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),

@@ -217,18 +217,37 @@ describe("due-forwarder — run-result correlation", () => {
     expect(published()[0].headers["x-job-run-id"]).toBe("run-uuid-42");
   });
 
-  it("dispatched run rows carry the full callable, never a service_code", async () => {
+  it("dispatched run rows carry the declared name — the callable lands on target_subject", async () => {
+    const handler = await handlerFor("system");
+
+    await handler(envelope({ name: "Welcome Mail" }), emptyMsg());
+
+    // `name` = the declared job identity (envelope stamp), never the
+    // destination; the consumed callable is the target_subject column.
+    // `created_by` stays the writer (system:job). No second truth.
+    expect(recorded()[0]).toMatchObject({
+      name: "Welcome Mail",
+      target_subject: "emailsender.send",
+      status: "dispatched",
+    });
+    expect(recorded()[0]).not.toHaveProperty("service_code");
+  });
+
+  it("the armed mirror's name wins over the envelope stamp", async () => {
+    const handler = await handlerFor("system");
+    h.getScheduleRow.mockResolvedValue({ status: "armed", name: "Mirror Name" } as never);
+
+    await handler(envelope({ name: "Welcome Mail" }), emptyMsg());
+
+    expect(recorded()[0].name).toBe("Mirror Name");
+  });
+
+  it("a legacy envelope without name falls back to the destination", async () => {
     const handler = await handlerFor("system");
 
     await handler(envelope(), emptyMsg());
 
-    // Executor provenance = the callable namespace inside `job_name`;
-    // `created_by` stays the writer (system:job). No second truth.
-    expect(recorded()[0]).toMatchObject({
-      job_name: "emailsender.send",
-      status: "dispatched",
-    });
-    expect(recorded()[0]).not.toHaveProperty("service_code");
+    expect(recorded()[0].name).toBe("emailsender.send");
   });
 
   it("marks a one-shot schedule fired after the dispatch attempt", async () => {

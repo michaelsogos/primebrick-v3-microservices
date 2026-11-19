@@ -205,16 +205,14 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_schedule.title",
   uid: "uuid",
-  display_field: "job_name",
+  display_field: "name",
   columns: [
     {
-      // @Calculated on JobScheduleEntity — the authored job identity:
-      // the owning trigger's display name (the job the trigger declares
-      // IS the schedule's name), falling back to the declared subject
-      // tail. The schedule has no name of its own — it inherits the
-      // job's. display_field → the pin derives here (never on a subject
-      // mirror).
-      key: "job_name", label_key: F("job_schedule", "job_name"), type: "text", order: 0, kind: "calculated",
+      // The declared job identity — PHYSICAL, REQUIRED in the arm
+      // contract (`DeclareScheduleInput.name`): the armer stamps the
+      // owning trigger's `name` verbatim at arm time. display_field →
+      // the pin derives here (never on a subject mirror).
+      key: "name", label_key: F("job_schedule", "name"), type: "text", order: 0,
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 10, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
     { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 20, icon: "send", color: "sky-500", default_visible: true, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
@@ -365,9 +363,9 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_run.title",
   uid: "uuid",
-  display_field: "job_name",
+  display_field: "name",
   columns: [
-    { key: "job_name", label_key: F("job_run", "job_name"), type: "text", order: 10 },
+    { key: "name", label_key: F("job_run", "name"), type: "text", order: 10 },
     { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "info" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "amber" }, skipped: { label_key: V("job_run", "skipped"), color: "gray" } } } },
     {
       // The trigger that armed this run — friendly @Calculated name over
@@ -410,9 +408,8 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // DESTINATION — the subject the handler consumed, stamped verbatim
       // at write time (forwarder: `envelope.target`; direct: `data.target`).
       // Mirrors `job_schedule.target_subject` (send = destination); NOT
-      // derivable from `job_name`, which is the mixed-derivation display
-      // field (callable verbatim on forwarded runs, parsed fragment on
-      // own-lane ones).
+      // derivable from `name`, which is the declared job identity
+      // (schedule/envelope stamp), never the destination itself.
       // Toggleable but off the default surface (lineage, not outcome data).
       key: "target_subject", label_key: F("job_run", "target_subject"), type: "text", format: "nats_subject", order: 75,
       icon: "send", color: "sky-500", default_visible: false,

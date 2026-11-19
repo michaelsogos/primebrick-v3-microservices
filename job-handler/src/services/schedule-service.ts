@@ -48,6 +48,7 @@ import {
   toNatsScheduleSpec,
 } from "../nats/schedule-mechanism.js";
 import {
+  extJsonStringify,
   JOB_SCHEDULE_SUBJECT_HEADER,
   logger,
   MIN_SCHEDULE_INTERVAL_MS,
@@ -94,6 +95,12 @@ export interface DeclareScheduleInput {
   schedule_subject: string;
   schedule: string;
   target: string;
+  /**
+   * The declared job identity — REQUIRED (mandatory since the unified
+   * `name` model): the armer writes it on the mirror verbatim and runs
+   * inherit it. The triggers engine passes `job_triggers.name`.
+   */
+  name: string;
   payload?: unknown;
   source?: string;
   ttl?: string;
@@ -175,6 +182,15 @@ export async function declareSchedule(
     throw new ScheduleDeclarationError(
       "INVALID_TARGET_SUBJECT",
       `target must be jobs.due.user|system.<owner>.<action>[.<id>], got "${input.target}"`,
+    );
+  }
+  // The declared name is mandatory — the mirror row cannot be written
+  // without it (job_schedules.name NOT NULL), and a nameless schedule
+  // has no authored job identity to display.
+  if (typeof input.name !== "string" || input.name.length === 0) {
+    throw new ScheduleDeclarationError(
+      "INVALID_SCHEDULE_NAME",
+      `name is required — the declared job identity (job_schedules.name), got ${extJsonStringify(input.name)}`,
     );
   }
   const lane = tm[1]! as "user" | "system";
@@ -260,6 +276,7 @@ export async function declareSchedule(
       const armedAt = new Date();
       const row: Partial<JobScheduleEntity> = {
         schedule_subject: input.schedule_subject,
+        name: input.name,
         run_as: lane,
         schedule_spec: input.schedule,
         schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-17T12:34:46.954Z",
+  "generatedAt": "2026-11-19T09:46:37.431Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -454,6 +454,19 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "name": {
+          "name": "name",
+          "ordinalPosition": 24,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -508,8 +521,8 @@
           "isNullable": true,
           "isPrimaryKey": false
         },
-        "job_name": {
-          "name": "job_name",
+        "name": {
+          "name": "name",
           "ordinalPosition": 5,
           "dataType": "text",
           "typname": "text",
@@ -685,6 +698,45 @@
           "typeOid": 20,
           "typcategory": "N",
           "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "trigger_uuid": {
+          "name": "trigger_uuid",
+          "ordinalPosition": 20,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "target_subject": {
+          "name": "target_subject",
+          "ordinalPosition": 21,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "schedule_uuid": {
+          "name": "schedule_uuid",
+          "ordinalPosition": 22,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": true,

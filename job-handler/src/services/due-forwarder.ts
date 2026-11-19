@@ -35,6 +35,10 @@ export interface JobForwardEnvelope {
   [FORWARD_ENVELOPE_MARK]: true;
   /** Service-owned callable subject, e.g. `emailsender.send`. */
   target: string;
+  /** Trigger's declared name (`job_triggers.name`) — the run row's
+   *  `name` on immediate dispatches, which have no schedule mirror to
+   *  inherit it from. Optional only for legacy in-flight envelopes. */
+  name?: string;
   /** Already-mapped request payload (verbatim for unmapped rules). */
   payload: unknown;
   /** Rule's schedule subject — links job_runs → job_schedules. */
@@ -71,7 +75,7 @@ async function insertRun(
   errorCode?: string,
   errorDetail?: string,
   fireSeq?: bigint,
-  scheduleRow?: { uuid?: string; trigger_uuid?: string },
+  scheduleRow?: { uuid?: string; trigger_uuid?: string; name?: string },
 ): Promise<string | undefined> {
   try {
     const row = await runs.addRun(
@@ -79,7 +83,11 @@ async function insertRun(
         schedule_subject: envelope.schedule_subject,
         schedule_uuid: scheduleRow?.uuid,
         trigger_uuid: scheduleRow?.trigger_uuid,
-        job_name: envelope.target,
+        // Declared name, never the destination: the armed mirror's stamp
+        // wins where one exists (authoritative), the envelope carries
+        // `trigger.name` for immediate fires; `envelope.target` is the
+        // legacy fallback for envelopes pre-dating the name field.
+        name: scheduleRow?.name ?? envelope.name ?? envelope.target,
         target_subject: envelope.target,
         run_as: lane,
         status,

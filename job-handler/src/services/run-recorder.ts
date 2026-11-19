@@ -93,7 +93,7 @@ function normalizeError(code: string | undefined, detail: string | undefined): {
 }
 
 /**
- * Derive `{ service_code, job_name, run_as }` from the consumed subject
+ * Derive `{ service_code, name, run_as }` from the consumed subject
  * the result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
  * strips the lane prefix, plain callable subjects (`emailsender.send`)
  * parse directly. `run_as` is `system` unless the due subject says `user`.
@@ -101,11 +101,11 @@ function normalizeError(code: string | undefined, detail: string | undefined): {
  * actor (`system:<svc>` = own-lane self-recording), same provenance
  * contract schedules use.
  */
-function parseTarget(target: string): { service_code: string; job_name: string; run_as: "user" | "system" } | null {
+function parseTarget(target: string): { service_code: string; name: string; run_as: "user" | "system" } | null {
   const due = /^jobs\.due\.(user|system)\.([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (due) return { service_code: due[2]!, job_name: due[3]!, run_as: due[1]! as "user" | "system" };
+  if (due) return { service_code: due[2]!, name: due[3]!, run_as: due[1]! as "user" | "system" };
   const plain = /^([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (plain) return { service_code: plain[1]!, job_name: target, run_as: "system" };
+  if (plain) return { service_code: plain[1]!, name: target, run_as: "system" };
   return null;
 }
 
@@ -158,7 +158,10 @@ async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number)
       schedule_subject: data.schedule_subject,
       schedule_uuid: scheduleRow?.uuid,
       trigger_uuid: scheduleRow?.trigger_uuid,
-      job_name: parsed?.job_name ?? data.target ?? "unknown",
+      // Declared name first — the live mirror's stamp is the authored
+      // identity; the subject-tail parse is the legacy own-lane fallback
+      // for rows whose mirror is already gone.
+      name: scheduleRow?.name ?? parsed?.name ?? data.target ?? "unknown",
       target_subject: data.target,
       run_as: parsed?.run_as ?? "system",
       status: data.status,
@@ -195,7 +198,7 @@ async function sweepLostRuns(): Promise<void> {
         },
         "system:job",
       );
-      logger.warn(`run-recorder: run ${row.uuid} (${row.job_name}) dispatched but never reported — lost`, {
+      logger.warn(`run-recorder: run ${row.uuid} (${row.name}) dispatched but never reported — lost`, {
         tags: ["jobs"],
       });
     } catch (err) {

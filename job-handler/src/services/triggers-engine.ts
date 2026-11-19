@@ -259,6 +259,7 @@ async function dispatch(
   const envelope: JobForwardEnvelope = {
     [FORWARD_ENVELOPE_MARK]: true,
     target: trigger.target_subject,
+    name: trigger.name,
     payload: mapped,
     schedule_subject: trigger.schedule_spec ? triggerScheduleSubject(trigger) : undefined,
   };
@@ -280,6 +281,7 @@ async function dispatch(
       schedule_subject: triggerScheduleSubject(trigger),
       schedule: trigger.schedule_spec,
       target: trampolineSubject(auth.lane, trigger),
+      name: trigger.name,
       trigger_uuid: trigger.uuid,
       payload: envelope,
       mirror_target: trigger.target_subject,

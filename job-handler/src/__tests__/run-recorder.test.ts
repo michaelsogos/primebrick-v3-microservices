@@ -76,7 +76,7 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
     expect(row).toMatchObject({
       schedule_subject: "jobs.schedule.ai.partition-maintenance",
-      job_name: "partition-maintenance",
+      name: "partition-maintenance",
       // The wire target is stamped verbatim — the column reports what the
       // handler consumed, not the parsed display fragment.
       target_subject: "jobs.due.system.ai.partition-maintenance",
@@ -90,8 +90,8 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     expect(row.report).toEqual({ maintenance_ran: true });
   });
 
-  it("stamps trigger_uuid + schedule_uuid from the live schedule row when one resolves", async () => {
-    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7", uuid: "sched-3" } as never);
+  it("stamps trigger_uuid + schedule_uuid + declared name from the live schedule row when one resolves", async () => {
+    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7", uuid: "sched-3", name: "Partition Care" } as never);
     const handler = await start();
     await handler(
       {
@@ -105,6 +105,8 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
     expect(row.trigger_uuid).toBe("trig-7");
     expect(row.schedule_uuid).toBe("sched-3");
+    // The declared identity wins over the subject-tail parse.
+    expect(row.name).toBe("Partition Care");
   });
 
   it("an unknown callable error_code coerces to EXECUTION_ERROR preserving the original", async () => {
@@ -206,7 +208,7 @@ describe("run-recorder — forwarder-correlated runs (run_id)", () => {
 
 describe("run-recorder — dispatched sweeper", () => {
   it("flips stale dispatched rows to lost with DISPATCH_TIMEOUT", async () => {
-    h.findAll.mockResolvedValue([{ uuid: "old-run", job_name: "x.y", version: 1 }]);
+    h.findAll.mockResolvedValue([{ uuid: "old-run", name: "x.y", version: 1 }]);
     await svc.startRunRecorder();
     // The sweeper is registered via setProcessInterval — invoke it directly.
     const sweep = h.setProcessInterval.mock.calls[0]![2] as () => Promise<void>;

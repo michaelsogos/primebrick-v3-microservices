@@ -55,17 +55,22 @@ export class JobRunEntity
   schedule_uuid?: string;
 
   /** Owning schedule display name — the SAME name the schedule record
-   *  sheet shows (its `display_field` resolves to the armer trigger's
-   *  name), joined through the stamped uuid — never the arrival
-   *  subject. NULL when the schedule row is gone. */
+   *  sheet shows (its physical `name` — the declared job identity,
+   *  stamped at arm time), joined through the stamped uuid — never the
+   *  arrival subject. NULL when the schedule row is gone. */
   @Calculated(
-    `(SELECT jt.name FROM job.job_schedules js JOIN job.job_triggers jt ON jt.uuid = js.trigger_uuid WHERE js.uuid = {self}.schedule_uuid)`,
+    `(SELECT js.name FROM job.job_schedules js WHERE js.uuid = {self}.schedule_uuid)`,
     { pgType: "text", nullable: true },
   )
   schedule?: string;
 
+  /** The declared job identity — stamped at dispatch time from the
+   *  armed schedule row (`job_schedules.name`) or the forward envelope
+   *  (`trigger.name` on immediate triggers); the destination subject
+   *  only for own-lane rows that never crossed a governed arm. Physical,
+   *  never derived — a trigger rename does not rewrite run history. */
   @Column({ nullable: false })
-  job_name!: string;
+  name!: string;
 
   /** Destination subject this run was dispatched to — the governed
    *  callable (`envelope.target`, e.g. `emailsender.send`) or, on own-lane
