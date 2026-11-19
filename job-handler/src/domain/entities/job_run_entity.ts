@@ -30,18 +30,24 @@ export class JobRunEntity
   schedule_subject?: string;
 
   /** Owning trigger uuid — STAMPED at write time from the armed schedule
-   *  row (or its subject lookup), so the lineage survives the schedule's
-   *  own lifecycle: schedules are hard-deleted rows, triggers are not.
-   *  NULL for manual/immediate runs and own-lane consumers whose mirror
-   *  never touched a `job_trigger`. */
-  @Column({ pgType: "uuid", nullable: true })
-  trigger_uuid?: string;
+   *  row or the trampoline subject tail (`jobs.due.<lane>.job.forward.
+   *  <uuid>`), so the lineage survives the schedule's own lifecycle:
+   *  schedules are hard-deleted rows, triggers are not. NOT NULL —
+   *  every run derives from a trigger; a dispatch that cannot prove its
+   *  trigger lineage is never recorded. */
+  @Column({ pgType: "uuid", nullable: false })
+  trigger_uuid!: string;
 
-  /** Owning trigger display name — joins `job_triggers` on the stamped
-   *  uuid (NOT through the ephemeral schedule mirror). NULL on manual
-   *  runs. */
+  /** Owning trigger display name — the run's job identity, resolved
+   *  live through `trigger_uuid` (rename relabels history by design:
+   *  name is identity, not provenance; the join survives soft-delete).
+   *  A physically-gone trigger surfaces the dead uuid — the
+   *  unresolved-ref → uuid convention, never "-". */
   @Calculated(
-    `(SELECT t.name FROM job.job_triggers t WHERE t.uuid = {self}.trigger_uuid)`,
+    `COALESCE(
+      (SELECT t.name FROM job.job_triggers t WHERE t.uuid = {self}.trigger_uuid),
+      {self}.trigger_uuid::text
+    )`,
     { pgType: "text", nullable: true },
   )
   trigger?: string;
@@ -50,27 +56,23 @@ export class JobRunEntity
    *  schedule row (forwarder) or the live subject lookup (own-lane
    *  recorder). Schedules are hard-deleted: a dangling uuid drills to
    *  the not-found hero while `schedule_subject` keeps the raw arrival
-   *  truth. NULL for manual/immediate runs. */
+   *  truth. NULL for immediate fires (no schedule mirror). */
   @Column({ pgType: "uuid", nullable: true })
   schedule_uuid?: string;
 
-  /** Owning schedule display name — the SAME name the schedule record
-   *  sheet shows (its physical `name` — the declared job identity,
-   *  stamped at arm time), joined through the stamped uuid — never the
-   *  arrival subject. NULL when the schedule row is gone. */
+  /** Owning schedule display — the schedule's identity IS its owning
+   *  trigger's name (resolved transitively through `js.trigger_uuid` —
+   *  schedules carry no name column of their own), joined through the
+   *  stamped uuid — never the arrival subject. NULL when the schedule
+   *  row is gone. */
   @Calculated(
-    `(SELECT js.name FROM job.job_schedules js WHERE js.uuid = {self}.schedule_uuid)`,
+    `(SELECT jt.name
+       FROM job.job_schedules js
+       JOIN job.job_triggers jt ON jt.uuid = js.trigger_uuid
+      WHERE js.uuid = {self}.schedule_uuid)`,
     { pgType: "text", nullable: true },
   )
   schedule?: string;
-
-  /** The declared job identity — stamped at dispatch time from the
-   *  armed schedule row (`job_schedules.name`) or the forward envelope
-   *  (`trigger.name` on immediate triggers); the destination subject
-   *  only for own-lane rows that never crossed a governed arm. Physical,
-   *  never derived — a trigger rename does not rewrite run history. */
-  @Column({ nullable: false })
-  name!: string;
 
   /** Destination subject this run was dispatched to — the governed
    *  callable (`envelope.target`, e.g. `emailsender.send`) or, on own-lane

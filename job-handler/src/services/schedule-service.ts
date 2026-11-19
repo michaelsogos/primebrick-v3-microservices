@@ -95,17 +95,16 @@ export interface DeclareScheduleInput {
   schedule_subject: string;
   schedule: string;
   target: string;
-  /**
-   * The declared job identity — REQUIRED (mandatory since the unified
-   * `name` model): the armer writes it on the mirror verbatim and runs
-   * inherit it. The triggers engine passes `job_triggers.name`.
-   */
-  name: string;
   payload?: unknown;
   source?: string;
   ttl?: string;
   forwardHeaders?: Record<string, string>;
-  trigger_uuid?: string;
+  /**
+   * The owning trigger — REQUIRED: every mirror row is trigger-owned
+   * (`job_schedules.trigger_uuid` NOT NULL) and the row's display identity
+   * resolves live through this FK. The triggers engine is the only armer.
+   */
+  trigger_uuid: string;
   /**
    * What job_schedules.target_subject shows when the real destination
    * differs from the NATS fire target — triggers arm on the JH-internal
@@ -184,13 +183,13 @@ export async function declareSchedule(
       `target must be jobs.due.user|system.<owner>.<action>[.<id>], got "${input.target}"`,
     );
   }
-  // The declared name is mandatory — the mirror row cannot be written
-  // without it (job_schedules.name NOT NULL), and a nameless schedule
-  // has no authored job identity to display.
-  if (typeof input.name !== "string" || input.name.length === 0) {
+  // The owning trigger is mandatory — the mirror row cannot be written
+  // without it (job_schedules.trigger_uuid NOT NULL), and a trigger-less
+  // schedule has no owner, no identity, and no lawful existence.
+  if (typeof input.trigger_uuid !== "string" || input.trigger_uuid.length === 0) {
     throw new ScheduleDeclarationError(
-      "INVALID_SCHEDULE_NAME",
-      `name is required — the declared job identity (job_schedules.name), got ${extJsonStringify(input.name)}`,
+      "MISSING_TRIGGER_UUID",
+      `trigger_uuid is required — every mirror row is trigger-owned, got ${extJsonStringify(input.trigger_uuid)}`,
     );
   }
   const lane = tm[1]! as "user" | "system";
@@ -276,13 +275,12 @@ export async function declareSchedule(
       const armedAt = new Date();
       const row: Partial<JobScheduleEntity> = {
         schedule_subject: input.schedule_subject,
-        name: input.name,
         run_as: lane,
         schedule_spec: input.schedule,
         schedule_type: input.schedule.startsWith("@at") ? "once" : "recurring",
         target_subject: input.mirror_target ?? input.target,
         status: "armed",
-        trigger_uuid: input.trigger_uuid === undefined ? undefined : toUUID(input.trigger_uuid),
+        trigger_uuid: toUUID(input.trigger_uuid),
         armed_at: armedAt,
         disarmed_at: undefined,
         expires_at: ttlMs === undefined ? undefined : new Date(armedAt.getTime() + ttlMs),
@@ -296,8 +294,8 @@ export async function declareSchedule(
       };
       // Honest system actor — `system:job` for engine materialization
       // (the only armer now). `created_by` is audit plumbing: provenance
-      // lives on the `armed_by` projection (the owning trigger via
-      // trigger_uuid), never on this stamp.
+      // lives on the `trigger` projection (the owning trigger resolved
+      // live via trigger_uuid), never on this stamp.
       const actor = "system:job";
       if (existing !== undefined) {
         await schedules.patchRow(existing.uuid, existing.version, row, actor);

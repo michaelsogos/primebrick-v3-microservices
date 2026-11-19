@@ -16,7 +16,7 @@
   type JobRun = {
     uuid: string;
     schedule_subject: string;
-    job_name: string;
+    trigger: string;
     status: string;
     error_code?: string | null;
     error_detail?: string | null;
@@ -101,8 +101,8 @@
         <span class="text-muted-foreground font-mono text-xs">{run.uuid}</span>
       </div>
       <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-        <dt class="text-muted-foreground">{t(F('job_name'))}</dt>
-        <dd class="font-medium">{run.job_name}</dd>
+        <dt class="text-muted-foreground">{t(F('trigger'))}</dt>
+        <dd class="font-medium">{run.trigger}</dd>
         <dt class="text-muted-foreground">{t(F('schedule_subject'))}</dt>
         <dd class="font-mono text-xs">{run.schedule_subject}</dd>
         <dt class="text-muted-foreground">{t(F('started_at'))}</dt>

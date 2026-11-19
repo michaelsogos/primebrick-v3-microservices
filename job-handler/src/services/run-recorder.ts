@@ -93,19 +93,19 @@ function normalizeError(code: string | undefined, detail: string | undefined): {
 }
 
 /**
- * Derive `{ service_code, name, run_as }` from the consumed subject
- * the result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
+ * Derive `{ service_code, run_as }` from the consumed subject the
+ * result reports on (`msg.target`): `jobs.due.<lane>.<svc>.<action>`
  * strips the lane prefix, plain callable subjects (`emailsender.send`)
- * parse directly. `run_as` is `system` unless the due subject says `user`.
- * `service_code` never lands on a row — it only stamps the `created_by`
- * actor (`system:<svc>` = own-lane self-recording), same provenance
- * contract schedules use.
+ * parse directly. `run_as` is `system` unless the due subject says
+ * `user`. `service_code` never lands on a row — it only stamps the
+ * `created_by` actor (`system:<svc>` = own-lane self-recording), same
+ * provenance contract schedules use.
  */
-function parseTarget(target: string): { service_code: string; name: string; run_as: "user" | "system" } | null {
+function parseTarget(target: string): { service_code: string; run_as: "user" | "system" } | null {
   const due = /^jobs\.due\.(user|system)\.([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (due) return { service_code: due[2]!, name: due[3]!, run_as: due[1]! as "user" | "system" };
+  if (due) return { service_code: due[2]!, run_as: due[1]! as "user" | "system" };
   const plain = /^([a-z0-9-]+)\.([a-z0-9.-]+)$/.exec(target);
-  if (plain) return { service_code: plain[1]!, name: target, run_as: "system" };
+  if (plain) return { service_code: plain[1]!, run_as: "system" };
   return null;
 }
 
@@ -143,25 +143,31 @@ async function correlateRun(data: JobResultMessage, redeliveryCount?: number): P
 /**
  * INSERT a completed row for an execution that never crossed the
  * forwarder — own-lane due consumers correlate by `schedule_subject`.
+ * Every run derives from a trigger: the forward-stamped `trigger_uuid`
+ * first, the live mirror's FK second. A result that can prove neither
+ * ran outside dispatch lineage — warn and drop instead of recording an
+ * unlinked row.
  */
 async function recordDirectRun(data: JobResultMessage, redeliveryCount?: number): Promise<void> {
   const parsed = parseTarget(data.target ?? "");
   const isError = data.status === "failed";
   const err = isError ? normalizeError(data.error_code, data.error_detail) : undefined;
-  // Best-effort lineage: own-lane runs bypass the forwarder, so the
-  // trigger stamp comes from the live mirror row when one still exists.
   const scheduleRow = data.schedule_subject
     ? await getScheduleRow(data.schedule_subject).catch(() => undefined)
     : undefined;
+  const triggerUuid = data.trigger_uuid ?? scheduleRow?.trigger_uuid;
+  if (triggerUuid === undefined) {
+    logger.warn(
+      `run-recorder: unresolvable trigger lineage for result on "${data.target ?? "unknown"}" (schedule_subject=${data.schedule_subject ?? "-"}) — dropped`,
+      { tags: ["jobs"] },
+    );
+    return;
+  }
   await runs.addRun(
     {
       schedule_subject: data.schedule_subject,
       schedule_uuid: scheduleRow?.uuid,
-      trigger_uuid: scheduleRow?.trigger_uuid,
-      // Declared name first — the live mirror's stamp is the authored
-      // identity; the subject-tail parse is the legacy own-lane fallback
-      // for rows whose mirror is already gone.
-      name: scheduleRow?.name ?? parsed?.name ?? data.target ?? "unknown",
+      trigger_uuid: triggerUuid,
       target_subject: data.target,
       run_as: parsed?.run_as ?? "system",
       status: data.status,
@@ -198,7 +204,7 @@ async function sweepLostRuns(): Promise<void> {
         },
         "system:job",
       );
-      logger.warn(`run-recorder: run ${row.uuid} (${row.name}) dispatched but never reported — lost`, {
+      logger.warn(`run-recorder: run ${row.uuid} (${row.trigger ?? row.trigger_uuid}) dispatched but never reported — lost`, {
         tags: ["jobs"],
       });
     } catch (err) {
@@ -221,7 +227,7 @@ export async function startRunRecorder(): Promise<void> {
         const correlated = await correlateRun(data, meta.info?.redeliveryCount);
         if (correlated) return;
         logger.warn(
-          `run-recorder: result for unknown run_id ${data.run_id} on "${meta.subject}" — recording unlinked`,
+          `run-recorder: result for unknown run_id ${data.run_id} on "${meta.subject}" — falling back to trigger lineage`,
           { tags: ["jobs"] },
         );
       }

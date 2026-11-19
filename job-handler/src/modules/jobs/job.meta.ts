@@ -205,14 +205,19 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_schedule.title",
   uid: "uuid",
-  display_field: "name",
+  display_field: "trigger",
   columns: [
     {
-      // The declared job identity — PHYSICAL, REQUIRED in the arm
-      // contract (`DeclareScheduleInput.name`): the armer stamps the
-      // owning trigger's `name` verbatim at arm time. display_field →
-      // the pin derives here (never on a subject mirror).
-      key: "name", label_key: F("job_schedule", "name"), type: "text", order: 0,
+      // The schedule's identity — the owning trigger's display name,
+      // resolved live via `trigger_uuid` (NOT NULL: every mirror is
+      // trigger-owned). display_field → the pin derives here (never on
+      // a subject mirror); the ref drills to job_trigger by the same
+      // uuid, and a physically-gone trigger surfaces the dead uuid —
+      // never "-". Identity position: sticky, always visible — only
+      // `uuid` may precede it (hidden by default).
+      key: "trigger", label_key: F("job_schedule", "trigger"), type: "ref", kind: "calculated", order: 0,
+      ref: { entity: "job_trigger", key_field: "trigger_uuid" },
+      tooltip: H("job_schedule", "trigger"), tooltip_title: HT("job_schedule", "trigger"), tooltip_priority: "HINT",
     },
     { key: "schedule_subject", label_key: F("job_schedule", "schedule_subject"), type: "text", format: "nats_subject", order: 10, icon: "zap", color: "amber-500", tooltip: H("job_schedule", "schedule_subject"), tooltip_title: HT("job_schedule", "schedule_subject"), tooltip_priority: "HINT" },
     { key: "target_subject", label_key: F("job_schedule", "target_subject"), type: "text", format: "nats_subject", order: 20, icon: "send", color: "sky-500", default_visible: true, tooltip: H("job_schedule", "target_subject"), tooltip_title: HT("job_schedule", "target_subject"), tooltip_priority: "HINT" },
@@ -287,9 +292,9 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
     // These are audited columns: a schedule's utility is not "created,
     // therefore exists" but "created AND armed". They rank FIRST of the
     // audit block (canonical extras band — declaration order IS the
-    // sequence: fired_at → armed_by → armed_at → disarmed_at), ahead of
-    // the standard created/updated pairs. `fired_at`/`armed_at` stay
-    // visible by default; `disarmed_at` is togglable like every audit.
+    // sequence: fired_at → armed_at → disarmed_at), ahead of the standard
+    // created/updated pairs. `fired_at`/`armed_at` stay visible by
+    // default; `disarmed_at` is togglable like every audit.
     // Semantics: `armed_at` is monotonic history (persists across disarm);
     // `disarmed_at` is the active disarm stamp (cleared on re-arm) — both
     // populated reads "armed at T1, disarmed at T2".
@@ -298,16 +303,6 @@ export const jobScheduleMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // subject (`skipped` excluded — a suppressed due never ran).
       key: "fired_at", label_key: F("job_schedule", "fired_at"), type: "datetime", kind: "calculated", audited: true, default_visible: true, order: 2000,
       tooltip: H("job_schedule", "fired_at"), tooltip_title: HT("job_schedule", "fired_at"), tooltip_priority: "HINT",
-    },
-    {
-      // WHO armed it — the owning trigger, always (`trigger_uuid` NOT
-      // NULL). The @Calculated column resolves its display name and the
-      // static ref drills it by uuid — same target as the `trigger_uuid`
-      // column itself, no lazy indirection left.
-      key: "armed_by", label_key: F("job_schedule", "armed_by"), type: "ref", kind: "calculated", audited: true,
-      default_visible: true, order: 2010,
-      ref: { entity: "job_trigger", key_field: "trigger_uuid" },
-      tooltip: H("job_schedule", "armed_by"), tooltip_title: HT("job_schedule", "armed_by"), tooltip_priority: "HINT",
     },
     { key: "armed_at", label_key: F("job_schedule", "armed_at"), type: "datetime", audited: true, default_visible: true, order: 2020 },
     { key: "disarmed_at", label_key: F("job_schedule", "disarmed_at"), type: "datetime", audited: true, default_visible: false, order: 2030 },
@@ -363,27 +358,29 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
   entities_ns: "job",
   title_key: "job.entities.job_run.title",
   uid: "uuid",
-  display_field: "name",
+  display_field: "trigger",
   columns: [
-    { key: "name", label_key: F("job_run", "name"), type: "text", order: 10 },
-    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "info" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "amber" }, skipped: { label_key: V("job_run", "skipped"), color: "gray" } } } },
     {
-      // The trigger that armed this run — friendly @Calculated name over
-      // the PHYSICAL stamped `trigger_uuid` (schedules are hard-deleted:
-      // the stamped uuid survives mirror churn, the join didn't). NULL =
-      // manual/immediate run → plain `-`, no fabricated state.
-      // Toggleable but off the default surface — the default grid is the
-      // outcome-monitor nine (name/status/timing/counters/report).
-      key: "trigger", label_key: F("job_run", "trigger"), type: "ref", order: 35, kind: "calculated", default_visible: false,
+      // The run's identity — the owning trigger's display name, resolved
+      // live via `trigger_uuid` (NOT NULL: every run derives from a
+      // trigger; the stamped uuid survives the mirror's hard-delete).
+      // display_field → the pin derives here; the ref drills to
+      // job_trigger by the same uuid, and a physically-gone trigger
+      // surfaces the dead uuid — never "-". Identity position: sticky,
+      // always visible — only `uuid` may precede it (hidden by default).
+      key: "trigger", label_key: F("job_run", "trigger"), type: "ref", kind: "calculated", order: 10,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     },
+    { key: "status", label_key: F("job_run", "status"), type: "badge", order: 30, badge: { values: { dispatched: { label_key: V("job_run", "dispatched"), color: "info" }, succeeded: { label_key: V("job_run", "succeeded"), color: "green" }, failed: { label_key: V("job_run", "failed"), color: "red" }, lost: { label_key: V("job_run", "lost"), color: "amber" }, skipped: { label_key: V("job_run", "skipped"), color: "gray" } } } },
     {
-      // The owning schedule — friendly @Calculated display name, drills
-      // to job_schedule by the PHYSICAL stamped `schedule_uuid` (same
-      // uuid-ref anatomy as `armed_by` → record sheet GET by uuid; a
-      // hard-deleted schedule lands on the not-found hero while the
-      // subject column keeps the raw truth). NULL → "-".
-      // Toggleable but off the default surface, like `trigger`.
+      // The owning schedule — its identity IS its owning trigger's name
+      // (resolved transitively via `js.trigger_uuid` — schedules carry
+      // no name of their own), drills to job_schedule by the PHYSICAL
+      // stamped `schedule_uuid` (same uuid-ref anatomy as `trigger` →
+      // record sheet GET by uuid; a hard-deleted schedule lands on the
+      // not-found hero while the subject column keeps the raw truth).
+      // NULL → "-". Toggleable but off the default surface — the default
+      // grid is the outcome-monitor nine (trigger/status/timing/counters).
       key: "schedule", label_key: F("job_run", "schedule"), type: "ref", order: 36, kind: "calculated", default_visible: false,
       ref: { entity: "job_schedule", key_field: "schedule_uuid" },
     },
@@ -408,8 +405,8 @@ export const jobRunMeta: EntityMeta = withColumnConstraints<EntityMeta>({
       // DESTINATION — the subject the handler consumed, stamped verbatim
       // at write time (forwarder: `envelope.target`; direct: `data.target`).
       // Mirrors `job_schedule.target_subject` (send = destination); NOT
-      // derivable from `name`, which is the declared job identity
-      // (schedule/envelope stamp), never the destination itself.
+      // derivable from `trigger` — the job identity is the owning
+      // trigger's name, never the destination itself.
       // Toggleable but off the default surface (lineage, not outcome data).
       key: "target_subject", label_key: F("job_run", "target_subject"), type: "text", format: "nats_subject", order: 75,
       icon: "send", color: "sky-500", default_visible: false,

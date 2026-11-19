@@ -102,22 +102,14 @@ export class JobScheduleEntity
   )
   next_run_at?: Date;
 
-  /** The declared job identity — REQUIRED in the arm contract
-   *  (`DeclareScheduleInput.name`), stamped at arm time. Every mirror is
-   *  trigger-owned, so the armer copies `job_triggers.name` verbatim; a
-   *  re-arm overwrites it with the trigger's then-current name, a
-   *  trigger rename never rewrites history until the next arm. */
-  @Column({ nullable: false })
-  name!: string;
-
-  /** WHO armed this schedule — ownership, never audit. Every row is
-   *  trigger-owned (`trigger_uuid` NOT NULL): the armer IS the owning
-   *  trigger, resolved live through `trigger_uuid` (rename-proof, and
-   *  surviving the trigger's soft-delete — a disarmed orphan keeps the
-   *  identity of who armed it). When the trigger row is physically gone
-   *  the dead key surfaces — the unresolved-ref → uuid convention.
-   *  `created_by` stays the hidden audit writer and is never consulted
-   *  here. */
+  /** The owning trigger — the ONE owner of every mirror row
+   *  (`trigger_uuid` NOT NULL), resolved live through the FK: the
+   *  schedule's identity IS the trigger's display name, never a stamped
+   *  copy (a trigger rename relabels every view without a re-arm, and
+   *  the join survives the trigger's soft-delete). When the trigger row
+   *  is physically gone the dead key surfaces — the unresolved-ref →
+   *  uuid convention. `created_by` stays the hidden audit writer and is
+   *  never consulted here. */
   @Calculated(
     `COALESCE(
       (SELECT jt.name FROM job.job_triggers jt WHERE jt.uuid = {self}.trigger_uuid),
@@ -125,7 +117,7 @@ export class JobScheduleEntity
     )`,
     { pgType: "text", nullable: true },
   )
-  armed_by?: string;
+  trigger?: string;
 
 
 }

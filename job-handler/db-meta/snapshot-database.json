@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-19T09:46:37.431Z",
+  "generatedAt": "2026-11-19T10:48:53.807Z",
   "source": "database",
   "tables": {
     "job.config_entries": {
@@ -454,19 +454,6 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
-        },
-        "name": {
-          "name": "name",
-          "ordinalPosition": 24,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": false
         }
       },
       "indexes": [
@@ -519,19 +506,6 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": true,
-          "isPrimaryKey": false
-        },
-        "name": {
-          "name": "name",
-          "ordinalPosition": 5,
-          "dataType": "text",
-          "typname": "text",
-          "typeOid": 25,
-          "typcategory": "S",
-          "formatType": "text",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
           "isPrimaryKey": false
         },
         "run_as": {
@@ -713,7 +687,7 @@
           "formatType": "uuid",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
+          "isNullable": false,
           "isPrimaryKey": false
         },
         "target_subject": {

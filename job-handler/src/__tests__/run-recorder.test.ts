@@ -66,6 +66,9 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
       {
         status: "succeeded",
         schedule_subject: "jobs.schedule.ai.partition-maintenance",
+        // `x-job-trigger-id` propagated onto the result — the lineage
+        // survives the mirror's hard-delete by construction.
+        trigger_uuid: "trig-7",
         target: "jobs.due.system.ai.partition-maintenance",
         fire_seq: 881n, // bigint — what extJsonParse actually delivers
         duration_ms: 43n, // bigint — Math.round() on this throws in Bun
@@ -76,22 +79,25 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
     expect(row).toMatchObject({
       schedule_subject: "jobs.schedule.ai.partition-maintenance",
-      name: "partition-maintenance",
+      trigger_uuid: "trig-7",
       // The wire target is stamped verbatim — the column reports what the
-      // handler consumed, not the parsed display fragment.
+      // handler consumed, not a parsed display fragment.
       target_subject: "jobs.due.system.ai.partition-maintenance",
       run_as: "system",
       status: "succeeded",
       duration_ms: 43n,
       fire_seq: 881n,
     });
-    // service_code is dropped — `created_by` owns executor provenance.
+    // No `name` column exists to stamp — the run's identity resolves
+    // live through `trigger`. `service_code` is dropped too —
+    // `created_by` owns executor provenance.
+    expect(row).not.toHaveProperty("name");
     expect(row).not.toHaveProperty("service_code");
     expect(row.report).toEqual({ maintenance_ran: true });
   });
 
-  it("stamps trigger_uuid + schedule_uuid + declared name from the live schedule row when one resolves", async () => {
-    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7", uuid: "sched-3", name: "Partition Care" } as never);
+  it("stamps trigger_uuid + schedule_uuid from the live schedule row when one resolves", async () => {
+    h.getScheduleRow.mockResolvedValue({ trigger_uuid: "trig-7", uuid: "sched-3" } as never);
     const handler = await start();
     await handler(
       {
@@ -105,8 +111,22 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
     const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
     expect(row.trigger_uuid).toBe("trig-7");
     expect(row.schedule_uuid).toBe("sched-3");
-    // The declared identity wins over the subject-tail parse.
-    expect(row.name).toBe("Partition Care");
+    expect(row).not.toHaveProperty("name");
+  });
+
+  it("a result that can prove no trigger lineage is dropped — never an unlinked row", async () => {
+    const handler = await start();
+    // No trigger_uuid on the wire, and the schedule mirror is gone —
+    // the execution ran outside dispatch lineage, so it is not a job run.
+    await handler(
+      {
+        status: "succeeded",
+        schedule_subject: "jobs.schedule.ai.partition-maintenance",
+        target: "jobs.due.system.ai.partition-maintenance",
+      },
+      meta,
+    );
+    expect(h.add).not.toHaveBeenCalled();
   });
 
   it("an unknown callable error_code coerces to EXECUTION_ERROR preserving the original", async () => {
@@ -115,6 +135,7 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
       {
         status: "failed",
         schedule_subject: "jobs.schedule.ai.partition-maintenance",
+        trigger_uuid: "trig-7",
         target: "jobs.due.system.ai.partition-maintenance",
         error_code: "PG_DEADLOCK_X9",
         error_detail: "serialization failure",
@@ -135,6 +156,7 @@ describe("run-recorder — own-lane direct runs (schedule_subject only)", () => 
       {
         status: "failed",
         schedule_subject: "jobs.schedule.ai.partition-maintenance",
+        trigger_uuid: "trig-7",
         target: "jobs.due.system.ai.partition-maintenance",
         error_code: "HANDLER_ERROR",
         error_detail: "pg down",
@@ -188,14 +210,26 @@ describe("run-recorder — forwarder-correlated runs (run_id)", () => {
     expect(h.add).not.toHaveBeenCalled();
   });
 
-  it("an unknown run_id falls back to a direct row (observability over purity)", async () => {
+  it("an unknown run_id still records when the propagated trigger lineage resolves", async () => {
+    h.findAll.mockResolvedValue([]);
+    const handler = await start();
+    await handler(
+      { status: "succeeded", run_id: "ghost", trigger_uuid: "trig-7", target: "emailsender.send" },
+      meta,
+    );
+    const row = h.add.mock.calls[0]![1] as Record<string, unknown>;
+    expect(row.trigger_uuid).toBe("trig-7");
+    expect(row).not.toHaveProperty("name");
+  });
+
+  it("an unknown run_id with no other lineage is dropped", async () => {
     h.findAll.mockResolvedValue([]);
     const handler = await start();
     await handler(
       { status: "succeeded", run_id: "ghost", target: "emailsender.send" },
       meta,
     );
-    expect(h.add).toHaveBeenCalledOnce();
+    expect(h.add).not.toHaveBeenCalled();
   });
 
   it("a result with neither run_id nor schedule_subject is dropped with a warn", async () => {
@@ -208,7 +242,7 @@ describe("run-recorder — forwarder-correlated runs (run_id)", () => {
 
 describe("run-recorder — dispatched sweeper", () => {
   it("flips stale dispatched rows to lost with DISPATCH_TIMEOUT", async () => {
-    h.findAll.mockResolvedValue([{ uuid: "old-run", name: "x.y", version: 1 }]);
+    h.findAll.mockResolvedValue([{ uuid: "old-run", trigger_uuid: "trig-7", version: 1 }]);
     await svc.startRunRecorder();
     // The sweeper is registered via setProcessInterval — invoke it directly.
     const sweep = h.setProcessInterval.mock.calls[0]![2] as () => Promise<void>;

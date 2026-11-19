@@ -75,7 +75,6 @@ const armInput = (over: Record<string, unknown> = {}) => ({
   schedule_subject: "jobs.schedule.job.trig-1",
   schedule: "@every 6h",
   target: "jobs.due.system.job.forward.trig-1",
-  name: "trig",
   trigger_uuid: "00000000-0000-7000-8000-000000000001",
   ...over,
 });
@@ -83,7 +82,6 @@ const armInput = (over: Record<string, unknown> = {}) => ({
 const mirrorRow = (over: Record<string, unknown> = {}) => ({
   uuid: "row-1",
   schedule_subject: "jobs.schedule.job.trig-1",
-  name: "trig",
   trigger_uuid: "00000000-0000-7000-8000-000000000001",
   run_as: "user",
   schedule_spec: "@every 1d",
@@ -110,19 +108,20 @@ describe("declareSchedule — arm protocol", () => {
     const row = h.add.mock.calls[0]![1] as unknown as Record<string, unknown>;
     expect(row).toMatchObject({
       schedule_subject: "jobs.schedule.job.trig-1",
-      name: "trig",
+      trigger_uuid: "00000000-0000-7000-8000-000000000001",
       status: "armed",
       schedule_type: "recurring",
     });
+    expect(row).not.toHaveProperty("name");
   });
 
-  it("a missing/empty name NEVER declares — the mirror identity is mandatory", async () => {
+  it("a missing/empty trigger_uuid NEVER declares — every mirror is trigger-owned", async () => {
     await expect(
-      svc.declareSchedule(armInput({ name: undefined })),
-    ).rejects.toMatchObject({ internal_code: "INVALID_SCHEDULE_NAME" });
+      svc.declareSchedule(armInput({ trigger_uuid: undefined })),
+    ).rejects.toMatchObject({ internal_code: "MISSING_TRIGGER_UUID" });
     await expect(
-      svc.declareSchedule(armInput({ name: "" })),
-    ).rejects.toMatchObject({ internal_code: "INVALID_SCHEDULE_NAME" });
+      svc.declareSchedule(armInput({ trigger_uuid: "" })),
+    ).rejects.toMatchObject({ internal_code: "MISSING_TRIGGER_UUID" });
     expect(h.ensure).not.toHaveBeenCalled();
   });
 

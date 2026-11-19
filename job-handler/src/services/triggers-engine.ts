@@ -55,7 +55,7 @@ import {
 import { callablePayloadSchema } from "./callable-catalog.js";
 import type { MsgHdrs } from "@nats-io/transport-node";
 import { JobTriggersService } from "../modules/jobs/jobs.service.js";
-import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX } from "../domain/entities/job_trigger_entity.js";
+import { JobTriggerEntity, TRIGGER_SCHEDULE_SUBJECT_PREFIX, trampolineSubject } from "../domain/entities/job_trigger_entity.js";
 
 /** Owning entity surface — module-scope (I/O-free ctor, lazy DAL). */
 const triggers = new JobTriggersService();
@@ -121,8 +121,8 @@ function triggerScheduleSubject(trigger: JobTriggerEntity): string {
   return `${TRIGGER_SCHEDULE_SUBJECT_PREFIX}${trigger.uuid}`;
 }
 
-function trampolineSubject(lane: Lane, trigger: JobTriggerEntity): string {
-  return `jobs.due.${lane}.job.forward.${trigger.uuid}`;
+function forwardSubject(lane: Lane, trigger: JobTriggerEntity): string {
+  return trampolineSubject(lane, trigger.uuid);
 }
 
 /** Live trigger state — the subscription is permanent, the map is the switch. */
@@ -259,7 +259,6 @@ async function dispatch(
   const envelope: JobForwardEnvelope = {
     [FORWARD_ENVELOPE_MARK]: true,
     target: trigger.target_subject,
-    name: trigger.name,
     payload: mapped,
     schedule_subject: trigger.schedule_spec ? triggerScheduleSubject(trigger) : undefined,
   };
@@ -280,8 +279,7 @@ async function dispatch(
     await declareSchedule({
       schedule_subject: triggerScheduleSubject(trigger),
       schedule: trigger.schedule_spec,
-      target: trampolineSubject(auth.lane, trigger),
-      name: trigger.name,
+      target: forwardSubject(auth.lane, trigger),
       trigger_uuid: trigger.uuid,
       payload: envelope,
       mirror_target: trigger.target_subject,
@@ -292,7 +290,7 @@ async function dispatch(
     // forwarder already consumes. jetstreamPublish, not core publish:
     // the trampoline subject is stream-captured — only a PubAck proves
     // the fire was durably stored; a core publish can silently drop.
-    await NatsClient.jetstreamPublish(trampolineSubject(auth.lane, trigger), envelope, auth.headers);
+    await NatsClient.jetstreamPublish(forwardSubject(auth.lane, trigger), envelope, auth.headers);
   }
 }
 

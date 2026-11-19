@@ -6,7 +6,7 @@ entity: job_run
 
 List, search and manage all job runs.
 
-Each row shows the Job Name, the Status, the Started at, the Finished at, the Duration, the Error Code, the Redeliveries, the Fire #, the Report.
+Each row shows the Trigger, the Status, the Started at, the Finished at, the Duration, the Error Code, the Redeliveries, the Fire #, the Report.
 
 The page is visible with the `access.system.job.runs` grant.
 
@@ -14,9 +14,8 @@ The page is visible with the `access.system.job.runs` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Job Name** | yes | yes | yes |  |
+| **Trigger** | yes | yes | yes |  |
 | **Status** | yes | yes | yes |  |
-| **Trigger** | no | yes | yes |  |
 | **Scheduler** | no | yes | yes |  |
 | **Duration** | yes | yes | yes |  |
 | **Source Queue** | no | yes | yes |  |
@@ -28,9 +27,8 @@ The page is visible with the `access.system.job.runs` grant.
 | **Report** | yes | yes | no |  |
 | **UUID** | no | yes | yes |  |
 
-- The Job Name column is shown by default and can be sorted and filtered.
+- The Trigger column is shown by default and can be sorted and filtered.
 - The Status column is shown by default and can be sorted and filtered.
-- The Trigger column is hidden by default and can be sorted and filtered.
 - The Scheduler column is hidden by default and can be sorted and filtered.
 - The Duration column is shown by default and can be sorted and filtered.
 - The Source Queue column is hidden by default and can be sorted and filtered.

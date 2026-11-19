@@ -43,16 +43,10 @@ The page is visible with the `access.system.job.triggers.create` grant.
 
 The **Listening Event** field offers these declared published event subjects:
 
-- `events.ai.ai_model.>` — **AI Model**
-- `events.ai.ai_cerebellum.>` — **AI Cerebellum**
-- `jobs.result.ai.*`
 - `events.job.job_trigger.>` — **Job Trigger**
 - `events.job.job_schedule.>` — **Job Schedule**
 - `events.job.job_run.>` — **Job Run**
 - `jobs.ctl.triggers.changed` — **Triggers changed** — Fired when the job trigger set changes — `jobs` domain, `ctl` control channel, `triggers` resource, `changed` verb. The triggers engine re-arms schedules on it
-- `events.emailsender.provider.>` — **Email Provider**
-- `events.emailsender.email_template.>` — **Email Template**
-- `emailsender.response.*`
 - `events.crm.customer.>` — **customer**
 - `events.crm.customer_type.>` — **Customer Type**
 - `events.crm.company_dimension.>` — **Company Dimension**
@@ -72,6 +66,13 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.crm.customer.on.changed` — **Customer changed** — Fires when a customer row is created, updated or deleted — carries the row snapshot plus change metadata
 - `events.crm.customer.on.high_value` — **High-value customer** — Semantic event — sales logic decided this customer crossed the high-value threshold. Carries the customer, the account manager and the trigger details
 - `events.crm.customer.on.payout` — **Customer payout** — Fires when a payout is recorded for a customer — carries the customer, the account manager and the payout details
+- `events.ai.ai_model.>` — **AI Model**
+- `events.ai.ai_cerebellum.>` — **AI Cerebellum**
+- `jobs.result.ai.*`
+- `events.emailsender.provider.>` — **Email Provider**
+- `events.emailsender.email_template.>` — **Email Template**
+- `emailsender.response.*`
+- `webhook.*.received`
 - `events.api.auth_event.>`
 - `events.api.config_entry.>`
 - `events.api.mfa_action_authorization.>`
@@ -86,15 +87,14 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.api.mcp_oauth_client.>`
 - `events.api.service_registry.>`
 - `events.api.client_shield_registry.>` — **client**
-- `webhook.*.received`
 
 The **Destination Event** field offers these declared callable work subjects:
 
-- `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
 - `job.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
-- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 - `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
 - `crm.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
+- `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
+- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 
 ## Actions
 

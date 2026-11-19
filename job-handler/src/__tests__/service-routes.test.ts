@@ -20,7 +20,9 @@ describe("jobServiceRouteHandler construction", () => {
   it("builds without throwing — all meta actions resolve to entity_op routes", async () => {
     const { jobServiceRouteHandler } = await import("../service-routes.js");
     expect(typeof jobServiceRouteHandler).toBe("function");
-  });
+    // Cold-import of the full route graph — the timeout is the cost of
+    // resolving entities/meta/SDK, not the assertion itself.
+  }, 15000);
 
   it("job_trigger declares the semantic exec-* chrome pairs", async () => {
     const { jobEntityDecls } = await import("../controllers/http/entities-route.js");
@@ -62,17 +64,19 @@ describe("jobServiceRouteHandler construction", () => {
     const keys = run?.meta?.columns?.map((c) => c.key) ?? [];
     expect(keys).not.toContain("service_code");
     const col = (key: string) => run?.meta?.columns?.find((c) => c.key === key);
-    // Friendly calculated ref — toggleable but off the default surface,
-    // drills to job_trigger by the PHYSICAL stamped trigger_uuid
-    // (schedules are hard-deleted; the stamped uuid survives mirror churn).
+    // The run's display identity IS the owning trigger — calculated ref,
+    // pinned always-visible by display_field, drills to job_trigger by
+    // the PHYSICAL stamped trigger_uuid (schedules are hard-deleted;
+    // the stamped uuid survives mirror churn). No physical `name`.
+    expect(run?.meta?.display_field).toBe("trigger");
+    expect(keys).not.toContain("name");
     expect(col("trigger")).toMatchObject({
       type: "ref",
       kind: "calculated",
-      default_visible: false,
       ref: { entity: "job_trigger", key_field: "trigger_uuid" },
     });
-    // The owning schedule — calculated friendly name, uuid-ref drill on
-    // the stamped `schedule_uuid` (same anatomy as `armed_by`).
+    // The owning schedule — calculated display, uuid-ref drill on
+    // the stamped `schedule_uuid` (same anatomy as `trigger`).
     expect(col("schedule")).toMatchObject({
       type: "ref",
       kind: "calculated",
@@ -132,8 +136,9 @@ describe("jobServiceRouteHandler construction", () => {
     for (const key of ["fire_seq", "report"] as const) {
       expect(col(key)).toMatchObject({ default_visible: true, filterable: false });
     }
-    // Lineage columns stay toggleable but off the default surface.
-    for (const key of ["trigger", "schedule", "run_as"] as const) {
+    // Secondary lineage columns stay toggleable but off the default
+    // surface (`trigger` is the display_field — always visible).
+    for (const key of ["schedule", "run_as"] as const) {
       expect(col(key)?.default_visible).toBe(false);
     }
     // Outcome preset owns `status`; default sort is dispatch-instant desc.
