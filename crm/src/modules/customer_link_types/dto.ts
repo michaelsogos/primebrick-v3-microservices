@@ -9,6 +9,8 @@ export const CustomerLinkTypeListQuerySchema = ListQueryBaseSchema.extend({
 const CustomerLinkTypeBaseSchema = z.object({
   code: z.string().min(1).max(50),
   label_key: z.string().min(1).max(100).optional(),
+  /** Directional inverse label — NULL = self-inverse type. */
+  inverse_label_key: z.string().min(1).max(100).nullish(),
   sort: z.coerce.number().int().min(0).default(0),
 });
 
