@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-3",
-  "issued_at": "2026-11-18T20:51:38.947Z",
+  "key_id": "dev-micha-2",
+  "issued_at": "2026-11-20T19:51:16.179Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -21,7 +21,9 @@
     "20261116090000_partition_maintenance_callable_i18n": "533b4d0ea7c3219d78764ad774aa5bf9d226a7ca8e341b4d6f01f940e82231ae",
     "20261116100000_audit_uuid_pk_retention": "12827e7d113f72c1c098b4db6a7cace67e70389b8b3b1f8c3fd4452ed644e8de",
     "20261208000000_i18n_segregation_config_keys": "bc597c2cfa58a9f6776822facb55616e7bec8b6faa814a2a1a822195d6746732",
-    "20261221130000_events_fields_labels_i18n": "eae7dccd4d86a3f924e3cd6cb575e59c238c61facf42fab3b94df3b42d4b49f9"
+    "20261221130000_events_fields_labels_i18n": "eae7dccd4d86a3f924e3cd6cb575e59c238c61facf42fab3b94df3b42d4b49f9",
+    "20261225150000_i18n_customer_link_type_rename_it": "0182e70585608b2fc72bfc822827e8bb8cccdaee8d35300d8286f9c228a8a62a",
+    "20261225170000_i18n_customer_link_type_settings_nav_it": "6ba1ba4f548927f27e7311ce3af695a9cdd23826d8b229fc107431355f68eacd"
   },
-  "signature": "BrRBmxnTuBAppvRRcTj2TA+TheBVCEvv8rCYaN67rL7AmI+HLpFFJcN5qukFSCsRjSinbSJlXVZNujMBWn9VCg=="
+  "signature": "4vicLpHnVPKapca9fNOsWBW5OeYscKOXGpt7xaTh+fgEkOn8bBOHaCB3mWxYP08DVlVA5aPv9EjW3GH4GIyUBA=="
 }
