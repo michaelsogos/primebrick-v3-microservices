@@ -30,6 +30,11 @@
       "appliesTo": [
         "fe/src/"
       ]
+    },
+    "ext-json": {
+      "allowPaths": [
+        "services/run-recorder.ts"
+      ]
     }
   },
   "i18n_namespaces": [
