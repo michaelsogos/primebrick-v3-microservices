@@ -14,7 +14,7 @@ const CustomerLinkTypeBaseSchema = z.object({
 
 export const CustomerLinkTypeCreateBodySchema = CustomerLinkTypeBaseSchema;
 export const CustomerLinkTypeUpdateBodySchema = zPartialNoDefaults(
-  CustomerLinkTypeBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  CustomerLinkTypeBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const CustomerLinkTypeAuditQuerySchema = z.object({

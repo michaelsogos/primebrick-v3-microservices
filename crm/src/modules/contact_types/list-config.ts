@@ -11,7 +11,7 @@ const F = (c: string) => `crm.entities.contact_type.fields.${c}`;
 /** `value_kind` drives the contact `value` renderer/validation
  *  (`email`→EmailInput+email rule, `phone`→PhoneInput+E.164 rule). */
 const CONTACT_TYPE_RAW_COLUMNS: ContactTypeListColumn[] = [
-  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false },
+  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true },
   { key: "label_key", label_key: F("label_key"), type: "text", order: 1 },
   { key: "value_kind", label_key: F("value_kind"), type: "badge", order: 2, badge: { values: { email: { label_key: "crm.entities.contact_type.value_kind.email", color: "emerald-300" }, phone: { label_key: "crm.entities.contact_type.value_kind.phone", color: "sky-300" }, text: { label_key: "crm.entities.contact_type.value_kind.text", color: "zinc-300" } } } },
   { key: "sort", label_key: F("sort"), type: "number", order: 3 },

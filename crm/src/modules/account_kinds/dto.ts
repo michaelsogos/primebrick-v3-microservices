@@ -14,7 +14,7 @@ const AccountKindBaseSchema = z.object({
 
 export const AccountKindCreateBodySchema = AccountKindBaseSchema;
 export const AccountKindUpdateBodySchema = zPartialNoDefaults(
-  AccountKindBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  AccountKindBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const AccountKindAuditQuerySchema = z.object({
