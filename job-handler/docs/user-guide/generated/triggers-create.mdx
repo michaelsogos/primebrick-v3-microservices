@@ -27,7 +27,7 @@ The page is visible with the `access.system.job.triggers.create` grant.
 |-------|----------|-------|
 | **Name** | required | max 200; min 5 |
 | **Listening Event** | optional | The event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event from the list; offers the event subjects published by the registered modules (44 declared); only declared values can be selected |
-| **Destination Event** | required | What the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (5 declared); only declared values can be selected |
+| **Destination Event** | required | What the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (4 declared); only declared values can be selected |
 | **Run As** | required | `originator` runs the action as the user who triggered the event, with their permissions — requires an event source; `author` runs as the trigger's author, identity resolved fresh at dispatch time; `system` runs with module privileges; max 20 |
 | **Schedule** | optional | When the trigger fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you |
 | **Filter** | optional | Restrict which events fire this trigger — the job runs only when every added condition matches the event's data. Leave empty to react to every event; edited as structured JSON with schema assistance |
@@ -35,7 +35,7 @@ The page is visible with the `access.system.job.triggers.create` grant.
 
 - The **Name** field is a required field that allows up to 200 characters and requires at least 5 characters.
 - The **Listening Event** field is an optional field — the event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event from the list; offers the event subjects published by the registered modules (44 declared); only declared values can be selected.
-- The **Destination Event** field is a required field — what the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (5 declared); only declared values can be selected.
+- The **Destination Event** field is a required field — what the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (4 declared); only declared values can be selected.
 - The **Run As** field is a required field that allows up to 20 characters — `originator` runs the action as the user who triggered the event, with their permissions — requires an event source; `author` runs as the trigger's author, identity resolved fresh at dispatch time; `system` runs with module privileges.
 - The **Schedule** field is an optional field — when the trigger fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you.
 - The **Filter** field is an optional field — restrict which events fire this trigger — the job runs only when every added condition matches the event's data. Leave empty to react to every event; edited as structured JSON with schema assistance.
@@ -90,7 +90,6 @@ The **Listening Event** field offers these declared published event subjects:
 
 The **Destination Event** field offers these declared callable work subjects:
 
-- `job.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
 - `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
 - `crm.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
 - `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
