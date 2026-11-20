@@ -72,10 +72,9 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.ai.ai_model.>` — **AI Model**
 - `events.ai.ai_cerebellum.>` — **AI Cerebellum**
 - `jobs.result.ai.*`
-- `events.emailsender.provider.>`
-- `events.emailsender.email_template.>`
+- `events.emailsender.provider.>` — **Email Provider**
+- `events.emailsender.email_template.>` — **Email Template**
 - `emailsender.response.*`
-- `webhook.*.received`
 - `events.api.auth_event.>`
 - `events.api.config_entry.>`
 - `events.api.mfa_action_authorization.>`
@@ -90,6 +89,7 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.api.mcp_oauth_client.>`
 - `events.api.service_registry.>`
 - `events.api.client_shield_registry.>` — **client**
+- `webhook.*.received`
 
 The **Destination Event** field offers these declared callable work subjects:
 
@@ -97,7 +97,7 @@ The **Destination Event** field offers these declared callable work subjects:
 - `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
 - `crm.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
 - `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
-- `emailsender.send`
+- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 
 ## Actions
 
