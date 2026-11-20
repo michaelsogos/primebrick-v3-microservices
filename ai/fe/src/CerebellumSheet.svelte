@@ -17,7 +17,7 @@
    * Writes ride `ctx.api` (ws-bound → /svc/ai/api/v1/entities/ai_cerebellum).
    */
   import type { ModuleSheetHost } from '@primebrick/ui';
-  import { modelVariantKey, type AiCerebellum, type AiModel } from '@primebrick/ui';
+  import { modelVariantKey, type AiCerebellum, type AiModel, extJsonStringify } from '@primebrick/ui';
   import { ComboSelect } from '@primebrick/ui';
   import { AiModelOption } from '@primebrick/ui';
   import { CerebellumRecommendationBadge } from '@primebrick/ui';
@@ -140,12 +140,12 @@
       ? await ctx.api(`/api/v1/entities/ai_cerebellum/${encodeURIComponent(existing.uuid)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entity: { ...entity, version: existing.version } }),
+          body: extJsonStringify({ entity: { ...entity, version: existing.version } }),
         })
       : await ctx.api('/api/v1/entities/ai_cerebellum', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ entity }),
+          body: extJsonStringify({ entity }),
         });
     saving = false;
     if (resp.ok) {

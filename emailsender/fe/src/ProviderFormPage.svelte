@@ -17,7 +17,7 @@
    *     ctx.components.params (injected by the host shim).
    */
   import { onMount, untrack } from 'svelte';
-  import { extJsonStringify, notifyParentAndClose, type ModulePageHost } from '@primebrick/ui';
+  import { extJsonStringify, notifyParentAndClose, type ModulePageHost, extJsonParse } from '@primebrick/ui';
   import HostLeaf from './HostLeaf.svelte';
   import type { EmailsenderComponents } from './host-contract';
 
@@ -48,7 +48,7 @@
       try {
         const res = await ctx.api(`/api/v1/entities/provider/${uuid}`);
         if (!res.ok) throw new Error(`LOAD_FAILED:${res.status}`);
-        const row = (await res.json()) as Record<string, unknown>;
+        const row = (await res.text().then((t) => extJsonParse<any>(t))) as Record<string, unknown>;
         provider = (row.provider as string) ?? '';
         apiEndpoint = (row.api_endpoint as string) ?? '';
         fromEmail = (row.from_email as string) ?? '';

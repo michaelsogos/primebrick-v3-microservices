@@ -50,6 +50,7 @@ vi.mock("../nats/schedule-mechanism.js", () => ({ listJobScheduleSubjects: vi.fn
 
 import { runStats } from "../controllers/http/actions-route.js";
 
+import { extJsonStringify } from '@primebrick/sdk';
 /** Yesterday's day-boundary — guaranteed inside the default 30d span. */
 function yesterdayBucket(): Date {
   const d = new Date();
@@ -144,7 +145,7 @@ describe("runStats", () => {
     expect(res.stats["jobs.schedule.job.t-1"]).toBeUndefined();
     // The SQL filter must have received the resolved mirror subject.
     const filter = findAll.mock.calls[0]?.[2]?.filters?.[0];
-    expect(JSON.stringify(filter)).toContain("jobs.schedule.job.t-1");
+    expect(extJsonStringify(filter)).toContain("jobs.schedule.job.t-1");
     // The mirror-row read asks for the SAME resolved subject.
     expect(listRowsBySubjects).toHaveBeenCalledWith(["jobs.schedule.job.t-1"]);
   });

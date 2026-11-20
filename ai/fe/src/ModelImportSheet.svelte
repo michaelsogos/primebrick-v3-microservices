@@ -12,7 +12,7 @@
    * Props contract: `ctx.sheet.props` = `{ existing_model_ids?, on_added? }`.
    */
   import type { ModuleSheetHost } from '@primebrick/ui';
-  import { SheetPanelLayout, SheetPanelFooter } from '@primebrick/ui';
+  import { SheetPanelLayout, SheetPanelFooter, extJsonStringify } from '@primebrick/ui';
   import { ComboSelect } from '@primebrick/ui';
   import { ModelIcon } from '@primebrick/ui';
   import { RankMeter } from '@primebrick/ui';
@@ -293,7 +293,7 @@
       const res = await ctx.api('/api/v1/entities/ai_model', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: extJsonStringify({
           entity: {
             model_id: hit.id,
             name: hit.name,

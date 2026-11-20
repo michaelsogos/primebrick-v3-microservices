@@ -16,7 +16,7 @@
    *     ctx.components.params (injected by the host shim).
    */
   import { onMount, untrack } from 'svelte';
-  import { extJsonStringify, notifyParentAndClose, type ModulePageHost } from '@primebrick/ui';
+  import { extJsonStringify, notifyParentAndClose, type ModulePageHost, extJsonParse } from '@primebrick/ui';
   import HostLeaf from './HostLeaf.svelte';
   import type { EmailsenderComponents } from './host-contract';
 
@@ -48,14 +48,14 @@
       try {
         const res = await ctx.api(`/api/v1/entities/email_template/${uuid}`);
         if (!res.ok) throw new Error(`LOAD_FAILED:${res.status}`);
-        const row = (await res.json()) as Record<string, unknown>;
+        const row = (await res.text().then((t) => extJsonParse<any>(t))) as Record<string, unknown>;
         code = (row.code as string) ?? '';
         languageIso = (row.language_iso as string) ?? '';
         subject = (row.subject as string) ?? '';
         bodyHtml = (row.body_html as string) ?? '';
         bodyText = (row.body_text as string) ?? '';
         mjmlSource = (row.mjml_source as string) ?? '';
-        variablesJson = row.variables == null ? '' : JSON.stringify(row.variables, null, 2);
+        variablesJson = row.variables == null ? '' : extJsonStringify(row.variables,2);
         version = Number(row.version ?? 0);
       } catch (e) {
         ctx.notify({
@@ -74,7 +74,7 @@
     const raw = variablesJson.trim();
     if (!raw) return { ok: true as const, value: null };
     try {
-      const v = JSON.parse(raw) as unknown;
+      const v = extJsonParse<any>(raw) as unknown;
       if (v === null || typeof v !== 'object' || Array.isArray(v)) {
         return { ok: false as const };
       }
