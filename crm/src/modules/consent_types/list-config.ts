@@ -9,7 +9,7 @@ const STICKY_KEYS = new Set<string>(["code"]);
 const F = (c: string) => `crm.entities.consent_type.fields.${c}`;
 
 const CONSENT_TYPE_RAW_COLUMNS: ConsentTypeListColumn[] = [
-  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true },
+  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true, tooltip: "system.entities.dict.hints.code", tooltip_title: "system.entities.dict.hints.code_title", tooltip_priority: "HINT" },
   { key: "label_key", label_key: F("label_key"), type: "text", order: 1 },
   { key: "sort", label_key: F("sort"), type: "number", order: 2 },
 ];

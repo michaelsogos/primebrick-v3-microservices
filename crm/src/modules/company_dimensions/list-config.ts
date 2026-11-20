@@ -9,7 +9,7 @@ const STICKY_KEYS = new Set<string>(["code"]);
 const F = (c: string) => `crm.entities.company_dimension.fields.${c}`;
 
 const COMPANY_DIMENSION_RAW_COLUMNS: CompanyDimensionListColumn[] = [
-  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true },
+  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true, tooltip: "system.entities.dict.hints.code", tooltip_title: "system.entities.dict.hints.code_title", tooltip_priority: "HINT" },
   { key: "label_key", label_key: F("label_key"), type: "text", order: 1 },
   { key: "min_size", label_key: F("min_size"), type: "number", order: 2 },
   { key: "max_size", label_key: F("max_size"), type: "number", order: 3 },
