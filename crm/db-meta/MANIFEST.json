@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-3",
-  "issued_at": "2026-11-21T16:56:24.804Z",
+  "issued_at": "2026-11-21T21:43:20.360Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -28,7 +28,8 @@
     "20261225170000_i18n_customer_link_type_settings_nav_it": "6ba1ba4f548927f27e7311ce3af695a9cdd23826d8b229fc107431355f68eacd",
     "20261226000000_customers_code_unique": "321a0e96ece00f9ecc2bf4d6bd8cd0b59d6049672eab12e5f2c44f07c7c9cf8f",
     "20261227120000_i18n_builtin_sequence_surface": "a2d325481a3bf3c08e6a5b0f90788db1fca470f701b6ac29a5f7d0bf81b70e7c",
-    "20261228100000_i18n_sequence_set_action": "07d7e2b4a2f3ac9021b57b0e3772914a461b54df03e6e4311ef4ba98dbdcf6c7"
+    "20261228100000_i18n_sequence_set_action": "07d7e2b4a2f3ac9021b57b0e3772914a461b54df03e6e4311ef4ba98dbdcf6c7",
+    "20261229120000_i18n_sequence_actions_projection": "320ccda19caa82a7b48c74a0bce5fcc4e585f1cb1e2ccb3e62ccc93b637de74d"
   },
-  "signature": "O2k3lbqnhCk83va2MzgiLzVSExawDOw48efkdl5VnXwba2YPE7NzJSursRP/LQFohhjw77/WYE/gVJ48XA2IAQ=="
+  "signature": "A0fT5UYqqS87R8mrWe3o6viwQllh6U3b+C7R6LEAWa0BviOoUPRbGl7G0BwF4yizFCWtE+q4debX68G4ugs8BQ=="
 }

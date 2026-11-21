@@ -6,7 +6,92 @@ entity: sequence
 
 List, search and manage all sequences.
 
+Each row shows the Code, the Pattern, the Step, the First value, the Time zone, the Label key, the Description key, the Next value, the Current value, the Emitted (next), the Emitted (current), the Last allocated at, the Last allocated by.
+
 The page is visible with the `access.crm.sequences` grant.
+
+## What you can do here
+
+### How to delete a sequence
+1. Open the row actions menu on the sequence and click **Delete**.
+2. Confirm the deletion in the dialog — the sequence is soft-deleted and can be restored.
+
+### How to restore a deleted sequence
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the sequence and click **Restore**.
+3. Confirm in the dialog — the sequence is active again.
+
+### How to view the change history of a sequence
+1. Open the row actions menu on the sequence and click **Audit history**.
+2. The version history of the sequence will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Code** | yes | yes | yes |  |
+| **Pattern** | yes | yes | yes |  |
+| **Step** | yes | yes | yes |  |
+| **First value** | yes | yes | yes |  |
+| **Time zone** | yes | yes | yes |  |
+| **Label key** | yes | yes | yes |  |
+| **Description key** | yes | yes | yes |  |
+| **Next value** | yes | no | no |  |
+| **Current value** | yes | no | no |  |
+| **Emitted (next)** | yes | no | no |  |
+| **Emitted (current)** | yes | no | no |  |
+| **Last allocated at** | yes | no | no |  |
+| **Last allocated by** | yes | no | no |  |
+| **UUID** | no | yes | yes |  |
+
+- The Code column is shown by default and can be sorted and filtered.
+- The Pattern column is shown by default and can be sorted and filtered.
+- The Step column is shown by default and can be sorted and filtered.
+- The First value column is shown by default and can be sorted and filtered.
+- The Time zone column is shown by default and can be sorted and filtered.
+- The Label key column is shown by default and can be sorted and filtered.
+- The Description key column is shown by default and can be sorted and filtered.
+- The Next value column is shown by default and cannot be sorted or filtered.
+- The Current value column is shown by default and cannot be sorted or filtered.
+- The Emitted (next) column is shown by default and cannot be sorted or filtered.
+- The Emitted (current) column is shown by default and cannot be sorted or filtered.
+- The Last allocated at column is shown by default and cannot be sorted or filtered.
+- The Last allocated by column is shown by default and cannot be sorted or filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | DISABLED | `crm.sequence.create.single` | Creates a new sequence | no |
+| **update** | DISABLED | `crm.sequence.update.single` | Opens the sequence for editing | no |
+| **delete** | ENABLED | `crm.sequence.delete.single` | Marks the sequence as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `crm.sequence.restore.single` | Brings a soft-deleted sequence back | no |
+| **purge** | DISABLED | — | Removes the sequence forever | no |
+| **audit history** | ENABLED | `crm.sequence.read.audit` | Shows the change history of the sequence | no |
+
+- Creating a new sequence is not available on this page — if enabled, it would require the `crm.sequence.create.single` permission.
+- Editing a sequence is not available on this page — if enabled, it would require the `crm.sequence.update.single` permission.
+- Soft-deleting a sequence is available on this page — marks the sequence as deleted but keeps it so it can be restored and it requires the `crm.sequence.delete.single` permission.
+- Restoring a soft-deleted sequence is available on this page — brings a soft-deleted sequence back and it requires the `crm.sequence.restore.single` permission.
+- Permanently deleting a sequence is not available on this page — no permission is declared for it on sequences.
+- Viewing the change history of a sequence is available on this page — every sequence keeps a full version history and it requires the `crm.sequence.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `crm.sequence.delete.bulk` | Marks the selected sequences as deleted | no |
+| **restore** | ENABLED | `crm.sequence.restore.bulk` | Restores the selected sequences | no |
+| **duplicate** | DISABLED | — | Duplicates the selected sequences | no |
+| **export** | ENABLED | `crm.sequence.export.all` | Exports the list | no |
+
+- Soft-deleting the selected sequences is available on this page — marks the selected sequences as deleted and it requires the `crm.sequence.delete.bulk` permission.
+- Restoring the selected sequences is available on this page — restores the selected sequences and it requires the `crm.sequence.restore.bulk` permission.
+- Duplicating the selected sequences is not available on this page — no permission is declared for it on sequences.
+- Exporting the list is available on this page — exports the list and it requires the `crm.sequence.export.all` permission.
 
 ## Doc references
 
