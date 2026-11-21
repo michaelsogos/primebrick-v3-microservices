@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-21T12:19:55.136Z",
-  "onlyInEntityTables": [
-    "crm.sequences",
-    "crm.sequence_counters"
-  ],
+  "generatedAt": "2026-11-21T15:30:29.640Z",
+  "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {}
 }

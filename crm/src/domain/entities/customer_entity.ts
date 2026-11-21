@@ -18,6 +18,7 @@ import {
   Column,
   Entity,
   Key,
+  Unique,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -38,6 +39,10 @@ export class CustomerEntity
   @Column({ pgType: "uuid" })
   uuid: UUID;
 
+  /** Human customer code — absolutely unique (a deleted row's code is
+   *  never reusable; restore must never collide). Seq-bound via
+   *  `@SequenceField` (PoC). */
+  @Unique()
   @Column({ length: 20, nullable: false })
   code: string;
 

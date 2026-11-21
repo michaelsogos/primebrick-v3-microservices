@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-21T12:19:55.000Z",
+  "generatedAt": "2026-11-21T15:30:29.513Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -339,7 +339,7 @@
           "dataType": "varchar(20)",
           "typname": "varchar(20)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "code",
           "isNullable": false
@@ -454,7 +454,17 @@
           "propertyKey": "preferred_locale",
           "isNullable": true
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "customers_code_uq",
+          "columns": [
+            "code"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
     },
     "crm.customer_types": {
       "kind": "table",
