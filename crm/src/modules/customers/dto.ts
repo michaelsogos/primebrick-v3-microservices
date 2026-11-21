@@ -23,7 +23,12 @@ export const CustomerListQuerySchema = ListQueryBaseSchema.extend({
 export type CustomerListQuery = z.infer<typeof CustomerListQuerySchema>;
 
 const CustomerBaseSchema = z.object({
-  code: z.string().min(1).max(20),
+  // Seq-bound (@SequenceField on the entity): the wire value is a
+  // sequence DIRECTIVE ({seq:…}) or is omitted (default allocation) —
+  // never a literal. `entityFieldValidator`/`checkEntityFields` owns the
+  // shape contract; this schema stays permissive so the predicate is the
+  // single source.
+  code: z.unknown().optional(),
   status: CustomerStatusSchema.default("ACTIVE"),
   status_reason: z.string().min(1).optional(),
   onboarding_at: z.preprocess(
