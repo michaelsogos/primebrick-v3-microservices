@@ -1,0 +1,99 @@
+---
+title: Sequences List
+description: List, search and manage all sequences.
+entity: sequence
+---
+
+List, search and manage all sequences.
+
+Each row shows the code, the pattern, the step, the start, the tz, the label key, the description key, the value next, the value actual, the emitted next, the emitted actual, the last alloc at, the last alloc by.
+
+The page is visible with the `access.system.ai.settings.sequences` grant.
+
+## What you can do here
+
+### How to delete a sequence
+1. Open the row actions menu on the sequence and click **Delete**.
+2. Confirm the deletion in the dialog — the sequence is soft-deleted and can be restored.
+
+### How to restore a deleted sequence
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the sequence and click **Restore**.
+3. Confirm in the dialog — the sequence is active again.
+
+### How to view the change history of a sequence
+1. Open the row actions menu on the sequence and click **Audit history**.
+2. The version history of the sequence will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **code** | yes | yes | yes |  |
+| **pattern** | yes | yes | yes |  |
+| **step** | yes | yes | yes |  |
+| **start** | yes | yes | yes |  |
+| **tz** | yes | yes | yes |  |
+| **label key** | yes | yes | yes |  |
+| **description key** | yes | yes | yes |  |
+| **value next** | yes | no | no |  |
+| **value actual** | yes | no | no |  |
+| **emitted next** | yes | no | no |  |
+| **emitted actual** | yes | no | no |  |
+| **last alloc at** | yes | no | no |  |
+| **last alloc by** | yes | no | no |  |
+| **UUID** | no | yes | yes |  |
+
+- The code column is shown by default and can be sorted and filtered.
+- The pattern column is shown by default and can be sorted and filtered.
+- The step column is shown by default and can be sorted and filtered.
+- The start column is shown by default and can be sorted and filtered.
+- The tz column is shown by default and can be sorted and filtered.
+- The label key column is shown by default and can be sorted and filtered.
+- The description key column is shown by default and can be sorted and filtered.
+- The value next column is shown by default and cannot be sorted or filtered.
+- The value actual column is shown by default and cannot be sorted or filtered.
+- The emitted next column is shown by default and cannot be sorted or filtered.
+- The emitted actual column is shown by default and cannot be sorted or filtered.
+- The last alloc at column is shown by default and cannot be sorted or filtered.
+- The last alloc by column is shown by default and cannot be sorted or filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | DISABLED | `ai.sequence.create.single` | Creates a new sequence | no |
+| **update** | DISABLED | `ai.sequence.update.single` | Opens the sequence for editing | no |
+| **delete** | ENABLED | `ai.sequence.delete.single` | Marks the sequence as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `ai.sequence.restore.single` | Brings a soft-deleted sequence back | no |
+| **purge** | DISABLED | — | Removes the sequence forever | no |
+| **audit history** | ENABLED | `ai.sequence.read.audit` | Shows the change history of the sequence | no |
+
+- Creating a new sequence is not available on this page — if enabled, it would require the `ai.sequence.create.single` permission.
+- Editing a sequence is not available on this page — if enabled, it would require the `ai.sequence.update.single` permission.
+- Soft-deleting a sequence is available on this page — marks the sequence as deleted but keeps it so it can be restored and it requires the `ai.sequence.delete.single` permission.
+- Restoring a soft-deleted sequence is available on this page — brings a soft-deleted sequence back and it requires the `ai.sequence.restore.single` permission.
+- Permanently deleting a sequence is not available on this page — no permission is declared for it on sequences.
+- Viewing the change history of a sequence is available on this page — every sequence keeps a full version history and it requires the `ai.sequence.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `ai.sequence.delete.bulk` | Marks the selected sequences as deleted | no |
+| **restore** | ENABLED | `ai.sequence.restore.bulk` | Restores the selected sequences | no |
+| **duplicate** | DISABLED | — | Duplicates the selected sequences | no |
+| **export** | ENABLED | `ai.sequence.export.all` | Exports the list | no |
+
+- Soft-deleting the selected sequences is available on this page — marks the selected sequences as deleted and it requires the `ai.sequence.delete.bulk` permission.
+- Restoring the selected sequences is available on this page — restores the selected sequences and it requires the `ai.sequence.restore.bulk` permission.
+- Duplicating the selected sequences is not available on this page — no permission is declared for it on sequences.
+- Exporting the list is available on this page — exports the list and it requires the `ai.sequence.export.all` permission.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

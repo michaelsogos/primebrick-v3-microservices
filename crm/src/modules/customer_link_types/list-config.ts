@@ -10,7 +10,7 @@ const F = (c: string) => `crm.entities.customer_link_type.fields.${c}`;
 
 const CUSTOMER_LINK_TYPE_RAW_COLUMNS: CustomerLinkTypeListColumn[] = [
   { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true, tooltip: "system.entities.dict.hints.code", tooltip_title: "system.entities.dict.hints.code_title", tooltip_priority: "HINT" },
-  { key: "label_key", label_key: F("label_key"), type: "text", order: 1 },
+  { key: "label_key", label_key: F("label_key"), type: "text", format: "i18n_key", order: 1 },
   // NULL inverse = self-inverse type (same vocabulary both directions)
   { key: "inverse_label_key", label_key: F("inverse_label_key"), type: "text", order: 2 },
   { key: "sort", label_key: F("sort"), type: "number", order: 3 },

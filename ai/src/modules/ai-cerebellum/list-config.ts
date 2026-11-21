@@ -21,7 +21,7 @@ const AI_CEREBELLUM_RAW_COLUMNS: AiCerebellumListColumn[] = [
   { key: "model_id", label_key: "ai.entities.ai_cerebellum.fields.model_id", type: "text", order: 1 },
   { key: "dtype", label_key: "ai.entities.ai_cerebellum.fields.dtype", type: "text", order: 1.5 },
   { key: "name", label_key: "ai.entities.ai_cerebellum.fields.name", type: "text", order: 2 },
-  { key: "description_key", label_key: "ai.entities.ai_cerebellum.fields.description_key", type: "text", order: 3, sortable: false, default_visible: false },
+  { key: "description_key", label_key: "ai.entities.ai_cerebellum.fields.description_key", type: "text", format: "i18n_key", order: 3, sortable: false, default_visible: false },
   { key: "enable_thinking", label_key: "ai.entities.ai_cerebellum.fields.enable_thinking", type: "badge", order: 4, default_visible: true, badge: { values: { true: { label_key: "ai.entities.ai_cerebellum.thinking.true", color: "violet-300" }, false: { label_key: "ai.entities.ai_cerebellum.thinking.false", color: "zinc-300" } } } },
   { key: "temperature", label_key: "ai.entities.ai_cerebellum.fields.temperature", type: "text", order: 5, default_visible: true },
   { key: "top_p", label_key: "ai.entities.ai_cerebellum.fields.top_p", type: "text", order: 6, sortable: false, default_visible: true },
