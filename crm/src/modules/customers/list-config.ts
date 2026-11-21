@@ -23,7 +23,7 @@ export const CUSTOMER_STICKY_COLUMN_KEYS = ["code"] as const;
  * `crm.translations` (`entities_ns: "crm"` on the meta).
  */
 const CUSTOMER_RAW_COLUMNS: CustomerListColumn[] = [
-  { key: "code", label_key: "crm.entities.customer.fields.code", type: "text", order: 0, hideable: false, immutable: true },
+  { key: "code", label_key: "crm.entities.customer.fields.code", type: "text", order: 0, hideable: false },
   { key: "display_name", label_key: "crm.entities.customer.fields.display_name", type: "text", order: 1 },
   { key: "status", label_key: "crm.entities.customer.fields.status", type: "badge", order: 6, searchable: false, hideable: false, badge: { values: { ACTIVE: { label_key: "crm.entities.customer.status.active", color: "emerald-300" }, INACTIVE: { label_key: "crm.entities.customer.status.inactive", color: "zinc-300" } } } },
   { key: "onboarding_at", label_key: "crm.entities.customer.fields.onboarding_at", type: "datetime", order: 7, default_visible: true, datetime_iana_toggle: { record_iana_field: "onboarding_time_zone" } },
