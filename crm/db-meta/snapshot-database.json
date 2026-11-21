@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T12:56:21.284Z",
+  "generatedAt": "2026-11-21T12:19:55.006Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -520,7 +520,19 @@
           "isNullable": true,
           "isPrimaryKey": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "customers_code_alive_uidx",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customers_code_alive_uidx ON crm.customers USING btree (code) WHERE (deleted_at IS NULL)"
+        }
+      ]
     },
     "crm.customer_types": {
       "kind": "table",
