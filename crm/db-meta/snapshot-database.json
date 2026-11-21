@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-21T15:30:29.520Z",
+  "generatedAt": "2026-11-21T15:38:16.341Z",
   "source": "database",
   "tables": {
     "crm.config_entries": {
@@ -3576,8 +3576,11 @@
           "using": "btree",
           "isUnique": true,
           "columns": [
-            "LEAST(parent_customer_uuid",
-            "child_customer_uuid"
+            "type_uuid"
+          ],
+          "expressions": [
+            "LEAST(parent_customer_uuid, child_customer_uuid)",
+            "GREATEST(parent_customer_uuid, child_customer_uuid)"
           ],
           "definition": "CREATE UNIQUE INDEX customer_links_pair_uq ON crm.customer_links USING btree (LEAST(parent_customer_uuid, child_customer_uuid), GREATEST(parent_customer_uuid, child_customer_uuid), type_uuid)"
         }

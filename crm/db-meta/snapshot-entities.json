@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-21T15:30:29.513Z",
+  "generatedAt": "2026-11-21T15:38:16.332Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
