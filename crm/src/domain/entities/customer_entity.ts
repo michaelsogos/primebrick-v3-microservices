@@ -19,6 +19,7 @@ import {
   Entity,
   Key,
   Unique,
+  SequenceField,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -40,9 +41,11 @@ export class CustomerEntity
   uuid: UUID;
 
   /** Human customer code — absolutely unique (a deleted row's code is
-   *  never reusable; restore must never collide). Seq-bound via
-   *  `@SequenceField` (PoC). */
+   *  never reusable; restore must never collide). Seq-bound: the write
+   *  payload carries a sequence directive resolved in-transaction;
+   *  the default sequence `customers.code` materializes at boot. */
   @Unique()
+  @SequenceField({ pattern: "CUST-{seq:5}", step: 1n, start: 1n })
   @Column({ length: 20, nullable: false })
   code: string;
 
