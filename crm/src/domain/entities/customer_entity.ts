@@ -43,7 +43,8 @@ export class CustomerEntity
   /** Human customer code — absolutely unique (a deleted row's code is
    *  never reusable; restore must never collide). Seq-bound: the write
    *  payload carries a sequence directive resolved in-transaction;
-   *  the default sequence `customers.code` materializes at boot. */
+   *  the default sequence materializes lazily on first write under its
+   *  deterministic bound uuid (`sequenceBoundUuid("customers.code")`). */
   @Unique()
   @SequenceField({ pattern: "CUST-{seq:5}", step: 1n, start: 1n })
   @Column({ length: 20, nullable: false })

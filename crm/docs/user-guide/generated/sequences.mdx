@@ -6,7 +6,7 @@ entity: sequence
 
 List, search and manage all sequences.
 
-Each row shows the Code, the Pattern, the Step, the First value, the Time zone, the Label key, the Description key, the Next value, the Current value, the Emitted (next), the Emitted (current), the Last allocated at, the Last allocated by.
+Each row shows the Name, the Increment, the Initial Value, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the Last allocated at, the Last allocated by.
 
 The page is visible with the `access.crm.sequences` grant.
 
@@ -29,34 +29,28 @@ The page is visible with the `access.crm.sequences` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **Code** | yes | yes | yes |  |
+| **Name** | yes | yes | yes |  |
+| **Increment** | yes | yes | yes |  |
+| **Initial Value** | yes | yes | yes |  |
+| **Current** | yes | no | no |  |
+| **Next** | yes | no | no |  |
 | **Pattern** | yes | yes | yes |  |
-| **Step** | yes | yes | yes |  |
-| **First value** | yes | yes | yes |  |
+| **Current Sequence** | yes | no | no |  |
+| **Next Sequence** | yes | no | no |  |
 | **Time zone** | yes | yes | yes |  |
-| **Label key** | yes | yes | yes |  |
-| **Description key** | yes | yes | yes |  |
-| **Next value** | yes | no | no |  |
-| **Current value** | yes | no | no |  |
-| **Emitted (next)** | yes | no | no |  |
-| **Emitted (current)** | yes | no | no |  |
-| **Last allocated at** | yes | no | no |  |
-| **Last allocated by** | yes | no | no |  |
+| **Description key** | no | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 
-- The Code column is shown by default and can be sorted and filtered.
+- The Name column is shown by default and can be sorted and filtered.
+- The Increment column is shown by default and can be sorted and filtered.
+- The Initial Value column is shown by default and can be sorted and filtered.
+- The Current column is shown by default and cannot be sorted or filtered.
+- The Next column is shown by default and cannot be sorted or filtered.
 - The Pattern column is shown by default and can be sorted and filtered.
-- The Step column is shown by default and can be sorted and filtered.
-- The First value column is shown by default and can be sorted and filtered.
+- The Current Sequence column is shown by default and cannot be sorted or filtered.
+- The Next Sequence column is shown by default and cannot be sorted or filtered.
 - The Time zone column is shown by default and can be sorted and filtered.
-- The Label key column is shown by default and can be sorted and filtered.
-- The Description key column is shown by default and can be sorted and filtered.
-- The Next value column is shown by default and cannot be sorted or filtered.
-- The Current value column is shown by default and cannot be sorted or filtered.
-- The Emitted (next) column is shown by default and cannot be sorted or filtered.
-- The Emitted (current) column is shown by default and cannot be sorted or filtered.
-- The Last allocated at column is shown by default and cannot be sorted or filtered.
-- The Last allocated by column is shown by default and cannot be sorted or filtered.
+- The Description key column is hidden by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 
 ## Actions

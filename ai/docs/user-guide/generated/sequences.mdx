@@ -6,7 +6,7 @@ entity: sequence
 
 List, search and manage all sequences.
 
-Each row shows the code, the pattern, the step, the start, the tz, the label key, the description key, the value next, the value actual, the emitted next, the emitted actual, the last alloc at, the last alloc by.
+Each row shows the name, the step, the start, the value actual, the value next, the pattern, the emitted actual, the emitted next, the tz, the last alloc at, the last alloc by.
 
 The page is visible with the `access.system.ai.settings.sequences` grant.
 
@@ -29,34 +29,28 @@ The page is visible with the `access.system.ai.settings.sequences` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **code** | yes | yes | yes |  |
-| **pattern** | yes | yes | yes |  |
+| **name** | yes | yes | yes |  |
 | **step** | yes | yes | yes |  |
 | **start** | yes | yes | yes |  |
-| **tz** | yes | yes | yes |  |
-| **label key** | yes | yes | yes |  |
-| **description key** | yes | yes | yes |  |
-| **value next** | yes | no | no |  |
 | **value actual** | yes | no | no |  |
-| **emitted next** | yes | no | no |  |
+| **value next** | yes | no | no |  |
+| **pattern** | yes | yes | yes |  |
 | **emitted actual** | yes | no | no |  |
-| **last alloc at** | yes | no | no |  |
-| **last alloc by** | yes | no | no |  |
+| **emitted next** | yes | no | no |  |
+| **tz** | yes | yes | yes |  |
+| **description key** | no | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 
-- The code column is shown by default and can be sorted and filtered.
-- The pattern column is shown by default and can be sorted and filtered.
+- The name column is shown by default and can be sorted and filtered.
 - The step column is shown by default and can be sorted and filtered.
 - The start column is shown by default and can be sorted and filtered.
-- The tz column is shown by default and can be sorted and filtered.
-- The label key column is shown by default and can be sorted and filtered.
-- The description key column is shown by default and can be sorted and filtered.
-- The value next column is shown by default and cannot be sorted or filtered.
 - The value actual column is shown by default and cannot be sorted or filtered.
-- The emitted next column is shown by default and cannot be sorted or filtered.
+- The value next column is shown by default and cannot be sorted or filtered.
+- The pattern column is shown by default and can be sorted and filtered.
 - The emitted actual column is shown by default and cannot be sorted or filtered.
-- The last alloc at column is shown by default and cannot be sorted or filtered.
-- The last alloc by column is shown by default and cannot be sorted or filtered.
+- The emitted next column is shown by default and cannot be sorted or filtered.
+- The tz column is shown by default and can be sorted and filtered.
+- The description key column is hidden by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 
 ## Actions
