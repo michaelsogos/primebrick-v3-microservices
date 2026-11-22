@@ -5,6 +5,7 @@
     "generated/runs",
     "generated/triggers",
     "generated/triggers-create",
-    "generated/triggers-edit"
+    "generated/triggers-edit",
+    "generated/sequences"
   ]
 }
