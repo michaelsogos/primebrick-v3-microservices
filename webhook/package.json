@@ -11,6 +11,7 @@
     "node": "24"
   },
   "scripts": {
+    "predev": "pnpm check:standards",
     "version:auto": "node ../scripts/version-sync.mjs",
     "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs",
     "dev": "node ../scripts/dev-hot.mjs",

@@ -13,7 +13,7 @@ const F = (c: string) => `crm.entities.legal_form.fields.${c}`;
  *  ACTV/INAC vocabulary. `display_field` is `name_local` (authoritative
  *  data, not translated). */
 const LEGAL_FORM_RAW_COLUMNS: LegalFormListColumn[] = [
-  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true, tooltip: "system.entities.dict.hints.code", tooltip_title: "system.entities.dict.hints.code_title", tooltip_priority: "HINT" },
+  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true, tooltip: "app.entities.dict.hints.code", tooltip_title: "app.entities.dict.hints.code_title", tooltip_priority: "HINT" },
   { key: "country", label_key: F("country"), type: "text", order: 1 },
   { key: "elf_code", label_key: F("elf_code"), type: "text", order: 2 },
   { key: "name_local", label_key: F("name_local"), type: "text", order: 3 },
