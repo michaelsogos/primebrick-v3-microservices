@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-18T06:55:03.927Z",
+  "issued_at": "2026-11-23T12:44:27.023Z",
   "patches": {
     "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
     "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
@@ -14,7 +14,8 @@
     "20261208000000_i18n_segregation_config_keys": "e0b95c93dda6c3d5243102c4a3af14640ffe5c196490a7711fd90c821f880420",
     "20261209000000_module_name_rename_it": "22355eb0ae5d890cbf85e8cdb08ef1cf8168dde2372241ccf50dfc0f98f5a9c6",
     "20261209010000_module_name_rename_langs": "56d00493e2f31202aac7da89218838096d950c780d842831db3b55a09241ee74",
-    "20261209020000_module_name_rename_communications": "07c42a3395f915e8b7313ffe549f783c85f467f1df5841cf2a4b2f68a2e7bf5a"
+    "20261209020000_module_name_rename_communications": "07c42a3395f915e8b7313ffe549f783c85f467f1df5841cf2a4b2f68a2e7bf5a",
+    "20261229130000_i18n_emailsender_settings_sequences": "0d457b991ea24a98d6d85a5b3f81b352ad42822912c39cda95bfb5f401f23ce0"
   },
-  "signature": "H71ZUmc3JFfV2fTHw+Vt5czzumX1ObDVcLfIcX1wDa0T3t4pW5BWToYYJgwh3c2j/BQUIuZ/caZP7aWcxCh9CQ=="
+  "signature": "Xlnk7wZNZue5WZq+m58pBaT+Xlm2anJYMdLX+YHGB/VEZfryhZMb2ld0CSOtG+e5biLhH6yGKZnlceOeAW7dDg=="
 }
