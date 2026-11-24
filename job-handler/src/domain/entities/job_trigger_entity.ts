@@ -64,7 +64,7 @@ export function trampolineTriggerUuid(subject: string): string | undefined {
   return /^jobs\.due\.(?:user|system)\.job\.forward\.([0-9a-fA-F-]{36})$/.exec(subject)?.[1];
 }
 
-@Entity("job_triggers", "job")
+@Entity("job_triggers")
 @AuditTrail()
 export class JobTriggerEntity
   extends Deletable(Auditable(EntityBase)) {

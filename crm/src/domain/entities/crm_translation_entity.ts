@@ -14,5 +14,5 @@
 
 import { Entity, TranslationEntityBase } from "@primebrick/dal-pg";
 
-@Entity("translations", "crm")
+@Entity("translations")
 export class CrmTranslationEntity extends TranslationEntityBase {}

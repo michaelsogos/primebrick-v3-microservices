@@ -13,7 +13,7 @@ import { Cached } from "@primebrick/sdk";
 /** GDPR consent record — historical rows, never updated-in-place:
  *  grant inserts, revoke sets revoked_at on the latest grant.
  *  `seal` is server-generated tamper evidence (see plan). */
-@Entity("customer_consents", "crm")
+@Entity("customer_consents")
 @AuditTrail()
 @Cached(300_000)
 export class CustomerConsentEntity

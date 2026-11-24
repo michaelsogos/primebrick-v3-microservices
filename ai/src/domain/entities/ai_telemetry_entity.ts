@@ -9,7 +9,7 @@ import { Column, Entity, Key,
   type UUID,
 } from "@primebrick/dal-pg";
 
-@Entity("ai_telemetry", "ai")
+@Entity("ai_telemetry")
 export class AiTelemetryEntity {
   @Key()
   @Column({ pgType: "uuid", nullable: false })

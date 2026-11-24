@@ -11,7 +11,7 @@ import { Cached } from "@primebrick/sdk";
  *  a ‹subsidiary›") and `inverse_label_key` child-side ("the parent IS
  *  a ‹holding›"). NULL inverse = self-inverse type (same vocabulary
  *  both directions — by construction, not configuration). */
-@Entity("customer_link_types", "crm")
+@Entity("customer_link_types")
 @Cached(300_000)
 @Dict({
   directional: {

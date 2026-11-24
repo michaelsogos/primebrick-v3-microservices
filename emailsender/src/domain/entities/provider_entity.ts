@@ -9,7 +9,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 
-@Entity("providers", "emailsender")
+@Entity("providers")
 export class ProviderEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()

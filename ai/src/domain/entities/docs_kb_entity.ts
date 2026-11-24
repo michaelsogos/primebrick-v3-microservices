@@ -18,7 +18,7 @@ import {
 } from "@primebrick/dal-pg";
 import { DocMetadata } from "../jsonb-contracts.js";
 
-@Entity("docs_kb", "ai")
+@Entity("docs_kb")
 export class DocsKbEntity {
   @Key()
   @Column({ pgType: "uuid" })

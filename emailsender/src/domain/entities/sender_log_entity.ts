@@ -8,7 +8,7 @@ import { RecipientEnvelope, SenderEnvelope } from "../jsonb-contracts.js";
  *
  * This table is NOT auditable (no created_at, updated_at, version, deleted_at columns).
  */
-@Entity("sender_log", "emailsender")
+@Entity("sender_log")
 export class SenderLogEntity {
   @Key()
   @Column({ pgType: "uuid" })

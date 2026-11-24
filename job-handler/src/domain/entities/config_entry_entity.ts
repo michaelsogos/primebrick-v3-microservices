@@ -9,7 +9,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 
-@Entity("config_entries", "job")
+@Entity("config_entries")
 export class ConfigEntryEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()

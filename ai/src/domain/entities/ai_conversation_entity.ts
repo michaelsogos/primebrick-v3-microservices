@@ -26,7 +26,7 @@ import {
   Auditable,
 } from "@primebrick/dal-pg";
 
-@Entity("ai_conversations", "ai")
+@Entity("ai_conversations")
 export class AiConversationEntity
   extends Auditable(EntityBase) {
   @Key()

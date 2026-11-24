@@ -11,7 +11,7 @@ import {
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
-@Entity("local_address_types", "crm")
+@Entity("local_address_types")
 @AuditTrail()
 @Cached(300_000)
 export class LocalAddressTypeEntity

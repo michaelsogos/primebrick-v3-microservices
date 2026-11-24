@@ -28,7 +28,7 @@ import {
 import { Cached } from "@primebrick/sdk";
 import { ExecutionConfig, WorkingSetDetail, type AiTestScore } from "../jsonb-contracts.js";
 
-@Entity("ai_models", "ai")
+@Entity("ai_models")
 @AuditTrail()
 @Cached(300_000) // 5 min TTL — reference data, changes rarely
 export class AiModelEntity

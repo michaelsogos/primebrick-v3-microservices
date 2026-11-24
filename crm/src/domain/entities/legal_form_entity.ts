@@ -14,7 +14,7 @@ import { Cached } from "@primebrick/sdk";
 /** ISO 20275 Entity Legal Forms (ELF) — seeded from the GLEIF code list.
  *  `code` = `<country>_<elf_code>` (e.g. `it_srl`); no label_key: legal-form
  *  names are authority data, not translated. */
-@Entity("legal_forms", "crm")
+@Entity("legal_forms")
 @AuditTrail()
 @Cached(300_000)
 export class LegalFormEntity

@@ -18,7 +18,7 @@ import {
   Auditable,
 } from "@primebrick/dal-pg";
 
-@Entity("job_runs", "job")
+@Entity("job_runs")
 export class JobRunEntity
   extends Auditable(EntityBase) {
   @Key()

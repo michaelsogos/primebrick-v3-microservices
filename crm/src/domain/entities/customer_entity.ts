@@ -30,7 +30,7 @@ import { Cached } from "@primebrick/sdk";
 
 export type CustomerStatus = "ACTIVE" | "INACTIVE";
 
-@Entity("customers", "crm")
+@Entity("customers")
 @AuditTrail()
 @Cached(300_000) // 5 min TTL — mutable business data
 export class CustomerEntity

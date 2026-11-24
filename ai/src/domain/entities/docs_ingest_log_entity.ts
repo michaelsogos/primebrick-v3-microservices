@@ -24,7 +24,7 @@ import {
 } from "@primebrick/dal-pg";
 import { PipelineStats } from "../jsonb-contracts.js";
 
-@Entity("docs_ingest_log", "ai")
+@Entity("docs_ingest_log")
 export class DocsIngestLogEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()

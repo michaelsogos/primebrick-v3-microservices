@@ -9,7 +9,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 
-@Entity("email_templates", "emailsender")
+@Entity("email_templates")
 export class EmailTemplateEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
