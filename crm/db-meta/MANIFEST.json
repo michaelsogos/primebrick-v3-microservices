@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-23T19:39:43.238Z",
+  "issued_at": "2026-11-24T01:09:01.480Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -37,7 +37,9 @@
     "20261229133000_i18n_sequence_start_label": "183a120392f844d035bd81719e92f7816d12432c229d986b533d83f9956517f8",
     "20261230120000_sequences_tz_not_null_default_utc": "26d368ba2b4608b08c4faf43f0f9c267e83a3c302dbe5584449ff1c79c169968",
     "20261230130000_i18n_purge_deleted_translations": "2655de3ff08f42cc46fe63c901e7fbb0456001d2a204e6f59765fc1ca4849829",
-    "20261230140000_i18n_translation_key_labels": "8c65d0d1d34a9180e04e778501082430c6b0333c82503b3ba5f702b9eed28dba"
+    "20261230140000_i18n_translation_key_labels": "8c65d0d1d34a9180e04e778501082430c6b0333c82503b3ba5f702b9eed28dba",
+    "20261231150000_sequence_revive_columns": "ba70f397574367eea0a2682baa04fb938dd4ce807d6c3bb089b48b59cf28ee79",
+    "20261231151000_i18n_sequence_revive_labels": "0d3830bde7cf5ee475ac73139f729ee143a6b22f9e9effa348ed146145fa4453"
   },
-  "signature": "yr3SpMYJPPT0I+wAbqCBm7yOHIxBHUO1fQ9sMdS9/iFMENGyEGTY1MAsA8KPPwaWVOa0G+NhcIOJMb3DXw06BA=="
+  "signature": "UzqM9sBf35gJknMlMi3aPiqo5nxv6hk49Y9Soe8tdVF+xsARWYh9tMvmhQoYX2xxY6zQFEKcsQah3EAztiR5DQ=="
 }

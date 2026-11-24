@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-22T20:16:23.025Z",
+  "generatedAt": "2026-11-24T01:09:32.389Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -3213,7 +3213,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "tz",
-          "isNullable": true
+          "isNullable": false,
+          "defaultSql": "'UTC'"
         },
         "description_key": {
           "name": "description_key",
@@ -3224,6 +3225,149 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "description_key",
+          "isNullable": true
+        },
+        "sez": {
+          "name": "sez",
+          "ordinalPosition": 15,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sez",
+          "isNullable": true
+        },
+        "sez2": {
+          "name": "sez2",
+          "ordinalPosition": 16,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sez2",
+          "isNullable": true
+        },
+        "sez3": {
+          "name": "sez3",
+          "ordinalPosition": 17,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sez3",
+          "isNullable": true
+        },
+        "binding_key": {
+          "name": "binding_key",
+          "ordinalPosition": 18,
+          "dataType": "varchar(130)",
+          "typname": "varchar(130)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "binding_key",
+          "isNullable": true
+        },
+        "revive_every": {
+          "name": "revive_every",
+          "ordinalPosition": 19,
+          "dataType": "varchar(30)",
+          "typname": "varchar(30)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revive_every",
+          "isNullable": true
+        },
+        "revive_grace": {
+          "name": "revive_grace",
+          "ordinalPosition": 20,
+          "dataType": "varchar(30)",
+          "typname": "varchar(30)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revive_grace",
+          "isNullable": true
+        },
+        "revive_slot": {
+          "name": "revive_slot",
+          "ordinalPosition": 21,
+          "dataType": "varchar(10)",
+          "typname": "varchar(10)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revive_slot",
+          "isNullable": true
+        },
+        "expire_at": {
+          "name": "expire_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "expire_at",
+          "isNullable": true
+        },
+        "switch_at": {
+          "name": "switch_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "switch_at",
+          "isNullable": true
+        },
+        "default_from": {
+          "name": "default_from",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "default_from",
+          "isNullable": true
+        },
+        "revived_from": {
+          "name": "revived_from",
+          "ordinalPosition": 25,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revived_from",
+          "isNullable": true
+        },
+        "revived_at": {
+          "name": "revived_at",
+          "ordinalPosition": 26,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revived_at",
+          "isNullable": true
+        },
+        "revived_by": {
+          "name": "revived_by",
+          "ordinalPosition": 27,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revived_by",
           "isNullable": true
         }
       }

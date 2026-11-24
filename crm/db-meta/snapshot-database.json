@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-22T20:16:23.032Z",
+  "generatedAt": "2026-11-24T01:09:32.396Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -3892,8 +3892,9 @@
           "formatType": "character varying(100)",
           "numericPrecision": null,
           "numericScale": null,
-          "isNullable": true,
-          "isPrimaryKey": false
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'UTC'::character varying"
         },
         "description_key": {
           "name": "description_key",
@@ -3907,8 +3908,190 @@
           "numericScale": null,
           "isNullable": true,
           "isPrimaryKey": false
+        },
+        "sez": {
+          "name": "sez",
+          "ordinalPosition": 16,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez2": {
+          "name": "sez2",
+          "ordinalPosition": 17,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez3": {
+          "name": "sez3",
+          "ordinalPosition": 18,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "binding_key": {
+          "name": "binding_key",
+          "ordinalPosition": 19,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(130)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_every": {
+          "name": "revive_every",
+          "ordinalPosition": 20,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(30)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_grace": {
+          "name": "revive_grace",
+          "ordinalPosition": 21,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(30)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_slot": {
+          "name": "revive_slot",
+          "ordinalPosition": 22,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(10)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "expire_at": {
+          "name": "expire_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "switch_at": {
+          "name": "switch_at",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "default_from": {
+          "name": "default_from",
+          "ordinalPosition": 25,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_from": {
+          "name": "revived_from",
+          "ordinalPosition": 26,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_at": {
+          "name": "revived_at",
+          "ordinalPosition": 27,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_by": {
+          "name": "revived_by",
+          "ordinalPosition": 28,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON crm.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"
+        }
+      ]
     },
     "crm.sequence_counters": {
       "kind": "table",
