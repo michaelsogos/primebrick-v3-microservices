@@ -96,7 +96,6 @@ export class ConversationsService extends DomainService<ConversationsT> {
     return await runWithSession(actorSession(opts.actor), () =>
       this.svc.create({
         title: opts.title,
-        last_seen_at: new Date(),
       }) as Promise<ConversationRow>);
   }
 

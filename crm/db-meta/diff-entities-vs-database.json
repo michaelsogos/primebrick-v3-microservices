@@ -1,7 +1,509 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T18:02:34.322Z",
+  "generatedAt": "2026-11-24T19:06:38.385Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "crm.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.customers": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_types": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.company_dimensions": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.legal_forms": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.local_address_types": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.qualifications": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.marketing_qualifications": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.contact_types": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.account_kinds": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_link_types": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.consent_types": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.local_addresses": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "local_addresses_type_idx",
+        "local_addresses_customer_uuid_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "local_addresses_customer_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_accounts": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "customer_accounts_customer_uuid_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "customer_accounts_customer_uuid_fkey",
+        "customer_accounts_local_address_uuid_fkey",
+        "customer_accounts_contact_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_contacts": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "customer_contacts_type_idx",
+        "customer_contacts_customer_uuid_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "customer_contacts_customer_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_consents": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "customer_consents_customer_uuid_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "customer_consents_customer_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.customer_links": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "customer_links_parent_uuid_idx",
+        "customer_links_child_uuid_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [
+        "customer_links_parent_uuid_fkey",
+        "customer_links_child_uuid_fkey"
+      ],
+      "foreignKeyMismatches": []
+    },
+    "crm.sequences": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "crm.sequence_counters": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

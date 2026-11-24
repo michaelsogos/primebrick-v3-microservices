@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T18:03:42.546Z",
+  "generatedAt": "2026-11-24T19:06:59.826Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -232,7 +232,8 @@
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON boilerplate.config_entries USING btree (key)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON boilerplate.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -399,7 +400,8 @@
           "columns": [
             "name"
           ],
-          "definition": "CREATE UNIQUE INDEX test_items_name_uq ON boilerplate.test_items USING btree (name)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX test_items_name_uq ON boilerplate.test_items USING btree (name) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -768,7 +770,28 @@
           "isNullable": true,
           "isPrimaryKey": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON boilerplate.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"
+        }
+      ]
     },
     "boilerplate.sequence_counters": {
       "kind": "table",

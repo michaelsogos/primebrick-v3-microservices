@@ -46,7 +46,7 @@ export class AiConversationEntity
    */
   @Partition({ interval: "1 month" })
   @Retention("6 months")
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   last_seen_at!: Date;
 
 

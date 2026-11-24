@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T18:03:42.541Z",
+  "generatedAt": "2026-11-24T19:06:59.822Z",
   "source": "entities",
   "tables": {
     "boilerplate.config_entries": {
@@ -19,7 +19,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -43,7 +43,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -220,7 +220,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -244,7 +244,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -367,7 +367,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -391,7 +391,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -700,7 +700,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -724,7 +724,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",

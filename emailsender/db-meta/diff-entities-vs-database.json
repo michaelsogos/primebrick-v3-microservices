@@ -1,19 +1,153 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T18:03:14.328Z",
+  "generatedAt": "2026-11-24T19:06:23.190Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
+    "emailsender.providers": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "emailsender.email_templates": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "emailsender.sender_log": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "sent_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": null
+        },
+        {
+          "column": "status_changed_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": null
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "emailsender.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
     "emailsender.sequences": {
       "onlyInEntityColumns": [],
       "onlyInDatabaseColumns": [],
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [
-        "sequences_binding_key_default_from_idx"
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
       ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "emailsender.sequence_counters": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
       "indexMismatches": [],
       "onlyInEntityForeignKeys": [],

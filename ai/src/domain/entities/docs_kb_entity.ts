@@ -62,9 +62,9 @@ export class DocsKbEntity {
   @Column({ nullable: false })
   content_hash!: string;
 
-  @Column({ nullable: false, jsType: "instant", defaultSql: "now()" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   created_at!: Date;
 
-  @Column({ nullable: false, jsType: "instant", defaultSql: "now()" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   updated_at!: Date;
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T18:03:14.223Z",
+  "generatedAt": "2026-11-24T19:06:23.121Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -1206,7 +1206,28 @@
           "isNullable": true,
           "isPrimaryKey": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON emailsender.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"
+        }
+      ]
     },
     "emailsender.sequence_counters": {
       "kind": "table",

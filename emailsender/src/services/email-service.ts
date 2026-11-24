@@ -122,8 +122,6 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
         senders: { from: config.from_email },
         recipients: { to: request.to, cc: request.cc, bcc: request.bcc },
         interpolated_sent_message: htmlContent || textContent,
-        sent_at: new Date(),
-        status_changed_at: new Date(),
       });
 
       return {
@@ -152,7 +150,6 @@ export class EmailService extends DomainService<SenderLogEntity & Record<string,
           recipients: { to: request.to },
           interpolated_sent_message: renderedHtml || renderedText,
           error_message: error instanceof Error ? error.message : "Unknown error",
-          status_changed_at: new Date(),
         });
       } catch (logError) {
         logger.error("Error logging failed email", { tags: ["email-service"], error: logError });

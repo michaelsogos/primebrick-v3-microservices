@@ -26,6 +26,6 @@ export class SenderLogEntity {
   @Column({ jsType: RecipientEnvelope, nullable: false }) recipients!: RecipientEnvelope;
   @Column({ nullable: true }) interpolated_sent_message?: string;
   @Column({ nullable: true }) error_message?: string;
-  @Column({ nullable: true, jsType: "instant" }) sent_at?: Date;
-  @Column({ nullable: true, jsType: "instant" }) status_changed_at?: Date;
+  @Column({ nullable: true, jsType: "instant", defaultSql: "clock_timestamp()" }) sent_at?: Date;
+  @Column({ nullable: true, jsType: "instant", defaultSql: "clock_timestamp()" }) status_changed_at?: Date;
 }

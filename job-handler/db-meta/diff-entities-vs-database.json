@@ -1,19 +1,159 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T18:02:17.759Z",
+  "generatedAt": "2026-11-24T19:07:14.026Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
+    "job.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "job.job_schedules": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "job_schedules_subject_uq",
+        "job_schedules_status_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "job.job_runs": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "job_runs_status_idx",
+        "job_runs_schedule_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "job.job_triggers": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
     "job.sequences": {
       "onlyInEntityColumns": [],
       "onlyInDatabaseColumns": [],
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [
-        "sequences_binding_key_default_from_idx"
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
       ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "job.sequence_counters": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
       "indexMismatches": [],
       "onlyInEntityForeignKeys": [],

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T18:03:42.594Z",
+  "generatedAt": "2026-11-24T19:06:59.880Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
@@ -10,22 +10,21 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [],
-      "indexMismatches": [
+      "defaultMismatches": [
         {
-          "name": "config_entries_key_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "key"
-          ],
-          "databaseColumns": [
-            "key"
-          ]
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
         }
       ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []
@@ -36,22 +35,21 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [],
-      "indexMismatches": [
+      "defaultMismatches": [
         {
-          "name": "test_items_name_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "name"
-          ],
-          "databaseColumns": [
-            "name"
-          ]
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
         }
       ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []
@@ -62,10 +60,44 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [
-        "sequences_binding_key_default_from_idx"
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
       ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "boilerplate.sequence_counters": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        },
+        {
+          "column": "updated_at",
+          "entityDefault": "clock_timestamp()",
+          "databaseDefault": "now()"
+        }
+      ],
+      "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
       "indexMismatches": [],
       "onlyInEntityForeignKeys": [],

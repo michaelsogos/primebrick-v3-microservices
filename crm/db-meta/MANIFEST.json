@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-3",
-  "issued_at": "2026-11-24T18:02:48.131Z",
+  "issued_at": "2026-11-24T19:06:38.725Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -25,6 +25,7 @@
     "20261122201506_noop": "32addd9e3d873c84fabaa53cd199219fc1511150a036f3f5094b7de12ad7c191",
     "20261124170003_noop": "69ac01f05d13132d7563e4615bd60e7961e369972d1077a0e8ee1a4464b79115",
     "20261124180400_rename_translations_canonical": "cd56f2f1ad280869f19f45d282fcde5ed7dc3c18bee1a3e1319e0ab00a190f94",
+    "20261124190638_defaults_crm_config_entries_crm_customers_crm_customer_types_crm_company": "81409e15784cf0af0396d58c66ebd1a0629099cbd6dd87806924d50ce6c292c0",
     "20261208000000_i18n_segregation_config_keys": "bc597c2cfa58a9f6776822facb55616e7bec8b6faa814a2a1a822195d6746732",
     "20261221130000_events_fields_labels_i18n": "eae7dccd4d86a3f924e3cd6cb575e59c238c61facf42fab3b94df3b42d4b49f9",
     "20261225150000_i18n_customer_link_type_rename_it": "0182e70585608b2fc72bfc822827e8bb8cccdaee8d35300d8286f9c228a8a62a",
@@ -43,5 +44,5 @@
     "20261231150000_sequence_revive_columns": "ba70f397574367eea0a2682baa04fb938dd4ce807d6c3bb089b48b59cf28ee79",
     "20261231151000_i18n_sequence_revive_labels": "0d3830bde7cf5ee475ac73139f729ee143a6b22f9e9effa348ed146145fa4453"
   },
-  "signature": "vRh4A+gS65BOjoJA9AltOF8WJQDe8tEcTHocP0x8sxCsqdBl8IF891o996ueDPzb/fBegydX0VWIzIUt9jiwBA=="
+  "signature": "aGTQRInTGNCMFlaU5l4ceK2XIz59EQm5YaE9sR/Vyxi/KxgodeXKtdEOh9Q2s8YyNLJ2hVYH9NsSOjMugwSUBw=="
 }

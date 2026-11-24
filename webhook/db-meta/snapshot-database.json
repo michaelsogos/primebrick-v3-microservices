@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T18:03:02.587Z",
+  "generatedAt": "2026-11-24T19:06:51.297Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -235,15 +235,6 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON webhook.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "config_entries_deleted_at_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "deleted_at"
-          ],
-          "definition": "CREATE INDEX config_entries_deleted_at_idx ON webhook.config_entries USING btree (deleted_at)"
         }
       ]
     },
@@ -612,7 +603,28 @@
           "isNullable": true,
           "isPrimaryKey": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON webhook.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"
+        }
+      ]
     },
     "webhook.sequence_counters": {
       "kind": "table",

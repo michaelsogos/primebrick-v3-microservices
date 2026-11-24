@@ -54,6 +54,6 @@ export class AiTelemetryEntity {
   @Column({ nullable: true })
   error?: string | null;
 
-  @Column({ nullable: false, jsType: "instant", defaultSql: "now()" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   created_at!: Date;
 }

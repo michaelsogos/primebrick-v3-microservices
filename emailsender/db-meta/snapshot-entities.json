@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T18:03:14.218Z",
+  "generatedAt": "2026-11-24T19:06:23.115Z",
   "source": "entities",
   "tables": {
     "emailsender.providers": {
@@ -19,7 +19,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -43,7 +43,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -198,7 +198,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -222,7 +222,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -498,7 +498,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "sent_at",
-          "isNullable": true
+          "isNullable": true,
+          "defaultSql": "clock_timestamp()"
         },
         "status_changed_at": {
           "name": "status_changed_at",
@@ -509,7 +510,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "status_changed_at",
-          "isNullable": true
+          "isNullable": true,
+          "defaultSql": "clock_timestamp()"
         }
       },
       "indexes": [
@@ -539,7 +541,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -563,7 +565,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -742,7 +744,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -766,7 +768,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1075,7 +1077,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1099,7 +1101,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
