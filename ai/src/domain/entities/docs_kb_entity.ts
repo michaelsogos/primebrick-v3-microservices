@@ -53,16 +53,16 @@ export class DocsKbEntity {
   @Column({ nullable: false, length: 1024, jsType: "vector" })
   embedding!: Vector;
 
-  @Column({ jsType: DocMetadata, nullable: false })
+  @Column({ jsType: DocMetadata, nullable: false, defaultSql: "'{}'::jsonb" })
   metadata!: DocMetadata;
 
   @Index()
   @Column({ nullable: false })
   content_hash!: string;
 
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "now()" })
   created_at!: Date;
 
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "now()" })
   updated_at!: Date;
 }

@@ -1,7 +1,8 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-19T10:48:53.807Z",
+  "generatedAt": "2026-11-24T11:21:08.024Z",
   "source": "database",
+  "capturesDefaults": true,
   "tables": {
     "job.config_entries": {
       "kind": "table",
@@ -19,7 +20,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
@@ -58,7 +60,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'string'::character varying"
         },
         "type_config": {
           "name": "type_config",
@@ -110,7 +113,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "group_key": {
           "name": "group_key",
@@ -136,7 +140,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -149,7 +154,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -162,7 +168,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -175,7 +182,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -188,7 +196,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -245,7 +254,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -310,7 +320,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'armed'::character varying"
         },
         "trigger_uuid": {
           "name": "trigger_uuid",
@@ -362,7 +373,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -375,7 +387,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -388,7 +401,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -401,7 +415,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -414,7 +429,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "schedule_type": {
           "name": "schedule_type",
@@ -427,7 +443,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'recurring'::character varying"
         },
         "expires_at": {
           "name": "expires_at",
@@ -493,7 +510,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -610,7 +628,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -623,7 +642,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -636,7 +656,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -649,7 +670,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -662,7 +684,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "fire_seq": {
           "name": "fire_seq",
@@ -763,7 +786,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "name": {
           "name": "name",
@@ -841,7 +865,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'user'::character varying"
         },
         "created_at": {
           "name": "created_at",
@@ -854,7 +879,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -867,7 +893,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -880,7 +907,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -893,7 +921,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -906,7 +935,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",

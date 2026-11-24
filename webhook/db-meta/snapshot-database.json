@@ -1,26 +1,14 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-15T14:21:52.150Z",
+  "generatedAt": "2026-11-24T11:21:10.444Z",
   "source": "database",
+  "capturesDefaults": true,
   "tables": {
     "webhook.config_entries": {
       "kind": "table",
       "schema": "webhook",
       "name": "config_entries",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -32,7 +20,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
@@ -71,7 +60,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'string'::character varying"
         },
         "type_config": {
           "name": "type_config",
@@ -123,7 +113,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "group_key": {
           "name": "group_key",
@@ -149,7 +140,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -175,7 +167,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -201,7 +194,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",

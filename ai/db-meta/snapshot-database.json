@@ -1,26 +1,14 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-11T17:41:25.349Z",
+  "generatedAt": "2026-11-24T11:21:05.863Z",
   "source": "database",
+  "capturesDefaults": true,
   "tables": {
     "ai.docs_kb": {
       "kind": "table",
       "schema": "ai",
       "name": "docs_kb",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "repo": {
           "name": "repo",
           "ordinalPosition": 2,
@@ -110,7 +98,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'{}'::jsonb"
         },
         "content_hash": {
           "name": "content_hash",
@@ -136,7 +125,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_at": {
           "name": "updated_at",
@@ -149,7 +139,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "uuid": {
           "name": "uuid",
@@ -162,7 +153,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         }
       },
       "indexes": [
@@ -174,15 +166,6 @@
             "content_hash"
           ],
           "definition": "CREATE INDEX docs_kb_content_hash_idx ON ai.docs_kb USING btree (content_hash)"
-        },
-        {
-          "name": "docs_kb_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX docs_kb_uuid_uq ON ai.docs_kb USING btree (uuid)"
         },
         {
           "name": "docs_kb_repo_path_chunk_idx_key",
@@ -209,7 +192,7 @@
           "using": "hnsw",
           "isUnique": false,
           "columns": [
-            "embedding vector_cosine_ops"
+            "embedding"
           ],
           "definition": "CREATE INDEX docs_kb_embedding_idx ON ai.docs_kb USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')"
         }
@@ -220,19 +203,6 @@
       "schema": "ai",
       "name": "ai_models",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -244,7 +214,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "model_id": {
           "name": "model_id",
@@ -309,7 +280,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "3"
         },
         "enable_thinking": {
           "name": "enable_thinking",
@@ -322,7 +294,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "temperature": {
           "name": "temperature",
@@ -335,7 +308,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0.70"
         },
         "top_p": {
           "name": "top_p",
@@ -348,7 +322,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0.90"
         },
         "max_tokens": {
           "name": "max_tokens",
@@ -361,7 +336,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "256"
         },
         "repetition_penalty": {
           "name": "repetition_penalty",
@@ -374,7 +350,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1.10"
         },
         "sort_order": {
           "name": "sort_order",
@@ -387,7 +364,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "100"
         },
         "created_at": {
           "name": "created_at",
@@ -400,7 +378,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -426,7 +405,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -452,7 +432,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -517,7 +498,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1.0"
         },
         "test_scores": {
           "name": "test_scores",
@@ -556,7 +538,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'webllm'::character varying"
         },
         "execution_config": {
           "name": "execution_config",
@@ -621,7 +604,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'hf_estimate'::character varying"
         },
         "working_set_detail": {
           "name": "working_set_detail",
@@ -647,19 +631,11 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "true"
         }
       },
       "indexes": [
-        {
-          "name": "ai_models_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_models_uuid_uq ON ai.ai_models USING btree (uuid)"
-        },
         {
           "name": "ai_models_model_id_dtype_uq",
           "using": "btree",
@@ -677,19 +653,6 @@
       "schema": "ai",
       "name": "ai_cerebellum",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -701,7 +664,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "assistant_key": {
           "name": "assistant_key",
@@ -857,7 +821,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -883,7 +848,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -909,7 +875,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -974,7 +941,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "true"
         },
         "is_default": {
           "name": "is_default",
@@ -987,19 +955,11 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         }
       },
       "indexes": [
-        {
-          "name": "ai_cerebellum_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_cerebellum_uuid_uq ON ai.ai_cerebellum USING btree (uuid)"
-        },
         {
           "name": "ai_cerebellum_assistant_model_dtype_uq",
           "using": "btree",
@@ -1028,19 +988,6 @@
       "schema": "ai",
       "name": "config_entries",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -1052,7 +999,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
@@ -1117,7 +1065,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1143,7 +1092,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1169,7 +1119,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1208,7 +1159,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'string'::character varying"
         },
         "type_config": {
           "name": "type_config",
@@ -1234,7 +1186,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "group_key": {
           "name": "group_key",
@@ -1252,24 +1205,6 @@
       },
       "indexes": [
         {
-          "name": "ai_config_entries_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_config_entries_uuid_uq ON ai.config_entries USING btree (uuid)"
-        },
-        {
-          "name": "ai_config_entries_deleted_at_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "deleted_at"
-          ],
-          "definition": "CREATE INDEX ai_config_entries_deleted_at_idx ON ai.config_entries USING btree (deleted_at)"
-        },
-        {
           "name": "ai_config_entries_key_uq",
           "using": "btree",
           "isUnique": true,
@@ -1285,19 +1220,6 @@
       "schema": "ai",
       "name": "docs_ingest_log",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "repo": {
           "name": "repo",
           "ordinalPosition": 2,
@@ -1361,7 +1283,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'{}'::jsonb"
         },
         "error": {
           "name": "error",
@@ -1387,7 +1310,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1439,7 +1363,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1478,19 +1403,11 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         }
       },
       "indexes": [
-        {
-          "name": "docs_ingest_log_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX docs_ingest_log_uuid_uq ON ai.docs_ingest_log USING btree (uuid)"
-        },
         {
           "name": "docs_ingest_log_created_idx",
           "using": "btree",
@@ -1516,19 +1433,6 @@
       "schema": "ai",
       "name": "ai_conversations",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -1540,7 +1444,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "title": {
           "name": "title",
@@ -1579,7 +1484,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1592,7 +1498,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1605,7 +1512,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1618,7 +1526,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1631,20 +1540,11 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         }
       },
       "indexes": [
-        {
-          "name": "ai_conversations_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid",
-            "last_seen_at"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_conversations_uuid_uq ON ONLY ai.ai_conversations USING btree (uuid, last_seen_at)"
-        },
         {
           "name": "ai_conversations_created_by_idx",
           "using": "btree",
@@ -1672,7 +1572,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "conversation_uuid": {
           "name": "conversation_uuid",
@@ -1750,7 +1651,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1763,7 +1665,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1776,7 +1679,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1789,7 +1693,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1802,20 +1707,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
-        },
-        "id": {
-          "name": "id",
-          "ordinalPosition": 12,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         }
       },
       "indexes": [
@@ -1828,15 +1721,6 @@
             "created_at"
           ],
           "definition": "CREATE INDEX ai_messages_conversation_uuid_created_at_idx ON ai.ai_messages USING btree (conversation_uuid, created_at)"
-        },
-        {
-          "name": "ai_messages_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_messages_uuid_uq ON ai.ai_messages USING btree (uuid)"
         }
       ]
     },
@@ -1845,19 +1729,6 @@
       "schema": "ai",
       "name": "ai_feedback",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -1869,7 +1740,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "message_uuid": {
           "name": "message_uuid",
@@ -1934,7 +1806,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1947,7 +1820,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1960,7 +1834,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1973,7 +1848,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1986,19 +1862,11 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         }
       },
       "indexes": [
-        {
-          "name": "ai_feedback_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_feedback_uuid_uq ON ai.ai_feedback USING btree (uuid)"
-        },
         {
           "name": "ai_feedback_message_uuid_idx",
           "using": "btree",
@@ -2024,19 +1892,6 @@
       "schema": "ai",
       "name": "ai_telemetry",
       "columns": {
-        "id": {
-          "name": "id",
-          "ordinalPosition": 1,
-          "dataType": "int8",
-          "typname": "int8",
-          "typeOid": 20,
-          "typcategory": "N",
-          "formatType": "bigint",
-          "numericPrecision": null,
-          "numericScale": null,
-          "isNullable": false,
-          "isPrimaryKey": true
-        },
         "uuid": {
           "name": "uuid",
           "ordinalPosition": 2,
@@ -2048,7 +1903,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "conversation_uuid": {
           "name": "conversation_uuid",
@@ -2100,7 +1956,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0"
         },
         "tokens_out": {
           "name": "tokens_out",
@@ -2113,7 +1970,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0"
         },
         "steps": {
           "name": "steps",
@@ -2126,7 +1984,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0"
         },
         "tool_calls": {
           "name": "tool_calls",
@@ -2139,7 +1998,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0"
         },
         "rag_hits": {
           "name": "rag_hits",
@@ -2152,7 +2012,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0"
         },
         "latency_ms": {
           "name": "latency_ms",
@@ -2165,7 +2026,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "0"
         },
         "success": {
           "name": "success",
@@ -2178,7 +2040,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "true"
         },
         "error": {
           "name": "error",
@@ -2204,19 +2067,11 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         }
       },
       "indexes": [
-        {
-          "name": "ai_telemetry_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX ai_telemetry_uuid_uq ON ai.ai_telemetry USING btree (uuid)"
-        },
         {
           "name": "ai_telemetry_user_uuid_created_at_idx",
           "using": "btree",

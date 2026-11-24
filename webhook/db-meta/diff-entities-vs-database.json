@@ -1,7 +1,44 @@
 {
   "version": 2,
-  "generatedAt": "2026-10-15T14:21:52.181Z",
-  "onlyInEntityTables": [],
+  "generatedAt": "2026-11-24T11:21:10.733Z",
+  "onlyInEntityTables": [
+    "webhook.sequences",
+    "webhook.sequence_counters"
+  ],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "webhook.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "updated_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "type",
+          "entityDefault": null,
+          "databaseDefault": "'string'"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "config_entries_uuid_uq",
+        "config_entries_deleted_at_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

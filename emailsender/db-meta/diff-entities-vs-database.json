@@ -1,7 +1,91 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-11T17:23:50.962Z",
-  "onlyInEntityTables": [],
+  "generatedAt": "2026-11-24T11:21:06.735Z",
+  "onlyInEntityTables": [
+    "emailsender.sequences",
+    "emailsender.sequence_counters"
+  ],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "emailsender.providers": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "updated_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "emailsender.email_templates": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "updated_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "emailsender.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "updated_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "type",
+          "entityDefault": null,
+          "databaseDefault": "'string'"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

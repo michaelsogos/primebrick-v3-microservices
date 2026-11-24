@@ -12,8 +12,13 @@ import { TestItemsService } from "../modules/test/test-items.service.js";
 import { ConfigEntriesService } from "../modules/config-entries/config-entries.service.js";
 import { testItemMeta } from "../modules/test/test-item.meta.js";
 import { ENTITY_REGISTRY } from "../domain/entities/registry.js";
-import { boilerplateRouteHandler } from "../service-routes.js";
 import { testActionRoutes } from "../controllers/http/test-actions-route.js";
+
+// `makeServiceRoutes` pulls builtin entity decls whose construction
+// requires the module's owned schema — in prod it comes from .env
+// (DATABASE_SCHEMA=boilerplate); vitest does not load .env, so mirror it
+// here and import the route surface lazily below.
+process.env.DATABASE_SCHEMA ??= "boilerplate";
 
 describe("boilerplate wiring", () => {
   it("entity registry carries config_entry + test_item", () => {
@@ -38,7 +43,8 @@ describe("boilerplate wiring", () => {
     expect(keys).toContain("version");
   });
 
-  it("route handler carries a built OpenAPI spec (one declaration)", () => {
+  it("route handler carries a built OpenAPI spec (one declaration)", async () => {
+    const { boilerplateRouteHandler } = await import("../service-routes.js");
     const spec = boilerplateRouteHandler.spec as {
       paths?: Record<string, unknown>;
       openapi?: string;

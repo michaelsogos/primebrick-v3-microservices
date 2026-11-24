@@ -24,30 +24,30 @@ export class AiTelemetryEntity {
   @Column({ nullable: false })
   model!: string;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   tokens_in!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   tokens_out!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   steps!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   tool_calls!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   rag_hits!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   latency_ms!: number;
 
-  @Column({ pgType: "boolean", nullable: false })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   success!: boolean;
 
   @Column({ nullable: true })
   error?: string | null;
 
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "now()" })
   created_at!: Date;
 }

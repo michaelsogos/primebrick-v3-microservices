@@ -1,7 +1,81 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-19T10:48:53.913Z",
-  "onlyInEntityTables": [],
+  "generatedAt": "2026-11-24T11:21:08.085Z",
+  "onlyInEntityTables": [
+    "job.sequences",
+    "job.sequence_counters"
+  ],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "job.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "type",
+          "entityDefault": null,
+          "databaseDefault": "'string'"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "job.job_schedules": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "schedule_type",
+          "entityDefault": null,
+          "databaseDefault": "'recurring'"
+        },
+        {
+          "column": "status",
+          "entityDefault": null,
+          "databaseDefault": "'armed'"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "job_schedules_subject_uq",
+        "job_schedules_status_idx"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "job.job_triggers": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "run_as",
+          "entityDefault": null,
+          "databaseDefault": "'user'"
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [
+        "job_triggers_system_key_uq"
+      ],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

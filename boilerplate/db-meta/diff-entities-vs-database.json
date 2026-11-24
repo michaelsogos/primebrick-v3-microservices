@@ -1,7 +1,61 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-16T16:22:37.036Z",
-  "onlyInEntityTables": [],
+  "generatedAt": "2026-11-24T11:21:11.457Z",
+  "onlyInEntityTables": [
+    "boilerplate.sequences",
+    "boilerplate.sequence_counters"
+  ],
   "onlyInDatabaseTables": [],
-  "tables": {}
+  "tables": {
+    "boilerplate.config_entries": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "updated_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "boilerplate.test_items": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [
+        {
+          "column": "created_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        },
+        {
+          "column": "updated_by",
+          "entityDefault": "'system'",
+          "databaseDefault": null
+        }
+      ],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    }
+  }
 }

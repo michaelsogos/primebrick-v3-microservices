@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-23T19:39:46.148Z",
+  "issued_at": "2026-11-24T11:21:08.089Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
@@ -39,7 +39,8 @@
     "20261222090000_trigger_derived_identity": "6bd05d23fa9152305cf18a0e05c73e3aae72ccc9422ad52e808ae5dd7a4dbce9",
     "20261223000000_trigger_filter_hint_user": "8456ed96e41b05e119127e46622a4cb5ab52bfcbb7cd8205e1c94527670ddf44",
     "20261229130000_i18n_job_settings_sequences": "eecde0cfd3affcd12394596c9f0dcdfe1776faa2890fe810ca3265f985a23719",
-    "20261230100000_i18n_purge_deleted_translations": "e3347c92b6826a499e4a476269034c814eaa9feee1e1c9d371e87a3b03f84f1f"
+    "20261230100000_i18n_purge_deleted_translations": "e3347c92b6826a499e4a476269034c814eaa9feee1e1c9d371e87a3b03f84f1f",
+    "20261124112108_create_job_sequences_job_sequence_counters": "3840285ea43386b70b530cc987be902d532a787c48f5d87d001781c5387f67e8"
   },
-  "signature": "A9GeiWK7sD8ocxhkWrB1g3gsaPvOHqi6Uma61zG6Sz1/SlAWcB/mbSCTv8PPswncYabtA6OuNToDMZdS/mniCw=="
+  "signature": ""
 }
