@@ -1,12 +1,12 @@
 ---
-title: Sequences List
+title: Sequences
 description: List, search and manage all sequences.
 entity: sequence
 ---
 
 List, search and manage all sequences.
 
-Each row shows the name, the step, the start, the value actual, the value next, the pattern, the emitted actual, the emitted next, the tz.
+Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the revive every, the expire at.
 
 The page is visible with the `access.system.job.settings.sequences` grant.
 
@@ -29,28 +29,54 @@ The page is visible with the `access.system.job.settings.sequences` grant.
 
 | Column | Visible | Sortable | Filterable | Notes |
 |--------|---------|----------|------------|-------|
-| **name** | yes | yes | yes |  |
-| **step** | yes | yes | yes |  |
-| **start** | yes | yes | yes |  |
-| **value actual** | yes | no | no |  |
-| **value next** | yes | no | no |  |
-| **pattern** | yes | yes | yes |  |
-| **emitted actual** | yes | no | no |  |
-| **emitted next** | yes | no | no |  |
-| **tz** | yes | yes | yes |  |
-| **description key** | no | yes | yes |  |
+| **Name** | yes | yes | yes |  |
+| **Increment** | yes | yes | yes |  |
+| **Start** | yes | yes | yes |  |
+| **Current** | yes | no | no |  |
+| **Next** | yes | no | no |  |
+| **Pattern** | yes | yes | yes |  |
+| **Current Sequence** | yes | no | no |  |
+| **Next Sequence** | yes | no | no |  |
+| **Time zone** | yes | yes | yes |  |
+| **revive every** | yes | yes | yes |  |
+| **expire at** | yes | yes | yes |  |
+| **sez** | no | yes | yes |  |
+| **sez2** | no | yes | yes |  |
+| **sez3** | no | yes | yes |  |
+| **binding key** | no | yes | yes |  |
+| **revive grace** | no | yes | yes |  |
+| **revive slot** | no | yes | yes |  |
+| **switch at** | no | yes | yes |  |
+| **default from** | no | yes | yes |  |
+| **revived from** | no | yes | yes |  |
+| **revived at** | no | yes | yes |  |
+| **revived by** | no | yes | yes |  |
+| **Description key** | no | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 
-- The name column is shown by default and can be sorted and filtered.
-- The step column is shown by default and can be sorted and filtered.
-- The start column is shown by default and can be sorted and filtered.
-- The value actual column is shown by default and cannot be sorted or filtered.
-- The value next column is shown by default and cannot be sorted or filtered.
-- The pattern column is shown by default and can be sorted and filtered.
-- The emitted actual column is shown by default and cannot be sorted or filtered.
-- The emitted next column is shown by default and cannot be sorted or filtered.
-- The tz column is shown by default and can be sorted and filtered.
-- The description key column is hidden by default and can be sorted and filtered.
+- The Name column is shown by default and can be sorted and filtered.
+- The Increment column is shown by default and can be sorted and filtered.
+- The Start column is shown by default and can be sorted and filtered.
+- The Current column is shown by default and cannot be sorted or filtered.
+- The Next column is shown by default and cannot be sorted or filtered.
+- The Pattern column is shown by default and can be sorted and filtered.
+- The Current Sequence column is shown by default and cannot be sorted or filtered.
+- The Next Sequence column is shown by default and cannot be sorted or filtered.
+- The Time zone column is shown by default and can be sorted and filtered.
+- The revive every column is shown by default and can be sorted and filtered.
+- The expire at column is shown by default and can be sorted and filtered.
+- The sez column is hidden by default and can be sorted and filtered.
+- The sez2 column is hidden by default and can be sorted and filtered.
+- The sez3 column is hidden by default and can be sorted and filtered.
+- The binding key column is hidden by default and can be sorted and filtered.
+- The revive grace column is hidden by default and can be sorted and filtered.
+- The revive slot column is hidden by default and can be sorted and filtered.
+- The switch at column is hidden by default and can be sorted and filtered.
+- The default from column is hidden by default and can be sorted and filtered.
+- The revived from column is hidden by default and can be sorted and filtered.
+- The revived at column is hidden by default and can be sorted and filtered.
+- The revived by column is hidden by default and can be sorted and filtered.
+- The Description key column is hidden by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 
 ## Actions

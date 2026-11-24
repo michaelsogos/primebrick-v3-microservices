@@ -88,6 +88,7 @@ async function main(): Promise<void> {
     // and materializes its trigger only when the registry carries a
     // maintained surface (@Partition / @AuditTrail / @Retention).
     partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+    sequenceRevive: dalMigrations.makeSequenceReviveJob(),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new BoilerplateAuthConfigPort(configLoader),

@@ -6,7 +6,7 @@ entity: sequence
 
 List, search and manage all sequences.
 
-Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone.
+Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the revive every, the expire at.
 
 The page is visible with the `access.crm.sequences` grant.
 
@@ -38,7 +38,20 @@ The page is visible with the `access.crm.sequences` grant.
 | **Current Sequence** | yes | no | no |  |
 | **Next Sequence** | yes | no | no |  |
 | **Time zone** | yes | yes | yes |  |
-| **Description key** | no | yes | yes |  |
+| **revive every** | yes | yes | yes |  |
+| **expire at** | yes | yes | yes |  |
+| **sez** | no | yes | yes |  |
+| **sez2** | no | yes | yes |  |
+| **sez3** | no | yes | yes |  |
+| **binding key** | no | yes | yes |  |
+| **revive grace** | no | yes | yes |  |
+| **revive slot** | no | yes | yes |  |
+| **switch at** | no | yes | yes |  |
+| **default from** | no | yes | yes |  |
+| **revived from** | no | yes | yes |  |
+| **revived at** | no | yes | yes |  |
+| **revived by** | no | yes | yes |  |
+| **Description translation** | no | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 
 - The Name column is shown by default and can be sorted and filtered.
@@ -50,7 +63,20 @@ The page is visible with the `access.crm.sequences` grant.
 - The Current Sequence column is shown by default and cannot be sorted or filtered.
 - The Next Sequence column is shown by default and cannot be sorted or filtered.
 - The Time zone column is shown by default and can be sorted and filtered.
-- The Description key column is hidden by default and can be sorted and filtered.
+- The revive every column is shown by default and can be sorted and filtered.
+- The expire at column is shown by default and can be sorted and filtered.
+- The sez column is hidden by default and can be sorted and filtered.
+- The sez2 column is hidden by default and can be sorted and filtered.
+- The sez3 column is hidden by default and can be sorted and filtered.
+- The binding key column is hidden by default and can be sorted and filtered.
+- The revive grace column is hidden by default and can be sorted and filtered.
+- The revive slot column is hidden by default and can be sorted and filtered.
+- The switch at column is hidden by default and can be sorted and filtered.
+- The default from column is hidden by default and can be sorted and filtered.
+- The revived from column is hidden by default and can be sorted and filtered.
+- The revived at column is hidden by default and can be sorted and filtered.
+- The revived by column is hidden by default and can be sorted and filtered.
+- The Description translation column is hidden by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 
 ## Actions

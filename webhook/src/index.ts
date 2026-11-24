@@ -65,6 +65,7 @@ async function main(): Promise<void> {
     // maintained surface (@Partition / @AuditTrail / @Retention). Trigger
     // row = the schedule of record (user-governed).
     partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+    sequenceRevive: dalMigrations.makeSequenceReviveJob(),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new WebhookAuthConfigPort(configLoader),

@@ -1,0 +1,119 @@
+---
+title: Sequences
+description: List, search and manage all sequences.
+entity: sequence
+---
+
+List, search and manage all sequences.
+
+Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the revive every, the expire at.
+
+The page is visible with the `access.system.emailsender.settings.sequences` grant.
+
+## What you can do here
+
+### How to delete a sequence
+1. Open the row actions menu on the sequence and click **Delete**.
+2. Confirm the deletion in the dialog — the sequence is soft-deleted and can be restored.
+
+### How to restore a deleted sequence
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the sequence and click **Restore**.
+3. Confirm in the dialog — the sequence is active again.
+
+### How to view the change history of a sequence
+1. Open the row actions menu on the sequence and click **Audit history**.
+2. The version history of the sequence will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Name** | yes | yes | yes |  |
+| **Increment** | yes | yes | yes |  |
+| **Start** | yes | yes | yes |  |
+| **Current** | yes | no | no |  |
+| **Next** | yes | no | no |  |
+| **Pattern** | yes | yes | yes |  |
+| **Current Sequence** | yes | no | no |  |
+| **Next Sequence** | yes | no | no |  |
+| **Time zone** | yes | yes | yes |  |
+| **revive every** | yes | yes | yes |  |
+| **expire at** | yes | yes | yes |  |
+| **sez** | no | yes | yes |  |
+| **sez2** | no | yes | yes |  |
+| **sez3** | no | yes | yes |  |
+| **binding key** | no | yes | yes |  |
+| **revive grace** | no | yes | yes |  |
+| **revive slot** | no | yes | yes |  |
+| **switch at** | no | yes | yes |  |
+| **default from** | no | yes | yes |  |
+| **revived from** | no | yes | yes |  |
+| **revived at** | no | yes | yes |  |
+| **revived by** | no | yes | yes |  |
+| **Description key** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Name column is shown by default and can be sorted and filtered.
+- The Increment column is shown by default and can be sorted and filtered.
+- The Start column is shown by default and can be sorted and filtered.
+- The Current column is shown by default and cannot be sorted or filtered.
+- The Next column is shown by default and cannot be sorted or filtered.
+- The Pattern column is shown by default and can be sorted and filtered.
+- The Current Sequence column is shown by default and cannot be sorted or filtered.
+- The Next Sequence column is shown by default and cannot be sorted or filtered.
+- The Time zone column is shown by default and can be sorted and filtered.
+- The revive every column is shown by default and can be sorted and filtered.
+- The expire at column is shown by default and can be sorted and filtered.
+- The sez column is hidden by default and can be sorted and filtered.
+- The sez2 column is hidden by default and can be sorted and filtered.
+- The sez3 column is hidden by default and can be sorted and filtered.
+- The binding key column is hidden by default and can be sorted and filtered.
+- The revive grace column is hidden by default and can be sorted and filtered.
+- The revive slot column is hidden by default and can be sorted and filtered.
+- The switch at column is hidden by default and can be sorted and filtered.
+- The default from column is hidden by default and can be sorted and filtered.
+- The revived from column is hidden by default and can be sorted and filtered.
+- The revived at column is hidden by default and can be sorted and filtered.
+- The revived by column is hidden by default and can be sorted and filtered.
+- The Description key column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | DISABLED | `emailsender.sequence.create.single` | Creates a new sequence | no |
+| **update** | DISABLED | `emailsender.sequence.update.single` | Opens the sequence for editing | no |
+| **delete** | ENABLED | `emailsender.sequence.delete.single` | Marks the sequence as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `emailsender.sequence.restore.single` | Brings a soft-deleted sequence back | no |
+| **purge** | DISABLED | — | Removes the sequence forever | no |
+| **audit history** | ENABLED | `emailsender.sequence.read.audit` | Shows the change history of the sequence | no |
+
+- Creating a new sequence is not available on this page — if enabled, it would require the `emailsender.sequence.create.single` permission.
+- Editing a sequence is not available on this page — if enabled, it would require the `emailsender.sequence.update.single` permission.
+- Soft-deleting a sequence is available on this page — marks the sequence as deleted but keeps it so it can be restored and it requires the `emailsender.sequence.delete.single` permission.
+- Restoring a soft-deleted sequence is available on this page — brings a soft-deleted sequence back and it requires the `emailsender.sequence.restore.single` permission.
+- Permanently deleting a sequence is not available on this page — no permission is declared for it on sequences.
+- Viewing the change history of a sequence is available on this page — every sequence keeps a full version history and it requires the `emailsender.sequence.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `emailsender.sequence.delete.bulk` | Marks the selected sequences as deleted | no |
+| **restore** | ENABLED | `emailsender.sequence.restore.bulk` | Restores the selected sequences | no |
+| **duplicate** | DISABLED | — | Duplicates the selected sequences | no |
+| **export** | ENABLED | `emailsender.sequence.export.all` | Exports the list | no |
+
+- Soft-deleting the selected sequences is available on this page — marks the selected sequences as deleted and it requires the `emailsender.sequence.delete.bulk` permission.
+- Restoring the selected sequences is available on this page — restores the selected sequences and it requires the `emailsender.sequence.restore.bulk` permission.
+- Duplicating the selected sequences is not available on this page — no permission is declared for it on sequences.
+- Exporting the list is available on this page — exports the list and it requires the `emailsender.sequence.export.all` permission.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+
