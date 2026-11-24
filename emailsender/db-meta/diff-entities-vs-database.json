@@ -1,57 +1,21 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T17:01:55.015Z",
+  "generatedAt": "2026-11-24T18:03:14.328Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
-    "emailsender.providers": {
+    "emailsender.sequences": {
       "onlyInEntityColumns": [],
       "onlyInDatabaseColumns": [],
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
       "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [],
-      "indexMismatches": [
-        {
-          "name": "providers_provider_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "provider"
-          ],
-          "databaseColumns": [
-            "provider"
-          ]
-        }
+      "onlyInEntityIndexes": [
+        "sequences_binding_key_default_from_idx"
       ],
-      "onlyInEntityForeignKeys": [],
-      "onlyInDatabaseForeignKeys": [],
-      "foreignKeyMismatches": []
-    },
-    "emailsender.config_entries": {
-      "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [],
-      "likelyRenames": [],
-      "typeMismatches": [],
-      "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
-      "indexMismatches": [
-        {
-          "name": "config_entries_key_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "key"
-          ],
-          "databaseColumns": [
-            "key"
-          ]
-        }
-      ],
+      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []

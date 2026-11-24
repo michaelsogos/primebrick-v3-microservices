@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T17:01:19.189Z",
+  "generatedAt": "2026-11-24T18:02:17.666Z",
   "source": "entities",
   "tables": {
     "job.config_entries": {
@@ -626,7 +626,19 @@
           "propertyKey": "report",
           "isNullable": true
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "job_runs_created_idx",
+          "columns": [
+            "created_at"
+          ],
+          "using": "btree",
+          "sort": [
+            "desc"
+          ]
+        }
+      ]
     },
     "job.job_triggers": {
       "kind": "table",
@@ -1152,7 +1164,26 @@
           "propertyKey": "revived_by",
           "isNullable": true
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "using": "btree",
+          "where": "deleted_at IS NULL",
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ]
+        }
+      ]
     },
     "job.sequence_counters": {
       "kind": "table",

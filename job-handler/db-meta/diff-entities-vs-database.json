@@ -1,59 +1,21 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T17:01:19.270Z",
+  "generatedAt": "2026-11-24T18:02:17.759Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
-    "job.config_entries": {
+    "job.sequences": {
       "onlyInEntityColumns": [],
       "onlyInDatabaseColumns": [],
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
       "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [],
-      "indexMismatches": [
-        {
-          "name": "config_entries_key_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "key"
-          ],
-          "databaseColumns": [
-            "key"
-          ],
-          "databaseIsConstraint": true
-        }
+      "onlyInEntityIndexes": [
+        "sequences_binding_key_default_from_idx"
       ],
-      "onlyInEntityForeignKeys": [],
-      "onlyInDatabaseForeignKeys": [],
-      "foreignKeyMismatches": []
-    },
-    "job.job_triggers": {
-      "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [],
-      "likelyRenames": [],
-      "typeMismatches": [],
-      "nullabilityMismatches": [],
-      "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
-      "indexMismatches": [
-        {
-          "name": "job_triggers_name_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "name"
-          ],
-          "databaseColumns": [
-            "name"
-          ],
-          "databaseIsConstraint": true
-        }
-      ],
+      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []

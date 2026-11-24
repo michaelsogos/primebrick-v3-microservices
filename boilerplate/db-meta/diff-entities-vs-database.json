@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T11:21:11.457Z",
-  "onlyInEntityTables": [
-    "boilerplate.sequences",
-    "boilerplate.sequence_counters"
-  ],
+  "generatedAt": "2026-11-24T18:03:42.594Z",
+  "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
     "boilerplate.config_entries": {
@@ -13,21 +10,22 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [
-        {
-          "column": "created_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "updated_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        }
-      ],
+      "defaultMismatches": [],
       "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
-      "indexMismatches": [],
+      "indexMismatches": [
+        {
+          "name": "config_entries_key_uq",
+          "entityUsing": "btree",
+          "databaseUsing": "btree",
+          "entityColumns": [
+            "key"
+          ],
+          "databaseColumns": [
+            "key"
+          ]
+        }
+      ],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []
@@ -38,19 +36,36 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [
+      "defaultMismatches": [],
+      "onlyInEntityIndexes": [],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [
         {
-          "column": "created_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "updated_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
+          "name": "test_items_name_uq",
+          "entityUsing": "btree",
+          "databaseUsing": "btree",
+          "entityColumns": [
+            "name"
+          ],
+          "databaseColumns": [
+            "name"
+          ]
         }
       ],
-      "onlyInEntityIndexes": [],
+      "onlyInEntityForeignKeys": [],
+      "onlyInDatabaseForeignKeys": [],
+      "foreignKeyMismatches": []
+    },
+    "boilerplate.sequences": {
+      "onlyInEntityColumns": [],
+      "onlyInDatabaseColumns": [],
+      "likelyRenames": [],
+      "typeMismatches": [],
+      "nullabilityMismatches": [],
+      "defaultMismatches": [],
+      "onlyInEntityIndexes": [
+        "sequences_binding_key_default_from_idx"
+      ],
       "onlyInDatabaseIndexes": [],
       "indexMismatches": [],
       "onlyInEntityForeignKeys": [],

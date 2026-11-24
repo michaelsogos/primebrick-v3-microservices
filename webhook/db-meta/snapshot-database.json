@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T17:01:34.468Z",
+  "generatedAt": "2026-11-24T18:03:02.587Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -233,7 +233,8 @@
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON webhook.config_entries USING btree (key)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON webhook.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         },
         {
           "name": "config_entries_deleted_at_idx",
@@ -243,15 +244,6 @@
             "deleted_at"
           ],
           "definition": "CREATE INDEX config_entries_deleted_at_idx ON webhook.config_entries USING btree (deleted_at)"
-        },
-        {
-          "name": "config_entries_uuid_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX config_entries_uuid_uq ON webhook.config_entries USING btree (uuid)"
         }
       ]
     },

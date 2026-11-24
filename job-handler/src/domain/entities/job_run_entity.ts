@@ -13,12 +13,16 @@ import {
   Unique,
   Column,
   Calculated,
+  Index,
   type UUID,
   EntityBase,
   Auditable,
 } from "@primebrick/dal-pg";
 
 @Entity("job_runs")
+// "latest runs first" — the only DESC index in the fleet with real scans;
+// `created_at` is an Auditable-mixin column → class-level spec form.
+@Index({ name: "job_runs_created_idx", columns: [{ name: "created_at", sort: "desc" }] })
 export class JobRunEntity
   extends Auditable(EntityBase) {
   @Key()

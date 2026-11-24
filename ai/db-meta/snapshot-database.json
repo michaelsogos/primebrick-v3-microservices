@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T16:57:53.611Z",
+  "generatedAt": "2026-11-24T18:01:19.950Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -159,7 +159,7 @@
       },
       "indexes": [
         {
-          "name": "docs_kb_repo_path_chunk_idx_key",
+          "name": "docs_kb_repo_path_chunk_idx_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
@@ -167,7 +167,7 @@
             "path",
             "chunk_idx"
           ],
-          "definition": "CREATE UNIQUE INDEX docs_kb_repo_path_chunk_idx_key ON ai.docs_kb USING btree (repo, path, chunk_idx)",
+          "definition": "CREATE UNIQUE INDEX docs_kb_repo_path_chunk_idx_uq ON ai.docs_kb USING btree (repo, path, chunk_idx)",
           "isConstraint": true
         },
         {
@@ -177,6 +177,10 @@
           "columns": [
             "embedding"
           ],
+          "with": {
+            "m": "16",
+            "ef_construction": "64"
+          },
           "definition": "CREATE INDEX docs_kb_embedding_idx ON ai.docs_kb USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')"
         },
         {
@@ -1211,13 +1215,14 @@
       },
       "indexes": [
         {
-          "name": "ai_config_entries_key_uq",
+          "name": "config_entries_key_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX ai_config_entries_key_uq ON ai.config_entries USING btree (key)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON ai.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1423,6 +1428,12 @@
           "isUnique": false,
           "columns": [
             "created_at"
+          ],
+          "sort": [
+            "desc"
+          ],
+          "nulls": [
+            "first"
           ],
           "definition": "CREATE INDEX docs_ingest_log_created_idx ON ai.docs_ingest_log USING btree (created_at DESC)"
         },
@@ -2089,6 +2100,14 @@
             "user_uuid",
             "created_at"
           ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "first"
+          ],
           "definition": "CREATE INDEX ai_telemetry_user_uuid_created_at_idx ON ai.ai_telemetry USING btree (user_uuid, created_at DESC)"
         },
         {
@@ -2097,6 +2116,12 @@
           "isUnique": false,
           "columns": [
             "created_at"
+          ],
+          "sort": [
+            "desc"
+          ],
+          "nulls": [
+            "first"
           ],
           "definition": "CREATE INDEX ai_telemetry_created_at_idx ON ai.ai_telemetry USING btree (created_at DESC)"
         }

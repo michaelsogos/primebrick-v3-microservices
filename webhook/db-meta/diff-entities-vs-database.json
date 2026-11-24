@@ -1,34 +1,21 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T17:01:34.510Z",
+  "generatedAt": "2026-11-24T18:03:02.628Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
-    "webhook.config_entries": {
+    "webhook.sequences": {
       "onlyInEntityColumns": [],
       "onlyInDatabaseColumns": [],
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
       "defaultMismatches": [],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [
-        "config_entries_deleted_at_idx",
-        "config_entries_uuid_uq"
+      "onlyInEntityIndexes": [
+        "sequences_binding_key_default_from_idx"
       ],
-      "indexMismatches": [
-        {
-          "name": "config_entries_key_uq",
-          "entityUsing": "btree",
-          "databaseUsing": "btree",
-          "entityColumns": [
-            "key"
-          ],
-          "databaseColumns": [
-            "key"
-          ]
-        }
-      ],
+      "onlyInDatabaseIndexes": [],
+      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []

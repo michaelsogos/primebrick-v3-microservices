@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T17:01:19.194Z",
+  "generatedAt": "2026-11-24T18:02:17.673Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -233,8 +233,8 @@
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON job.config_entries USING btree (key)",
-          "isConstraint": true
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON job.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -747,6 +747,12 @@
           "columns": [
             "created_at"
           ],
+          "sort": [
+            "desc"
+          ],
+          "nulls": [
+            "first"
+          ],
           "definition": "CREATE INDEX job_runs_created_idx ON job.job_runs USING btree (created_at DESC)"
         },
         {
@@ -997,8 +1003,8 @@
           "columns": [
             "name"
           ],
-          "definition": "CREATE UNIQUE INDEX job_triggers_name_uq ON job.job_triggers USING btree (name)",
-          "isConstraint": true
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX job_triggers_name_uq ON job.job_triggers USING btree (name) WHERE (deleted_at IS NULL)"
         },
         {
           "name": "job_triggers_system_key_uq",

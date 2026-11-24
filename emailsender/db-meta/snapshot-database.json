@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T17:01:54.953Z",
+  "generatedAt": "2026-11-24T18:03:14.223Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -206,7 +206,8 @@
           "columns": [
             "provider"
           ],
-          "definition": "CREATE UNIQUE INDEX providers_provider_uq ON emailsender.providers USING btree (provider)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX providers_provider_uq ON emailsender.providers USING btree (provider) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -835,7 +836,8 @@
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON emailsender.config_entries USING btree (key)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON emailsender.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },

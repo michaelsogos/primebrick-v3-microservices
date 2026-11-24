@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T16:57:53.605Z",
+  "generatedAt": "2026-11-24T18:01:19.944Z",
   "source": "entities",
   "tables": {
     "ai.docs_kb": {
@@ -149,7 +149,11 @@
             "embedding"
           ],
           "using": "hnsw",
-          "opclass": "vector_cosine_ops"
+          "opclass": "vector_cosine_ops",
+          "with": {
+            "m": "16",
+            "ef_construction": "64"
+          }
         },
         {
           "name": "docs_kb_content_hash_idx",
@@ -1220,7 +1224,19 @@
           "propertyKey": "error",
           "isNullable": true
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "docs_ingest_log_created_idx",
+          "columns": [
+            "created_at"
+          ],
+          "using": "btree",
+          "sort": [
+            "desc"
+          ]
+        }
+      ]
     },
     "ai.ai_conversations": {
       "kind": "table",
@@ -1762,7 +1778,31 @@
           "isNullable": false,
           "defaultSql": "now()"
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "ai_telemetry_user_uuid_created_at_idx",
+          "columns": [
+            "user_uuid",
+            "created_at"
+          ],
+          "using": "btree",
+          "sort": [
+            "asc",
+            "desc"
+          ]
+        },
+        {
+          "name": "ai_telemetry_created_at_idx",
+          "columns": [
+            "created_at"
+          ],
+          "using": "btree",
+          "sort": [
+            "desc"
+          ]
+        }
+      ]
     },
     "ai.sequences": {
       "kind": "table",
@@ -2077,7 +2117,26 @@
           "propertyKey": "revived_by",
           "isNullable": true
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "using": "btree",
+          "where": "deleted_at IS NULL",
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ]
+        }
+      ]
     },
     "ai.sequence_counters": {
       "kind": "table",

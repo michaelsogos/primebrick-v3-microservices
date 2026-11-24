@@ -5,11 +5,17 @@
  * a server-default timestamp, `user_uuid` is a domain column (not the
  * audit `created_by`). No updates/deletes by design.
  */
-import { Column, Entity, Key,
+import { Column, Entity, Index, Key,
   type UUID,
 } from "@primebrick/dal-pg";
 
 @Entity("ai_telemetry")
+// "latest metrics first" list + per-user history — matching the live defs.
+@Index({ name: "ai_telemetry_created_at_idx", columns: [{ name: "created_at", sort: "desc" }] })
+@Index({
+  name: "ai_telemetry_user_uuid_created_at_idx",
+  columns: ["user_uuid", { name: "created_at", sort: "desc" }],
+})
 export class AiTelemetryEntity {
   @Key()
   @Column({ pgType: "uuid", nullable: false })

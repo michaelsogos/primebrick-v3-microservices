@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T17:00:03.303Z",
+  "generatedAt": "2026-11-24T18:02:34.115Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -228,14 +228,14 @@
       },
       "indexes": [
         {
-          "name": "crm_config_entries_key_uq",
+          "name": "config_entries_key_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX crm_config_entries_key_uq ON crm.config_entries USING btree (key)",
-          "isConstraint": true
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON crm.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -545,7 +545,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX customers_code_uq ON crm.customers USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customers_code_uq ON crm.customers USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -712,7 +713,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX customer_types_code_uq ON crm.customer_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customer_types_code_uq ON crm.customer_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -905,7 +907,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX company_dimensions_code_uq ON crm.company_dimensions USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX company_dimensions_code_uq ON crm.company_dimensions USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1131,6 +1134,16 @@
       },
       "indexes": [
         {
+          "name": "legal_forms_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code) WHERE (deleted_at IS NULL)"
+        },
+        {
           "name": "legal_forms_country_elf_uidx",
           "using": "btree",
           "isUnique": true,
@@ -1140,15 +1153,6 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE UNIQUE INDEX legal_forms_country_elf_uidx ON crm.legal_forms USING btree (country, elf_code) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "legal_forms_code_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "code"
-          ],
-          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code)"
         },
         {
           "name": "legal_forms_country_idx",
@@ -1325,7 +1329,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX local_address_types_code_uq ON crm.local_address_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX local_address_types_code_uq ON crm.local_address_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1492,7 +1497,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX qualifications_code_uq ON crm.qualifications USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX qualifications_code_uq ON crm.qualifications USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1659,7 +1665,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX marketing_qualifications_code_uq ON crm.marketing_qualifications USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX marketing_qualifications_code_uq ON crm.marketing_qualifications USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1839,7 +1846,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX contact_types_code_uq ON crm.contact_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX contact_types_code_uq ON crm.contact_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -2006,7 +2014,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX account_kinds_code_uq ON crm.account_kinds USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX account_kinds_code_uq ON crm.account_kinds USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -2186,7 +2195,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX customer_link_types_code_uq ON crm.customer_link_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customer_link_types_code_uq ON crm.customer_link_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -2353,7 +2363,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX consent_types_code_uq ON crm.consent_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX consent_types_code_uq ON crm.consent_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -4088,6 +4099,14 @@
           "columns": [
             "binding_key",
             "default_from"
+          ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON crm.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"

@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T16:57:53.710Z",
+  "generatedAt": "2026-11-24T18:01:20.051Z",
   "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
-    "ai.config_entries": {
+    "ai.sequences": {
       "onlyInEntityColumns": [],
       "onlyInDatabaseColumns": [],
       "likelyRenames": [],
@@ -12,11 +12,9 @@
       "nullabilityMismatches": [],
       "defaultMismatches": [],
       "onlyInEntityIndexes": [
-        "config_entries_key_uq"
+        "sequences_binding_key_default_from_idx"
       ],
-      "onlyInDatabaseIndexes": [
-        "ai_config_entries_key_uq"
-      ],
+      "onlyInDatabaseIndexes": [],
       "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],

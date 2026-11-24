@@ -51,7 +51,7 @@ export class DocsKbEntity {
   // it as the '[v1,v2,…]' literal on write and hydrates it on read. `jsType`
   // is the runtime hydration marker (a bare `Vector` annotation is invisible
   // at runtime — without it a jsonb round-trip would surface a raw string).
-  @Index({ using: "hnsw", opclass: "vector_cosine_ops" })
+  @Index({ using: "hnsw", opclass: "vector_cosine_ops", with: { m: "16", ef_construction: "64" } })
   @Column({ nullable: false, length: 1024, jsType: "vector" })
   embedding!: Vector;
 

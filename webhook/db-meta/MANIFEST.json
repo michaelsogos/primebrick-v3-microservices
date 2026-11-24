@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-3",
-  "issued_at": "2026-11-24T17:01:37.279Z",
+  "issued_at": "2026-11-24T18:14:15.894Z",
   "patches": {
     "0001_initial_schema_webhook": "bf4dd142785e3094ea4e3bdebcdb87b1a5d9f469fdf3395e188fd0f423ad1344",
     "0002_seed_webhook_config": "08d871ade3a47770fbaca39fab4954dd8a8082535f58956c1742158c3e857858",
@@ -13,9 +13,11 @@
     "20261114002000_translations_language_check": "173fcd1dd9c78382ff58fd26068f61ecef27397e8500923a2d23c1ba8939b00a",
     "20261124112110_create_webhook_sequences_webhook_sequence_counters": "f13c71c35e76d3e385e9e160f113aa05106037f365ad507ac77ed0b13b8231d1",
     "20261124170134_noop": "004182f88936073611117a6f71057b7c8a0c9e8ab2518ba5912a4c3c4db91faf",
+    "20261124180302_indexes_webhook_sequences": "ee38200ff3a443595bdaaf73b62aa1642fa3cde9f64b06741f49e34144302ad6",
+    "20261124184600_drop_config_entries_deleted_at_idx": "db7772b43f59cffa50b24b1e01963b21d511d18566c5a9d8c4402df45500e0ea",
     "20261205000000_i18n_key_snake_cleanup": "725d714be7c4430cbe2d890dae7879ebfc90f228368604e5180ea2be3972a354",
     "20261206000000_webhook_module_name_i18n": "1cabd2bc05fb7ef8f8207a8f52ebc5af720ba14b71ae7343c5b4264610f9ea54",
     "20261208000000_i18n_segregation_config_keys": "7993b8af114e9ddf2f3f36baf130676e6402f121c6b7abf7936bae0d8f74f35c"
   },
-  "signature": "7J+jaad2wtiWzKoEKKu1BtEUXHt9BFo09Vwp8QMVldRUt6Hy/SUoFI5tLIb69vXUvjYb+X4wrcS5gOyCl18iBQ=="
+  "signature": "VTmKEZJKb8xj36m+89F5Qqm2PcGXcsXLi7FdNbyqtnjOPqKGLbj7DKQNbOk7PCS3VS3p3bHjnmL7Otbe3UAbCQ=="
 }
