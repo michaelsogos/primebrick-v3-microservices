@@ -86,8 +86,10 @@ bun dist/index.js          # starts on port 3003 (from config table)
 
 The microservice reads its NATS™ URL, HTTP port, and service code from the
 `config_entries` table at startup via the SDK's `ConfigLoader` — not from env vars.
-The only required env vars are `DATABASE_URL` and `DATABASE_SCHEMA` (the
-service's owned PG schema — closed-set validated by `assertDbEnv()`).
+The only required env var is `DATABASE_URL` (closed-set validated by
+`assertDbEnv()`). The service's owned PG schema is declared in code —
+`OWNED_SCHEMAS` in `src/db/dal.ts`; `DATABASE_SCHEMA` in env is a reserved
+violation.
 
 To verify the service is running:
 

@@ -39,10 +39,11 @@ service follows — nothing more, nothing less.
 
 One `createMicroservice(options)` call. Required options:
 
-`serviceName`, `envSchema` (closed-set: exactly `DATABASE_URL` +
-`DATABASE_SCHEMA` — `assertDbEnv()` parses `DATABASE_SCHEMA` into the
-`string[]` domain; `[0]` is the service's owned schema and is sent to the
-BE as the `service.register` schema claim), `initDal`/`dalClose`,
+`serviceName`, `schemas` (the `OWNED_SCHEMAS` const in `src/db/dal.ts` —
+`[0]` is the service's owned schema, sent to the BE as the
+`service.register` schema claim; `DATABASE_SCHEMA` in env is a reserved
+violation), `envSchema` (closed-set: exactly `DATABASE_URL` —
+`assertDbEnv()`), `initDal`/`dalClose`,
 `configRepositoryAdapter`, `authConfigPort`, `healthCheckPort`,
 `routeHandler` (factory-produced only).
 

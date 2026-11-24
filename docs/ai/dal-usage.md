@@ -12,6 +12,14 @@ Database access has a two-step convention:
 - **`initDal()`** — bootstrap-only, called ONCE in `index.ts`; lives inside
   the service's own gateway module `<us>/src/db/dal.ts` (which wraps
   `getDal(config)` from `@primebrick/dal-pg`).
+- **`OWNED_SCHEMAS`** — the schema-domain const, declared in that same
+  `db/dal.ts` (`export const OWNED_SCHEMAS = ["<svc>"] as const`). It is
+  the SINGLE source of schema identity: `initDal`/`getDal` config,
+  `createMicroservice({ schemas })`, `makeServiceRoutes({ schemas })`
+  (builtin entities mount on `OWNED_SCHEMAS[0]` — the primary), and the
+  `scripts/database-patch-{check,apply}.ts` wrappers all read it.
+  `DATABASE_SCHEMA` in env is a reserved violation (`assertDbEnv` throws)
+  — see `env-policy.md`.
 - **`getDal()`** — the singleton accessor; usable ONLY inside the declared
   seam list (`.devin/check-standards.json` → `dal-access.allowPaths`:
   `db/dal.ts`, `index.ts`). Everywhere else data access comes from

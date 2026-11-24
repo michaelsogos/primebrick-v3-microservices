@@ -22,8 +22,8 @@ description: "Clone-source template for new Primebrick microservices — real bo
 cp -r boilerplate <new-svc>          # plain copy — no git metadata inside
 cd <new-svc>
 # rename <boilerplate> → <new-svc> everywhere:
-#   package.json name, .env DATABASE_SCHEMA, src/index.ts serviceName +
-#   displayName + schema + applicationName, entities' @Entity schema token,
+#   package.json name, OWNED_SCHEMAS in src/db/dal.ts, src/index.ts
+#   serviceName + displayName + applicationName, entities' @Entity schema token,
 #   db-meta patches (schema + seed values + filenames), .devin
 #   i18n_namespaces, service-routes serverUrl port, docs/dev-guide/index.mdx
 # pick a free http_port (taken: 3003-3007 — next free 3009+)
