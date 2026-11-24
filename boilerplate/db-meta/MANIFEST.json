@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-3",
-  "issued_at": "2026-11-24T19:07:00.199Z",
+  "issued_at": "2026-11-24T23:07:14.802Z",
   "patches": {
     "20261116000000_boilerplate_infra": "73770c233d5f18a85f87352e511324c5e9b1025e460d88e0c830c98a63fe849d",
     "20261116162221_create_boilerplate_config_entries_boilerplate_test_items": "aff0e02ae30eeb6a4853dc51b5e0275a40928813a3cb0d141261fdcc57ef09fc",
@@ -10,7 +10,8 @@
     "20261124112111_create_boilerplate_sequences_boilerplate_sequence_counters": "e89876536b5c810ce826a59c49d76842e3af57bebffb56043b97b6b69ad55e3c",
     "20261124180342_indexes_boilerplate_config_entries_boilerplate_test_items_boilerplate_se": "5b3901e71dce66312bc54541630edb975abd049855ce369d25250ba03760424e",
     "20261124190659_defaults_boilerplate_config_entries_boilerplate_test_items_boilerplate_s": "71af03fe9489ab8305ab942af2afdd269554a142e236bd60f98d7aa6e0c8bafc",
-    "20261208000000_i18n_segregation_config_keys": "f3e4c272d3834d10bfe94ead7660ad4d114942a284dc700ba51b35a775945975"
+    "20261208000000_i18n_segregation_config_keys": "f3e4c272d3834d10bfe94ead7660ad4d114942a284dc700ba51b35a775945975",
+    "20270101100000_sequence_revive_spec_varchar40": "9ab717b11b63ef563bbad31ccd62b802acfb49558ecb3e3b30d471092f986ca7"
   },
-  "signature": "/Zy3gnTAYetT6pOYamL2CEJwt/PgQrhth8T3d/0nlx756SZJVOgsFJO30Bg4drk7H6Mr3ex9hitbYTLkV9/NCg=="
+  "signature": "5HLavkH4oucXUYrwYvj015VR+4BjWOii3PVKQUjpt76vnVHhGMo0eTQA1NdoxYHQRkMJGf+VkXbZhKRjXEaHBw=="
 }
