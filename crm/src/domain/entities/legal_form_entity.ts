@@ -3,6 +3,8 @@ import {
   Entity,
   Key,
   Unique,
+  UniqueIndex,
+  Index,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -16,6 +18,7 @@ import { Cached } from "@primebrick/sdk";
  *  names are authority data, not translated. */
 @Entity("legal_forms")
 @AuditTrail()
+@UniqueIndex({ name: "legal_forms_country_elf_uidx" })
 @Cached(300_000)
 export class LegalFormEntity
   extends Deletable(Auditable(EntityBase)) {
@@ -28,10 +31,13 @@ export class LegalFormEntity
   code!: string;
 
   /** ISO 3166-1 alpha-2 jurisdiction — pivot of the country→legal_form cascade. */
+  @Unique("legal_forms_country_elf_uidx", 0)
+  @Index({ where: "deleted_at IS NULL" })
   @Column({ length: 2, nullable: false })
   country!: string;
 
   /** ISO 20275 ELF code (4 chars). */
+  @Unique("legal_forms_country_elf_uidx", 1)
   @Column({ length: 4, nullable: false })
   elf_code!: string;
 

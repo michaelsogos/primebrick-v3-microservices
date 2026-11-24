@@ -28,6 +28,7 @@ import {
   Entity,
   Key,
   Unique,
+  UniqueIndex,
   Column,
   Calculated,
   type UUID,
@@ -66,6 +67,7 @@ export function trampolineTriggerUuid(subject: string): string | undefined {
 
 @Entity("job_triggers")
 @AuditTrail()
+@UniqueIndex({ name: "job_triggers_system_key_uq" })
 export class JobTriggerEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
@@ -79,7 +81,9 @@ export class JobTriggerEntity
   /** Stable module-owned job id — written ONCE at materialization by the
    *  declaring service, the reconcile anchor across releases. NULL on
    *  user-made triggers; a non-NULL value IS the system flag (`is_system`
-   *  projects it — one physical source, never a second truth). */
+   *  projects it — one physical source, never a second truth). Unique among
+   *  live rows only — tombstones never block re-materialization. */
+  @Unique("job_triggers_system_key_uq", 0)
   @Column({ nullable: true })
   system_key?: string;
 

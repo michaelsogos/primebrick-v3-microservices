@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T11:21:10.404Z",
+  "generatedAt": "2026-11-24T17:01:34.464Z",
   "source": "entities",
   "tables": {
     "webhook.config_entries": {
@@ -200,7 +200,8 @@
             "key"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },

@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T11:21:06.735Z",
-  "onlyInEntityTables": [
-    "emailsender.sequences",
-    "emailsender.sequence_counters"
-  ],
+  "generatedAt": "2026-11-24T17:01:55.015Z",
+  "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
     "emailsender.providers": {
@@ -13,46 +10,22 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [
-        {
-          "column": "created_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "updated_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        }
-      ],
+      "defaultMismatches": [],
       "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
-      "indexMismatches": [],
-      "onlyInEntityForeignKeys": [],
-      "onlyInDatabaseForeignKeys": [],
-      "foreignKeyMismatches": []
-    },
-    "emailsender.email_templates": {
-      "onlyInEntityColumns": [],
-      "onlyInDatabaseColumns": [],
-      "likelyRenames": [],
-      "typeMismatches": [],
-      "nullabilityMismatches": [],
-      "defaultMismatches": [
+      "indexMismatches": [
         {
-          "column": "created_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "updated_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
+          "name": "providers_provider_uq",
+          "entityUsing": "btree",
+          "databaseUsing": "btree",
+          "entityColumns": [
+            "provider"
+          ],
+          "databaseColumns": [
+            "provider"
+          ]
         }
       ],
-      "onlyInEntityIndexes": [],
-      "onlyInDatabaseIndexes": [],
-      "indexMismatches": [],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []
@@ -63,26 +36,22 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [
-        {
-          "column": "created_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "updated_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "type",
-          "entityDefault": null,
-          "databaseDefault": "'string'"
-        }
-      ],
+      "defaultMismatches": [],
       "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [],
-      "indexMismatches": [],
+      "indexMismatches": [
+        {
+          "name": "config_entries_key_uq",
+          "entityUsing": "btree",
+          "databaseUsing": "btree",
+          "entityColumns": [
+            "key"
+          ],
+          "databaseColumns": [
+            "key"
+          ]
+        }
+      ],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []

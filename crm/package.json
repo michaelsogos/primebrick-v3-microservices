@@ -28,7 +28,8 @@
     "docs:check": "bun src/index.ts --emit-docs --check",
     "fe:check": "cd fe && svelte-check",
     "db:check": "bun scripts/database-patch-check.ts",
-    "deploy": "node ../scripts/deploy-service.mjs crm"
+    "deploy": "node ../scripts/deploy-service.mjs crm",
+    "db:meta:compare": "bun scripts/database-patch-compare.ts"
   },
   "dependencies": {
     "@primebrick/dal-pg": "workspace:*",

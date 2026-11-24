@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T01:09:32.389Z",
+  "generatedAt": "2026-11-24T17:00:03.293Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -201,7 +201,8 @@
             "key"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -468,7 +469,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -614,7 +616,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -782,7 +785,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -904,7 +908,7 @@
           "dataType": "varchar(2)",
           "typname": "varchar(2)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "country",
           "isNullable": false
@@ -915,7 +919,7 @@
           "dataType": "varchar(4)",
           "typname": "varchar(4)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "elf_code",
           "isNullable": false
@@ -978,12 +982,31 @@
       },
       "indexes": [
         {
+          "name": "legal_forms_country_idx",
+          "columns": [
+            "country"
+          ],
+          "using": "btree",
+          "where": "deleted_at IS NULL"
+        },
+        {
           "name": "legal_forms_code_uq",
           "columns": [
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
+        },
+        {
+          "name": "legal_forms_country_elf_uidx",
+          "columns": [
+            "country",
+            "elf_code"
+          ],
+          "using": "btree",
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1129,7 +1152,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1275,7 +1299,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1421,7 +1446,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1578,7 +1604,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1724,7 +1751,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1881,7 +1909,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -2027,7 +2056,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },

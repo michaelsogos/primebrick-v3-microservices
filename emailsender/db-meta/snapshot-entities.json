@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T11:21:06.679Z",
+  "generatedAt": "2026-11-24T17:01:54.949Z",
   "source": "entities",
   "tables": {
     "emailsender.providers": {
@@ -177,7 +177,8 @@
             "provider"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -719,7 +720,8 @@
             "key"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },

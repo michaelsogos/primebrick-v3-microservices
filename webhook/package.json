@@ -25,7 +25,8 @@
     "docs:check": "bun src/index.ts --emit-docs --check",
     "check:standards": "bun ../../primebrick-v3-sdk/tools/check-standards.ts src",
     "db:check": "bun scripts/database-patch-check.ts",
-    "deploy": "node ../scripts/deploy-service.mjs webhook"
+    "deploy": "node ../scripts/deploy-service.mjs webhook",
+    "db:meta:compare": "bun scripts/database-patch-compare.ts"
   },
   "dependencies": {
     "@nats-io/jetstream": "3.4.0",

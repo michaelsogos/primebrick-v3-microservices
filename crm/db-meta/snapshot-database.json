@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T01:09:32.396Z",
+  "generatedAt": "2026-11-24T17:00:03.303Z",
   "source": "database",
   "capturesDefaults": true,
   "tables": {
@@ -234,7 +234,8 @@
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX crm_config_entries_key_uq ON crm.config_entries USING btree (key)"
+          "definition": "CREATE UNIQUE INDEX crm_config_entries_key_uq ON crm.config_entries USING btree (key)",
+          "isConstraint": true
         }
       ]
     },
@@ -1130,15 +1131,6 @@
       },
       "indexes": [
         {
-          "name": "legal_forms_code_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "code"
-          ],
-          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code)"
-        },
-        {
           "name": "legal_forms_country_elf_uidx",
           "using": "btree",
           "isUnique": true,
@@ -1148,6 +1140,15 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE UNIQUE INDEX legal_forms_country_elf_uidx ON crm.legal_forms USING btree (country, elf_code) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "legal_forms_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code)"
         },
         {
           "name": "legal_forms_country_idx",
@@ -2656,16 +2657,6 @@
       },
       "indexes": [
         {
-          "name": "local_addresses_customer_uuid_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_uuid"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "local_addresses_type_idx",
           "using": "btree",
           "isUnique": false,
@@ -2674,6 +2665,16 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX local_addresses_type_idx ON crm.local_addresses USING btree (type_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "local_addresses_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
@@ -3213,16 +3214,6 @@
       },
       "indexes": [
         {
-          "name": "customer_contacts_customer_uuid_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_uuid"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "customer_contacts_type_idx",
           "using": "btree",
           "isUnique": false,
@@ -3231,6 +3222,16 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX customer_contacts_type_idx ON crm.customer_contacts USING btree (type_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_contacts_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
@@ -3669,16 +3670,6 @@
           "definition": "CREATE INDEX customer_links_parent_uuid_idx ON crm.customer_links USING btree (parent_customer_uuid) WHERE (deleted_at IS NULL)"
         },
         {
-          "name": "customer_links_child_uuid_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "child_customer_uuid"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "customer_links_pair_uq",
           "using": "btree",
           "isUnique": true,
@@ -3690,6 +3681,16 @@
             "GREATEST(parent_customer_uuid, child_customer_uuid)"
           ],
           "definition": "CREATE UNIQUE INDEX customer_links_pair_uq ON crm.customer_links USING btree (LEAST(parent_customer_uuid, child_customer_uuid), GREATEST(parent_customer_uuid, child_customer_uuid), type_uuid)"
+        },
+        {
+          "name": "customer_links_child_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "child_customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [

@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-11-24T11:21:10.733Z",
-  "onlyInEntityTables": [
-    "webhook.sequences",
-    "webhook.sequence_counters"
-  ],
+  "generatedAt": "2026-11-24T17:01:34.510Z",
+  "onlyInEntityTables": [],
   "onlyInDatabaseTables": [],
   "tables": {
     "webhook.config_entries": {
@@ -13,29 +10,25 @@
       "likelyRenames": [],
       "typeMismatches": [],
       "nullabilityMismatches": [],
-      "defaultMismatches": [
-        {
-          "column": "created_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "updated_by",
-          "entityDefault": "'system'",
-          "databaseDefault": null
-        },
-        {
-          "column": "type",
-          "entityDefault": null,
-          "databaseDefault": "'string'"
-        }
-      ],
+      "defaultMismatches": [],
       "onlyInEntityIndexes": [],
       "onlyInDatabaseIndexes": [
-        "config_entries_uuid_uq",
-        "config_entries_deleted_at_idx"
+        "config_entries_deleted_at_idx",
+        "config_entries_uuid_uq"
       ],
-      "indexMismatches": [],
+      "indexMismatches": [
+        {
+          "name": "config_entries_key_uq",
+          "entityUsing": "btree",
+          "databaseUsing": "btree",
+          "entityColumns": [
+            "key"
+          ],
+          "databaseColumns": [
+            "key"
+          ]
+        }
+      ],
       "onlyInEntityForeignKeys": [],
       "onlyInDatabaseForeignKeys": [],
       "foreignKeyMismatches": []

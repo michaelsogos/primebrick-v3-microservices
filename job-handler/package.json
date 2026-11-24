@@ -28,7 +28,8 @@
     "db:check": "bun scripts/database-patch-check.ts",
     "fe:build": "vite build fe",
     "fe:check": "cd fe && svelte-check",
-    "deploy": "node ../scripts/deploy-service.mjs job-handler"
+    "deploy": "node ../scripts/deploy-service.mjs job-handler",
+    "db:meta:compare": "bun scripts/database-patch-compare.ts"
   },
   "dependencies": {
     "@nats-io/jetstream": "3.4.0",

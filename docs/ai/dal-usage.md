@@ -139,6 +139,26 @@ Consumers MUST NOT — NO EXCEPTIONS, EVER:
   (allowPaths, adapters, `db/dal.ts`, `entity-repo.ts`, DomainService
   example, signed db-meta). See `docs/dev-guide/adding-a-service.mdx`.
 
+## Unique constraints (declared, never hand-made)
+
+Every unique index lives in the entity class — a DB-only unique index is
+drift (WARN) and never dropped automatically:
+
+- **bare `@Unique()`** on a column → single-col index `<table>_<col>_uq`.
+  The default for simple cases.
+- **`@UniqueIndex({name, where?, aliveOnly?, nullsNotDistinct?})`** at
+  class level + `@Unique(name, order)` on each member column — required
+  for composite indexes, partial predicates (`where`), and every opt-out
+  (`aliveOnly: false`). Options live ONLY on the class decl; a named
+  `@Unique` with no matching `@UniqueIndex` throws at meta-build.
+- **`aliveOnly` default is ON for `Deletable` entities** — uniques emit
+  `WHERE deleted_at IS NULL` so tombstones never block re-creation.
+  Opt out ONLY via the named decl (`ai_cerebellum`/`ai_models` are the
+  precedent: identity twins must conflict even soft-deleted).
+- One column may join N indexes (`service_registry.code` = the canonical
+  two-partial-unique example). Full contract: `primebrick-dal-v3`
+  dev-guide `entities.mdx` (`@Unique`/`@UniqueIndex`).
+
 ## Audit vs events (do NOT conflate)
 
 - **Audit trail** — the persistent `{table}_audit` row written by

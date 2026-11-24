@@ -11,6 +11,7 @@ import {
   Entity,
   Key,
   Unique,
+  UniqueIndex,
   Index,
   Column,
   Vector,
@@ -19,6 +20,7 @@ import {
 import { DocMetadata } from "../jsonb-contracts.js";
 
 @Entity("docs_kb")
+@UniqueIndex({ name: "docs_kb_repo_path_chunk_idx_uq" })
 export class DocsKbEntity {
   @Key()
   @Column({ pgType: "uuid" })

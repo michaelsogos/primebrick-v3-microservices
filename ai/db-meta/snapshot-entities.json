@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T11:21:05.850Z",
+  "generatedAt": "2026-11-24T16:57:53.605Z",
   "source": "entities",
   "tables": {
     "ai.docs_kb": {
@@ -830,6 +830,15 @@
       },
       "indexes": [
         {
+          "name": "ai_cerebellum_one_default_per_assistant_uq",
+          "columns": [
+            "assistant_key"
+          ],
+          "using": "btree",
+          "isUnique": true,
+          "where": "(is_default) AND (deleted_at IS NULL)"
+        },
+        {
           "name": "ai_cerebellum_assistant_model_dtype_uq",
           "columns": [
             "assistant_key",
@@ -1039,7 +1048,8 @@
             "key"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
