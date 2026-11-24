@@ -16,7 +16,6 @@ services:
       # Closed-set contract: only the DB pair is a real env var.
       # service_base_url / nats_url / etc. live in config_entries.
       DATABASE_URL: postgresql://primebrick:primebrick@primebrick-postgres-18:5432/primebrick
-      DATABASE_SCHEMA: emailsender
       NODE_ENV: development
     networks:
       - primebrick-infra-net

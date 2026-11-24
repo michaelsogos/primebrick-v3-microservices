@@ -17,11 +17,13 @@ import {
   makeServiceRoutes,
   detectPackageIdentity,
 } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "./db/dal.js";
 import { boilerplateEntityDecls } from "./controllers/http/entities-route.js";
 import { testActionRoutes } from "./controllers/http/test-actions-route.js";
 import { configEntryRoutes } from "./controllers/http/config-route.js";
 
 export const boilerplateRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "Boilerplate Catalog",
     version: detectPackageIdentity().version ?? "0.0.0",

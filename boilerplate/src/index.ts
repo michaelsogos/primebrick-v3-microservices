@@ -5,13 +5,12 @@ import {
   createMicroservice,
   logger,
   pgServerBanner,
-  assertDbEnv,
   CachingApiKeyPort,
   NatsApiKeyPort,
   getSdkCachePort,
 } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
-import { initDal, getDal } from "./db/dal.js";
+import { initDal, getDal, OWNED_SCHEMAS } from "./db/dal.js";
 import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import {
   ConfigRepositoryAdapter,
@@ -27,7 +26,8 @@ async function main(): Promise<void> {
   // would register a phantom "boilerplate" module (schema, routes,
   // registry entry) into the live platform. After copying the folder,
   // rename <boilerplate> everywhere (package.json name, serviceName +
-  // displayName, DATABASE_SCHEMA, schema tokens in entities/patches,
+  // displayName, OWNED_SCHEMAS in db/dal.ts, schema tokens in
+  // entities/patches,
   // ports, i18n_namespaces, seed values) and DELETE this block — the
   // service then boots for real with zero further code, serving
   // /api/v1/entities/test_item + /api/v1/actions/test-* + config_entry.
@@ -48,6 +48,8 @@ async function main(): Promise<void> {
 
   await createMicroservice({
     serviceName: "boilerplate",
+    // Owned schemas — service identity as code (db/dal.ts OWNED_SCHEMAS).
+    schemas: OWNED_SCHEMAS,
     serviceDisplayName: "Boilerplate Service",
     serviceDescription:
       "Clone-source template for new microservices — rename <boilerplate> with your service code",
@@ -61,8 +63,8 @@ async function main(): Promise<void> {
     // subjects in events-declaration.ts.
     events: BOILERPLATE_EVENTS,
 
-    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
-    // enforced by assertDbEnv() inside createMicroservice — envSchema has
+    // Closed-set env contract (DATABASE_URL only) is enforced by
+    // assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
     envSchema: {},
 
@@ -77,7 +79,6 @@ async function main(): Promise<void> {
       engine: dalMigrations,
       // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
       pool: () => getDal().getPool(),
-      schema: () => assertDbEnv().schemas[0],
       patchesDir: join(process.cwd(), "db-meta", "patches"),
       entityRegistry: [...ENTITY_REGISTRY],
       allowedTrust:

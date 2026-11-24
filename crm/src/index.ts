@@ -24,12 +24,11 @@ import {
   pgServerBanner,
 } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
-import { initDal, getDal } from "./db/dal.js";
+import { initDal, getDal, OWNED_SCHEMAS } from "./db/dal.js";
 import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { ConfigRepositoryAdapter } from "./adapters/config-repository-adapter.js";
 import { HealthCheckAdapter } from "./adapters/health-check-adapter.js";
 import { CrmAuthConfigPort } from "./adapters/auth-ports-adapter.js";
-import { assertDbEnv } from "@primebrick/sdk";
 import { CRM_NAV } from "./nav-declaration.js";
 import { CRM_EVENTS } from "./events-declaration.js";
 import { subscribeFakeEventEmitter } from "./controllers/nats-sub/fake-event-emitter.js";
@@ -38,6 +37,7 @@ import { compositeRouteHandler } from "./controllers/http/composite-route.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "crm",
+    schemas: OWNED_SCHEMAS,
     serviceDisplayName: "CRM",
     serviceDescription:
       "CRM playground — module-ownership case study: nav, route census and translations declared via service registration.",
@@ -67,7 +67,7 @@ async function main(): Promise<void> {
     // emits them for real yet — the crm.emit_fake_event callable does.
     events: CRM_EVENTS,
 
-    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
+    // Closed-set env contract (DATABASE_URL only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
     envSchema: {},
@@ -82,7 +82,6 @@ async function main(): Promise<void> {
       engine: dalMigrations,
       // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
       pool: () => getDal().getPool(),
-      schema: () => assertDbEnv().schemas[0],
       patchesDir: join(process.cwd(), "db-meta", "patches"),
       entityRegistry: [...ENTITY_REGISTRY],
       allowedTrust:

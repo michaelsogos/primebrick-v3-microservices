@@ -1,17 +1,25 @@
 /**
  * Dal gateway bootstrap for the job-handler microservice.
- * The env contract (DATABASE_URL + DATABASE_SCHEMA, nothing else) is
- * enforced by assertDbEnv — the first schema is the owned one (`job`).
+ * The env contract (DATABASE_URL only) is
+ * enforced by assertDbEnv — the owned schema list is OWNED_SCHEMAS (`job`).
  */
 import { getDal, type Dal } from "@primebrick/dal-pg";
 import { assertDbEnv, wireEntityEventEmission } from "@primebrick/sdk";
 
+/**
+ * Owned PG schemas — [0] = the primary/owned schema. The single source
+ * for initDal, createMicroservice({ schemas }), db:check tooling and
+ * migration scripts. Add a schema ONLY when the service genuinely owns
+ * more than one.
+ */
+export const OWNED_SCHEMAS = ["job"] as const;
+
 export async function initDal(): Promise<void> {
-  const { url, schemas } = assertDbEnv();
+  const { url } = assertDbEnv();
 
   getDal({
     connectionString: url,
-    schemas,
+    schemas: [...OWNED_SCHEMAS],
     max: 10,
     statementTimeoutMs: 30000,
     applicationName: "primebrick-job",

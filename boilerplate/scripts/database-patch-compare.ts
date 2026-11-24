@@ -14,13 +14,15 @@
 import "dotenv/config";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
+import { OWNED_SCHEMAS } from "../src/db/dal.js";
 
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL is not set");
 
 const cli = join(process.cwd(), "node_modules", "@primebrick", "dal-pg", "dist", "cli", "primebrick-db.js");
 // Under bun the CLI imports the .ts entity registry directly — no loader
-// shim needed (bun resolves TS in imported modules).
+// shim needed (bun resolves TS in imported modules). The schema domain
+// comes from OWNED_SCHEMAS — the single source, never from env.
 const res = spawnSync(
   "bun",
   [
@@ -28,6 +30,7 @@ const res = spawnSync(
     "compare",
     "--registry", "src/domain/entities/registry.ts",
     "--url", url,
+    "--schema", OWNED_SCHEMAS.join(","),
     "--out", "db-meta",
   ],
   { stdio: "inherit" },

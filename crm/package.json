@@ -27,7 +27,7 @@
     "generate:docs": "bun src/index.ts --emit-docs",
     "docs:check": "bun src/index.ts --emit-docs --check",
     "fe:check": "cd fe && svelte-check",
-    "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json",
+    "db:check": "bun scripts/database-patch-check.ts",
     "deploy": "node ../scripts/deploy-service.mjs crm"
   },
   "dependencies": {

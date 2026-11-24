@@ -1,17 +1,20 @@
-// job-handler migration runner — thin wrapper over the dal-pg engine.
+// Service migration runner — thin wrapper over the dal-pg engine.
 // The SAME code path runs at service boot (createMicroservice dbPatches);
-// this script exists for manual/dev runs only.
+// this script exists for manual/dev runs only. Pass --first-boot to
+// materialize a schema that has no patch registry yet (the boot guard
+// otherwise refuses — anti-bifurcation).
 import "dotenv/config";
 import { Pool } from "pg";
 import { join } from "node:path";
 import { runMigrations } from "@primebrick/dal-pg";
 import { logger, assertDbEnv } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "../src/db/dal.js";
 
 const PATCHES_DIR = join(process.cwd(), "db-meta", "patches");
 
 async function main() {
-  const { url, schemas } = assertDbEnv();
-  const schema = schemas[0];
+  const { url } = assertDbEnv();
+  const schema = OWNED_SCHEMAS[0];
 
   const pool = new Pool({ connectionString: url, max: 4 });
   try {
@@ -20,6 +23,7 @@ async function main() {
       schema,
       patchesDir: PATCHES_DIR,
       allowedTrust: ["dev", "release"],
+      firstBoot: process.argv.includes("--first-boot"),
       actor: `cli:${process.pid}`,
       logger,
     });

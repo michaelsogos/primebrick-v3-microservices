@@ -30,6 +30,7 @@ import {
   logger,
 } from "@primebrick/sdk";
 import { lookupService } from "../../registry/registry-cache.js";
+import { OWNED_SCHEMAS } from "../../db/dal.js";
 
 const WEBHOOK_STREAM = "WEBHOOK";
 const SUBJECT_PREFIX = "webhook";
@@ -141,6 +142,7 @@ export const webhookRoutes: RpcRoute[] = [
  *  derive from the same `webhookRoutes` table — the spec can never drift
  *  from the registered routes. */
 export const webhookRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "Webhook Ingress",
     version: detectPackageIdentity().version ?? "0.0.0",

@@ -15,10 +15,8 @@ import { ENTITY_REGISTRY } from "../domain/entities/registry.js";
 import { testActionRoutes } from "../controllers/http/test-actions-route.js";
 
 // `makeServiceRoutes` pulls builtin entity decls whose construction
-// requires the module's owned schema — in prod it comes from .env
-// (DATABASE_SCHEMA=boilerplate); vitest does not load .env, so mirror it
-// here and import the route surface lazily below.
-process.env.DATABASE_SCHEMA ??= "boilerplate";
+// requires the module's owned schema — it flows via
+// ServiceRoutesInput.schemas (OWNED_SCHEMAS in src/db/dal.ts), never env.
 
 describe("boilerplate wiring", () => {
   it("entity registry carries config_entry + test_item", () => {
