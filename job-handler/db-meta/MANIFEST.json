@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-24T11:21:08.089Z",
+  "issued_at": "2026-11-24T11:27:06.616Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
@@ -29,6 +29,7 @@
     "20261117140000_run_service_code_drop": "110bf3efacf284bbd47f029f8d2a0e3d9631724d25ec962ef0a146871a880fc4",
     "20261117183000_run_lineage_error_codes": "4f741cd940d083da3a0811234e05c63b91d58952c67953086a9e4ce593139ec2",
     "20261117190000_run_schedule_uuid": "1b5353c6e5e2364879d5964b880f67fba3a69937c85c2a1c8c54aa16eb07d919",
+    "20261124112108_create_job_sequences_job_sequence_counters": "3840285ea43386b70b530cc987be902d532a787c48f5d87d001781c5387f67e8",
     "20261207000000_run_as_labels_clarity": "104fd79204add71881fb21ebd858886afa4c76eaab2ffe18df6d23dec28ee070",
     "20261207100000_run_outcome_preset_reorder": "68224d439504c79d27fb070736a823b157238ea1ddf8b7c279f6d178b214eab7",
     "20261207110000_gateway_public_secret_config": "ce2b47c8e8194f5d77cff888f0d2c48682f5726ea9fcd5b7683749cf9615f5c4",
@@ -39,8 +40,7 @@
     "20261222090000_trigger_derived_identity": "6bd05d23fa9152305cf18a0e05c73e3aae72ccc9422ad52e808ae5dd7a4dbce9",
     "20261223000000_trigger_filter_hint_user": "8456ed96e41b05e119127e46622a4cb5ab52bfcbb7cd8205e1c94527670ddf44",
     "20261229130000_i18n_job_settings_sequences": "eecde0cfd3affcd12394596c9f0dcdfe1776faa2890fe810ca3265f985a23719",
-    "20261230100000_i18n_purge_deleted_translations": "e3347c92b6826a499e4a476269034c814eaa9feee1e1c9d371e87a3b03f84f1f",
-    "20261124112108_create_job_sequences_job_sequence_counters": "3840285ea43386b70b530cc987be902d532a787c48f5d87d001781c5387f67e8"
+    "20261230100000_i18n_purge_deleted_translations": "e3347c92b6826a499e4a476269034c814eaa9feee1e1c9d371e87a3b03f84f1f"
   },
-  "signature": ""
+  "signature": "9EULqTk2Exe0n0pRi9Zo50jGvtJLnAEfJtMuWMKymmZdehmJN0aYSKIqUaGctqDYjCn9uxSJU5ldqpcC3xKzDg=="
 }
