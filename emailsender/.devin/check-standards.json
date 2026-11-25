@@ -38,7 +38,7 @@
     },
     "no-fnf-nats-publish": {
       "allowPaths": [
-        "controllers/nats-sub/email-send.ts"
+        "services/email-service.ts"
       ]
     }
   },

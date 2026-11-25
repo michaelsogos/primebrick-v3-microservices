@@ -89,8 +89,19 @@ async function main(): Promise<void> {
     onReady: async () => {
       const emailService = new EmailService();
       subscribeToEmailSendRequests(async (request, actorId) => {
-        return await emailService.sendEmail(request, actorId);
+        const accepted = await emailService.acceptSend(request, actorId);
+        if (accepted.logUuid) {
+          const logUuid = accepted.logUuid;
+          void emailService.dispatchRow(logUuid, actorId).catch((error) =>
+            logger.error("Detached dispatch failed", { tags: ["nats-sub"], error }),
+          );
+        }
+        return accepted;
       });
+      await emailService.sweepPending();
+      setInterval(() => {
+        void emailService.sweepPending().catch(() => {});
+      }, 60_000);
       await subscribeToWebhooks();
     },
   });

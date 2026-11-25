@@ -26,3 +26,23 @@ export class RecipientEnvelope {
   cc?: string[];
   bcc?: string[];
 }
+
+/**
+ * `sender_log.request_payload` — the original send request VERBATIM, captured
+ * at taken-charge time so the asynchronous dispatch never depends on the
+ * original NATS message. Field names are camelCase because the payload IS the
+ * wire contract (`SendEmailRequest`) — a verbatim copy, not a domain model
+ * (documented exception to snake_case: renaming would corrupt the capture).
+ */
+export class SendRequestPayload {
+  requestId?: string;
+  templateCode?: string;
+  languageIso?: string;
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
+  variables?: Record<string, unknown>;
+  entityTable?: string;
+  entityUuid?: string;
+  initiatedBy?: string;
+}
