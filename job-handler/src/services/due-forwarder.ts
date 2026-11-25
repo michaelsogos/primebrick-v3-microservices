@@ -20,7 +20,7 @@
  * callable will then deny it — that IS the governance).
  */
 
-import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_TRIGGER_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, JOB_SCHEDULE_HEADERS, type AuthUser, logger } from "@primebrick/sdk";
+import { NatsClient, forwardAuthHeaders, forwardedActor, dueLaneVerify, applyPayloadInjectors, serializeAuthUserToHeaders, getAuthConfig, currentClientShieldSecret, getSdkCachePort, callNats, JOB_RUN_ID_HEADER, JOB_TRIGGER_ID_HEADER, JOB_SCHEDULE_SUBJECT_HEADER, JOB_SCHEDULE_HEADERS, type AuthUser, logger } from "@primebrick/sdk";
 import { trampolineTriggerUuid } from "../domain/entities/job_trigger_entity.js";
 import { JobRunsService } from "../modules/jobs/jobs.service.js";
 import { JOBS_STREAM } from "./run-recorder.js";
@@ -277,6 +277,19 @@ async function forward(
     ...(runUuid ? { [JOB_RUN_ID_HEADER]: runUuid } : {}),
     ...(triggerUuid ? { [JOB_TRIGGER_ID_HEADER]: triggerUuid } : {}),
   };
+  // Fire-time secret re-stamp — the forwarded headers carry the arm-time
+  // snapshot of the rotating client-shield secret, which dies within the
+  // grace window (rotation hourly, grace minutes). The publisher-side
+  // contract is current-at-publish (sdk auth/client-shield-secret.ts) and
+  // the forwarder IS the publisher at fire time: forwarding the stale
+  // snapshot made every schedule firing past rotation fail verification
+  // (AUTH_CLIENT_SHIELD_SECRET_INVALID). The user lane re-serializes
+  // through freshAuthHeaders and was immune; the system lane was not.
+  const gwConfig = getAuthConfig().gateway;
+  const freshSecret = currentClientShieldSecret(gwConfig.secret);
+  if (gwConfig.secret_header_name && freshSecret) {
+    outHeaders[gwConfig.secret_header_name] = freshSecret;
+  }
   let dispatchError: string | undefined;
   try {
     await NatsClient.publishEphemeralLossy(envelope.target, payload, outHeaders);
