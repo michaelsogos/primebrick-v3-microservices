@@ -74,6 +74,8 @@ async function main(): Promise<void> {
 
     initDal,
     dalClose: async () => { await getDal().close(); },
+    // standards-exempt: getPool — createMicroservice fabric key wiring reads vault material via direct DAL (sanctioned seam)
+    dalPool: () => getDal().getPool(),
     dbBanner: () => pgServerBanner(getDal(), process.env.DATABASE_URL!),
 
     // Own-schema migrations BEFORE ConfigLoader/registration.
