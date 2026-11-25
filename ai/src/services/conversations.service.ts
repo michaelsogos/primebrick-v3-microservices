@@ -55,7 +55,7 @@ export interface ConversationRow {
   last_seen_at: Date;
   created_at: Date;
   updated_at: Date;
-  version: number;
+  version: bigint;
 }
 
 export interface MessageRow {
@@ -141,7 +141,7 @@ export class ConversationsService extends DomainService<ConversationsT> {
    */
   async commitStamped<T>(
     conversationUuid: string | undefined,
-    build: (tx: DeferredTx, convVersion?: number) => { result: { value: T } },
+    build: (tx: DeferredTx, convVersion?: bigint) => { result: { value: T } },
   ): Promise<T> {
     const MAX_ATTEMPTS = 3;
     for (let attempt = 0; ; attempt++) {
@@ -158,12 +158,12 @@ export class ConversationsService extends DomainService<ConversationsT> {
     }
   }
 
-  async updateConversationTitle(uuid: string, title: string, version: number, actor: string): Promise<void> {
+  async updateConversationTitle(uuid: string, title: string, version: bigint, actor: string): Promise<void> {
     await runWithSession(actorSession(actor), () =>
       this.svc.update(uuid, { version, title }));
   }
 
-  async deleteConversation(uuid: string, version: number, actor: string): Promise<void> {
+  async deleteConversation(uuid: string, version: bigint, actor: string): Promise<void> {
     // Physical cascade — conversations are auditable but NOT deletable
     // (no @DeletableField) → `hardDelete` is the physical path. Children
     // (feedback, then messages) die in the SAME transaction: a conversation

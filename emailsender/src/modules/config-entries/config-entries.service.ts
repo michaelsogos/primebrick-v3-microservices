@@ -73,13 +73,13 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  the route used to hold: static-identity keys rejected
    *  (`assertWritableConfigKey` — deployed-artifact identity). Returns the
    *  re-read row — `null` when the uuid is unknown. */
-  async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
+  async updateValue(uuid: string, body: { value: unknown; version: bigint }): Promise<ConfigEntryEntity | null> {
     const target = (await this.svc.get(uuid)) as { key?: string } | null;
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);
     // svc.update — the ambient HTTP session supplies the actor; the
     // beforeUpdate hook re-checks the key guard for every writer.
-    await this.svc.update(uuid, { value: body.value as string, version: Number(body.version) });
+    await this.svc.update(uuid, { value: body.value as string, version: body.version });
     return this.getEntry(uuid);
   }
 }

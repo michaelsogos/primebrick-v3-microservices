@@ -142,7 +142,7 @@ export const configEntryRoutes: RpcRoute[] = [
       const b = body as Record<string, unknown>;
       const result = await configEntries.updateValue(params.uuid, {
         value: b.value,
-        version: Number(b.version),
+        version: b.version as bigint,
       });
       if (!result) {
         sendError(res, 404, "Config entry not found", "config-entry-not-found");
