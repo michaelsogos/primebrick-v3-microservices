@@ -25,7 +25,7 @@ export function publishTriggerChanged(uuid: unknown): void {
   // req/reply AND any syncSubjects re-ensure by another service strips it —
   // the publish then fails silently and the reload tap dies). A missed
   // event is harmless: boot reloads every enabled trigger anyway.
-  NatsClient.publish("jobs.ctl.triggers.changed", { trigger_uuid: uuid }).catch((err) => {
+  NatsClient.publishEphemeralLossy("jobs.ctl.triggers.changed", { trigger_uuid: uuid }).catch((err) => {
     logger.warn(`trigger changed publish failed (${String(err)})`, { tags: ["jobs"] });
   });
 }

@@ -113,7 +113,7 @@ export const webhookRoutes: RpcRoute[] = [
       if (auth) forwardHeaders["authorization"] = Array.isArray(auth) ? auth[0] : auth;
 
       try {
-        const seq = await NatsClient.jetstreamPublish(
+        const seq = await NatsClient.publish(
           `${SUBJECT_PREFIX}.${serviceCode}.${SUBJECT_SUFFIX}`,
           envelope,
           forwardHeaders,

@@ -35,6 +35,11 @@
       "allowPaths": [
         "providers/brevo.ts"
       ]
+    },
+    "no-fnf-nats-publish": {
+      "allowPaths": [
+        "controllers/nats-sub/email-send.ts"
+      ]
     }
   },
   "i18n_namespaces": [

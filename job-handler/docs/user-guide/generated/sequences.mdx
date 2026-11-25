@@ -6,7 +6,7 @@ entity: sequence
 
 List, search and manage all sequences.
 
-Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the revive every, the expire at.
+Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the Renew Every, the Starts from, the revive slot, the Renews On.
 
 The page is visible with the `access.system.job.settings.sequences` grant.
 
@@ -38,19 +38,13 @@ The page is visible with the `access.system.job.settings.sequences` grant.
 | **Current Sequence** | yes | no | no |  |
 | **Next Sequence** | yes | no | no |  |
 | **Time zone** | yes | yes | yes |  |
-| **revive every** | yes | yes | yes |  |
-| **expire at** | yes | yes | yes |  |
-| **sez** | no | yes | yes |  |
-| **sez2** | no | yes | yes |  |
-| **sez3** | no | yes | yes |  |
-| **binding key** | no | yes | yes |  |
-| **revive grace** | no | yes | yes |  |
-| **revive slot** | no | yes | yes |  |
-| **switch at** | no | yes | yes |  |
-| **default from** | no | yes | yes |  |
-| **revived from** | no | yes | yes |  |
-| **revived at** | no | yes | yes |  |
-| **revived by** | no | yes | yes |  |
+| **Renew Every** | yes | yes | yes | How often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation. |
+| **Starts from** | yes | yes | yes | When this generation starts being used. Available only when "Renew every" is set. |
+| **revive slot** | yes | yes | yes | Which code section advances at each renewal (e.g. the year). Available only when "Renew every" is set. |
+| **Activation** | no | yes | yes | When the next generation becomes active: an offset after the renewal moment or an exact date. Until then the previous generation keeps working. |
+| **sez** | no | yes | yes | Current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal. |
+| **sez2** | no | yes | yes | Current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal. |
+| **sez3** | no | yes | yes | Current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal. |
 | **Description key** | no | yes | yes |  |
 | **UUID** | no | yes | yes |  |
 
@@ -63,19 +57,13 @@ The page is visible with the `access.system.job.settings.sequences` grant.
 - The Current Sequence column is shown by default and cannot be sorted or filtered.
 - The Next Sequence column is shown by default and cannot be sorted or filtered.
 - The Time zone column is shown by default and can be sorted and filtered.
-- The revive every column is shown by default and can be sorted and filtered.
-- The expire at column is shown by default and can be sorted and filtered.
-- The sez column is hidden by default and can be sorted and filtered.
-- The sez2 column is hidden by default and can be sorted and filtered.
-- The sez3 column is hidden by default and can be sorted and filtered.
-- The binding key column is hidden by default and can be sorted and filtered.
-- The revive grace column is hidden by default and can be sorted and filtered.
-- The revive slot column is hidden by default and can be sorted and filtered.
-- The switch at column is hidden by default and can be sorted and filtered.
-- The default from column is hidden by default and can be sorted and filtered.
-- The revived from column is hidden by default and can be sorted and filtered.
-- The revived at column is hidden by default and can be sorted and filtered.
-- The revived by column is hidden by default and can be sorted and filtered.
+- The Renew Every column is shown by default and can be sorted and filtered — how often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation.
+- The Starts from column is shown by default and can be sorted and filtered — when this generation starts being used. Available only when "Renew every" is set.
+- The revive slot column is shown by default and can be sorted and filtered — which code section advances at each renewal (e.g. the year). Available only when "Renew every" is set.
+- The Activation column is hidden by default and can be sorted and filtered — when the next generation becomes active: an offset after the renewal moment or an exact date. Until then the previous generation keeps working.
+- The sez column is hidden by default and can be sorted and filtered — current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal.
+- The sez2 column is hidden by default and can be sorted and filtered — current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal.
+- The sez3 column is hidden by default and can be sorted and filtered — current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal.
 - The Description key column is hidden by default and can be sorted and filtered.
 - The UUID column is hidden by default and can be sorted and filtered.
 

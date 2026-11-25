@@ -287,10 +287,10 @@ async function dispatch(
     });
   } else {
     // Immediate — the envelope lands on the same trampoline the due-
-    // forwarder already consumes. jetstreamPublish, not core publish:
+    // forwarder already consumes. durable publish, not core:
     // the trampoline subject is stream-captured — only a PubAck proves
     // the fire was durably stored; a core publish can silently drop.
-    await NatsClient.jetstreamPublish(forwardSubject(auth.lane, trigger), envelope, auth.headers);
+    await NatsClient.publish(forwardSubject(auth.lane, trigger), envelope, auth.headers);
   }
 }
 

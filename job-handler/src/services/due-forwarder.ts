@@ -279,7 +279,7 @@ async function forward(
   };
   let dispatchError: string | undefined;
   try {
-    await NatsClient.publish(envelope.target, payload, outHeaders);
+    await NatsClient.publishEphemeralLossy(envelope.target, payload, outHeaders);
   } catch (err) {
     dispatchError = err instanceof Error ? err.message : String(err);
     await failRun(runUuid, dispatchError);

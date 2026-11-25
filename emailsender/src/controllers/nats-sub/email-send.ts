@@ -42,7 +42,7 @@ export async function subscribeToEmailSendRequests(
         handler: async ({ request }) => {
           logger.debug(`Received email send request: ${request.requestId}`, { tags: ["nats-sub"] });
           const response = await handleSendEmail(request, request.initiatedBy);
-          await NatsClient.publish(`${EMAIL_RESPONSE_SUBJECT}.${request.requestId}`, response);
+          await NatsClient.publishEphemeralLossy(`${EMAIL_RESPONSE_SUBJECT}.${request.requestId}`, response);
           logger.debug(
             `Processed email send request: ${request.requestId} - ${response.success ? "SUCCESS" : "FAILED"}`,
             { tags: ["nats-sub"] },
