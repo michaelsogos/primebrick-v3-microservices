@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T19:06:23.115Z",
+  "generatedAt": "2026-11-26T16:38:46.839Z",
   "source": "entities",
   "tables": {
     "emailsender.providers": {
@@ -412,9 +412,31 @@
           "propertyKey": "provider_message_id",
           "isNullable": true
         },
+        "request_id": {
+          "name": "request_id",
+          "ordinalPosition": 5,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "request_id",
+          "isNullable": true
+        },
+        "request_payload": {
+          "name": "request_payload",
+          "ordinalPosition": 6,
+          "dataType": "jsonb",
+          "typname": "jsonb",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "request_payload",
+          "isNullable": true
+        },
         "provider_uuid": {
           "name": "provider_uuid",
-          "ordinalPosition": 5,
+          "ordinalPosition": 7,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -425,7 +447,7 @@
         },
         "status": {
           "name": "status",
-          "ordinalPosition": 6,
+          "ordinalPosition": 8,
           "dataType": "varchar(50)",
           "typname": "varchar(50)",
           "isPrimaryKey": false,
@@ -436,7 +458,7 @@
         },
         "template_uuid": {
           "name": "template_uuid",
-          "ordinalPosition": 7,
+          "ordinalPosition": 9,
           "dataType": "uuid",
           "typname": "uuid",
           "isPrimaryKey": false,
@@ -447,7 +469,7 @@
         },
         "senders": {
           "name": "senders",
-          "ordinalPosition": 8,
+          "ordinalPosition": 10,
           "dataType": "jsonb",
           "typname": "jsonb",
           "isPrimaryKey": false,
@@ -458,7 +480,7 @@
         },
         "recipients": {
           "name": "recipients",
-          "ordinalPosition": 9,
+          "ordinalPosition": 11,
           "dataType": "jsonb",
           "typname": "jsonb",
           "isPrimaryKey": false,
@@ -469,7 +491,7 @@
         },
         "interpolated_sent_message": {
           "name": "interpolated_sent_message",
-          "ordinalPosition": 10,
+          "ordinalPosition": 12,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -480,7 +502,7 @@
         },
         "error_message": {
           "name": "error_message",
-          "ordinalPosition": 11,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -491,7 +513,7 @@
         },
         "sent_at": {
           "name": "sent_at",
-          "ordinalPosition": 12,
+          "ordinalPosition": 14,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -503,7 +525,7 @@
         },
         "status_changed_at": {
           "name": "status_changed_at",
-          "ordinalPosition": 13,
+          "ordinalPosition": 15,
           "dataType": "timestamptz",
           "typname": "timestamptz",
           "isPrimaryKey": false,
@@ -519,6 +541,14 @@
           "name": "sender_log_provider_message_id_uq",
           "columns": [
             "provider_message_id"
+          ],
+          "using": "btree",
+          "isUnique": true
+        },
+        {
+          "name": "sender_log_request_id_uq",
+          "columns": [
+            "request_id"
           ],
           "using": "btree",
           "isUnique": true
@@ -944,8 +974,8 @@
         "revive_every": {
           "name": "revive_every",
           "ordinalPosition": 19,
-          "dataType": "varchar(30)",
-          "typname": "varchar(30)",
+          "dataType": "varchar(40)",
+          "typname": "varchar(40)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -955,8 +985,8 @@
         "revive_grace": {
           "name": "revive_grace",
           "ordinalPosition": 20,
-          "dataType": "varchar(30)",
-          "typname": "varchar(30)",
+          "dataType": "varchar(40)",
+          "typname": "varchar(40)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,

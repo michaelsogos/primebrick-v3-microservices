@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-2",
-  "issued_at": "2026-11-26T14:02:35.107Z",
+  "key_id": "dev-micha-3",
+  "issued_at": "2026-11-26T16:29:50.845Z",
   "patches": {
     "0001_initial_schema_webhook": "bf4dd142785e3094ea4e3bdebcdb87b1a5d9f469fdf3395e188fd0f423ad1344",
     "0002_seed_webhook_config": "08d871ade3a47770fbaca39fab4954dd8a8082535f58956c1742158c3e857858",
@@ -20,7 +20,8 @@
     "20261206000000_webhook_module_name_i18n": "1cabd2bc05fb7ef8f8207a8f52ebc5af720ba14b71ae7343c5b4264610f9ea54",
     "20261208000000_i18n_segregation_config_keys": "7993b8af114e9ddf2f3f36baf130676e6402f121c6b7abf7936bae0d8f74f35c",
     "20270101100000_sequence_revive_spec_varchar40": "97f6dd45a31a59091bd5d462dc3d64803e12bcb8922e5618f9c7c5e2bf8b0724",
-    "20270101120000_shield_config_cleanup": "ad27a7ca09a4f3ca9a1d2746eac11a323cc36feae77f18fef916de8bd76a793d"
+    "20270101120000_shield_config_cleanup": "ad27a7ca09a4f3ca9a1d2746eac11a323cc36feae77f18fef916de8bd76a793d",
+    "20270101160000_sequence_revive_action_labels": "af5b5eee1a30b00c766d5d85739a888df0b93f925011b8a5b5d039d2b67b196d"
   },
-  "signature": "FJcVBNFAF5BSA9MECkvYMUUoOpOw09CcQH5dfb+UU9XcnCcso3UeNRxjPvEC14l9JxpbIMc56TP1vcccisaICg=="
+  "signature": "Lfmtj/IrFNn3w0x+9pksp9Po91i9KbFgbcsbapcw3Zfcxe1KIyfHcrMWK/b7CEyu2yg+OizeyQO5ot5eR26iBA=="
 }

@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-2",
-  "issued_at": "2026-11-26T14:02:35.299Z",
+  "key_id": "dev-micha-3",
+  "issued_at": "2026-11-26T16:29:49.496Z",
   "patches": {
     "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
     "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
@@ -25,7 +25,8 @@
     "20270101100000_sequence_revive_spec_varchar40": "53f86726ebace4731feb7cb8c128d4c4ac020d325d462639fdade6a3ad51b750",
     "20270101110000_sequence_revive_labels_tooltips": "c4315cf1db2a034354896d8fdf51724a65c899f60eae14d1596259e5c8f4d105",
     "20270101120000_shield_config_cleanup": "55c114a231b79372dacff664069d658c7da2cf52d930a0b666903660e6bdd70b",
+    "20270101160000_sequence_revive_action_labels": "d57fb6175dd59cc294490a04a405a9ff184b10dcff7e8095f22aa56e529f9015",
     "20270102100000_sender_log_request_id": "08d6d7515aa867ef521d5ba58409e13e15d5686086fc56c3eba0b5669df767f8"
   },
-  "signature": "unDhasgjkqFMQgI5J0bq2czCmPQZHFbFs14QIiYaUwKLPjHzSNR8QdrsITX2dZy2hK4+t1lVc7Oe5K0pV1CpBA=="
+  "signature": "A9ywp2FBBfbNPWEWJLpbcMRzZLe2NBRFqE3J4YLUMlP9TJCIyxLmc8uCF/gOBjl1zE9OTV81853jLpgOuLA+BA=="
 }

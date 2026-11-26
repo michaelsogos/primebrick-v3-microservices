@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-2",
-  "issued_at": "2026-11-26T14:02:34.458Z",
+  "key_id": "dev-micha-3",
+  "issued_at": "2026-11-26T16:29:48.293Z",
   "patches": {
     "0001_ai_schema": "1d3db8305d2a1114da22b197444b5486651b556e0bf5750b684b69d963a36c65",
     "0002_seed_config": "9b1c33abb48950074654b08ba277d8435078abb1320ceae21cfe7748fd724f44",
@@ -26,7 +26,8 @@
     "20261231240000_i18n_sequence_form_contract": "4cd9ffe1e40ea1da6de0a24fa101c73ac7316877711666faaa5a3cc47e88df57",
     "20270101100000_sequence_revive_spec_varchar40": "9df584a218952600b4b89f3eec7a5a9d16e3ba9dc4219aeb7280a343433ed9a1",
     "20270101110000_sequence_revive_labels_tooltips": "f3e5b637c58835bb15ccf84e6c3325a0d312ce7a63198d6a48ca9a2edfa55338",
-    "20270101120000_shield_config_cleanup": "e0e1f75e28b418e8f7ef8dd12d15a4f0eedc9500447e1510faa0bec2bf4b682c"
+    "20270101120000_shield_config_cleanup": "e0e1f75e28b418e8f7ef8dd12d15a4f0eedc9500447e1510faa0bec2bf4b682c",
+    "20270101160000_sequence_revive_action_labels": "72407ce42585e8087cdfe2fec1d7fce4572d1b8d97a33d157ecd434ed863e097"
   },
-  "signature": "l2MM7XtzOxK6r14jnzLhYzYI3AN3+71fYHXLbWcYUNssBfYaGX16nM/vjTJiVdlj9eIHWnNqHP/cYzQsJmXvDA=="
+  "signature": "PLiD3WIjqper8IwG8y5DqPcQwjZboxO5ezlhuTPmGVJRluo7dKN1VL93/N4s8n6xzhAq4UEfWWL216NCY/O9Bg=="
 }

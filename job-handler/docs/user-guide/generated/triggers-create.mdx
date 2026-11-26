@@ -74,9 +74,9 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.ai.ai_model.>` — **AI Model**
 - `events.ai.ai_cerebellum.>` — **AI Cerebellum**
 - `jobs.result.ai.*`
-- `events.emailsender.sequence.>`
-- `events.emailsender.provider.>`
-- `events.emailsender.email_template.>`
+- `events.emailsender.sequence.>` — **Sequence**
+- `events.emailsender.provider.>` — **Email Provider**
+- `events.emailsender.email_template.>` — **Email Template**
 - `emailsender.response.*`
 - `events.api.auth_event.>`
 - `events.api.config_entry.>`
@@ -102,7 +102,7 @@ The **Destination Event** field offers these declared callable work subjects:
 - `webhook.sequence_revive`
 - `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
 - `ai.sequence_revive`
-- `emailsender.send`
+- `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
 - `emailsender.sequence_revive`
 
 ## Actions
