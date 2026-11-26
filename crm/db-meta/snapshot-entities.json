@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T12:56:21.279Z",
+  "generatedAt": "2026-11-24T19:06:38.218Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -19,7 +19,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -30,7 +30,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -42,7 +43,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -53,7 +54,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -132,7 +134,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "type",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'string'"
         },
         "type_config": {
           "name": "type_config",
@@ -176,7 +179,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "reserved",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "false"
         },
         "group_key": {
           "name": "group_key",
@@ -197,7 +201,8 @@
             "key"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -218,7 +223,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -229,7 +234,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -241,7 +247,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -252,7 +258,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -339,7 +346,7 @@
           "dataType": "varchar(20)",
           "typname": "varchar(20)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "code",
           "isNullable": false
@@ -454,7 +461,18 @@
           "propertyKey": "preferred_locale",
           "isNullable": true
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "customers_code_uq",
+          "columns": [
+            "code"
+          ],
+          "using": "btree",
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
+        }
+      ]
     },
     "crm.customer_types": {
       "kind": "table",
@@ -473,7 +491,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -484,7 +502,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -496,7 +515,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -507,7 +526,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -596,7 +616,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -617,7 +638,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -628,7 +649,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -640,7 +662,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -651,7 +673,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -762,7 +785,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -783,7 +807,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -794,7 +818,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -806,7 +831,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -817,7 +842,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -882,7 +908,7 @@
           "dataType": "varchar(2)",
           "typname": "varchar(2)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "country",
           "isNullable": false
@@ -893,7 +919,7 @@
           "dataType": "varchar(4)",
           "typname": "varchar(4)",
           "isPrimaryKey": false,
-          "isUnique": false,
+          "isUnique": true,
           "isPostgresIdentity": false,
           "propertyKey": "elf_code",
           "isNullable": false
@@ -956,12 +982,31 @@
       },
       "indexes": [
         {
+          "name": "legal_forms_country_idx",
+          "columns": [
+            "country"
+          ],
+          "using": "btree",
+          "where": "deleted_at IS NULL"
+        },
+        {
           "name": "legal_forms_code_uq",
           "columns": [
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
+        },
+        {
+          "name": "legal_forms_country_elf_uidx",
+          "columns": [
+            "country",
+            "elf_code"
+          ],
+          "using": "btree",
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -982,7 +1027,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -993,7 +1038,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1005,7 +1051,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1016,7 +1062,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1105,7 +1152,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1126,7 +1174,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1137,7 +1185,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1149,7 +1198,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1160,7 +1209,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1249,7 +1299,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1270,7 +1321,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1281,7 +1332,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1293,7 +1345,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1304,7 +1356,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1393,7 +1446,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1414,7 +1468,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1425,7 +1479,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1437,7 +1492,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1448,7 +1503,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1548,7 +1604,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1569,7 +1626,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1580,7 +1637,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1592,7 +1650,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1603,7 +1661,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1692,7 +1751,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1713,7 +1773,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1724,7 +1784,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1736,7 +1797,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1747,7 +1808,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1847,7 +1909,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -1868,7 +1931,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -1879,7 +1942,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1891,7 +1955,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1902,7 +1966,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -1991,7 +2056,8 @@
             "code"
           ],
           "using": "btree",
-          "isUnique": true
+          "isUnique": true,
+          "where": "deleted_at IS NULL"
         }
       ]
     },
@@ -2012,7 +2078,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -2023,7 +2089,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2035,7 +2102,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2046,7 +2113,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -2267,7 +2335,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -2278,7 +2346,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2290,7 +2359,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2301,7 +2370,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -2468,7 +2538,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "is_default",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "false"
         }
       }
     },
@@ -2489,7 +2560,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -2500,7 +2571,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2512,7 +2584,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2523,7 +2595,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -2646,7 +2719,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "is_default",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "false"
         },
         "label": {
           "name": "label",
@@ -2678,7 +2752,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -2689,7 +2763,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2701,7 +2776,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2712,7 +2787,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -2878,7 +2954,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "created_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "created_by": {
           "name": "created_by",
@@ -2889,7 +2965,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "created_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2901,7 +2978,7 @@
           "isPostgresIdentity": false,
           "propertyKey": "updated_at",
           "isNullable": false,
-          "defaultSql": "now()"
+          "defaultSql": "clock_timestamp()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2912,7 +2989,8 @@
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "updated_by",
-          "isNullable": false
+          "isNullable": false,
+          "defaultSql": "'system'"
         },
         "version": {
           "name": "version",
@@ -3003,6 +3081,511 @@
           ],
           "columns": [
             "type_uuid"
+          ],
+          "using": "btree",
+          "isUnique": true
+        }
+      ]
+    },
+    "crm.sequences": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "sequences",
+      "entityClassName": "SequenceEntity",
+      "isAuditable": true,
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "clock_timestamp()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false,
+          "defaultSql": "'system'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "clock_timestamp()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false,
+          "defaultSql": "'system'"
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_at",
+          "isNullable": true
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "deleted_by",
+          "isNullable": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 8,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false,
+          "defaultSql": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "ordinalPosition": 9,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "name",
+          "isNullable": false
+        },
+        "pattern": {
+          "name": "pattern",
+          "ordinalPosition": 10,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "pattern",
+          "isNullable": false
+        },
+        "step": {
+          "name": "step",
+          "ordinalPosition": 11,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "step",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "start": {
+          "name": "start",
+          "ordinalPosition": 12,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "start",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "tz": {
+          "name": "tz",
+          "ordinalPosition": 13,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "tz",
+          "isNullable": false,
+          "defaultSql": "'UTC'"
+        },
+        "description_key": {
+          "name": "description_key",
+          "ordinalPosition": 14,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "description_key",
+          "isNullable": true
+        },
+        "sez": {
+          "name": "sez",
+          "ordinalPosition": 15,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sez",
+          "isNullable": true
+        },
+        "sez2": {
+          "name": "sez2",
+          "ordinalPosition": 16,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sez2",
+          "isNullable": true
+        },
+        "sez3": {
+          "name": "sez3",
+          "ordinalPosition": 17,
+          "dataType": "varchar(200)",
+          "typname": "varchar(200)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sez3",
+          "isNullable": true
+        },
+        "binding_key": {
+          "name": "binding_key",
+          "ordinalPosition": 18,
+          "dataType": "varchar(130)",
+          "typname": "varchar(130)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "binding_key",
+          "isNullable": true
+        },
+        "revive_every": {
+          "name": "revive_every",
+          "ordinalPosition": 19,
+          "dataType": "varchar(30)",
+          "typname": "varchar(30)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revive_every",
+          "isNullable": true
+        },
+        "revive_grace": {
+          "name": "revive_grace",
+          "ordinalPosition": 20,
+          "dataType": "varchar(30)",
+          "typname": "varchar(30)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revive_grace",
+          "isNullable": true
+        },
+        "revive_slot": {
+          "name": "revive_slot",
+          "ordinalPosition": 21,
+          "dataType": "varchar(10)",
+          "typname": "varchar(10)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revive_slot",
+          "isNullable": true
+        },
+        "expire_at": {
+          "name": "expire_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "expire_at",
+          "isNullable": true
+        },
+        "switch_at": {
+          "name": "switch_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "switch_at",
+          "isNullable": true
+        },
+        "default_from": {
+          "name": "default_from",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "default_from",
+          "isNullable": true
+        },
+        "revived_from": {
+          "name": "revived_from",
+          "ordinalPosition": 25,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revived_from",
+          "isNullable": true
+        },
+        "revived_at": {
+          "name": "revived_at",
+          "ordinalPosition": 26,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revived_at",
+          "isNullable": true
+        },
+        "revived_by": {
+          "name": "revived_by",
+          "ordinalPosition": 27,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "revived_by",
+          "isNullable": true
+        }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "using": "btree",
+          "where": "deleted_at IS NULL",
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ]
+        }
+      ]
+    },
+    "crm.sequence_counters": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "sequence_counters",
+      "entityClassName": "SequenceCounterEntity",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_at",
+          "isNullable": false,
+          "defaultSql": "clock_timestamp()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "created_by",
+          "isNullable": false,
+          "defaultSql": "'system'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_at",
+          "isNullable": false,
+          "defaultSql": "clock_timestamp()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "updated_by",
+          "isNullable": false,
+          "defaultSql": "'system'"
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "version",
+          "isNullable": false,
+          "defaultSql": "1"
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 6,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": true,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "uuid",
+          "isNullable": false,
+          "defaultSql": "uuidv7()"
+        },
+        "sequence_uuid": {
+          "name": "sequence_uuid",
+          "ordinalPosition": 7,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "sequence_uuid",
+          "isNullable": false
+        },
+        "period_key": {
+          "name": "period_key",
+          "ordinalPosition": 8,
+          "dataType": "varchar(64)",
+          "typname": "varchar(64)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "period_key",
+          "isNullable": false,
+          "defaultSql": "''"
+        },
+        "partition_key": {
+          "name": "partition_key",
+          "ordinalPosition": 9,
+          "dataType": "varchar(255)",
+          "typname": "varchar(255)",
+          "isPrimaryKey": false,
+          "isUnique": true,
+          "isPostgresIdentity": false,
+          "propertyKey": "partition_key",
+          "isNullable": false,
+          "defaultSql": "''"
+        },
+        "counter": {
+          "name": "counter",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "counter",
+          "isNullable": false
+        },
+        "last_alloc_at": {
+          "name": "last_alloc_at",
+          "ordinalPosition": 11,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "last_alloc_at",
+          "isNullable": true
+        },
+        "last_alloc_by": {
+          "name": "last_alloc_by",
+          "ordinalPosition": 12,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "last_alloc_by",
+          "isNullable": true
+        },
+        "last_alloc_count": {
+          "name": "last_alloc_count",
+          "ordinalPosition": 13,
+          "dataType": "int8",
+          "typname": "int8",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "last_alloc_count",
+          "isNullable": true
+        }
+      },
+      "indexes": [
+        {
+          "name": "sequence_counters_identity",
+          "columns": [
+            "sequence_uuid",
+            "period_key",
+            "partition_key"
           ],
           "using": "btree",
           "isUnique": true

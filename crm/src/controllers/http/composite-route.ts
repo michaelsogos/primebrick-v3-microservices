@@ -7,10 +7,12 @@
  */
 
 import { makeServiceRoutes, detectPackageIdentity } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "../../db/dal.js";
 import { crmEntityDecls } from "./entities-route.js";
 import { moduleAssetsRoutes } from "./module-assets-route.js";
 
 export const compositeRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "CRM",
     version: detectPackageIdentity().version ?? "0.0.0",

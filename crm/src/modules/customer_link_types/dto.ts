@@ -9,12 +9,14 @@ export const CustomerLinkTypeListQuerySchema = ListQueryBaseSchema.extend({
 const CustomerLinkTypeBaseSchema = z.object({
   code: z.string().min(1).max(50),
   label_key: z.string().min(1).max(100).optional(),
+  /** Directional inverse label — NULL = self-inverse type. */
+  inverse_label_key: z.string().min(1).max(100).nullish(),
   sort: z.coerce.number().int().min(0).default(0),
 });
 
 export const CustomerLinkTypeCreateBodySchema = CustomerLinkTypeBaseSchema;
 export const CustomerLinkTypeUpdateBodySchema = zPartialNoDefaults(
-  CustomerLinkTypeBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  CustomerLinkTypeBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const CustomerLinkTypeAuditQuerySchema = z.object({

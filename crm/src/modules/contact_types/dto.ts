@@ -16,7 +16,7 @@ const ContactTypeBaseSchema = z.object({
 
 export const ContactTypeCreateBodySchema = ContactTypeBaseSchema;
 export const ContactTypeUpdateBodySchema = zPartialNoDefaults(
-  ContactTypeBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  ContactTypeBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const ContactTypeAuditQuerySchema = z.object({

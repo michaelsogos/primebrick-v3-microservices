@@ -1,7 +1,8 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-14T12:56:21.284Z",
+  "generatedAt": "2026-11-24T19:06:38.228Z",
   "source": "database",
+  "capturesDefaults": true,
   "tables": {
     "crm.config_entries": {
       "kind": "table",
@@ -19,7 +20,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
@@ -58,7 +60,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'string'::character varying"
         },
         "type_config": {
           "name": "type_config",
@@ -110,7 +113,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "group_key": {
           "name": "group_key",
@@ -136,7 +140,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -149,7 +154,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -162,7 +168,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -175,7 +182,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -188,7 +196,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -219,13 +228,14 @@
       },
       "indexes": [
         {
-          "name": "crm_config_entries_key_uq",
+          "name": "config_entries_key_uq",
           "using": "btree",
           "isUnique": true,
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX crm_config_entries_key_uq ON crm.config_entries USING btree (key)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON crm.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -245,7 +255,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -297,7 +308,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -310,7 +322,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -323,7 +336,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -336,7 +350,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -349,7 +364,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -520,7 +536,19 @@
           "isNullable": true,
           "isPrimaryKey": false
         }
-      }
+      },
+      "indexes": [
+        {
+          "name": "customers_code_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "code"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customers_code_uq ON crm.customers USING btree (code) WHERE (deleted_at IS NULL)"
+        }
+      ]
     },
     "crm.customer_types": {
       "kind": "table",
@@ -538,7 +566,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -551,7 +580,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -564,7 +594,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -577,7 +608,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -590,7 +622,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -629,7 +662,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -679,7 +713,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX customer_types_code_uq ON crm.customer_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customer_types_code_uq ON crm.customer_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -699,7 +734,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -712,7 +748,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -725,7 +762,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -738,7 +776,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -751,7 +790,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -790,7 +830,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -866,7 +907,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX company_dimensions_code_uq ON crm.company_dimensions USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX company_dimensions_code_uq ON crm.company_dimensions USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -886,7 +928,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -899,7 +942,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -912,7 +956,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -925,7 +970,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -938,7 +984,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -977,7 +1024,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -1092,7 +1140,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX legal_forms_code_uq ON crm.legal_forms USING btree (code) WHERE (deleted_at IS NULL)"
         },
         {
           "name": "legal_forms_country_elf_uidx",
@@ -1133,7 +1182,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1146,7 +1196,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1159,7 +1210,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1172,7 +1224,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1185,7 +1238,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1224,7 +1278,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -1274,7 +1329,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX local_address_types_code_uq ON crm.local_address_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX local_address_types_code_uq ON crm.local_address_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1294,7 +1350,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1307,7 +1364,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1320,7 +1378,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1333,7 +1392,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1346,7 +1406,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1385,7 +1446,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -1435,7 +1497,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX qualifications_code_uq ON crm.qualifications USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX qualifications_code_uq ON crm.qualifications USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1455,7 +1518,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1468,7 +1532,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1481,7 +1546,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1494,7 +1560,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1507,7 +1574,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1546,7 +1614,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -1596,7 +1665,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX marketing_qualifications_code_uq ON crm.marketing_qualifications USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX marketing_qualifications_code_uq ON crm.marketing_qualifications USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1616,7 +1686,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1629,7 +1700,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1642,7 +1714,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1655,7 +1728,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1668,7 +1742,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1707,7 +1782,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -1770,7 +1846,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX contact_types_code_uq ON crm.contact_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX contact_types_code_uq ON crm.contact_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1790,7 +1867,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1803,7 +1881,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1816,7 +1895,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1829,7 +1909,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -1842,7 +1923,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -1881,7 +1963,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -1931,7 +2014,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX account_kinds_code_uq ON crm.account_kinds USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX account_kinds_code_uq ON crm.account_kinds USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -1951,7 +2035,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -1964,7 +2049,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1977,7 +2063,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -1990,7 +2077,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -2003,7 +2091,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -2042,7 +2131,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -2105,7 +2195,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX customer_link_types_code_uq ON crm.customer_link_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX customer_link_types_code_uq ON crm.customer_link_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -2125,7 +2216,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -2138,7 +2230,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2151,7 +2244,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2164,7 +2258,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -2177,7 +2272,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -2216,7 +2312,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "code": {
           "name": "code",
@@ -2266,7 +2363,8 @@
           "columns": [
             "code"
           ],
-          "definition": "CREATE UNIQUE INDEX consent_types_code_uq ON crm.consent_types USING btree (code)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX consent_types_code_uq ON crm.consent_types USING btree (code) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -2286,7 +2384,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -2299,7 +2398,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2312,7 +2412,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2325,7 +2426,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -2338,7 +2440,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -2377,7 +2480,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -2564,16 +2668,6 @@
       },
       "indexes": [
         {
-          "name": "local_addresses_customer_uuid_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_uuid"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "local_addresses_type_idx",
           "using": "btree",
           "isUnique": false,
@@ -2582,6 +2676,16 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX local_addresses_type_idx ON crm.local_addresses USING btree (type_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "local_addresses_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX local_addresses_customer_uuid_idx ON crm.local_addresses USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
@@ -2612,7 +2716,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -2625,7 +2730,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2638,7 +2744,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2651,7 +2758,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -2664,7 +2772,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -2703,7 +2812,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "kind_uuid": {
           "name": "kind_uuid",
@@ -2768,7 +2878,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "customer_uuid": {
           "name": "customer_uuid",
@@ -2907,7 +3018,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -2920,7 +3032,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2933,7 +3046,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -2946,7 +3060,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -2959,7 +3074,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -2998,7 +3114,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -3037,7 +3154,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "label": {
           "name": "label",
@@ -3107,16 +3225,6 @@
       },
       "indexes": [
         {
-          "name": "customer_contacts_customer_uuid_idx",
-          "using": "btree",
-          "isUnique": false,
-          "columns": [
-            "customer_uuid"
-          ],
-          "where": "(deleted_at IS NULL)",
-          "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
           "name": "customer_contacts_type_idx",
           "using": "btree",
           "isUnique": false,
@@ -3125,6 +3233,16 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX customer_contacts_type_idx ON crm.customer_contacts USING btree (type_uuid) WHERE (deleted_at IS NULL)"
+        },
+        {
+          "name": "customer_contacts_customer_uuid_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "customer_uuid"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX customer_contacts_customer_uuid_idx ON crm.customer_contacts USING btree (customer_uuid) WHERE (deleted_at IS NULL)"
         }
       ],
       "foreignKeys": [
@@ -3155,7 +3273,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -3168,7 +3287,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -3181,7 +3301,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -3194,7 +3315,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -3207,7 +3329,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -3246,7 +3369,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -3406,7 +3530,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -3419,7 +3544,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -3432,7 +3558,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -3445,7 +3572,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -3458,7 +3586,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -3497,7 +3626,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "type_uuid": {
           "name": "type_uuid",
@@ -3551,6 +3681,19 @@
           "definition": "CREATE INDEX customer_links_parent_uuid_idx ON crm.customer_links USING btree (parent_customer_uuid) WHERE (deleted_at IS NULL)"
         },
         {
+          "name": "customer_links_pair_uq",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "type_uuid"
+          ],
+          "expressions": [
+            "LEAST(parent_customer_uuid, child_customer_uuid)",
+            "GREATEST(parent_customer_uuid, child_customer_uuid)"
+          ],
+          "definition": "CREATE UNIQUE INDEX customer_links_pair_uq ON crm.customer_links USING btree (LEAST(parent_customer_uuid, child_customer_uuid), GREATEST(parent_customer_uuid, child_customer_uuid), type_uuid)"
+        },
+        {
           "name": "customer_links_child_uuid_idx",
           "using": "btree",
           "isUnique": false,
@@ -3559,16 +3702,6 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE INDEX customer_links_child_uuid_idx ON crm.customer_links USING btree (child_customer_uuid) WHERE (deleted_at IS NULL)"
-        },
-        {
-          "name": "customer_links_pair_uq",
-          "using": "btree",
-          "isUnique": true,
-          "columns": [
-            "LEAST(parent_customer_uuid",
-            "child_customer_uuid"
-          ],
-          "definition": "CREATE UNIQUE INDEX customer_links_pair_uq ON crm.customer_links USING btree (LEAST(parent_customer_uuid, child_customer_uuid), GREATEST(parent_customer_uuid, child_customer_uuid), type_uuid)"
         }
       ],
       "foreignKeys": [
@@ -3589,6 +3722,591 @@
           "refColumn": "uuid",
           "onDelete": "cascade",
           "onUpdate": "no_action"
+        }
+      ]
+    },
+    "crm.sequences": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "sequences",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 8,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "ordinalPosition": 9,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "pattern": {
+          "name": "pattern",
+          "ordinalPosition": 10,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "step": {
+          "name": "step",
+          "ordinalPosition": 11,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "start": {
+          "name": "start",
+          "ordinalPosition": 12,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "tz": {
+          "name": "tz",
+          "ordinalPosition": 13,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'UTC'::character varying"
+        },
+        "description_key": {
+          "name": "description_key",
+          "ordinalPosition": 15,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez": {
+          "name": "sez",
+          "ordinalPosition": 16,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez2": {
+          "name": "sez2",
+          "ordinalPosition": 17,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez3": {
+          "name": "sez3",
+          "ordinalPosition": 18,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "binding_key": {
+          "name": "binding_key",
+          "ordinalPosition": 19,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(130)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_every": {
+          "name": "revive_every",
+          "ordinalPosition": 20,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(30)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_grace": {
+          "name": "revive_grace",
+          "ordinalPosition": 21,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(30)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_slot": {
+          "name": "revive_slot",
+          "ordinalPosition": 22,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(10)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "expire_at": {
+          "name": "expire_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "switch_at": {
+          "name": "switch_at",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "default_from": {
+          "name": "default_from",
+          "ordinalPosition": 25,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_from": {
+          "name": "revived_from",
+          "ordinalPosition": 26,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_at": {
+          "name": "revived_at",
+          "ordinalPosition": 27,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_by": {
+          "name": "revived_by",
+          "ordinalPosition": 28,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON crm.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"
+        }
+      ]
+    },
+    "crm.sequence_counters": {
+      "kind": "table",
+      "schema": "crm",
+      "name": "sequence_counters",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 6,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
+        },
+        "sequence_uuid": {
+          "name": "sequence_uuid",
+          "ordinalPosition": 7,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "period_key": {
+          "name": "period_key",
+          "ordinalPosition": 8,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(64)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "''::character varying"
+        },
+        "partition_key": {
+          "name": "partition_key",
+          "ordinalPosition": 9,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(255)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "''::character varying"
+        },
+        "counter": {
+          "name": "counter",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "last_alloc_at": {
+          "name": "last_alloc_at",
+          "ordinalPosition": 11,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "last_alloc_by": {
+          "name": "last_alloc_by",
+          "ordinalPosition": 12,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "last_alloc_count": {
+          "name": "last_alloc_count",
+          "ordinalPosition": 13,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "sequence_counters_identity",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "sequence_uuid",
+            "period_key",
+            "partition_key"
+          ],
+          "definition": "CREATE UNIQUE INDEX sequence_counters_identity ON crm.sequence_counters USING btree (sequence_uuid, period_key, partition_key)"
         }
       ]
     }

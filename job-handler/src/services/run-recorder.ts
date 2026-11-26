@@ -57,7 +57,7 @@ function plainJson<T>(v: T): T {
   if (v === undefined) return v;
   // The round-trip must NOT extJsonParse (that would re-bigintify) —
   // the whole point is folding bigint → number.
-  return JSON.parse(extJsonStringify(v)) as T; // standards-exempt: ext-json — sanitizer needs plain parse
+  return JSON.parse(extJsonStringify(v)) as T;
 }
 
 /** JH-internal trampoline outcomes — the forwarder records these itself. */

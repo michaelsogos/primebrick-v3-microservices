@@ -5,11 +5,17 @@
  * a server-default timestamp, `user_uuid` is a domain column (not the
  * audit `created_by`). No updates/deletes by design.
  */
-import { Column, Entity, Key,
+import { Column, Entity, Index, Key,
   type UUID,
 } from "@primebrick/dal-pg";
 
-@Entity("ai_telemetry", "ai")
+@Entity("ai_telemetry")
+// "latest metrics first" list + per-user history — matching the live defs.
+@Index({ name: "ai_telemetry_created_at_idx", columns: [{ name: "created_at", sort: "desc" }] })
+@Index({
+  name: "ai_telemetry_user_uuid_created_at_idx",
+  columns: ["user_uuid", { name: "created_at", sort: "desc" }],
+})
 export class AiTelemetryEntity {
   @Key()
   @Column({ pgType: "uuid", nullable: false })
@@ -24,30 +30,30 @@ export class AiTelemetryEntity {
   @Column({ nullable: false })
   model!: string;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   tokens_in!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   tokens_out!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   steps!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   tool_calls!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   rag_hits!: number;
 
-  @Column({ pgType: "int4", nullable: false })
+  @Column({ pgType: "int4", nullable: false, defaultSql: "0" })
   latency_ms!: number;
 
-  @Column({ pgType: "boolean", nullable: false })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   success!: boolean;
 
   @Column({ nullable: true })
   error?: string | null;
 
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   created_at!: Date;
 }

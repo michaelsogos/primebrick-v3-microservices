@@ -33,7 +33,7 @@ export interface EnsureJobScheduleOpts {
    *  stream's subjects. */
   target: string;
   /** Payload stored on the schedule message — fired verbatim unless
-   *  `source` is set. Serialized via extJson by jetstreamPublish. */
+   *  `source` is set. Serialized via extJson by publish. */
   payload?: unknown;
   /** Fire-time indirection (ADR-51): at fire time the scheduler reads the
    *  LATEST message on this subject and fires THAT as the payload — the
@@ -78,7 +78,7 @@ export async function ensureJobSchedule(opts: EnsureJobScheduleOpts): Promise<bi
   };
   if (opts.ttl) hdrs[JOB_SCHEDULE_HEADERS.ttl] = opts.ttl;
   if (opts.source) hdrs[JOB_SCHEDULE_HEADERS.source] = opts.source;
-  return NatsClient.jetstreamPublish(opts.scheduleSubject, opts.payload ?? null, hdrs);
+  return NatsClient.publish(opts.scheduleSubject, opts.payload ?? null, hdrs);
 }
 
 /**
@@ -96,7 +96,7 @@ export async function cancelJobSchedule(
       "cancelJobSchedule: cancelSubject must differ from scheduleSubject (same-subject publish replaces the schedule)",
     );
   }
-  return NatsClient.jetstreamPublish(cancelSubject, null, {
+  return NatsClient.publish(cancelSubject, null, {
     [JOB_SCHEDULE_HEADERS.next]: "purge",
     [JOB_SCHEDULE_HEADERS.scheduler]: scheduleSubject,
   });

@@ -27,8 +27,9 @@ const runsPaths = entityPaths("/system/job", "runs");
 /**
  * The job_trigger form placement — shared verbatim by `create` and `detail`
  * (the update mode of the same `entity_form` archetype): one declaration,
- * two behaviors. Detail adds collaboration (the record exists) and the
- * readonly policy stays in the placement flags.
+ * two behaviors. Detail adds collaboration (the record exists); the
+ * view/edit split is the host's pencil toggle, and non-writability is a
+ * column fact (immutable/kind/managed) — never a placement flag.
  */
 const TRIGGER_FORM: FormPageDecl = {
   fields: [

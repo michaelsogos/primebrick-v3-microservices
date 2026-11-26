@@ -1,6 +1,6 @@
 // crm customers seed — moved from primebrick-be-v3 (customer ownership moved
 // here: the demo dataset belongs to the module that owns `crm.customers`).
-// Requirements: DATABASE_URL + DATABASE_SCHEMA in .env (dotenv); the
+// Requirements: DATABASE_URL in .env (dotenv); the
 // `crm.customers` table must already exist (run `pnpm db:migrate` first).
 import "dotenv/config";
 import { Pool } from "pg";

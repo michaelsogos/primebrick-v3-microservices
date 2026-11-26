@@ -57,13 +57,13 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
     Object.fromEntries(Object.entries(headers ?? {}).filter(([k]) => k.startsWith("x-user-")));
   return {
     ...real,
-    NatsClient: { publish: h.publish, jetstreamSubscribe: h.jetstreamSubscribe },
+    NatsClient: { publish: h.publish, publishEphemeralLossy: h.publish, jetstreamSubscribe: h.jetstreamSubscribe },
     callNats: h.callNats,
     getSdkCachePort: () => ({
       get: async (key: string) => (h.cache.has(key) ? h.cache.get(key) : null),
       set: async (key: string, value: unknown) => void h.cache.set(key, value),
     }),
-    getAuthConfig: () => ({}),
+    getAuthConfig: () => ({ gateway: {} }),
     // Deterministic serializer — "x-resolved" marks headers produced from a
     // resolved AuthUser, distinguishing them from verbatim arm-time headers.
     serializeAuthUserToHeaders: (user: { user_uuid?: string }) => ({

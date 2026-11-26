@@ -26,6 +26,7 @@ import {
   Entity,
   Key,
   Unique,
+  UniqueIndex,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -34,8 +35,10 @@ import {
 import { Cached } from "@primebrick/sdk";
 import { ExecutionConfig, type AiTestScore } from "../jsonb-contracts.js";
 
-@Entity("ai_cerebellum", "ai")
+@Entity("ai_cerebellum")
 @AuditTrail()
+@UniqueIndex({ name: "ai_cerebellum_assistant_model_dtype_uq", nullsNotDistinct: true, aliveOnly: false })
+@UniqueIndex({ name: "ai_cerebellum_one_default_per_assistant_uq", where: "is_default" })
 @Cached(300_000) // 5 min TTL — reference data, changes rarely
 export class AiCerebellumEntity
   extends Deletable(Auditable(EntityBase))
@@ -48,7 +51,8 @@ export class AiCerebellumEntity
    *  Composite unique (assistant_key, model_id, dtype) — non-partial: a
    *  soft-deleted twin conflicts too and must be restored, never
    *  duplicated (DAL raises ERR05 with the row uuid). */
-  @Unique("ai_cerebellum_assistant_model_dtype_uq", 0, { nullsNotDistinct: true })
+  @Unique("ai_cerebellum_assistant_model_dtype_uq", 0)
+  @Unique("ai_cerebellum_one_default_per_assistant_uq", 0)
   @Column({ length: 60, nullable: false })
   assistant_key: string;
 

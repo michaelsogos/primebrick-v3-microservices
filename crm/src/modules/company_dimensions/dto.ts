@@ -16,7 +16,7 @@ const CompanyDimensionBaseSchema = z.object({
 
 export const CompanyDimensionCreateBodySchema = CompanyDimensionBaseSchema;
 export const CompanyDimensionUpdateBodySchema = zPartialNoDefaults(
-  CompanyDimensionBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  CompanyDimensionBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const CompanyDimensionAuditQuerySchema = z.object({

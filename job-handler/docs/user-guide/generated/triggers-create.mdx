@@ -26,16 +26,16 @@ The page is visible with the `access.system.job.triggers.create` grant.
 | Field | Required | Notes |
 |-------|----------|-------|
 | **Name** | required | max 200; min 5 |
-| **Listening Event** | optional | The event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event from the list; offers the event subjects published by the registered modules (44 declared); only declared values can be selected |
-| **Destination Event** | required | What the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (3 declared); only declared values can be selected |
+| **Listening Event** | optional | The event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event from the list; offers the event subjects published by the registered modules (48 declared); only declared values can be selected |
+| **Destination Event** | required | What the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (10 declared); only declared values can be selected |
 | **Run As** | required | `originator` runs the action as the user who triggered the event, with their permissions — requires an event source; `author` runs as the trigger's author, identity resolved fresh at dispatch time; `system` runs with module privileges; max 20 |
 | **Schedule** | optional | When the trigger fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you |
 | **Filter** | optional | Restrict which events fire this trigger — the job runs only when every added condition matches the event's data. Leave empty to react to every event; edited as structured JSON with schema assistance |
 | **Payload mapping** | optional | interactive payload-map builder — How to build the request payload for the destination — per destination field, pick a constant value, a path into the event payload, or a trigger context value (actor, trigger id, fire time). Leave empty to forward the event payload unchanged |
 
 - The **Name** field is a required field that allows up to 200 characters and requires at least 5 characters.
-- The **Listening Event** field is an optional field — the event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event from the list; offers the event subjects published by the registered modules (44 declared); only declared values can be selected.
-- The **Destination Event** field is a required field — what the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (3 declared); only declared values can be selected.
+- The **Listening Event** field is an optional field — the event that can trigger this trigger: when something happens in the system (e.g. a customer crosses a threshold) the trigger can run. Pick an available event from the list; offers the event subjects published by the registered modules (48 declared); only declared values can be selected.
+- The **Destination Event** field is a required field — what the trigger does when it triggers: the operation to run (e.g. send an email). Available destinations depend on the active services; offers the callable work subjects declared by the registered modules (10 declared); only declared values can be selected.
 - The **Run As** field is a required field that allows up to 20 characters — `originator` runs the action as the user who triggered the event, with their permissions — requires an event source; `author` runs as the trigger's author, identity resolved fresh at dispatch time; `system` runs with module privileges.
 - The **Schedule** field is an optional field — when the trigger fires — `@every <n><unit>` for intervals, `@at <timestamp>` for one-shot, or a 5-field cron expression. The assistant button builds one for you.
 - The **Filter** field is an optional field — restrict which events fire this trigger — the job runs only when every added condition matches the event's data. Leave empty to react to every event; edited as structured JSON with schema assistance.
@@ -43,10 +43,12 @@ The page is visible with the `access.system.job.triggers.create` grant.
 
 The **Listening Event** field offers these declared published event subjects:
 
+- `events.job.sequence.>` — **Sequence**
 - `events.job.job_trigger.>` — **Job Trigger**
 - `events.job.job_schedule.>` — **Job Schedule**
 - `events.job.job_run.>` — **Job Run**
 - `jobs.ctl.triggers.changed` — **Triggers changed** — Fired when the job trigger set changes — `jobs` domain, `ctl` control channel, `triggers` resource, `changed` verb. The triggers engine re-arms schedules on it
+- `events.crm.sequence.>` — **Sequence**
 - `events.crm.customer.>` — **customer**
 - `events.crm.customer_type.>` — **Customer Type**
 - `events.crm.company_dimension.>` — **Company Dimension**
@@ -66,9 +68,13 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.crm.customer.on.changed` — **Customer changed** — Fires when a customer row is created, updated or deleted — carries the row snapshot plus change metadata
 - `events.crm.customer.on.high_value` — **High-value customer** — Semantic event — sales logic decided this customer crossed the high-value threshold. Carries the customer, the account manager and the trigger details
 - `events.crm.customer.on.payout` — **Customer payout** — Fires when a payout is recorded for a customer — carries the customer, the account manager and the payout details
+- `events.webhook.sequence.>`
+- `webhook.*.received`
+- `events.ai.sequence.>` — **Sequence**
 - `events.ai.ai_model.>` — **AI Model**
 - `events.ai.ai_cerebellum.>` — **AI Cerebellum**
 - `jobs.result.ai.*`
+- `events.emailsender.sequence.>` — **Sequence**
 - `events.emailsender.provider.>` — **Email Provider**
 - `events.emailsender.email_template.>` — **Email Template**
 - `emailsender.response.*`
@@ -85,14 +91,19 @@ The **Listening Event** field offers these declared published event subjects:
 - `events.api.api_key.>`
 - `events.api.mcp_oauth_client.>`
 - `events.api.service_registry.>`
-- `events.api.client_shield_registry.>` — **client**
-- `webhook.*.received`
 
 The **Destination Event** field offers these declared callable work subjects:
 
 - `job.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
+- `job.sequence_revive`
+- `crm.emit_fake_event` — **Emit fake event (PoC)** — Dev/PoC harness — publishes a canned or overridden fake payload on one of the declared crm.* event subjects
+- `crm.partition_maintenance` — **Partition maintenance** — Drops expired audit and entity partitions and sweeps rows past their declared retention. Takes no parameters
+- `crm.sequence_revive` — **Sequence revive** — Creates successor generations for expired sequences and retires rows past their switch time
+- `webhook.sequence_revive`
 - `ai.partition_maintenance` — **Partition maintenance** — Drops partitions whose retention window has elapsed, on every entity that declares one. Takes no parameters
+- `ai.sequence_revive`
 - `emailsender.send` — **Send email** — Sends a templated email through the configured provider — accepts template code, recipients and merge variables
+- `emailsender.sequence_revive`
 
 ## Actions
 

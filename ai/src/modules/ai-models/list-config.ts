@@ -33,8 +33,8 @@ const AI_MODEL_RAW_COLUMNS: AiModelListColumn[] = [
   { key: "download_size_mb", label_key: "ai.entities.ai_model.fields.download_size_mb", type: "text", order: 12, default_visible: true },
   { key: "vram_mb", label_key: "ai.entities.ai_model.fields.vram_mb", type: "text", order: 13, default_visible: true },
   { key: "is_compatible", label_key: "ai.entities.ai_model.fields.is_compatible", type: "badge", order: 14, default_visible: true, badge: { values: { true: { label_key: "ai.entities.ai_model.compatibility.compatible", color: "emerald-300" }, false: { label_key: "ai.entities.ai_model.compatibility.not_compatible", color: "rose-300" } } } },
-  { key: "label_key", label_key: "ai.entities.ai_model.fields.label_key", type: "text", order: 15, sortable: false, default_visible: false },
-  { key: "description_key", label_key: "ai.entities.ai_model.fields.description_key", type: "text", order: 16, sortable: false, default_visible: false },
+  { key: "label_key", label_key: "ai.entities.ai_model.fields.label_key", type: "text", format: "i18n_key", order: 15, sortable: false, default_visible: false },
+  { key: "description_key", label_key: "ai.entities.ai_model.fields.description_key", type: "text", format: "i18n_key", order: 16, sortable: false, default_visible: false },
 ];
 
 const stickyKeySet = new Set<string>(AI_MODEL_STICKY_COLUMN_KEYS);

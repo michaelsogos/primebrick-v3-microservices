@@ -15,7 +15,7 @@ import {
  * and `ConfigEntriesService` governs its writes. Rename the schema token
  * on clone — everything else is boilerplate-stable.
  */
-@Entity("config_entries", "boilerplate")
+@Entity("config_entries")
 export class ConfigEntryEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()

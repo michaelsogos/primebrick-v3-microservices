@@ -1,7 +1,7 @@
 import { logger, runWithSession } from "@primebrick/sdk";
 import { BrevoClient } from "../providers/brevo.js";
 import { SenderLogEntity } from "../domain/entities/sender_log_entity.js";
-import { DomainService, NotFoundError, Project, field, Filter } from "@primebrick/dal-pg";
+import { DomainService, NotFoundError, Project, field, Filter, DAL_NOW } from "@primebrick/dal-pg";
 import { actorSession, entityActor } from "../db/entity-repo.js";
 
 /**
@@ -98,7 +98,7 @@ export class WebhookService extends DomainService<SenderLogEntity & Record<strin
       await runWithSession(actorSession(actorId ?? "system:emailsender"), async () => {
         await this.svc.update(current.uuid, {
           status,
-          status_changed_at: new Date(),
+          status_changed_at: DAL_NOW,
           error_message: errorMessage,
         });
       });

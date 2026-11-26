@@ -139,7 +139,7 @@ export const configEntryRoutes: RpcRoute[] = [
       // lives inside ConfigEntriesService (lookup + assertWritableConfigKey
       // in svc's beforeUpdate hook); svc stamps the actor from the ambient
       // HTTP session — the wire contract is unchanged.
-      const result = await new ConfigEntriesService().updateValue(params.uuid, body as { value: unknown; version: number });
+      const result = await new ConfigEntriesService().updateValue(params.uuid, body as { value: unknown; version: bigint });
       return { config_entries: result };
     },
   },

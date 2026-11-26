@@ -40,7 +40,6 @@
 import {
   NatsClient,
   ENTITY_EVENTS_STREAM,
-  subscribeShielded,
   forwardAuthHeaders,
   forwardedActor,
   applyPayloadMap,
@@ -287,10 +286,10 @@ async function dispatch(
     });
   } else {
     // Immediate — the envelope lands on the same trampoline the due-
-    // forwarder already consumes. jetstreamPublish, not core publish:
+    // forwarder already consumes. durable publish, not core:
     // the trampoline subject is stream-captured — only a PubAck proves
     // the fire was durably stored; a core publish can silently drop.
-    await NatsClient.jetstreamPublish(forwardSubject(auth.lane, trigger), envelope, auth.headers);
+    await NatsClient.publish(forwardSubject(auth.lane, trigger), envelope, auth.headers);
   }
 }
 
@@ -379,7 +378,7 @@ async function bindSubject(subject: string): Promise<void> {
   // `jobs.ctl.triggers.changed` below stays unqueued on purpose: the
   // reload is a broadcast every replica must see to keep liveTriggers
   // consistent.
-  await subscribeShielded(subject, (payload, msg) => dispatch(payload, msg), { queue: "job" });
+  await NatsClient.subscribe(subject, (payload, msg) => dispatch(payload, msg), { queue: "job" });
   logger.done(`trigger subscription bound on ${subject} (queue=job)`, { tags: ["jobs"] });
 }
 
@@ -452,7 +451,7 @@ export async function startTriggersEngine(): Promise<void> {
   // Reload tap: trigger CRUD publishes here so a running instance picks up
   // changes without restart. Core pub/sub — `jobs.ctl.*` is the control
   // plane, never stream-captured; a missed event self-heals on restart.
-  await subscribeShielded<{ trigger_uuid?: string }>(
+  await NatsClient.subscribe<{ trigger_uuid?: string }>(
     "jobs.ctl.triggers.changed",
     async (data) => {
       if (data?.trigger_uuid) await refreshTrigger(data.trigger_uuid);

@@ -11,6 +11,7 @@ import {
   Entity,
   Key,
   Unique,
+  UniqueIndex,
   Index,
   Column,
   Vector,
@@ -18,7 +19,8 @@ import {
 } from "@primebrick/dal-pg";
 import { DocMetadata } from "../jsonb-contracts.js";
 
-@Entity("docs_kb", "ai")
+@Entity("docs_kb")
+@UniqueIndex({ name: "docs_kb_repo_path_chunk_idx_uq" })
 export class DocsKbEntity {
   @Key()
   @Column({ pgType: "uuid" })
@@ -49,20 +51,20 @@ export class DocsKbEntity {
   // it as the '[v1,v2,…]' literal on write and hydrates it on read. `jsType`
   // is the runtime hydration marker (a bare `Vector` annotation is invisible
   // at runtime — without it a jsonb round-trip would surface a raw string).
-  @Index({ using: "hnsw", opclass: "vector_cosine_ops" })
+  @Index({ using: "hnsw", opclass: "vector_cosine_ops", with: { m: "16", ef_construction: "64" } })
   @Column({ nullable: false, length: 1024, jsType: "vector" })
   embedding!: Vector;
 
-  @Column({ jsType: DocMetadata, nullable: false })
+  @Column({ jsType: DocMetadata, nullable: false, defaultSql: "'{}'::jsonb" })
   metadata!: DocMetadata;
 
   @Index()
   @Column({ nullable: false })
   content_hash!: string;
 
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   created_at!: Date;
 
-  @Column({ nullable: false, jsType: "instant" })
+  @Column({ nullable: false, jsType: "instant", defaultSql: "clock_timestamp()" })
   updated_at!: Date;
 }

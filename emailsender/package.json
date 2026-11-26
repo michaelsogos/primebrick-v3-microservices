@@ -11,6 +11,7 @@
     "node": "24"
   },
   "scripts": {
+    "predev": "pnpm check:standards && pnpm check:types",
     "version:auto": "node ../scripts/version-sync.mjs",
     "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs && pnpm fe:build",
     "dev": "node ../scripts/dev-hot.mjs",
@@ -26,10 +27,12 @@
     "generate:docs": "bun src/index.ts --emit-docs",
     "docs:check": "bun src/index.ts --emit-docs --check",
     "check:standards": "bun ../../primebrick-v3-sdk/tools/check-standards.ts src",
+    "check:types": "tsc --noEmit",
     "fe:build": "vite build fe",
     "fe:check": "cd fe && svelte-check",
-    "db:check": "bun node_modules/@primebrick/dal-pg/dist/cli/primebrick-db.js check --registry src/domain/entities/registry.ts --snapshot db-meta/snapshot-entities.json",
-    "deploy": "node ../scripts/deploy-service.mjs emailsender"
+    "db:check": "bun scripts/database-patch-check.ts",
+    "deploy": "node ../scripts/deploy-service.mjs emailsender",
+    "db:meta:compare": "bun scripts/database-patch-compare.ts"
   },
   "dependencies": {
     "@nats-io/jetstream": "3.4.0",

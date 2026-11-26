@@ -7,11 +7,13 @@
  */
 
 import { makeServiceRoutes, detectPackageIdentity } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "../../db/dal.js";
 import { emailsenderEntityDecls } from "./entities-route.js";
 import { configEntryRoutes } from "./config-route.js";
 import { moduleAssetsRoutes } from "./module-assets-route.js";
 
 export const compositeRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "EmailSender Catalog",
     version: detectPackageIdentity().version ?? "0.0.0",

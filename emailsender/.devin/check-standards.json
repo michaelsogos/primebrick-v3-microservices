@@ -30,6 +30,16 @@
       "appliesTo": [
         "fe/src/"
       ]
+    },
+    "ext-json": {
+      "allowPaths": [
+        "providers/brevo.ts"
+      ]
+    },
+    "no-fnf-nats-publish": {
+      "allowPaths": [
+        "services/email-service.ts"
+      ]
     }
   },
   "i18n_namespaces": [

@@ -4,6 +4,7 @@
     "generated/customer_types",
     "generated/customers-create",
     "generated/pipeline",
-    "generated/customer_link_types"
+    "generated/customer_link_types",
+    "generated/sequences"
   ]
 }

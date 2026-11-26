@@ -15,7 +15,7 @@
  */
 
 import {
-  subscribeShielded,
+  NatsClient,
   callNats,
   SERVICE_SUBJECTS,
   logger,
@@ -194,10 +194,10 @@ export async function emitDeclFor(
  * mid-fetch broadcast overwritten by the census self-heals on the next
  * registration. */
 export async function startCallableCatalog(): Promise<void> {
-  await subscribeShielded<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
+  await NatsClient.subscribe<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
     indexPayload(p);
   });
-  await subscribeShielded<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
+  await NatsClient.subscribe<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
     catalog.delete(p.code);
     emitCatalog.delete(p.code);
   });

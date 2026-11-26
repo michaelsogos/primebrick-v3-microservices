@@ -25,7 +25,7 @@ import { Cached } from "@primebrick/sdk";
  *  rejection of both exact and direction-reversed duplicates (a reversed
  *  row is a circular reference in the hierarchy). Ends are create-set /
  *  frozen afterwards: repointing an edge is delete+create. */
-@Entity("customer_links", "crm")
+@Entity("customer_links")
 @AuditTrail()
 @Cached(300_000)
 @Relation({

@@ -18,7 +18,7 @@ import {
 } from "@primebrick/dal-pg";
 import { AiConversationEntity } from "./ai_conversation_entity.js";
 
-@Entity("ai_feedback", "ai")
+@Entity("ai_feedback")
 @PartitionChildOf({ parent: AiConversationEntity, ref: "conversation_uuid" })
 export class AiFeedbackEntity
   extends Auditable(EntityBase) {

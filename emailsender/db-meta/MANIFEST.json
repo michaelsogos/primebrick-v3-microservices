@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "dev-micha-2",
-  "issued_at": "2026-11-18T06:55:03.927Z",
+  "issued_at": "2026-11-26T14:02:35.299Z",
   "patches": {
     "0001_emailsender_schema": "c235b258b9bee59faa933952087cad68ac84c7387a89374c9cc4a4cb35dff8f5",
     "0002_seed_config": "8e82a3c9e32352b6f0822cce5b2e7f6cf6a2c5dd11fea37403d82d18e2791dcc",
@@ -11,10 +11,21 @@
     "0006_uuid_pk_swap": "8b6229b7e16a5779b7b94c793c2eadb3809473d207b956b9a82728fb53d725a8",
     "0007_uuid_v4_to_v7_rewrite": "e4259e06e23a727b7572644c6810fe0cd71eb4f099c457d2c4724c4acd5251e3",
     "0008_translations_language_check": "89f9a2e23154fb3a45398cac64da2eea7e3f90db2d0d68802acc09913382ee2f",
+    "20261124112106_create_emailsender_sequences_emailsender_sequence_counters": "d354754b0541985b6fde948a8e145a06269a6258da6e212b877b3b91a6ad8c35",
+    "20261124170155_noop": "593080baa9f042f6547ad5482e78ece79e3c5e1afd303fc824c286c912a308c5",
+    "20261124180314_indexes_emailsender_sequences": "1190cd09838d786f4ed57f4f8f3c28d9c5fef30fdb783aa36ce53a5a52a24b6a",
+    "20261124190623_defaults_emailsender_providers_emailsender_email_templates_emailsender_s": "15aa0f47412e39cf00eb3007f9a5407b4c807528aebffd77b5cf4a03b71fede5",
     "20261208000000_i18n_segregation_config_keys": "e0b95c93dda6c3d5243102c4a3af14640ffe5c196490a7711fd90c821f880420",
     "20261209000000_module_name_rename_it": "22355eb0ae5d890cbf85e8cdb08ef1cf8168dde2372241ccf50dfc0f98f5a9c6",
     "20261209010000_module_name_rename_langs": "56d00493e2f31202aac7da89218838096d950c780d842831db3b55a09241ee74",
-    "20261209020000_module_name_rename_communications": "07c42a3395f915e8b7313ffe549f783c85f467f1df5841cf2a4b2f68a2e7bf5a"
+    "20261209020000_module_name_rename_communications": "07c42a3395f915e8b7313ffe549f783c85f467f1df5841cf2a4b2f68a2e7bf5a",
+    "20261229130000_i18n_emailsender_settings_sequences": "0d457b991ea24a98d6d85a5b3f81b352ad42822912c39cda95bfb5f401f23ce0",
+    "20261230100000_i18n_purge_deleted_translations": "e47452dcbc0ee2c7ebbea66e343e4c84490527f098cd1fad23898b1976a4b7c2",
+    "20261231240000_i18n_sequence_form_contract": "25c6848c1ec61288ee0207167555d658e867eb288daa78c92457c7025d8d4bb7",
+    "20270101100000_sequence_revive_spec_varchar40": "53f86726ebace4731feb7cb8c128d4c4ac020d325d462639fdade6a3ad51b750",
+    "20270101110000_sequence_revive_labels_tooltips": "c4315cf1db2a034354896d8fdf51724a65c899f60eae14d1596259e5c8f4d105",
+    "20270101120000_shield_config_cleanup": "55c114a231b79372dacff664069d658c7da2cf52d930a0b666903660e6bdd70b",
+    "20270102100000_sender_log_request_id": "08d6d7515aa867ef521d5ba58409e13e15d5686086fc56c3eba0b5669df767f8"
   },
-  "signature": "H71ZUmc3JFfV2fTHw+Vt5czzumX1ObDVcLfIcX1wDa0T3t4pW5BWToYYJgwh3c2j/BQUIuZ/caZP7aWcxCh9CQ=="
+  "signature": "unDhasgjkqFMQgI5J0bq2czCmPQZHFbFs14QIiYaUwKLPjHzSNR8QdrsITX2dZy2hK4+t1lVc7Oe5K0pV1CpBA=="
 }

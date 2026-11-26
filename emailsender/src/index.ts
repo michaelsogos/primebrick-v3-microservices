@@ -1,9 +1,9 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { join } from "node:path";
-import { createMicroservice, logger, pgServerBanner, assertDbEnv, CachingApiKeyPort, NatsApiKeyPort, getSdkCachePort } from "@primebrick/sdk";
+import { createMicroservice, logger, pgServerBanner, CachingApiKeyPort, NatsApiKeyPort, getSdkCachePort } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
-import { initDal, getDal } from "./db/dal.js";
+import { initDal, getDal, OWNED_SCHEMAS } from "./db/dal.js";
 import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { subscribeToEmailSendRequests } from "./controllers/nats-sub/email-send.js";
 import { EmailService } from "./services/email-service.js";
@@ -20,6 +20,7 @@ import {
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "emailsender",
+    schemas: OWNED_SCHEMAS,
     serviceDisplayName: "Communications Management",
     labelKey: "emailsender.module.name",
     serviceDescription: "Email sending microservice",
@@ -35,13 +36,15 @@ async function main(): Promise<void> {
     nav: EMAILSENDER_NAV,
     events: EMAILSENDER_EVENTS,
 
-    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
+    // Closed-set env contract (DATABASE_URL only) is
     // enforced by assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
     envSchema: {},
 
     initDal,
     dalClose: async () => { await getDal().close(); },
+    // standards-exempt: getPool — createMicroservice fabric key wiring reads vault material via direct DAL (sanctioned seam)
+    dalPool: () => getDal().getPool(),
     dbBanner: () => pgServerBanner(getDal(), process.env.DATABASE_URL!),
 
     // Step 2.5 — own-schema migrations BEFORE ConfigLoader/registration.
@@ -50,7 +53,6 @@ async function main(): Promise<void> {
       engine: dalMigrations,
       // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
       pool: () => getDal().getPool(),
-      schema: () => assertDbEnv().schemas[0],
       patchesDir: join(process.cwd(), "db-meta", "patches"),
       entityRegistry: [...ENTITY_REGISTRY],
       allowedTrust:
@@ -62,6 +64,7 @@ async function main(): Promise<void> {
     // maintained surface (@Partition / @AuditTrail / @Retention). Trigger
     // row = the schedule of record (user-governed).
     partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+    sequenceRevive: dalMigrations.makeSequenceReviveJob(),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new EmailSenderAuthConfigPort(configLoader),
@@ -88,8 +91,19 @@ async function main(): Promise<void> {
     onReady: async () => {
       const emailService = new EmailService();
       subscribeToEmailSendRequests(async (request, actorId) => {
-        return await emailService.sendEmail(request, actorId);
+        const accepted = await emailService.acceptSend(request, actorId);
+        if (accepted.logUuid) {
+          const logUuid = accepted.logUuid;
+          void emailService.dispatchRow(logUuid, actorId).catch((error) =>
+            logger.error("Detached dispatch failed", { tags: ["nats-sub"], error }),
+          );
+        }
+        return accepted;
       });
+      await emailService.sweepPending();
+      setInterval(() => {
+        void emailService.sweepPending().catch(() => {});
+      }, 60_000);
       await subscribeToWebhooks();
     },
   });

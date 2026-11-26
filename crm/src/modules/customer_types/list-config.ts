@@ -13,8 +13,8 @@ const F = (c: string) => `crm.entities.customer_type.fields.${c}`;
 /** Dictionary list contract: code is the sticky identity column; `label_key`
  *  is the i18n pointer the ref-combo resolves (display_field). */
 const CUSTOMER_TYPE_RAW_COLUMNS: CustomerTypeListColumn[] = [
-  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false },
-  { key: "label_key", label_key: F("label_key"), type: "text", order: 1 },
+  { key: "code", label_key: F("code"), type: "text", order: 0, hideable: false, immutable: true, tooltip: "app.entities.dict.hints.code", tooltip_title: "app.entities.dict.hints.code_title", tooltip_priority: "HINT" },
+  { key: "label_key", label_key: F("label_key"), type: "text", format: "i18n_key", order: 1 },
   { key: "sort", label_key: F("sort"), type: "number", order: 2 },
 ];
 

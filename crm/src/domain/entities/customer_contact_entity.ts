@@ -14,7 +14,7 @@ import { Cached } from "@primebrick/sdk";
 /** Customer contact channel — sub-array of the customer (SMS/VOICE/EMAIL/…).
  *  `value` semantics come from the type's `value_kind`; one default per
  *  (customer,type) — partial unique index in DDL. */
-@Entity("customer_contacts", "crm")
+@Entity("customer_contacts")
 @AuditTrail()
 @Cached(300_000)
 export class CustomerContactEntity
@@ -35,7 +35,7 @@ export class CustomerContactEntity
   @Column({ nullable: false })
   value!: string;
 
-  @Column({ pgType: "boolean", nullable: false })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   is_default!: boolean;
 
   @Column({ nullable: true })

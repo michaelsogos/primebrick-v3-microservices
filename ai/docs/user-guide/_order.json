@@ -5,6 +5,7 @@
     "generated/model-cache",
     "generated/model-import",
     "generated/model-test-report",
-    "generated/docs-index"
+    "generated/docs-index",
+    "generated/sequences"
   ]
 }

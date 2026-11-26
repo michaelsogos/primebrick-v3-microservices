@@ -83,8 +83,8 @@ export class DocsPackReindexService extends DomainService<DocsIngestLogT> {
 
 /**
  * Retry-bounded pack pull + ingest. The gateway_online → pull race loses
- * when the BE rotates the client-shield secret at boot: the pull fires
- * before `secret.rotated` reaches this service → 401 → without a retry the
+ * when the peer's boot is still completing (provenance keys not yet
+ * distributed, routes not yet mounted): the pull fires too early → failure → without a retry the
  * pack (and its KB corpus) would stay stale until the next lifecycle event.
  */
   async pullAndIngest(

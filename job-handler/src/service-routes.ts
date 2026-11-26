@@ -14,12 +14,14 @@ import {
   makeServiceRoutes,
   detectPackageIdentity,
 } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "./db/dal.js";
 import { jobEntityDecls } from "./controllers/http/entities-route.js";
 import { jobActionsRoutes } from "./controllers/http/actions-route.js";
 import { configEntryRoutes } from "./controllers/http/config-route.js";
 import { moduleAssetsRoutes } from "./controllers/http/module-assets-route.js";
 
 export const jobServiceRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "Job Handler",
     version: detectPackageIdentity().version ?? "0.0.0",

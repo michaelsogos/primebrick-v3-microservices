@@ -178,7 +178,7 @@ export async function subscribeFakeEventEmitter(): Promise<void> {
           // Durable publish — domain events land on ENTITY_EVENTS like
           // real emits; auth headers ride along verbatim so user-lane
           // rules arm on this event only with the caller's context.
-          await NatsClient.jetstreamPublish(request.event, payload, forwardAuthHeaders(msg));
+          await NatsClient.publish(request.event, payload, forwardAuthHeaders(msg));
           return { published: request.event, payload };
         },
       },
