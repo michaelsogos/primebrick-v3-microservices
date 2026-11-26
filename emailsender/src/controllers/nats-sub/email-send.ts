@@ -10,10 +10,10 @@ const EMAIL_SEND_SUBJECT = "emailsender.send";
 
 /**
  * Inbound email work item. Two-layer inbound model enforced by the SDK
- * factory: FIRST the publisher's client shield (UA+key vs client_shield_registry —
- * "BE may talk to emailsender"), THEN the user layer ("is this actor allowed
- * to send email"): gateway secret + AuthUser + RBAC EMAILSENDER_SEND.
- * A valid shield with missing/insufficient user context is denied — service
+ * factory: FIRST the sealed-envelope provenance (only a service holding vault-derived keys can produce it —
+ * "a legitimate service may talk to emailsender"), THEN the user layer ("is this actor allowed
+ * to send email"): AuthUser resolution + RBAC EMAILSENDER_SEND.
+ * Valid provenance with missing/insufficient user context is denied — service
  * identity never authorizes a user-context operation.
  *
  * The payload contract is `SendEmailSchema` (types.ts) — `{schema, parse}`
