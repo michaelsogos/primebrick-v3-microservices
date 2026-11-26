@@ -19,20 +19,22 @@ import { getDal, resetDal, type DalConfig } from "@primebrick/dal-pg";
 import { ProviderEntity, EmailTemplateEntity, SenderLogEntity } from "../../src/domain/entities/registry.js";
 import { Filter, field } from "@primebrick/dal-pg";
 import { assertDbEnv } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "../../src/db/dal.js";
 
 let dalInitialized = false;
 
 /**
  * Initialize the Dal gateway singleton once. Subsequent calls are no-ops.
- * Reads DATABASE_URL and DATABASE_SCHEMA via assertDbEnv (same as src/db/dal.ts).
+ * Reads DATABASE_URL via assertDbEnv; the schema domain comes from
+ * OWNED_SCHEMAS (same as src/db/dal.ts).
  */
 export function initTestDal(): void {
   if (dalInitialized) return;
-  const { url, schemas } = assertDbEnv();
+  const { url } = assertDbEnv();
 
   const config: DalConfig = {
     connectionString: url,
-    schemas,
+    schemas: [...OWNED_SCHEMAS],
     max: 5,
     statementTimeoutMs: 30000,
     applicationName: "primebrick-emailsender-test",

@@ -32,7 +32,7 @@ export class ProvidersService extends DomainService<ProviderEntity & Record<stri
       actor: entityActor,
       // No `providers_audit` table by requirement — silence the default
       // trail writer (writes still stamp the Auditable columns via actor).
-      auditPort: { writeAudit: async () => 0n },
+      auditPort: { writeAudit: async () => ({ key: 0n, changed_at: new Date(0) }) },
       list: {
         meta: providerMeta,
         defaultSort: { key: "updated_at", dir: "desc" },

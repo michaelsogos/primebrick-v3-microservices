@@ -9,7 +9,7 @@ import {
   Deletable,
 } from "@primebrick/dal-pg";
 
-@Entity("config_entries", "webhook")
+@Entity("config_entries")
 export class ConfigEntryEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()
@@ -35,7 +35,7 @@ export class ConfigEntryEntity
   @Column({ length: 100, nullable: true })
   description_key?: string;
 
-  @Column({ pgType: "boolean", nullable: false })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   reserved!: boolean;
 
   @Column({ length: 100, nullable: true })

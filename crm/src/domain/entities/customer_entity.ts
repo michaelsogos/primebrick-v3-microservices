@@ -18,6 +18,8 @@ import {
   Column,
   Entity,
   Key,
+  Unique,
+  SequenceField,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -28,7 +30,7 @@ import { Cached } from "@primebrick/sdk";
 
 export type CustomerStatus = "ACTIVE" | "INACTIVE";
 
-@Entity("customers", "crm")
+@Entity("customers")
 @AuditTrail()
 @Cached(300_000) // 5 min TTL — mutable business data
 export class CustomerEntity
@@ -38,6 +40,13 @@ export class CustomerEntity
   @Column({ pgType: "uuid" })
   uuid: UUID;
 
+  /** Human customer code — absolutely unique (a deleted row's code is
+   *  never reusable; restore must never collide). Seq-bound: the write
+   *  payload carries a sequence directive resolved in-transaction;
+   *  the default sequence materializes lazily on first write under its
+   *  deterministic bound uuid (`sequenceBoundUuid("customers.code")`). */
+  @Unique()
+  @SequenceField({ pattern: "CUST-{seq:5}", step: 1n, start: 1n })
   @Column({ length: 20, nullable: false })
   code: string;
 

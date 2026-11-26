@@ -7,6 +7,10 @@
  */
 import { describe, expect, it, vi } from "vitest";
 
+// `makeServiceRoutes` pulls builtin entity decls whose construction
+// requires the module's owned schema — it flows via
+// ServiceRoutesInput.schemas (OWNED_SCHEMAS in src/db/dal.ts), never env.
+
 vi.mock("@primebrick/sdk", async (importOriginal) => {
   const real = await importOriginal<typeof import("@primebrick/sdk")>();
   return {

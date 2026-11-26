@@ -8,11 +8,11 @@ import type { HealthCheckPort } from "@primebrick/sdk";
  * type-only, the class itself is not constructible by consumers.
  */
 export class HealthCheckAdapter implements HealthCheckPort {
-  constructor(private readonly dal: Dal) {}
+  constructor(private readonly db: Dal) {}
 
   async ping(): Promise<boolean> {
     try {
-      await this.dal.serverVersion();
+      await this.db.serverVersion();
       return true;
     } catch {
       return false;

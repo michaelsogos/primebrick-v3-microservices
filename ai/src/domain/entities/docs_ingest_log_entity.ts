@@ -16,6 +16,7 @@ import type { UUID } from "@primebrick/dal-pg";
 import {
   Column,
   Entity,
+  Index,
   Key,
   type IAuditableEntity,
   EntityBase,
@@ -24,7 +25,10 @@ import {
 } from "@primebrick/dal-pg";
 import { PipelineStats } from "../jsonb-contracts.js";
 
-@Entity("docs_ingest_log", "ai")
+@Entity("docs_ingest_log")
+// "latest ingest runs first" — `created_at` is an Auditable-mixin column
+// → class-level spec form.
+@Index({ name: "docs_ingest_log_created_idx", columns: [{ name: "created_at", sort: "desc" }] })
 export class DocsIngestLogEntity
   extends Deletable(Auditable(EntityBase)) {
   @Key()

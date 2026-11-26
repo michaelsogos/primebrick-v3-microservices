@@ -60,7 +60,6 @@ export class HealthCheckAdapter implements HealthCheckPort {
           const healthText = await healthRes.text();
           // mistral.rs /health returns plain text version or JSON
           try {
-            // standards-exempt: ext-json — external wire payload (mistral.rs /health) — must not bigint-ify
             const healthJson = JSON.parse(healthText);
             version = healthJson.version ?? healthJson.mistralrs_version;
           } catch {

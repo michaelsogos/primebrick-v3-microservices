@@ -87,14 +87,14 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  and `type === "secret"` + empty value = "leave unchanged" (the FE
    *  sends the masked null back when no new secret was typed). Returns
    *  the re-read, masked row — `null` when the uuid is unknown. */
-  async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
+  async updateValue(uuid: string, body: { value: unknown; version: bigint }): Promise<ConfigEntryEntity | null> {
     const target = (await this.svc.get(uuid)) as { key?: string; type?: string } | null;
     if (!target?.key) return null;
     assertWritableConfigKey(target.key);
     if (!(target.type === "secret" && (body.value === null || body.value === ""))) {
       // svc.update — the ambient HTTP session supplies the actor; the
       // beforeUpdate hook re-checks the key guard for every writer.
-      await this.svc.update(uuid, { value: body.value as string, version: Number(body.version) });
+      await this.svc.update(uuid, { value: body.value as string, version: body.version });
     }
     return this.getEntry(uuid);
   }

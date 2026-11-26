@@ -5,6 +5,7 @@
     "generated/providers-edit",
     "generated/templates",
     "generated/templates-create",
-    "generated/templates-edit"
+    "generated/templates-edit",
+    "generated/sequences"
   ]
 }

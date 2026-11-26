@@ -15,7 +15,7 @@ import { Cached } from "@primebrick/sdk";
  *  registered company_name + legal_form (ragione sociale) + jurisdiction
  *  country + the local_address and contact channel that represent it.
  *  Billing flows read ONE row, fully resolved — no relation chasing. */
-@Entity("customer_accounts", "crm")
+@Entity("customer_accounts")
 @AuditTrail()
 @Cached(300_000)
 export class CustomerAccountEntity
@@ -54,6 +54,6 @@ export class CustomerAccountEntity
   contact_uuid?: string;
 
   /** One default account per customer — partial unique index in DDL. */
-  @Column({ pgType: "boolean", nullable: false })
+  @Column({ pgType: "boolean", nullable: false, defaultSql: "false" })
   is_default!: boolean;
 }

@@ -19,7 +19,7 @@ import {
 import { AiConversationEntity } from "./ai_conversation_entity.js";
 import { MessageContent } from "../jsonb-contracts.js";
 
-@Entity("ai_messages", "ai")
+@Entity("ai_messages")
 @PartitionChildOf({ parent: AiConversationEntity, ref: "conversation_uuid" })
 export class AiMessageEntity
   extends Auditable(EntityBase) {

@@ -12,6 +12,14 @@ Database access has a two-step convention:
 - **`initDal()`** — bootstrap-only, called ONCE in `index.ts`; lives inside
   the service's own gateway module `<us>/src/db/dal.ts` (which wraps
   `getDal(config)` from `@primebrick/dal-pg`).
+- **`OWNED_SCHEMAS`** — the schema-domain const, declared in that same
+  `db/dal.ts` (`export const OWNED_SCHEMAS = ["<svc>"] as const`). It is
+  the SINGLE source of schema identity: `initDal`/`getDal` config,
+  `createMicroservice({ schemas })`, `makeServiceRoutes({ schemas })`
+  (builtin entities mount on `OWNED_SCHEMAS[0]` — the primary), and the
+  `scripts/database-patch-{check,apply}.ts` wrappers all read it.
+  `DATABASE_SCHEMA` in env is a reserved violation (`assertDbEnv` throws)
+  — see `env-policy.md`.
 - **`getDal()`** — the singleton accessor; usable ONLY inside the declared
   seam list (`.devin/check-standards.json` → `dal-access.allowPaths`:
   `db/dal.ts`, `index.ts`). Everywhere else data access comes from
@@ -130,6 +138,26 @@ Consumers MUST NOT — NO EXCEPTIONS, EVER:
   governed service shape: it carries this whole contract already wired
   (allowPaths, adapters, `db/dal.ts`, `entity-repo.ts`, DomainService
   example, signed db-meta). See `docs/dev-guide/adding-a-service.mdx`.
+
+## Unique constraints (declared, never hand-made)
+
+Every unique index lives in the entity class — a DB-only unique index is
+drift (WARN) and never dropped automatically:
+
+- **bare `@Unique()`** on a column → single-col index `<table>_<col>_uq`.
+  The default for simple cases.
+- **`@UniqueIndex({name, where?, aliveOnly?, nullsNotDistinct?})`** at
+  class level + `@Unique(name, order)` on each member column — required
+  for composite indexes, partial predicates (`where`), and every opt-out
+  (`aliveOnly: false`). Options live ONLY on the class decl; a named
+  `@Unique` with no matching `@UniqueIndex` throws at meta-build.
+- **`aliveOnly` default is ON for `Deletable` entities** — uniques emit
+  `WHERE deleted_at IS NULL` so tombstones never block re-creation.
+  Opt out ONLY via the named decl (`ai_cerebellum`/`ai_models` are the
+  precedent: identity twins must conflict even soft-deleted).
+- One column may join N indexes (`service_registry.code` = the canonical
+  two-partial-unique example). Full contract: `primebrick-dal-v3`
+  dev-guide `entities.mdx` (`@Unique`/`@UniqueIndex`).
 
 ## Audit vs events (do NOT conflate)
 

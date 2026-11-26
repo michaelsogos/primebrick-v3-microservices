@@ -30,6 +30,13 @@
       "appliesTo": [
         "fe/src/"
       ]
+    },
+    "ext-json": {
+      "allowPaths": [
+        "adapters/health-check-adapter.ts",
+        "services/docs-loader.ts",
+        "services/embedding-provider.ts"
+      ]
     }
   },
   "i18n_namespaces": [

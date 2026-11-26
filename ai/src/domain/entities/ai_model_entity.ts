@@ -20,6 +20,7 @@ import {
   Entity,
   Key,
   Unique,
+  UniqueIndex,
   AuditTrail,
   EntityBase,
   Auditable,
@@ -28,8 +29,9 @@ import {
 import { Cached } from "@primebrick/sdk";
 import { ExecutionConfig, WorkingSetDetail, type AiTestScore } from "../jsonb-contracts.js";
 
-@Entity("ai_models", "ai")
+@Entity("ai_models")
 @AuditTrail()
+@UniqueIndex({ name: "ai_models_model_id_dtype_uq", aliveOnly: false })
 @Cached(300_000) // 5 min TTL — reference data, changes rarely
 export class AiModelEntity
   extends Deletable(Auditable(EntityBase))

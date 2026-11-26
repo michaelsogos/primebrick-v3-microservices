@@ -13,6 +13,7 @@ import {
   makeServiceRoutes,
   detectPackageIdentity,
 } from "@primebrick/sdk";
+import { OWNED_SCHEMAS } from "./db/dal.js";
 import { AI_ROUTES } from "./controllers/http/composite-route.js";
 import { DOCS_SEARCH_ROUTES } from "./controllers/http/docs-search-route.js";
 import { aiEntityDecls } from "./controllers/http/entities-route.js";
@@ -20,6 +21,7 @@ import { moduleAssetsRoutes } from "./controllers/http/module-assets-route.js";
 import { configEntryRoutes } from "./controllers/http/config-route.js";
 
 export const aiRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "AI Catalog",
     version: detectPackageIdentity().version ?? "0.0.0",

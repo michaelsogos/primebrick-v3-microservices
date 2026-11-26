@@ -14,7 +14,7 @@ const MarketingQualificationBaseSchema = z.object({
 
 export const MarketingQualificationCreateBodySchema = MarketingQualificationBaseSchema;
 export const MarketingQualificationUpdateBodySchema = zPartialNoDefaults(
-  MarketingQualificationBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  MarketingQualificationBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const MarketingQualificationAuditQuerySchema = z.object({

@@ -10,6 +10,7 @@
    */
   import type { ModuleSheetHost } from '@primebrick/ui';
 
+import { extJsonParse } from '@primebrick/ui';
   let { ctx }: { ctx: ModuleSheetHost } = $props();
   const t = (key: string, params?: Record<string, unknown>) => ctx.i18n.t(key, params);
 
@@ -41,7 +42,7 @@
     try {
       const res = await ctx.api(`/api/v1/entities/job_run/${encodeURIComponent(run_uuid)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      run = (await res.json()) as JobRun;
+      run = (await res.text().then((t) => extJsonParse<any>(t))) as JobRun;
       phase = 'ready';
     } catch (e) {
       phase = 'error';

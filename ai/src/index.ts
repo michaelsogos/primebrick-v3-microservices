@@ -1,11 +1,11 @@
 import "dotenv/config";
 import "reflect-metadata";
 import { join } from "node:path";
-import { createMicroservice, logger, pgServerBanner, assertDbEnv } from "@primebrick/sdk";
+import { createMicroservice, logger, pgServerBanner } from "@primebrick/sdk";
 import * as dalMigrations from "@primebrick/dal-pg";
 import { ENTITY_REGISTRY } from "./domain/entities/registry.js";
 import { runEmbeddingPipeline } from "./services/embedding-pipeline.js";
-import { initDal, getDal } from "./db/dal.js";
+import { initDal, getDal, OWNED_SCHEMAS } from "./db/dal.js";
 
 import { startDocsPackSubscriber } from "./controllers/nats-sub/docs-pack-subscriber.js";
 import { aiRouteHandler } from "./service-routes.js";
@@ -21,6 +21,9 @@ import { AI_EVENTS } from "./events-declaration.js";
 async function main(): Promise<void> {
   await createMicroservice({
     serviceName: "ai",
+    // Owned schemas — service identity as code (db/dal.ts OWNED_SCHEMAS);
+    // env cannot mutate it (DATABASE_SCHEMA is a boot violation).
+    schemas: OWNED_SCHEMAS,
     serviceDisplayName: "AI Assistants Management",
     labelKey: "ai.module.name",
     serviceDescription: "AI chat microservice with RAG knowledge base",
@@ -36,13 +39,15 @@ async function main(): Promise<void> {
     nav: AI_NAV,
     events: AI_EVENTS,
 
-    // Closed-set env contract (DATABASE_URL + DATABASE_SCHEMA only) is
-    // enforced by assertDbEnv() inside createMicroservice — envSchema has
+    // Closed-set env contract (DATABASE_URL only) is enforced by
+    // assertDbEnv() inside createMicroservice — envSchema has
     // no keys left to declare.
     envSchema: {},
 
     initDal,
     dalClose: async () => { await getDal().close(); },
+    // standards-exempt: getPool — createMicroservice fabric key wiring reads vault material via direct DAL (sanctioned seam)
+    dalPool: () => getDal().getPool(),
     dbBanner: () => pgServerBanner(getDal(), process.env.DATABASE_URL!),
 
     // Step 2.5 — own-schema migrations BEFORE ConfigLoader/registration.
@@ -51,7 +56,6 @@ async function main(): Promise<void> {
       engine: dalMigrations,
       // standards-exempt: getPool — dbPatches migration engine needs the raw pool (sanctioned seam)
       pool: () => getDal().getPool(),
-      schema: () => assertDbEnv().schemas[0],
       patchesDir: join(process.cwd(), "db-meta", "patches"),
       entityRegistry: [...ENTITY_REGISTRY],
       allowedTrust:
@@ -63,6 +67,7 @@ async function main(): Promise<void> {
     // surface (@Partition / @AuditTrail / @Retention). Trigger row = the
     // schedule of record (user-governed).
     partitionMaintenance: dalMigrations.makePartitionMaintenanceJob(ENTITY_REGISTRY),
+    sequenceRevive: dalMigrations.makeSequenceReviveJob(),
 
     configRepositoryAdapter: () => new ConfigRepositoryAdapter(),
     authConfigPort: (configLoader) => new AiAuthConfigPort(configLoader),

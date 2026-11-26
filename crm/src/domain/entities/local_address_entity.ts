@@ -13,7 +13,7 @@ import { Cached } from "@primebrick/sdk";
 
 /** Local Unit address — FK `customer_uuid` (REFERENCES
  *  crm.customers(uuid)); `type_uuid` is a lazy meta ref → local_address_types. */
-@Entity("local_addresses", "crm")
+@Entity("local_addresses")
 @AuditTrail()
 @Cached(300_000)
 export class LocalAddressEntity

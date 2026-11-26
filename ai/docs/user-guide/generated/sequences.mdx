@@ -1,0 +1,107 @@
+---
+title: Sequences
+description: List, search and manage all sequences.
+entity: sequence
+---
+
+List, search and manage all sequences.
+
+Each row shows the Name, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the Renew Every, the Starts from, the revive slot, the Renews On.
+
+The page is visible with the `access.system.ai.settings.sequences` grant.
+
+## What you can do here
+
+### How to delete a sequence
+1. Open the row actions menu on the sequence and click **Delete**.
+2. Confirm the deletion in the dialog — the sequence is soft-deleted and can be restored.
+
+### How to restore a deleted sequence
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the sequence and click **Restore**.
+3. Confirm in the dialog — the sequence is active again.
+
+### How to view the change history of a sequence
+1. Open the row actions menu on the sequence and click **Audit history**.
+2. The version history of the sequence will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Name** | yes | yes | yes |  |
+| **Increment** | yes | yes | yes |  |
+| **Start** | yes | yes | yes |  |
+| **Current** | yes | no | no |  |
+| **Next** | yes | no | no |  |
+| **Pattern** | yes | yes | yes |  |
+| **Current Sequence** | yes | no | no |  |
+| **Next Sequence** | yes | no | no |  |
+| **Time zone** | yes | yes | yes |  |
+| **Renew Every** | yes | yes | yes | How often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation. |
+| **Starts from** | yes | yes | yes | When this generation starts being used. Available only when "Renew every" is set. |
+| **revive slot** | yes | yes | yes | Which code section advances at each renewal (e.g. the year). Available only when "Renew every" is set. |
+| **Activation** | no | yes | yes | When the next generation becomes active: an offset after the renewal moment or an exact date. Until then the previous generation keeps working. |
+| **sez** | no | yes | yes | Current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal. |
+| **sez2** | no | yes | yes | Current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal. |
+| **sez3** | no | yes | yes | Current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal. |
+| **Description key** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Name column is shown by default and can be sorted and filtered.
+- The Increment column is shown by default and can be sorted and filtered.
+- The Start column is shown by default and can be sorted and filtered.
+- The Current column is shown by default and cannot be sorted or filtered.
+- The Next column is shown by default and cannot be sorted or filtered.
+- The Pattern column is shown by default and can be sorted and filtered.
+- The Current Sequence column is shown by default and cannot be sorted or filtered.
+- The Next Sequence column is shown by default and cannot be sorted or filtered.
+- The Time zone column is shown by default and can be sorted and filtered.
+- The Renew Every column is shown by default and can be sorted and filtered — how often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation.
+- The Starts from column is shown by default and can be sorted and filtered — when this generation starts being used. Available only when "Renew every" is set.
+- The revive slot column is shown by default and can be sorted and filtered — which code section advances at each renewal (e.g. the year). Available only when "Renew every" is set.
+- The Activation column is hidden by default and can be sorted and filtered — when the next generation becomes active: an offset after the renewal moment or an exact date. Until then the previous generation keeps working.
+- The sez column is hidden by default and can be sorted and filtered — current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal.
+- The sez2 column is hidden by default and can be sorted and filtered — current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal.
+- The sez3 column is hidden by default and can be sorted and filtered — current value of the code section that renewals advance (e.g. 2026). Updated automatically at each renewal.
+- The Description key column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | DISABLED | `ai.sequence.create.single` | Creates a new sequence | no |
+| **update** | DISABLED | `ai.sequence.update.single` | Opens the sequence for editing | no |
+| **delete** | ENABLED | `ai.sequence.delete.single` | Marks the sequence as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `ai.sequence.restore.single` | Brings a soft-deleted sequence back | no |
+| **purge** | DISABLED | — | Removes the sequence forever | no |
+| **audit history** | ENABLED | `ai.sequence.read.audit` | Shows the change history of the sequence | no |
+
+- Creating a new sequence is not available on this page — if enabled, it would require the `ai.sequence.create.single` permission.
+- Editing a sequence is not available on this page — if enabled, it would require the `ai.sequence.update.single` permission.
+- Soft-deleting a sequence is available on this page — marks the sequence as deleted but keeps it so it can be restored and it requires the `ai.sequence.delete.single` permission.
+- Restoring a soft-deleted sequence is available on this page — brings a soft-deleted sequence back and it requires the `ai.sequence.restore.single` permission.
+- Permanently deleting a sequence is not available on this page — no permission is declared for it on sequences.
+- Viewing the change history of a sequence is available on this page — every sequence keeps a full version history and it requires the `ai.sequence.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `ai.sequence.delete.bulk` | Marks the selected sequences as deleted | no |
+| **restore** | ENABLED | `ai.sequence.restore.bulk` | Restores the selected sequences | no |
+| **duplicate** | DISABLED | — | Duplicates the selected sequences | no |
+| **export** | ENABLED | `ai.sequence.export.all` | Exports the list | no |
+
+- Soft-deleting the selected sequences is available on this page — marks the selected sequences as deleted and it requires the `ai.sequence.delete.bulk` permission.
+- Restoring the selected sequences is available on this page — restores the selected sequences and it requires the `ai.sequence.restore.bulk` permission.
+- Duplicating the selected sequences is not available on this page — no permission is declared for it on sequences.
+- Exporting the list is available on this page — exports the list and it requires the `ai.sequence.export.all` permission.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

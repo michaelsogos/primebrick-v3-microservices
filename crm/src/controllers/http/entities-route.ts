@@ -203,6 +203,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       duplicate: [Permission.CUSTOMER_DUPLICATE_BULK],
       bulkDelete: [Permission.CUSTOMER_DELETE_BULK],
       bulkRestore: [Permission.CUSTOMER_RESTORE_BULK],
+      bulkUpdate: [Permission.CUSTOMER_UPDATE_BULK],
       get: [Permission.CUSTOMER_READ_SINGLE],
       update: [Permission.CUSTOMER_UPDATE_SINGLE],
       delete: [Permission.CUSTOMER_DELETE_SINGLE],
@@ -238,6 +239,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_TYPE_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_TYPE_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_TYPE_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CUSTOMER_TYPE_UPDATE_BULK],
       audit: [Permission.CRM_CUSTOMER_TYPE_READ_AUDIT],
     },
     schemas: {
@@ -262,6 +264,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_COMPANY_DIMENSION_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_COMPANY_DIMENSION_DELETE_BULK],
       bulkRestore: [Permission.CRM_COMPANY_DIMENSION_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_COMPANY_DIMENSION_UPDATE_BULK],
       audit: [Permission.CRM_COMPANY_DIMENSION_READ_AUDIT],
     },
     schemas: {
@@ -286,6 +289,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_LEGAL_FORM_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_LEGAL_FORM_DELETE_BULK],
       bulkRestore: [Permission.CRM_LEGAL_FORM_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_LEGAL_FORM_UPDATE_BULK],
       audit: [Permission.CRM_LEGAL_FORM_READ_AUDIT],
     },
     schemas: {
@@ -310,6 +314,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_LOCAL_ADDRESS_TYPE_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_LOCAL_ADDRESS_TYPE_DELETE_BULK],
       bulkRestore: [Permission.CRM_LOCAL_ADDRESS_TYPE_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_LOCAL_ADDRESS_TYPE_UPDATE_BULK],
       audit: [Permission.CRM_LOCAL_ADDRESS_TYPE_READ_AUDIT],
     },
     schemas: {
@@ -334,6 +339,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_QUALIFICATION_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_QUALIFICATION_DELETE_BULK],
       bulkRestore: [Permission.CRM_QUALIFICATION_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_QUALIFICATION_UPDATE_BULK],
       audit: [Permission.CRM_QUALIFICATION_READ_AUDIT],
     },
     schemas: {
@@ -358,6 +364,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_MARKETING_QUALIFICATION_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_MARKETING_QUALIFICATION_DELETE_BULK],
       bulkRestore: [Permission.CRM_MARKETING_QUALIFICATION_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_MARKETING_QUALIFICATION_UPDATE_BULK],
       audit: [Permission.CRM_MARKETING_QUALIFICATION_READ_AUDIT],
     },
     schemas: {
@@ -382,6 +389,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CONTACT_TYPE_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CONTACT_TYPE_DELETE_BULK],
       bulkRestore: [Permission.CRM_CONTACT_TYPE_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CONTACT_TYPE_UPDATE_BULK],
       audit: [Permission.CRM_CONTACT_TYPE_READ_AUDIT],
     },
     schemas: {
@@ -406,6 +414,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_ACCOUNT_KIND_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_ACCOUNT_KIND_DELETE_BULK],
       bulkRestore: [Permission.CRM_ACCOUNT_KIND_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_ACCOUNT_KIND_UPDATE_BULK],
       audit: [Permission.CRM_ACCOUNT_KIND_READ_AUDIT],
     },
     schemas: {
@@ -430,6 +439,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_LINK_TYPE_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_LINK_TYPE_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_LINK_TYPE_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CUSTOMER_LINK_TYPE_UPDATE_BULK],
       audit: [Permission.CRM_CUSTOMER_LINK_TYPE_READ_AUDIT],
     },
     schemas: {
@@ -454,6 +464,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CONSENT_TYPE_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CONSENT_TYPE_DELETE_BULK],
       bulkRestore: [Permission.CRM_CONSENT_TYPE_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CONSENT_TYPE_UPDATE_BULK],
       audit: [Permission.CRM_CONSENT_TYPE_READ_AUDIT],
     },
     schemas: {
@@ -478,6 +489,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_LOCAL_ADDRESS_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_LOCAL_ADDRESS_DELETE_BULK],
       bulkRestore: [Permission.CRM_LOCAL_ADDRESS_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_LOCAL_ADDRESS_UPDATE_BULK],
       duplicate: [Permission.CRM_LOCAL_ADDRESS_DUPLICATE_BULK],
       audit: [Permission.CRM_LOCAL_ADDRESS_READ_AUDIT],
     },
@@ -503,6 +515,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_ACCOUNT_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_ACCOUNT_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_ACCOUNT_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CUSTOMER_ACCOUNT_UPDATE_BULK],
       duplicate: [Permission.CRM_CUSTOMER_ACCOUNT_DUPLICATE_BULK],
       audit: [Permission.CRM_CUSTOMER_ACCOUNT_READ_AUDIT],
     },
@@ -528,6 +541,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_CONTACT_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_CONTACT_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_CONTACT_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CUSTOMER_CONTACT_UPDATE_BULK],
       duplicate: [Permission.CRM_CUSTOMER_CONTACT_DUPLICATE_BULK],
       audit: [Permission.CRM_CUSTOMER_CONTACT_READ_AUDIT],
     },
@@ -553,6 +567,7 @@ export const crmEntityDecls: EntityRouteDecl[] = [
       restore: [Permission.CRM_CUSTOMER_LINK_RESTORE_SINGLE],
       bulkDelete: [Permission.CRM_CUSTOMER_LINK_DELETE_BULK],
       bulkRestore: [Permission.CRM_CUSTOMER_LINK_RESTORE_BULK],
+      bulkUpdate: [Permission.CRM_CUSTOMER_LINK_UPDATE_BULK],
       audit: [Permission.CRM_CUSTOMER_LINK_READ_AUDIT],
     },
     schemas: {

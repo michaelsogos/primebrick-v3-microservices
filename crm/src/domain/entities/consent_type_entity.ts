@@ -11,7 +11,7 @@ import {
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
-@Entity("consent_types", "crm")
+@Entity("consent_types")
 @AuditTrail()
 @Cached(300_000)
 export class ConsentTypeEntity

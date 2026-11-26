@@ -14,7 +14,7 @@ const LocalAddressTypeBaseSchema = z.object({
 
 export const LocalAddressTypeCreateBodySchema = LocalAddressTypeBaseSchema;
 export const LocalAddressTypeUpdateBodySchema = zPartialNoDefaults(
-  LocalAddressTypeBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  LocalAddressTypeBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const LocalAddressTypeAuditQuerySchema = z.object({

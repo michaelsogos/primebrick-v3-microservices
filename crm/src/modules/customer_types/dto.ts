@@ -14,7 +14,7 @@ const CustomerTypeBaseSchema = z.object({
 
 export const CustomerTypeCreateBodySchema = CustomerTypeBaseSchema;
 export const CustomerTypeUpdateBodySchema = zPartialNoDefaults(
-  CustomerTypeBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  CustomerTypeBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const CustomerTypeAuditQuerySchema = z.object({

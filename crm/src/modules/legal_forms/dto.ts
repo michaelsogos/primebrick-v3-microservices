@@ -22,7 +22,7 @@ const LegalFormBaseSchema = z.object({
 
 export const LegalFormCreateBodySchema = LegalFormBaseSchema;
 export const LegalFormUpdateBodySchema = zPartialNoDefaults(
-  LegalFormBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  LegalFormBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const LegalFormAuditQuerySchema = z.object({

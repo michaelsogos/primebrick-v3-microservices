@@ -15,7 +15,7 @@ import { Cached } from "@primebrick/sdk";
  *  of this type (`email` → zod email + EmailInput; `phone` → E.164 +
  *  PhoneInput; `text` → free). Declared per row so user-added types pick
  *  their semantics explicitly. */
-@Entity("contact_types", "crm")
+@Entity("contact_types")
 @AuditTrail()
 @Cached(300_000)
 export class ContactTypeEntity

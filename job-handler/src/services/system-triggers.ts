@@ -118,7 +118,7 @@ async function reconcileOne(caller: string, decl: SystemJobDecl): Promise<Materi
   // `version` is the auditable write's optimistic-concurrency token —
   // the row read above carries it, so a user edit racing the reconcile
   // fails loudly instead of silently losing either side's write.
-  await triggers.patchRow(uuid, row.version as number, patch, actor);
+  await triggers.patchRow(uuid, row.version as bigint, patch, actor);
   publishTriggerChanged(uuid);
   return { key: decl.key, action: "updated", uuid, changed_fields: drifted };
 }

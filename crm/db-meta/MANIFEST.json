@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-3",
-  "issued_at": "2026-11-18T20:51:38.947Z",
+  "key_id": "dev-micha-2",
+  "issued_at": "2026-11-26T14:02:34.693Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -20,8 +20,33 @@
     "20261115221000_version_history_full_dedup": "220c2deb7b6f5e52923e898f8ab69cdb548c95e1b38f50aee7ce8166a4f1e784",
     "20261116090000_partition_maintenance_callable_i18n": "533b4d0ea7c3219d78764ad774aa5bf9d226a7ca8e341b4d6f01f940e82231ae",
     "20261116100000_audit_uuid_pk_retention": "12827e7d113f72c1c098b4db6a7cace67e70389b8b3b1f8c3fd4452ed644e8de",
+    "20261121121955_create_crm_sequences_crm_sequence_counters": "1219b645d38e907ab076c0343d50cfab5ccc0e9358ef5e7f36f0ae6bc857517d",
+    "20261121180000_customers_code_full_unique": "54b4c0183b0c543e2be24de7401c2d08921b0428c0b2706a583c2a3a68eedaa1",
+    "20261122201506_noop": "32addd9e3d873c84fabaa53cd199219fc1511150a036f3f5094b7de12ad7c191",
+    "20261124170003_noop": "69ac01f05d13132d7563e4615bd60e7961e369972d1077a0e8ee1a4464b79115",
+    "20261124180400_rename_translations_canonical": "cd56f2f1ad280869f19f45d282fcde5ed7dc3c18bee1a3e1319e0ab00a190f94",
+    "20261124190638_defaults_crm_config_entries_crm_customers_crm_customer_types_crm_company": "81409e15784cf0af0396d58c66ebd1a0629099cbd6dd87806924d50ce6c292c0",
     "20261208000000_i18n_segregation_config_keys": "bc597c2cfa58a9f6776822facb55616e7bec8b6faa814a2a1a822195d6746732",
-    "20261221130000_events_fields_labels_i18n": "eae7dccd4d86a3f924e3cd6cb575e59c238c61facf42fab3b94df3b42d4b49f9"
+    "20261221130000_events_fields_labels_i18n": "eae7dccd4d86a3f924e3cd6cb575e59c238c61facf42fab3b94df3b42d4b49f9",
+    "20261225150000_i18n_customer_link_type_rename_it": "0182e70585608b2fc72bfc822827e8bb8cccdaee8d35300d8286f9c228a8a62a",
+    "20261225170000_i18n_customer_link_type_settings_nav_it": "6ba1ba4f548927f27e7311ce3af695a9cdd23826d8b229fc107431355f68eacd",
+    "20261226000000_customers_code_unique": "321a0e96ece00f9ecc2bf4d6bd8cd0b59d6049672eab12e5f2c44f07c7c9cf8f",
+    "20261227120000_i18n_builtin_sequence_surface": "a2d325481a3bf3c08e6a5b0f90788db1fca470f701b6ac29a5f7d0bf81b70e7c",
+    "20261228100000_i18n_sequence_set_action": "07d7e2b4a2f3ac9021b57b0e3772914a461b54df03e6e4311ef4ba98dbdcf6c7",
+    "20261229120000_i18n_sequence_actions_projection": "320ccda19caa82a7b48c74a0bce5fcc4e585f1cb1e2ccb3e62ccc93b637de74d",
+    "20261229130000_sequence_name_uuid_identity": "74cea4b061fafab1fd5217d65736fa2ff5c9eb45a5b0377df527ccdd2da0b017",
+    "20261229131000_i18n_sequence_name_labels": "945d2cf40317e6934194e526b29f73000b4905764c7da2357043063d4345005d",
+    "20261229132000_sequence_deterministic_uuid_rekey": "a953b743e60d2dcf0e6a0da27b82088f3b8af9d2c5a0e2dad8c144b15837238b",
+    "20261229133000_i18n_sequence_start_label": "183a120392f844d035bd81719e92f7816d12432c229d986b533d83f9956517f8",
+    "20261230120000_sequences_tz_not_null_default_utc": "26d368ba2b4608b08c4faf43f0f9c267e83a3c302dbe5584449ff1c79c169968",
+    "20261230130000_i18n_purge_deleted_translations": "2655de3ff08f42cc46fe63c901e7fbb0456001d2a204e6f59765fc1ca4849829",
+    "20261230140000_i18n_translation_key_labels": "8c65d0d1d34a9180e04e778501082430c6b0333c82503b3ba5f702b9eed28dba",
+    "20261231150000_sequence_revive_columns": "ba70f397574367eea0a2682baa04fb938dd4ce807d6c3bb089b48b59cf28ee79",
+    "20261231151000_i18n_sequence_revive_labels": "0d3830bde7cf5ee475ac73139f729ee143a6b22f9e9effa348ed146145fa4453",
+    "20261231240000_i18n_sequence_form_contract": "750a13308552a90f52eb4ca2a39f59ecd70723a91578d7015f8a3ee024869543",
+    "20270101100000_sequence_revive_spec_varchar40": "c21c15e23ca7240b1d7fcd36bf41199aa7846647f76dc7e4bb87841ce4a3ca87",
+    "20270101110000_sequence_revive_labels_tooltips": "89f94929d04e624d97241d5113f75a45713557d894b612bee24e9dafcc55557c",
+    "20270101120000_shield_config_cleanup": "f3c62870937a1afff03cb4e7ad483f1dca08deddf3deb3725f11aeb9ce531528"
   },
-  "signature": "BrRBmxnTuBAppvRRcTj2TA+TheBVCEvv8rCYaN67rL7AmI+HLpFFJcN5qukFSCsRjSinbSJlXVZNujMBWn9VCg=="
+  "signature": "k+72lLUzg7/GVLgqAh2SsxnvsAJN4dXqmgsiHvQ1cx77GtNnQViQjiAKHshn0TZN63ICLxlLX2mcAI2BX9iQDA=="
 }

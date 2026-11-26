@@ -35,7 +35,7 @@ export const jobEntityDecls: EntityRouteDecl[] = [
       meta: readPerms, list: readPerms, get: readPerms,
       create: writePerms, update: writePerms,
       delete: writePerms, restore: writePerms, audit: writePerms,
-      bulkDelete: writePerms, bulkRestore: writePerms,
+      bulkDelete: writePerms, bulkRestore: writePerms, bulkUpdate: writePerms,
     },
   },
   {

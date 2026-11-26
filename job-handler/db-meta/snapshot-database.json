@@ -1,7 +1,8 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-19T10:48:53.807Z",
+  "generatedAt": "2026-11-24T19:07:13.912Z",
   "source": "database",
+  "capturesDefaults": true,
   "tables": {
     "job.config_entries": {
       "kind": "table",
@@ -19,7 +20,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "key": {
           "name": "key",
@@ -110,7 +112,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "false"
         },
         "group_key": {
           "name": "group_key",
@@ -136,7 +139,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -149,7 +153,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -162,7 +167,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -175,7 +181,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -188,7 +195,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -225,7 +233,8 @@
           "columns": [
             "key"
           ],
-          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON job.config_entries USING btree (key)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX config_entries_key_uq ON job.config_entries USING btree (key) WHERE (deleted_at IS NULL)"
         }
       ]
     },
@@ -245,7 +254,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -362,7 +372,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -375,7 +386,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -388,7 +400,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -401,7 +414,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -414,7 +428,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "schedule_type": {
           "name": "schedule_type",
@@ -464,7 +479,8 @@
           "columns": [
             "schedule_subject"
           ],
-          "definition": "CREATE UNIQUE INDEX job_schedules_subject_uq ON job.job_schedules USING btree (schedule_subject)"
+          "definition": "CREATE UNIQUE INDEX job_schedules_subject_uq ON job.job_schedules USING btree (schedule_subject)",
+          "isConstraint": true
         },
         {
           "name": "job_schedules_status_idx",
@@ -493,7 +509,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "schedule_subject": {
           "name": "schedule_subject",
@@ -610,7 +627,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -623,7 +641,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -636,7 +655,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -649,7 +669,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -662,7 +683,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "fire_seq": {
           "name": "fire_seq",
@@ -719,13 +741,19 @@
       },
       "indexes": [
         {
-          "name": "job_runs_schedule_idx",
+          "name": "job_runs_created_idx",
           "using": "btree",
           "isUnique": false,
           "columns": [
-            "schedule_subject"
+            "created_at"
           ],
-          "definition": "CREATE INDEX job_runs_schedule_idx ON job.job_runs USING btree (schedule_subject)"
+          "sort": [
+            "desc"
+          ],
+          "nulls": [
+            "first"
+          ],
+          "definition": "CREATE INDEX job_runs_created_idx ON job.job_runs USING btree (created_at DESC)"
         },
         {
           "name": "job_runs_status_idx",
@@ -737,13 +765,13 @@
           "definition": "CREATE INDEX job_runs_status_idx ON job.job_runs USING btree (status)"
         },
         {
-          "name": "job_runs_created_idx",
+          "name": "job_runs_schedule_idx",
           "using": "btree",
           "isUnique": false,
           "columns": [
-            "created_at"
+            "schedule_subject"
           ],
-          "definition": "CREATE INDEX job_runs_created_idx ON job.job_runs USING btree (created_at DESC)"
+          "definition": "CREATE INDEX job_runs_schedule_idx ON job.job_runs USING btree (schedule_subject)"
         }
       ]
     },
@@ -763,7 +791,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": true
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
         },
         "name": {
           "name": "name",
@@ -854,7 +883,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "created_by": {
           "name": "created_by",
@@ -867,7 +897,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "updated_at": {
           "name": "updated_at",
@@ -880,7 +911,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
         },
         "updated_by": {
           "name": "updated_by",
@@ -893,7 +925,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
         },
         "version": {
           "name": "version",
@@ -906,7 +939,8 @@
           "numericPrecision": null,
           "numericScale": null,
           "isNullable": false,
-          "isPrimaryKey": false
+          "isPrimaryKey": false,
+          "defaultSql": "1"
         },
         "deleted_at": {
           "name": "deleted_at",
@@ -969,7 +1003,8 @@
           "columns": [
             "name"
           ],
-          "definition": "CREATE UNIQUE INDEX job_triggers_name_uq ON job.job_triggers USING btree (name)"
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE UNIQUE INDEX job_triggers_name_uq ON job.job_triggers USING btree (name) WHERE (deleted_at IS NULL)"
         },
         {
           "name": "job_triggers_system_key_uq",
@@ -980,6 +1015,591 @@
           ],
           "where": "(deleted_at IS NULL)",
           "definition": "CREATE UNIQUE INDEX job_triggers_system_key_uq ON job.job_triggers USING btree (system_key) WHERE (deleted_at IS NULL)"
+        }
+      ]
+    },
+    "job.sequences": {
+      "kind": "table",
+      "schema": "job",
+      "name": "sequences",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "ordinalPosition": 6,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "deleted_by": {
+          "name": "deleted_by",
+          "ordinalPosition": 7,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 8,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
+        },
+        "name": {
+          "name": "name",
+          "ordinalPosition": 9,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "pattern": {
+          "name": "pattern",
+          "ordinalPosition": 10,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "step": {
+          "name": "step",
+          "ordinalPosition": 11,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "start": {
+          "name": "start",
+          "ordinalPosition": 12,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "tz": {
+          "name": "tz",
+          "ordinalPosition": 13,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'UTC'::character varying"
+        },
+        "description_key": {
+          "name": "description_key",
+          "ordinalPosition": 14,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez": {
+          "name": "sez",
+          "ordinalPosition": 15,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez2": {
+          "name": "sez2",
+          "ordinalPosition": 16,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "sez3": {
+          "name": "sez3",
+          "ordinalPosition": 17,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(200)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "binding_key": {
+          "name": "binding_key",
+          "ordinalPosition": 18,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(130)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_every": {
+          "name": "revive_every",
+          "ordinalPosition": 19,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(30)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_grace": {
+          "name": "revive_grace",
+          "ordinalPosition": 20,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(30)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revive_slot": {
+          "name": "revive_slot",
+          "ordinalPosition": 21,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(10)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "expire_at": {
+          "name": "expire_at",
+          "ordinalPosition": 22,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "switch_at": {
+          "name": "switch_at",
+          "ordinalPosition": 23,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "default_from": {
+          "name": "default_from",
+          "ordinalPosition": 24,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_from": {
+          "name": "revived_from",
+          "ordinalPosition": 25,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_at": {
+          "name": "revived_at",
+          "ordinalPosition": 26,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "revived_by": {
+          "name": "revived_by",
+          "ordinalPosition": 27,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "sequences_binding_key_default_from_idx",
+          "using": "btree",
+          "isUnique": false,
+          "columns": [
+            "binding_key",
+            "default_from"
+          ],
+          "sort": [
+            "asc",
+            "desc"
+          ],
+          "nulls": [
+            "last",
+            "last"
+          ],
+          "where": "(deleted_at IS NULL)",
+          "definition": "CREATE INDEX sequences_binding_key_default_from_idx ON job.sequences USING btree (binding_key, default_from DESC NULLS LAST) WHERE (deleted_at IS NULL)"
+        }
+      ]
+    },
+    "job.sequence_counters": {
+      "kind": "table",
+      "schema": "job",
+      "name": "sequence_counters",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "ordinalPosition": 1,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "created_by": {
+          "name": "created_by",
+          "ordinalPosition": 2,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "ordinalPosition": 3,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "now()"
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "ordinalPosition": 4,
+          "dataType": "text",
+          "typname": "text",
+          "typeOid": 25,
+          "typcategory": "S",
+          "formatType": "text",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "'system'::text"
+        },
+        "version": {
+          "name": "version",
+          "ordinalPosition": 5,
+          "dataType": "int4",
+          "typname": "int4",
+          "typeOid": 23,
+          "typcategory": "N",
+          "formatType": "integer",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "1"
+        },
+        "uuid": {
+          "name": "uuid",
+          "ordinalPosition": 6,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": true,
+          "defaultSql": "uuidv7()"
+        },
+        "sequence_uuid": {
+          "name": "sequence_uuid",
+          "ordinalPosition": 7,
+          "dataType": "uuid",
+          "typname": "uuid",
+          "typeOid": 2950,
+          "typcategory": "U",
+          "formatType": "uuid",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "period_key": {
+          "name": "period_key",
+          "ordinalPosition": 8,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(64)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "''::character varying"
+        },
+        "partition_key": {
+          "name": "partition_key",
+          "ordinalPosition": 9,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(255)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false,
+          "defaultSql": "''::character varying"
+        },
+        "counter": {
+          "name": "counter",
+          "ordinalPosition": 10,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": false,
+          "isPrimaryKey": false
+        },
+        "last_alloc_at": {
+          "name": "last_alloc_at",
+          "ordinalPosition": 11,
+          "dataType": "timestamptz",
+          "typname": "timestamptz",
+          "typeOid": 1184,
+          "typcategory": "D",
+          "formatType": "timestamp with time zone",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "last_alloc_by": {
+          "name": "last_alloc_by",
+          "ordinalPosition": 12,
+          "dataType": "varchar",
+          "typname": "varchar",
+          "typeOid": 1043,
+          "typcategory": "S",
+          "formatType": "character varying(100)",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        },
+        "last_alloc_count": {
+          "name": "last_alloc_count",
+          "ordinalPosition": 13,
+          "dataType": "int8",
+          "typname": "int8",
+          "typeOid": 20,
+          "typcategory": "N",
+          "formatType": "bigint",
+          "numericPrecision": null,
+          "numericScale": null,
+          "isNullable": true,
+          "isPrimaryKey": false
+        }
+      },
+      "indexes": [
+        {
+          "name": "sequence_counters_identity",
+          "using": "btree",
+          "isUnique": true,
+          "columns": [
+            "sequence_uuid",
+            "period_key",
+            "partition_key"
+          ],
+          "definition": "CREATE UNIQUE INDEX sequence_counters_identity ON job.sequence_counters USING btree (sequence_uuid, period_key, partition_key)"
         }
       ]
     }

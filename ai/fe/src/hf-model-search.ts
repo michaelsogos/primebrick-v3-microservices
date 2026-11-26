@@ -1,3 +1,4 @@
+import { extJsonParse } from '@primebrick/ui';
 /**
  * Hugging Face model search for the "Add model" sheet.
  *
@@ -113,7 +114,7 @@ export async function searchHfModels(
       `&${SORT_PARAMS[sort]}&limit=${limit}&full=false`;
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`HF search failed (${res.status})`);
-  const rows = (await res.json()) as HfApiRow[];
+  const rows = (await res.text().then((t) => extJsonParse<any>(t))) as HfApiRow[];
   const next = parseNextUrl(res.headers.get('Link'));
   const hits = rows
     .filter((r) => {
@@ -169,7 +170,7 @@ export async function fetchHfDtypeVariants(
 ): Promise<HfDtypeVariant[]> {
   const res = await fetch(`${HF_API}/${repoId}?blobs=true`, { signal });
   if (!res.ok) throw new Error(`HF repo fetch failed (${res.status})`);
-  const row = (await res.json()) as {
+  const row = (await res.text().then((t) => extJsonParse<any>(t))) as {
     siblings?: { rfilename: string; size?: number }[];
   };
   const files = row.siblings ?? [];
@@ -199,7 +200,7 @@ export async function fetchHfGenerationConfig(
   for (const path of ['generation_config.json', 'onnx/generation_config.json']) {
     try {
       const res = await fetch(`https://huggingface.co/${repoId}/raw/main/${path}`, { signal });
-      if (res.ok) return (await res.json()) as { top_p?: number; repetition_penalty?: number };
+      if (res.ok) return (await res.text().then((t) => extJsonParse<any>(t))) as { top_p?: number; repetition_penalty?: number };
     } catch {
       // network/abort — fall through
     }

@@ -10,7 +10,7 @@
  * a derived index, not auditable domain data, and soft-delete is
  * meaningless for regenerable rows).
  */
-import { field, Filter, Project } from "@primebrick/dal-pg";
+import { field, Filter, Project, DAL_NOW } from "@primebrick/dal-pg";
 import { dalInfra } from "../db/dal.js";
 import { DocsKbEntity } from "../domain/entities/docs_kb_entity.js";
 
@@ -73,7 +73,7 @@ export async function updateDocChunks(rows: DocChunkWrite[]): Promise<void> {
       embedding: r.embedding,
       metadata: r.metadata,
       content_hash: r.content_hash,
-      updated_at: new Date(),
+      updated_at: DAL_NOW,
     })),
     { matchBy: [...CHUNK_MATCH_BY] },
   );

@@ -14,7 +14,7 @@ const ConsentTypeBaseSchema = z.object({
 
 export const ConsentTypeCreateBodySchema = ConsentTypeBaseSchema;
 export const ConsentTypeUpdateBodySchema = zPartialNoDefaults(
-  ConsentTypeBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  ConsentTypeBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const ConsentTypeAuditQuerySchema = z.object({

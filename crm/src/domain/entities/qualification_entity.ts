@@ -11,7 +11,7 @@ import {
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
-@Entity("qualifications", "crm")
+@Entity("qualifications")
 @AuditTrail()
 @Cached(300_000)
 export class QualificationEntity

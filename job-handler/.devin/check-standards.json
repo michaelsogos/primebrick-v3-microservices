@@ -30,6 +30,17 @@
       "appliesTo": [
         "fe/src/"
       ]
+    },
+    "ext-json": {
+      "allowPaths": [
+        "services/run-recorder.ts"
+      ]
+    },
+    "no-fnf-nats-publish": {
+      "allowPaths": [
+        "services/due-forwarder.ts",
+        "modules/jobs/jobs.service.ts"
+      ]
     }
   },
   "i18n_namespaces": [

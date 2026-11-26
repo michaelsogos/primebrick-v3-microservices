@@ -6,6 +6,8 @@
  * the FE (list tables, column pickers, badges), not a transport DTO.
  */
 
+import type { MetaColumnFormat } from "@primebrick/sdk";
+
 export type MetaColumnType =
   | "text"
   | "badge"
@@ -20,6 +22,9 @@ export interface MetaColumn {
   /** i18n key for the column/field label. */
   label_key: string;
   type: MetaColumnType;
+  /** Semantic format hint — canonical union lives in `@primebrick/core`
+   *  (re-exported via `@primebrick/sdk`). */
+  format?: MetaColumnFormat;
   /** Deterministic display position. */
   order: number;
   sortable?: boolean;

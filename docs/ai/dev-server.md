@@ -18,8 +18,14 @@
 4. **The stack must survive the turn**: BE, FE, job-handler and CRM stay
    running across agent turns — a service started inside an agent shell
    dies with the session, so services MUST be started **detached** via
-   `primebrick-workspace/scripts/dev-stack.ps1` (idempotent, skips ports
-   already listening, logs to `primebrick-workspace/temp/logs/`). If a
+   `primebrick-workspace/scripts/dev-stack.ps1` (delegates to
+   `dev-stack.mjs` — genuinely idempotent: per-service state files in
+   `temp/dev/<name>.json`, serialized lock, process-TREE kill via
+   `taskkill /T`, `status`/`stop`/`restart`/`reap` subcommands;
+   `reap` kills untracked primebrick dev processes — zombies — while a
+   chain that reaches an IDE terminal is classified USER-STARTED and
+   never touched. Logs to `temp/logs/` at the multi-repo checkout root
+   (`D:\git\primebrick\temp\logs\` — NOT under primebrick-workspace). If a
    turn finds a service down, restart it detached — never leave the only
    copy of the stack inside an ephemeral shell.
 5. **Releases and branch churn kill the stack — restart it after**:
@@ -49,6 +55,34 @@ they are NOT in package.json or .env.example:
 Each microservice is self-contained; there is no root dev script.)
 
 Other stack services: FE 5173, BE 3001.
+
+## Two-layer watch — service code vs library code
+
+Services boot via `scripts/dev-hot.mjs` (spawned by `pnpm run dev`), which
+runs `bun --conditions=development --hot src/index.ts`. Two independent watch
+layers cover the whole editable surface:
+
+1. **Service `src/`** — watched by `bun --hot` itself (in-project files).
+   Editing service code hot-reloads in place; no respawn.
+2. **External library `src/`** — `@primebrick/sdk`, `@primebrick/dal-pg`,
+   `@primebrick/core` and `@primebrick/decimal` carry a `development` export
+   condition, so bun resolves them to the sibling repos' **TypeScript
+   sources** — no lib rebuild is ever needed while iterating. Those files
+   live outside the project directory, so `bun --hot` cannot watch them;
+   `dev-hot.mjs` watches their `src/` trees recursively and **respawns** the
+   service (~1s) on any non-test file change.
+
+### The warning-noise filter (enforcement-preserving)
+
+bun prints `warn: File ... is not in the project directory and will not be
+watched` once per external file — historically ~1600 lines per boot, hiding
+real signals. `dev-hot.mjs` pipes the child's stdout/stderr and suppresses
+**only** the warnings whose path falls inside one of the watched lib repos
+(sdk, dal-pg, core, decimal) — those are structurally compensated by the
+respawn layer. Every other warning passes verbatim: if a new external
+dependency ever enters the graph without being covered by the watch list,
+its warning WILL appear — the filter cannot hide new gaps. Do not widen it
+to a blanket suppression.
 
 ## Procedure — before starting or touching a server
 

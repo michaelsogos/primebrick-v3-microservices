@@ -22,17 +22,7 @@
  * rejecting would be guesswork. The layer tightens only what is provable.
  */
 
-import {
-  callNats,
-  internalFetch,
-  logger,
-  parseMapKeysDeclaration,
-  PAYLOAD_X_MAP_KEYS,
-  PAYLOAD_X_OPTIONS,
-  type MapKeyDecl,
-  type PayloadMapKeysHint,
-  type PayloadOptionsSource,
-} from "@primebrick/sdk";
+import { callNats, internalFetch, logger, parseMapKeysDeclaration, PAYLOAD_X_MAP_KEYS, PAYLOAD_X_OPTIONS, type MapKeyDecl, type PayloadMapKeysHint, type PayloadOptionsSource, extJsonParse } from '@primebrick/sdk';
 
 /** `service.registry.get {code}` → the service's HTTP `base_url` (the same
  *  row the `/svc` proxy targets). Cached per code — registration churn is
@@ -85,7 +75,7 @@ export async function resolveMapKeySchemas(
       if (!base) continue;
       const res = await internalFetch(`${base}${parsed.path}`, { method: src?.api_verb ?? "GET" });
       if (!res.ok) continue;
-      const data = (await res.json()) as { rows?: Record<string, unknown>[] };
+      const data = (await res.text().then((t) => extJsonParse<any>(t))) as { rows?: Record<string, unknown>[] };
       const row = (data.rows ?? []).find((r) => r[src?.value_field ?? ""] === fromEntry.value);
       if (!row) continue;
       const decls = parseMapKeysDeclaration(row[hint.prop]);

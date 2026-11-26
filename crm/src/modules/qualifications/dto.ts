@@ -14,7 +14,7 @@ const QualificationBaseSchema = z.object({
 
 export const QualificationCreateBodySchema = QualificationBaseSchema;
 export const QualificationUpdateBodySchema = zPartialNoDefaults(
-  QualificationBaseSchema.extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }),
+  QualificationBaseSchema.omit({ code: true }).extend({ version: zBoundedInt(0, Number.MAX_SAFE_INTEGER) }).strict(),
 );
 
 export const QualificationAuditQuerySchema = z.object({

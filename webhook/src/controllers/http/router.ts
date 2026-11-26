@@ -30,6 +30,7 @@ import {
   logger,
 } from "@primebrick/sdk";
 import { lookupService } from "../../registry/registry-cache.js";
+import { OWNED_SCHEMAS } from "../../db/dal.js";
 
 const WEBHOOK_STREAM = "WEBHOOK";
 const SUBJECT_PREFIX = "webhook";
@@ -95,7 +96,6 @@ export const webhookRoutes: RpcRoute[] = [
       let parsed: unknown = null;
       if (rawBody) {
         try {
-          // standards-exempt: ext-json — external wire payload (inbound webhook) — must not bigint-ify
           parsed = JSON.parse(rawBody);
         } catch {
           sendRfcError(res, 400, "Invalid JSON", "Request body is not valid JSON", "WEBHOOK_INVALID_BODY", "LOW");
@@ -113,7 +113,7 @@ export const webhookRoutes: RpcRoute[] = [
       if (auth) forwardHeaders["authorization"] = Array.isArray(auth) ? auth[0] : auth;
 
       try {
-        const seq = await NatsClient.jetstreamPublish(
+        const seq = await NatsClient.publish(
           `${SUBJECT_PREFIX}.${serviceCode}.${SUBJECT_SUFFIX}`,
           envelope,
           forwardHeaders,
@@ -142,6 +142,7 @@ export const webhookRoutes: RpcRoute[] = [
  *  derive from the same `webhookRoutes` table — the spec can never drift
  *  from the registered routes. */
 export const webhookRouteHandler = makeServiceRoutes({
+  schemas: OWNED_SCHEMAS,
   info: {
     title: "Webhook Ingress",
     version: detectPackageIdentity().version ?? "0.0.0",

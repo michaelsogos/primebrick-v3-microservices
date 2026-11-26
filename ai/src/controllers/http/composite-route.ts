@@ -74,9 +74,11 @@ function sendError(res: ServerResponse, status: number, title: string, detail: s
  * every write (same convention as the SDK entity-router `requireVersion`).
  * The repository never derives it: a stale version must fail, not refetch.
  */
-function requireVersionQuery(query: URLSearchParams): number | null {
-  const n = Number(query.get("version"));
-  return Number.isInteger(n) && n > 0 ? n : null;
+function requireVersionQuery(query: URLSearchParams): bigint | null {
+  const raw = query.get("version");
+  if (raw === null || !/^\d+$/.test(raw)) return null;
+  const n = BigInt(raw);
+  return n > 0n ? n : null;
 }
 
 // ─── Route declarations ─────────────────────────────────────────────────────

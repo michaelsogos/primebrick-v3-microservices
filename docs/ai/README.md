@@ -6,7 +6,7 @@ These files help humans and agents collaborate consistently on the
 | File | Role |
 |------|------|
 | [`dev-server.md`](./dev-server.md) | Dev-server lifecycle & process ownership — empirical ownership check, ask-first for user-owned servers, per-service port table (3003–3007) |
-| [`env-policy.md`](./env-policy.md) | Closed environment policy — `.env` limited to `DATABASE_URL` + `DATABASE_SCHEMA`; everything else in `config_entries` |
+| [`env-policy.md`](./env-policy.md) | Closed environment policy — `.env` limited to `DATABASE_URL` only (`DATABASE_SCHEMA` is a reserved violation — schema identity is `OWNED_SCHEMAS` in code); everything else in `config_entries` |
 | [`enforcement-over-verification.md`](./enforcement-over-verification.md) | Enforcement-over-verification doctrine — behavior is enforced by code/types/builders/validators, tests prove it |
 | Root [`../../AGENTS.md`](../../AGENTS.md) | Project facts, commands, and pointers |
 | [`always-check-rules-first.md`](./always-check-rules-first.md) | Always Check Rules Before Action |

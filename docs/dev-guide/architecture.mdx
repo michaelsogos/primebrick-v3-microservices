@@ -75,8 +75,9 @@ them with `verifyNatsMessage()`.
 Every microservice uses `@primebrick/sdk` for its lifecycle:
 
 1. **Environment validation** — `requireEnv()` validates the bootstrap env
-   vars at startup (`DATABASE_URL`, `DATABASE_SCHEMA` — the only env-sourced
-   settings, validated closed-set by `assertDbEnv()`; all runtime config
+   at startup (`DATABASE_URL` — the only env-sourced setting, closed-set
+   validated by `assertDbEnv()`; `DATABASE_SCHEMA` is a reserved violation —
+   schema identity is the `OWNED_SCHEMAS` const in code; all runtime config
    lives in the service's `config_entries` table)
 2. **Config loading** — `ConfigLoader` reads the `config_entries` table for
    service-specific settings (NATS™ URL, HTTP port, service code)
