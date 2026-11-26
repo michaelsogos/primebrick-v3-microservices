@@ -56,7 +56,11 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
   return {
     ...real,
     NatsClient: {
-      publish: h.publish,
+      // Post-A3/A4 SDK: `publish` IS the durable jetstream publish (PubAck);
+      // `publishEphemeralLossy` is the lossy core path. Harness names kept:
+      // jetstreamPublish = durable capture, publish = lossy-core capture.
+      publish: h.jetstreamPublish,
+      publishEphemeralLossy: h.publish,
       jetstreamSubscribe: h.jetstreamSubscribe,
       jetstreamPublish: h.jetstreamPublish,
     },

@@ -332,7 +332,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
   /** Flip soft-delete state — the wire-canonical path (svc): audit row +
    *  entity-changed marker + afterWrite publish all fire; the actor stamps
    *  through the configured `requireActor` supplier. */
-  async setDeleted(uuid: string, version: number, deleted: boolean): Promise<void> {
+  async setDeleted(uuid: string, version: bigint, deleted: boolean): Promise<void> {
     if (deleted) await this.svc.delete(uuid, version);
     else await this.svc.restore(uuid, version);
   }
@@ -346,7 +346,7 @@ export class JobTriggersService extends DomainService<TriggerT> {
 
   /** Optimistic-lock patch on code-owned fields — reconcile drift write,
    *  same governed path as `insertSystemRow`. */
-  async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
+  async patchRow(uuid: string, version: bigint, patch: Record<string, unknown>, actor: string): Promise<void> {
     await runWithSession(actorSession(actor), () => this.svc.update(uuid, { ...patch, version }));
   }
 }
@@ -447,13 +447,13 @@ export class JobSchedulesService extends DomainService<ScheduleT> {
 
   /** Optimistic-lock patch on a mirror row — collapses disarm, unsuppress,
    *  reconcile heal/backfill, mark-fired and re-arm writes. */
-  async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
+  async patchRow(uuid: string, version: bigint, patch: Record<string, unknown>, actor: string): Promise<void> {
     await runWithSession(actorSession(actor), () => this.svc.update(uuid, { ...patch, version }));
   }
 
   /** Physical drop — the mirror is a derived artifact, not auditable
    *  state: a disarmed tombstone would list a schedule nobody can re-arm. */
-  async dropMirror(uuid: string, version: number, actor: string): Promise<void> {
+  async dropMirror(uuid: string, version: bigint, actor: string): Promise<void> {
     await runWithSession(actorSession(actor), () => this.svc.purge(uuid, version));
   }
 }
@@ -489,7 +489,7 @@ export class JobRunsService extends DomainService<RunT> {
 
   /** Optimistic-lock patch — status flips, duration/report correlate,
    *  sweep-to-lost. */
-  async patchRow(uuid: string, version: number, patch: Record<string, unknown>, actor: string): Promise<void> {
+  async patchRow(uuid: string, version: bigint, patch: Record<string, unknown>, actor: string): Promise<void> {
     await runWithSession(actorSession(actor), () => this.svc.update(uuid, { ...patch, version }));
   }
 
@@ -624,7 +624,7 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
    *  `type === "secret"` + empty value = "leave unchanged" (the FE sends
    *  the masked null back when no new secret was typed). Returns the
    *  re-read, masked row — `null` when the uuid is unknown. */
-  async updateValue(uuid: string, body: { value: unknown; version: number }): Promise<ConfigEntryEntity | null> {
+  async updateValue(uuid: string, body: { value: unknown; version: bigint }): Promise<ConfigEntryEntity | null> {
     const target = await this.svc.find<{ key?: string; type?: string }>([
       Project.field(field(ConfigEntryEntity, "key")),
       Project.field(field(ConfigEntryEntity, "type")),
@@ -638,7 +638,7 @@ export class ConfigEntriesService extends DomainService<ConfigEntryT> {
       // svc.update — ambient HTTP session supplies the actor; audit row +
       // marker fire, and the beforeUpdate hook re-checks the key guard
       // for every writer (not just this call site).
-      await this.svc.update(uuid, { value: body.value as string, version: Number(body.version) });
+      await this.svc.update(uuid, { value: body.value as string, version: body.version });
     }
     return this.getEntry(uuid);
   }

@@ -148,7 +148,7 @@ export const configEntryRoutes: RpcRoute[] = [
       // the service — the controller maps `null` to the 404 transport.
       const result = await configEntries.updateValue(
         params.uuid,
-        { value: b.value, version: Number(b.version) },
+        { value: b.value, version: b.version as bigint },
       );
       if (!result) {
         sendError(res, 404, "Config entry not found", "config-entry-not-found");
