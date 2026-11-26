@@ -63,8 +63,8 @@ vi.mock("@primebrick/sdk", async (importOriginal) => {
       publishEphemeralLossy: h.publish,
       jetstreamSubscribe: h.jetstreamSubscribe,
       jetstreamPublish: h.jetstreamPublish,
+      subscribe: h.subscribeShielded,
     },
-    subscribeShielded: h.subscribeShielded,
     callNats: h.callNats,
     getAuthConfig: () => ({}),
     serializeAuthUserToHeaders: (user: { user_uuid?: string }) => ({

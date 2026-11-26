@@ -10,7 +10,7 @@
 
 import {
   logger,
-  subscribeShielded,
+  NatsClient,
   DOCS_PACK_CAPABILITY,
   SERVICE_SUBJECTS,
   type ServiceRegisterPayload,
@@ -24,14 +24,14 @@ const repoByService = new Map<string, string>();
 const reindexer = new DocsPackReindexService();
 
 export async function startDocsPackSubscriber(beBaseUrl: string): Promise<void> {
-  await subscribeShielded<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
+  await NatsClient.subscribe<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
     if (!p.capabilities?.includes(DOCS_PACK_CAPABILITY)) return;
     void reindexer.pullAndIngest(p.base_url, p.code, "register").then((r) => {
       if (r.repo) repoByService.set(p.code, r.repo);
     }); // fire-and-forget: never block lifecycle
   });
 
-  await subscribeShielded<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
+  await NatsClient.subscribe<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
     const repo = repoByService.get(p.code) ?? p.code;
     const deleted = await deleteRepoDocs(repo);
     repoByService.delete(p.code);
@@ -43,7 +43,7 @@ export async function startDocsPackSubscriber(beBaseUrl: string): Promise<void> 
   // The BE never publishes service.register (it IS the registry) — its
   // pack is pulled at startup and re-pulled on every gateway_online
   // broadcast (BE restart → self-healing re-ingest, hashes make it cheap).
-  await subscribeShielded(SERVICE_SUBJECTS.GATEWAY_ONLINE, async () => {
+  await NatsClient.subscribe(SERVICE_SUBJECTS.GATEWAY_ONLINE, async () => {
     void reindexer.pullAndIngest(beBaseUrl, "backend", "gateway_online");
   });
   void reindexer.pullAndIngest(beBaseUrl, "backend", "startup");
