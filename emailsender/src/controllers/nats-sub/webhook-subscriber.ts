@@ -18,7 +18,6 @@
 import {
   NatsClient,
   verifyApiKey,
-  verifyNatsPublisher,
   enforceNatsRbac,
   Permission,
   AuthError,
@@ -66,10 +65,9 @@ export async function subscribeToWebhooks(): Promise<void> {
     filterSubject: FILTER_SUBJECT,
     handler: async (envelope, msg) => {
       try {
-        // Layer 1 — client shield: the publisher must be the registered
-        // `webhook` ingress service. Layer 2 — the envelope's API key +
-        // RBAC authorize the external caller the envelope represents.
-        if (!(await verifyNatsPublisher(msg))) return; // terminal — ack'd
+        // The sealed envelope is the provenance proof (post-shield fabric).
+        // The envelope's API key + RBAC authorizes the external caller
+        // the envelope represents.
         const user = await verifyApiKey(headerProvider(msg.headers), apiKeyPort!);
         enforceNatsRbac(user, [Permission.EMAILSENDER_LOG_CREATE_SINGLE]);
 

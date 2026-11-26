@@ -10,7 +10,7 @@
  */
 
 import {
-  subscribeShielded,
+  NatsClient,
   callNats,
   SERVICE_SUBJECTS,
   type ServiceRegisterPayload,
@@ -52,16 +52,16 @@ function deriveStatus(p: { http_healthy: boolean; nats_connected: boolean }): Ca
  * NATS connection is established.
  */
 export async function startRegistryCache(): Promise<void> {
-  await subscribeShielded<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
+  await NatsClient.subscribe<ServiceRegisterPayload>(SERVICE_SUBJECTS.REGISTER, async (p) => {
     cache.set(p.code, { status: deriveStatus(p) });
   });
-  await subscribeShielded<ServiceHeartbeatPayload>(SERVICE_SUBJECTS.HEARTBEAT, async (p) => {
+  await NatsClient.subscribe<ServiceHeartbeatPayload>(SERVICE_SUBJECTS.HEARTBEAT, async (p) => {
     cache.set(p.code, { status: deriveStatus(p) });
   });
-  await subscribeShielded<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
+  await NatsClient.subscribe<ServiceUnregisterPayload>(SERVICE_SUBJECTS.UNREGISTER, async (p) => {
     cache.delete(p.code);
   });
-  await subscribeShielded<ServiceStalePayload>(SERVICE_SUBJECTS.STALE, async (p) => {
+  await NatsClient.subscribe<ServiceStalePayload>(SERVICE_SUBJECTS.STALE, async (p) => {
     const e = cache.get(p.code);
     if (e) e.status = "stale";
   });

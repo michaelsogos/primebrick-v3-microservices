@@ -15,7 +15,7 @@
 
 import {
   makeNatsRequestRoute,
-  serviceShieldVerify,
+  serviceLaneVerify,
   scheduleSpecError,
   jobTriggerShapeIssues,
   MIN_SCHEDULE_INTERVAL_MS,
@@ -87,7 +87,7 @@ export async function registerSystemTriggerRoutes(): Promise<void> {
       {
         subject: "jobs.ctl.triggers.materialize",
         permissions: [], // `verify` replaces the user chain — service-only endpoint
-        verify: serviceShieldVerify,
+        verify: serviceLaneVerify,
         validate: validateMaterialize,
         handler: async ({ request, msg }) => {
           const caller = callerServiceCode(msg.headers?.get("user-agent") ?? undefined);
