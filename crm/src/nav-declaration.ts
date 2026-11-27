@@ -26,34 +26,24 @@ const customersPaths = entityPaths("/crm", "customers");
 /**
  * Entity nav is DERIVED, never hand-written — `deriveEntityNav` (sdk,
  * wired inside `createMicroservice`) reads the SAME entity declarations
- * that serve the routes and emits: `dict` leaves under the settings
- * sibling for `@Dict` vocabularies, list+create leaves at this root for
- * standard entities (create only when the permission exists), nothing
- * for `@Relation` bridges. This file declares only the surfaces the
- * derivation can never guess: customers (custom icon + module default +
- * remote create page) and the pipeline remote page. Authoring a route
- * for an entity here suppresses its derivation — the author owns it.
+ * that serve the routes and emits list+create leaves and routes for every
+ * standard entity, dict leaves under settings, nothing for bridges.
+ * Derivation is TOTAL: authored leaves are COSMETIC override carriers
+ * only (icon, default, order) — they merge onto the derived leaf by href
+ * and never suppress anything, never change a route or a page kind.
  */
 export const CRM_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/crm"],
   access: "access.crm",
   nav: [
     { id: "customers", label_key: "crm.customers.nav", href: customersPaths.list, icon: "users-round", default: true, order: 1 },
+    // The create leaf override — cosmetics ONLY (user-ratified 2026-11-27): the
+    // derivation owns id/href/sidebar:false; what is authored here is the
+    // user-round icon and nothing else. It never suppresses anything.
+    { id: "customers-create", label_key: "crm.customers.nav.create", href: customersPaths.create, icon: "user-round" },
   ],
-  routes: [
-    // Host-rendered EntityTablePage list — the standard archetype,
-    // delivered statically by the FE; the service declares ownership.
-    { route: customersPaths.list, kind: "list", entity: "customer", label_key: "crm.customers.nav" },
-    // Module-owned remote surface on the crm-pages chunk — the create
-    // page is a stub pending the form archetype. It dispatches on
-    // ctx.nav.route inside the chunk.
-    {
-      route: customersPaths.create,
-      kind: "create",
-      entity: "customer",
-      label_key: "crm.customers.nav.create",
-      component_url: "/svc/crm/api/v1/module-assets/crm-pages.js",
-      component_format: "esm-mount",
-    },
-  ],
+  // NO authored routes — derivation is total (user-ratified 2026-11-27):
+  // list + create routes are derived standard surfaces like every other
+  // entity. This file carries ONLY the cosmetic leaf overrides the
+  // derivation can never guess (icon, module default, pinned order).
 };
