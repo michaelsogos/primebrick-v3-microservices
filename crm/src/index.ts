@@ -7,8 +7,8 @@
  * and it will eventually be split out into a standalone product.
  *
  * What it does today: declares the crm module (nav + route census) so the
- * module switcher and route ownership resolve `/crm/customers` and
- * `/system/crm/pipeline` to `crm` instead of being borrowed from another module's static
+ * module switcher and route ownership resolve `/crm/customers`
+ * to `crm` instead of being borrowed from another module's static
  * registry — AND owns the `customer` domain entity end-to-end (entity class,
  * `crm.customers` table, `/api/v1/entities/customer/*` routes, meta, export
  * pipeline, `crm.entities.customer.*` translations).
@@ -54,11 +54,8 @@ async function main(): Promise<void> {
     labelKey: "crm.module.name",
 
     // Module self-declaration — persisted in service_registry.endpoints.nav.
-    // The crm module OWNS /crm plus an EXTRA root membership under
-    // `system`: the pipeline page lives at /system/crm/pipeline — a crm
-    // page inside the System app ("a foot in two shoes"). The code stays
-    // the URL's second segment in every prefix, so longest-prefix
-    // ownership keeps resolving module=breadcrumb.
+    // The crm module IS its own root: every surface lives under /crm —
+    // the documented single-namespace contract (partOf === code).
     nav: CRM_NAV,
 
     // Emitted-event vocabulary — persisted in endpoints.events and served

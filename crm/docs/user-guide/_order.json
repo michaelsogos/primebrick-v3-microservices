@@ -3,7 +3,6 @@
     "generated/customers",
     "generated/customer_types",
     "generated/customers-create",
-    "generated/pipeline",
     "generated/customer_link_types",
     "generated/sequences",
     "generated/account_kinds",

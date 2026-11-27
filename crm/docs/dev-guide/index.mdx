@@ -15,8 +15,8 @@ into a standalone product.
 
 - Declares the `crm` **root level** (`partOf: "crm"` — the CRM module IS its
   own root level, unlike the `system` services).
-- Owns the `/crm` route prefix: `/crm/customers`, plus an extra root-level
-  membership under `system` (`/system/crm/pipeline` — "a foot in two shoes").
+- Owns the `/crm` route prefix: `/crm/customers` — every surface lives in
+  the single documented namespace (`partOf === code` collapses to `/crm/**`).
 - Registers `CRM_NAV` (`nav-declaration.ts`) via `service_registry.endpoints.nav`.
 - Translates its own module label (`labelKey: "crm.module.name"`) in the
   `crm.translations` namespace.
@@ -45,8 +45,8 @@ into a standalone product.
 ## Remote pages
 
 `fe/` is a vite+svelte remote-chunk build (`fe:build` → `dist/crm-pages.js`):
-`/crm/customers/create` and `/system/crm/pipeline` are module-owned remote
-pages (`component_format: "esm-mount"`), mounted by the FE catch-all through
+`/crm/customers/create` is a module-owned remote
+page (`component_format: "esm-mount"`), mounted by the FE catch-all through
 `RemotePageMount`. The list page stays host-rendered (`kind: "list"`).
 `bindRemoteCtx(ctx, { service: 'crm' })` wires service-scoped i18n/API.
 

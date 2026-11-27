@@ -35,30 +35,23 @@ const customersPaths = entityPaths("/crm", "customers");
  * for an entity here suppresses its derivation — the author owns it.
  */
 export const CRM_NAV: ModuleNavDeclaration = {
-  route_prefixes: ["/crm", "/system/crm"],
+  route_prefixes: ["/crm"],
   access: "access.crm",
   nav: [
     { id: "customers", label_key: "crm.customers.nav", href: customersPaths.list, icon: "users-round", default: true },
-    { id: "pipeline", label_key: "crm.pipeline.nav", href: "/system/crm/pipeline", icon: "git-branch" },
   ],
   routes: [
     // Host-rendered EntityTablePage list — the standard archetype,
     // delivered statically by the FE; the service declares ownership.
     { route: customersPaths.list, kind: "list", entity: "customer", label_key: "crm.customers.nav" },
-    // Module-owned remote surfaces on the crm-pages chunk — the create
-    // page is a stub pending the form archetype; pipeline is the static
-    // preview. Both dispatch on ctx.nav.route inside the chunk.
+    // Module-owned remote surface on the crm-pages chunk — the create
+    // page is a stub pending the form archetype. It dispatches on
+    // ctx.nav.route inside the chunk.
     {
       route: customersPaths.create,
       kind: "create",
       entity: "customer",
       label_key: "app.common.new",
-      component_url: "/svc/crm/api/v1/module-assets/crm-pages.js",
-      component_format: "esm-mount",
-    },
-    {
-      route: "/system/crm/pipeline",
-      kind: "page",
       component_url: "/svc/crm/api/v1/module-assets/crm-pages.js",
       component_format: "esm-mount",
     },

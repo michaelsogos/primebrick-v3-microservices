@@ -1,9 +1,8 @@
 /**
  * crm-pages chunk — `esm-mount` entry for the crm module's remote pages.
  *
- * Declared in `endpoints.nav.routes[]` (`/crm/customers/new` kind:"create",
- * `/system/crm/pipeline` kind:"page" — see src/nav-declaration.ts),
- * resolved by the FE shells from the routes census and mounted via
+ * Declared in `endpoints.nav.routes[]` (`/crm/customers/create` kind:"create"
+ * — see src/nav-declaration.ts), resolved by the FE shells from the routes census and mounted via
  * RemotePageMount → mountPage(el, ctx). Dispatch rides `ctx.nav.route`
  * (ai precedent — the PAGES map is the typed dispatcher).
  *
@@ -14,12 +13,10 @@
  */
 import { bindRemoteCtx, mountModuleContent, type ModulePageHost } from '@primebrick/ui';
 import CustomerCreatePage from './CustomerCreatePage.svelte';
-import PipelinePage from './PipelinePage.svelte';
 import type { Component } from 'svelte';
 
 const PAGES: Record<string, Component<{ ctx: ModulePageHost }>> = {
   '/crm/customers/create': CustomerCreatePage,
-  '/system/crm/pipeline': PipelinePage,
 };
 
 export function mountPage(el: HTMLElement, ctx: ModulePageHost) {
