@@ -20,9 +20,9 @@
  */
 import { entityPaths, type ModuleNavDeclaration, type FormPageDecl } from "@primebrick/sdk";
 
-const schedulesPaths = entityPaths("/system/job", "job-schedules");
-const triggersPaths = entityPaths("/system/job", "triggers");
-const runsPaths = entityPaths("/system/job", "runs");
+const schedulesPaths = entityPaths("/system/job", "job_schedules");
+const triggersPaths = entityPaths("/system/job", "job_triggers");
+const runsPaths = entityPaths("/system/job", "job_runs");
 
 /**
  * The job_trigger form placement — shared verbatim by `create` and `detail`
@@ -59,9 +59,9 @@ export const JOB_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/system/job"],
   access: "access.system.job",
   nav: [
-    { id: "triggers", label_key: "job.jobs.nav_triggers", href: triggersPaths.list, icon: "list-checks", default: true },
-    { id: "schedules", label_key: "job.jobs.nav", href: schedulesPaths.list, icon: "list-clock" },
-    { id: "runs", label_key: "job.jobs.nav_runs", href: runsPaths.list, icon: "play" },
+    { id: "triggers", label_key: "job.jobs.nav_triggers", href: triggersPaths.list, icon: "list-checks", default: true, order: 1 },
+    { id: "schedules", label_key: "job.jobs.nav", href: schedulesPaths.list, icon: "list-clock", order: 2 },
+    { id: "runs", label_key: "job.jobs.nav_runs", href: runsPaths.list, icon: "play", order: 3 },
   ],
   routes: [
     // Host-rendered EntityTablePage lists — the standard archetype,

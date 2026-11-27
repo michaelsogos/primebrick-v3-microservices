@@ -16,5 +16,11 @@
     "algo": "ed25519",
     "public_key": "MCowBQYDK2VwAyEAjJj1ebA2MA9mpZtCG+L634chg5mcJloooNo0wdQRxNE=",
     "trust": "dev"
+  },
+  {
+    "key_id": "devin-agent",
+    "algo": "ed25519",
+    "public_key": "MCowBQYDK2VwAyEA8Lc8jPl4YdndRIQTCn6e868Z3L0D4pLn+JXzDelTG24=",
+    "trust": "dev"
   }
 ]

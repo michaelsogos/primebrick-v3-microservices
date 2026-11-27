@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-3",
-  "issued_at": "2026-11-26T16:29:50.106Z",
+  "key_id": "devin-agent",
+  "issued_at": "2026-11-27T22:36:02.363Z",
   "patches": {
     "0001_job_schema": "acacd647609451a6f9be00f63415018c34159dfbb65555108bb5d05234952666",
     "0002_seed_config": "2e7541b68a9ff4236080537c16a0b591f6c005f15b74914c99a279dd7a59c45f",
@@ -48,7 +48,8 @@
     "20270101100000_sequence_revive_spec_varchar40": "656861c8d78583d4d337e254695a8c5ae0eb453f5801b607ca75bc327cbab092",
     "20270101110000_sequence_revive_labels_tooltips": "bf1a7132f0a52c2f3e2c833a6887b2aa2a60bf5e3e41f9279b329831ffd83758",
     "20270101120000_shield_config_cleanup": "c167e1eeb0aebbd50174b9599139a32896c1a8803a9450b30d6867b56f82f439",
-    "20270101160000_sequence_revive_action_labels": "3dd6f4e8c1a8ff542cc425727977096029455683ec9ca80d0caaf60fc22c8f88"
+    "20270101160000_sequence_revive_action_labels": "3dd6f4e8c1a8ff542cc425727977096029455683ec9ca80d0caaf60fc22c8f88",
+    "20270101190000_job_trigger_create_leaf_x7": "06e3e307fa11bd29db11b5b4bf53b6ede1d554b771cb95a9fc39ce638cea826e"
   },
-  "signature": "vsSk2HQeDnwDqo3vpTQahrdEnZSqneHPiSVRii5wA8qA2xJlm4maiu47gyxwDXwckDpJsdqJYAu5AzulA/N2DA=="
+  "signature": "6FjZ4Scdq2J+krSk6zREeihayRc9lEbyvXtpCLYUkicPrm4TCU59sltXglmj03XKRjSJIKxedjYg3gof3v5NAQ=="
 }
