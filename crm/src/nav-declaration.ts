@@ -38,7 +38,7 @@ export const CRM_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/crm"],
   access: "access.crm",
   nav: [
-    { id: "customers", label_key: "crm.customers.nav", href: customersPaths.list, icon: "users-round", default: true },
+    { id: "customers", label_key: "crm.customers.nav", href: customersPaths.list, icon: "users-round", default: true, order: 1 },
   ],
   routes: [
     // Host-rendered EntityTablePage list — the standard archetype,
