@@ -1,7 +1,7 @@
 {
   "version": 1,
   "key_id": "devin-agent",
-  "issued_at": "2026-11-27T19:25:02.471Z",
+  "issued_at": "2026-11-27T20:00:22.683Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -48,7 +48,8 @@
     "20270101100000_sequence_revive_spec_varchar40": "c21c15e23ca7240b1d7fcd36bf41199aa7846647f76dc7e4bb87841ce4a3ca87",
     "20270101110000_sequence_revive_labels_tooltips": "89f94929d04e624d97241d5113f75a45713557d894b612bee24e9dafcc55557c",
     "20270101120000_shield_config_cleanup": "f3c62870937a1afff03cb4e7ad483f1dca08deddf3deb3725f11aeb9ce531528",
-    "20270101160000_sequence_revive_action_labels": "8fb6b7ad0be3f2966ad0fdbddccbf58cfbfcb137b87bb3790e2a37f619e31805"
+    "20270101160000_sequence_revive_action_labels": "8fb6b7ad0be3f2966ad0fdbddccbf58cfbfcb137b87bb3790e2a37f619e31805",
+    "20270101170000_i18n_parity_x7": "28b1f9694293a0644bc5666f4b2b9f76d75c82089dfea8b962bc7c3219c758b3"
   },
-  "signature": "WWzJQAop02WOVDZCuLpyKG54CqUSKdXxQOPiC64I+EGR/FFYtXhiR2qNtCEUfv4Guwgis2e4DgvkpSS959xxBA=="
+  "signature": "uzr/zvcnQSsu18hHA87/BDZDCvZcmOHa4HnDDrPBp6Eq/8e0EMX/3GK5DPU3bhX1h25POPXk0EUsLFQILmwSAw=="
 }
