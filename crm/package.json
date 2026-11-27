@@ -11,7 +11,7 @@
     "node": "24"
   },
   "scripts": {
-    "predev": "pnpm check:standards && pnpm check:vendor-drift && pnpm check:types",
+    "predev": "pnpm check:standards && pnpm check:vendor-drift && pnpm check:types && node ../scripts/check-i18n-docs.mjs",
     "version:auto": "node ../scripts/version-sync.mjs",
     "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm check:vendor-drift && pnpm db:check && pnpm generate:docs && pnpm fe:build",
     "dev": "node ../scripts/dev-hot.mjs",
