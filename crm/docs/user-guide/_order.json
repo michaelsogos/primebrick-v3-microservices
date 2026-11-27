@@ -7,27 +7,19 @@
     "generated/customer_link_types",
     "generated/sequences",
     "generated/account_kinds",
-    "generated/account_kinds-create",
     "generated/company_dimensions",
-    "generated/company_dimensions-create",
     "generated/consent_types",
-    "generated/consent_types-create",
     "generated/contact_types",
-    "generated/contact_types-create",
     "generated/customer_accounts",
     "generated/customer_accounts-create",
     "generated/customer_consents",
     "generated/customer_contacts",
     "generated/customer_contacts-create",
     "generated/legal_forms",
-    "generated/legal_forms-create",
     "generated/local_address_types",
-    "generated/local_address_types-create",
     "generated/local_addresses",
     "generated/local_addresses-create",
     "generated/marketing_qualifications",
-    "generated/marketing_qualifications-create",
-    "generated/qualifications",
-    "generated/qualifications-create"
+    "generated/qualifications"
   ]
 }

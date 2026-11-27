@@ -1,100 +1,14 @@
 ---
-title: Legal Forms
+title: Legal Forms List
 description: List, search and manage all legal forms.
 entity: legal_form
 ---
 
 List, search and manage all legal forms.
 
-Each row shows the Code, the Country, the ELF code, the Local name, the Abbreviation, the Status.
-
 The page is visible with the `access.crm.legal_forms` grant.
-
-## Pages routes
-
-- `/crm/legal_forms` — List, search and manage all legal forms. *(this page)*
-- `/crm/legal_forms/create` — Create a new legal form.
-
-## What you can do here
-
-### How to create a new legal form
-1. Click **New** in the toolbar.
-2. Fill in the form — required: **15**, **0**, **1**, **2**, **3**, **4**, **5**, **6**, **7**.
-3. Click **Save** — the new legal form is created.
-
-### How to delete a legal form
-1. Open the row actions menu on the legal form and click **Delete**.
-2. Confirm the deletion in the dialog — the legal form is soft-deleted and can be restored.
-
-### How to restore a deleted legal form
-1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
-2. Open the row actions menu on the legal form and click **Restore**.
-3. Confirm in the dialog — the legal form is active again.
-
-### How to view the change history of a legal form
-1. Open the row actions menu on the legal form and click **Audit history**.
-2. The version history of the legal form will appear on the right sheet panel.
-
-## Columns
-
-| Column | Visible | Sortable | Filterable | Notes |
-|--------|---------|----------|------------|-------|
-| **Code** | yes | yes | yes | The row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation. |
-| **Country** | yes | yes | yes |  |
-| **ELF code** | yes | yes | yes |  |
-| **Local name** | yes | yes | yes |  |
-| **Transliterated name** | no | yes | yes |  |
-| **Abbreviation** | yes | yes | yes |  |
-| **Status** | yes | yes | yes |  |
-| **Sort** | no | yes | yes |  |
-| **UUID** | no | yes | yes |  |
-
-- The Code column is shown by default and can be sorted and filtered — the row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation.
-- The Country column is shown by default and can be sorted and filtered.
-- The ELF code column is shown by default and can be sorted and filtered.
-- The Local name column is shown by default and can be sorted and filtered.
-- The Transliterated name column is hidden by default and can be sorted and filtered.
-- The Abbreviation column is shown by default and can be sorted and filtered.
-- The Status column is shown by default and can be sorted and filtered.
-- The Sort column is hidden by default and can be sorted and filtered.
-- The UUID column is hidden by default and can be sorted and filtered.
-
-## Actions
-
-### Row actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **create** | ENABLED | `crm.legal_form.create.single` | Creates a new legal form | no |
-| **update** | DISABLED | `crm.legal_form.update.single` | Opens the legal form for editing | no |
-| **delete** | ENABLED | `crm.legal_form.delete.single` | Marks the legal form as deleted but keeps it so it can be restored | no |
-| **restore** | ENABLED | `crm.legal_form.restore.single` | Brings a soft-deleted legal form back | no |
-| **purge** | DISABLED | — | Removes the legal form forever | no |
-| **audit history** | ENABLED | `crm.legal_form.read.audit` | Shows the change history of the legal form | no |
-
-- Creating a new legal form is available on this page — the create action opens the create form in the same tab and it requires the `crm.legal_form.create.single` permission.
-- Editing a legal form is not available on this page — if enabled, it would require the `crm.legal_form.update.single` permission.
-- Soft-deleting a legal form is available on this page — marks the legal form as deleted but keeps it so it can be restored and it requires the `crm.legal_form.delete.single` permission.
-- Restoring a soft-deleted legal form is available on this page — brings a soft-deleted legal form back and it requires the `crm.legal_form.restore.single` permission.
-- Permanently deleting a legal form is not available on this page — no permission is declared for it on legal forms.
-- Viewing the change history of a legal form is available on this page — every legal form keeps a full version history and it requires the `crm.legal_form.read.audit` permission.
-
-### Bulk actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **delete** | ENABLED | `crm.legal_form.delete.bulk` | Marks the selected legal forms as deleted | no |
-| **restore** | ENABLED | `crm.legal_form.restore.bulk` | Restores the selected legal forms | no |
-| **duplicate** | DISABLED | — | Duplicates the selected legal forms | no |
-| **export** | DISABLED | — | Exports the list | no |
-
-- Soft-deleting the selected legal forms is available on this page — marks the selected legal forms as deleted and it requires the `crm.legal_form.delete.bulk` permission.
-- Restoring the selected legal forms is available on this page — restores the selected legal forms and it requires the `crm.legal_form.restore.bulk` permission.
-- Duplicating the selected legal forms is not available on this page — no permission is declared for it on legal forms.
-- Exporting the list is not available on this page — no permission is declared for it on legal forms.
 
 ## Doc references
 
-- [Legal Forms Create](/docs/user-guide/generated/legal_forms-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

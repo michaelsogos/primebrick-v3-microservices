@@ -1,90 +1,14 @@
 ---
-title: Marketing Qualifications
+title: Marketing Qualifications List
 description: List, search and manage all marketing qualifications.
 entity: marketing_qualification
 ---
 
 List, search and manage all marketing qualifications.
 
-Each row shows the Code, the Label translation, the Sort.
-
 The page is visible with the `access.crm.marketing_qualifications` grant.
-
-## Pages routes
-
-- `/crm/marketing_qualifications` — List, search and manage all marketing qualifications. *(this page)*
-- `/crm/marketing_qualifications/create` — Create a new marketing qualification.
-
-## What you can do here
-
-### How to create a new marketing qualification
-1. Click **New** in the toolbar.
-2. Fill in the form — required: **10**, **0**, **1**, **2**.
-3. Click **Save** — the new marketing qualification is created.
-
-### How to delete a marketing qualification
-1. Open the row actions menu on the marketing qualification and click **Delete**.
-2. Confirm the deletion in the dialog — the marketing qualification is soft-deleted and can be restored.
-
-### How to restore a deleted marketing qualification
-1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
-2. Open the row actions menu on the marketing qualification and click **Restore**.
-3. Confirm in the dialog — the marketing qualification is active again.
-
-### How to view the change history of a marketing qualification
-1. Open the row actions menu on the marketing qualification and click **Audit history**.
-2. The version history of the marketing qualification will appear on the right sheet panel.
-
-## Columns
-
-| Column | Visible | Sortable | Filterable | Notes |
-|--------|---------|----------|------------|-------|
-| **Code** | yes | yes | yes | The row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation. |
-| **Label translation** | yes | yes | yes |  |
-| **Sort** | yes | yes | yes |  |
-| **UUID** | no | yes | yes |  |
-
-- The Code column is shown by default and can be sorted and filtered — the row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation.
-- The Label translation column is shown by default and can be sorted and filtered.
-- The Sort column is shown by default and can be sorted and filtered.
-- The UUID column is hidden by default and can be sorted and filtered.
-
-## Actions
-
-### Row actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **create** | ENABLED | `crm.marketing_qualification.create.single` | Creates a new marketing qualification | no |
-| **update** | DISABLED | `crm.marketing_qualification.update.single` | Opens the marketing qualification for editing | no |
-| **delete** | ENABLED | `crm.marketing_qualification.delete.single` | Marks the marketing qualification as deleted but keeps it so it can be restored | no |
-| **restore** | ENABLED | `crm.marketing_qualification.restore.single` | Brings a soft-deleted marketing qualification back | no |
-| **purge** | DISABLED | — | Removes the marketing qualification forever | no |
-| **audit history** | ENABLED | `crm.marketing_qualification.read.audit` | Shows the change history of the marketing qualification | no |
-
-- Creating a new marketing qualification is available on this page — the create action opens the create form in the same tab and it requires the `crm.marketing_qualification.create.single` permission.
-- Editing a marketing qualification is not available on this page — if enabled, it would require the `crm.marketing_qualification.update.single` permission.
-- Soft-deleting a marketing qualification is available on this page — marks the marketing qualification as deleted but keeps it so it can be restored and it requires the `crm.marketing_qualification.delete.single` permission.
-- Restoring a soft-deleted marketing qualification is available on this page — brings a soft-deleted marketing qualification back and it requires the `crm.marketing_qualification.restore.single` permission.
-- Permanently deleting a marketing qualification is not available on this page — no permission is declared for it on marketing qualifications.
-- Viewing the change history of a marketing qualification is available on this page — every marketing qualification keeps a full version history and it requires the `crm.marketing_qualification.read.audit` permission.
-
-### Bulk actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **delete** | ENABLED | `crm.marketing_qualification.delete.bulk` | Marks the selected marketing qualifications as deleted | no |
-| **restore** | ENABLED | `crm.marketing_qualification.restore.bulk` | Restores the selected marketing qualifications | no |
-| **duplicate** | DISABLED | — | Duplicates the selected marketing qualifications | no |
-| **export** | DISABLED | — | Exports the list | no |
-
-- Soft-deleting the selected marketing qualifications is available on this page — marks the selected marketing qualifications as deleted and it requires the `crm.marketing_qualification.delete.bulk` permission.
-- Restoring the selected marketing qualifications is available on this page — restores the selected marketing qualifications and it requires the `crm.marketing_qualification.restore.bulk` permission.
-- Duplicating the selected marketing qualifications is not available on this page — no permission is declared for it on marketing qualifications.
-- Exporting the list is not available on this page — no permission is declared for it on marketing qualifications.
 
 ## Doc references
 
-- [Marketing Qualifications Create](/docs/user-guide/generated/marketing_qualifications-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

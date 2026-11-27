@@ -1,90 +1,14 @@
 ---
-title: Consent Types
+title: Consent Types List
 description: List, search and manage all consent types.
 entity: consent_type
 ---
 
 List, search and manage all consent types.
 
-Each row shows the Code, the Label translation, the Sort.
-
 The page is visible with the `access.crm.consent_types` grant.
-
-## Pages routes
-
-- `/crm/consent_types` — List, search and manage all consent types. *(this page)*
-- `/crm/consent_types/create` — Create a new consent type.
-
-## What you can do here
-
-### How to create a new consent type
-1. Click **New** in the toolbar.
-2. Fill in the form — required: **10**, **0**, **1**, **2**.
-3. Click **Save** — the new consent type is created.
-
-### How to delete a consent type
-1. Open the row actions menu on the consent type and click **Delete**.
-2. Confirm the deletion in the dialog — the consent type is soft-deleted and can be restored.
-
-### How to restore a deleted consent type
-1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
-2. Open the row actions menu on the consent type and click **Restore**.
-3. Confirm in the dialog — the consent type is active again.
-
-### How to view the change history of a consent type
-1. Open the row actions menu on the consent type and click **Audit history**.
-2. The version history of the consent type will appear on the right sheet panel.
-
-## Columns
-
-| Column | Visible | Sortable | Filterable | Notes |
-|--------|---------|----------|------------|-------|
-| **Code** | yes | yes | yes | The row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation. |
-| **Label translation** | yes | yes | yes |  |
-| **Sort** | yes | yes | yes |  |
-| **UUID** | no | yes | yes |  |
-
-- The Code column is shown by default and can be sorted and filtered — the row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation.
-- The Label translation column is shown by default and can be sorted and filtered.
-- The Sort column is shown by default and can be sorted and filtered.
-- The UUID column is hidden by default and can be sorted and filtered.
-
-## Actions
-
-### Row actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **create** | ENABLED | `crm.consent_type.create.single` | Creates a new consent type | no |
-| **update** | DISABLED | `crm.consent_type.update.single` | Opens the consent type for editing | no |
-| **delete** | ENABLED | `crm.consent_type.delete.single` | Marks the consent type as deleted but keeps it so it can be restored | no |
-| **restore** | ENABLED | `crm.consent_type.restore.single` | Brings a soft-deleted consent type back | no |
-| **purge** | DISABLED | — | Removes the consent type forever | no |
-| **audit history** | ENABLED | `crm.consent_type.read.audit` | Shows the change history of the consent type | no |
-
-- Creating a new consent type is available on this page — the create action opens the create form in the same tab and it requires the `crm.consent_type.create.single` permission.
-- Editing a consent type is not available on this page — if enabled, it would require the `crm.consent_type.update.single` permission.
-- Soft-deleting a consent type is available on this page — marks the consent type as deleted but keeps it so it can be restored and it requires the `crm.consent_type.delete.single` permission.
-- Restoring a soft-deleted consent type is available on this page — brings a soft-deleted consent type back and it requires the `crm.consent_type.restore.single` permission.
-- Permanently deleting a consent type is not available on this page — no permission is declared for it on consent types.
-- Viewing the change history of a consent type is available on this page — every consent type keeps a full version history and it requires the `crm.consent_type.read.audit` permission.
-
-### Bulk actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **delete** | ENABLED | `crm.consent_type.delete.bulk` | Marks the selected consent types as deleted | no |
-| **restore** | ENABLED | `crm.consent_type.restore.bulk` | Restores the selected consent types | no |
-| **duplicate** | DISABLED | — | Duplicates the selected consent types | no |
-| **export** | DISABLED | — | Exports the list | no |
-
-- Soft-deleting the selected consent types is available on this page — marks the selected consent types as deleted and it requires the `crm.consent_type.delete.bulk` permission.
-- Restoring the selected consent types is available on this page — restores the selected consent types and it requires the `crm.consent_type.restore.bulk` permission.
-- Duplicating the selected consent types is not available on this page — no permission is declared for it on consent types.
-- Exporting the list is not available on this page — no permission is declared for it on consent types.
 
 ## Doc references
 
-- [Consent Types Create](/docs/user-guide/generated/consent_types-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

@@ -1,29 +1,13 @@
 import {
   Column,
   Entity,
-  Key,
-  Unique,
-  AuditTrail,
-  EntityBase,
-  Auditable,
-  Deletable,
-  type UUID,
+  DictEntityBase,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
 @Entity("company_dimensions")
-@AuditTrail()
 @Cached(300_000)
-export class CompanyDimensionEntity
-  extends Deletable(Auditable(EntityBase)) {
-  @Key()
-  @Column({ pgType: "uuid" })
-  uuid!: UUID;
-
-  @Unique()
-  @Column({ length: 50, nullable: false })
-  code!: string;
-
+export class CompanyDimensionEntity extends DictEntityBase {
   @Column({ length: 100, nullable: false })
   label_key!: string;
 
@@ -33,7 +17,4 @@ export class CompanyDimensionEntity
   /** Inclusive upper bound; null = unbounded (e.g. "500+"). */
   @Column({ pgType: "int4", nullable: true })
   max_size?: number;
-
-  @Column({ pgType: "int4", nullable: false })
-  sort!: number;
 }

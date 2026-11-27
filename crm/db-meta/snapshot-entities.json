@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-24T19:06:38.218Z",
+  "generatedAt": "2026-11-27T15:43:28.221Z",
   "source": "entities",
   "tables": {
     "crm.config_entries": {
@@ -733,9 +733,20 @@
           "propertyKey": "code",
           "isNullable": false
         },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 10,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sort",
+          "isNullable": false
+        },
         "label_key": {
           "name": "label_key",
-          "ordinalPosition": 10,
+          "ordinalPosition": 11,
           "dataType": "varchar(100)",
           "typname": "varchar(100)",
           "isPrimaryKey": false,
@@ -746,7 +757,7 @@
         },
         "min_size": {
           "name": "min_size",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
@@ -757,7 +768,7 @@
         },
         "max_size": {
           "name": "max_size",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
@@ -765,17 +776,6 @@
           "isPostgresIdentity": false,
           "propertyKey": "max_size",
           "isNullable": true
-        },
-        "sort": {
-          "name": "sort",
-          "ordinalPosition": 13,
-          "dataType": "int4",
-          "typname": "int4",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "sort",
-          "isNullable": false
         }
       },
       "indexes": [
@@ -902,9 +902,20 @@
           "propertyKey": "code",
           "isNullable": false
         },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 10,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sort",
+          "isNullable": false
+        },
         "country": {
           "name": "country",
-          "ordinalPosition": 10,
+          "ordinalPosition": 11,
           "dataType": "varchar(2)",
           "typname": "varchar(2)",
           "isPrimaryKey": false,
@@ -915,7 +926,7 @@
         },
         "elf_code": {
           "name": "elf_code",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "varchar(4)",
           "typname": "varchar(4)",
           "isPrimaryKey": false,
@@ -926,7 +937,7 @@
         },
         "name_local": {
           "name": "name_local",
-          "ordinalPosition": 12,
+          "ordinalPosition": 13,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -937,7 +948,7 @@
         },
         "name_transliterated": {
           "name": "name_transliterated",
-          "ordinalPosition": 13,
+          "ordinalPosition": 14,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -948,7 +959,7 @@
         },
         "abbreviation": {
           "name": "abbreviation",
-          "ordinalPosition": 14,
+          "ordinalPosition": 15,
           "dataType": "text",
           "typname": "text",
           "isPrimaryKey": false,
@@ -959,24 +970,13 @@
         },
         "status": {
           "name": "status",
-          "ordinalPosition": 15,
+          "ordinalPosition": 16,
           "dataType": "varchar(10)",
           "typname": "varchar(10)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "status",
-          "isNullable": false
-        },
-        "sort": {
-          "name": "sort",
-          "ordinalPosition": 16,
-          "dataType": "int4",
-          "typname": "int4",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "sort",
           "isNullable": false
         }
       },
@@ -1122,26 +1122,26 @@
           "propertyKey": "code",
           "isNullable": false
         },
-        "label_key": {
-          "name": "label_key",
-          "ordinalPosition": 10,
-          "dataType": "varchar(100)",
-          "typname": "varchar(100)",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "label_key",
-          "isNullable": false
-        },
         "sort": {
           "name": "sort",
-          "ordinalPosition": 11,
+          "ordinalPosition": 10,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "sort",
+          "isNullable": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
           "isNullable": false
         }
       },
@@ -1269,26 +1269,26 @@
           "propertyKey": "code",
           "isNullable": false
         },
-        "label_key": {
-          "name": "label_key",
-          "ordinalPosition": 10,
-          "dataType": "varchar(100)",
-          "typname": "varchar(100)",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "label_key",
-          "isNullable": false
-        },
         "sort": {
           "name": "sort",
-          "ordinalPosition": 11,
+          "ordinalPosition": 10,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "sort",
+          "isNullable": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
           "isNullable": false
         }
       },
@@ -1416,26 +1416,26 @@
           "propertyKey": "code",
           "isNullable": false
         },
-        "label_key": {
-          "name": "label_key",
-          "ordinalPosition": 10,
-          "dataType": "varchar(100)",
-          "typname": "varchar(100)",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "label_key",
-          "isNullable": false
-        },
         "sort": {
           "name": "sort",
-          "ordinalPosition": 11,
+          "ordinalPosition": 10,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "sort",
+          "isNullable": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
           "isNullable": false
         }
       },
@@ -1563,9 +1563,20 @@
           "propertyKey": "code",
           "isNullable": false
         },
+        "sort": {
+          "name": "sort",
+          "ordinalPosition": 10,
+          "dataType": "int4",
+          "typname": "int4",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "sort",
+          "isNullable": false
+        },
         "label_key": {
           "name": "label_key",
-          "ordinalPosition": 10,
+          "ordinalPosition": 11,
           "dataType": "varchar(100)",
           "typname": "varchar(100)",
           "isPrimaryKey": false,
@@ -1576,24 +1587,13 @@
         },
         "value_kind": {
           "name": "value_kind",
-          "ordinalPosition": 11,
+          "ordinalPosition": 12,
           "dataType": "varchar(20)",
           "typname": "varchar(20)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "value_kind",
-          "isNullable": false
-        },
-        "sort": {
-          "name": "sort",
-          "ordinalPosition": 12,
-          "dataType": "int4",
-          "typname": "int4",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "sort",
           "isNullable": false
         }
       },
@@ -1721,26 +1721,26 @@
           "propertyKey": "code",
           "isNullable": false
         },
-        "label_key": {
-          "name": "label_key",
-          "ordinalPosition": 10,
-          "dataType": "varchar(100)",
-          "typname": "varchar(100)",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "label_key",
-          "isNullable": false
-        },
         "sort": {
           "name": "sort",
-          "ordinalPosition": 11,
+          "ordinalPosition": 10,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "sort",
+          "isNullable": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
           "isNullable": false
         }
       },
@@ -2026,26 +2026,26 @@
           "propertyKey": "code",
           "isNullable": false
         },
-        "label_key": {
-          "name": "label_key",
-          "ordinalPosition": 10,
-          "dataType": "varchar(100)",
-          "typname": "varchar(100)",
-          "isPrimaryKey": false,
-          "isUnique": false,
-          "isPostgresIdentity": false,
-          "propertyKey": "label_key",
-          "isNullable": false
-        },
         "sort": {
           "name": "sort",
-          "ordinalPosition": 11,
+          "ordinalPosition": 10,
           "dataType": "int4",
           "typname": "int4",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
           "propertyKey": "sort",
+          "isNullable": false
+        },
+        "label_key": {
+          "name": "label_key",
+          "ordinalPosition": 11,
+          "dataType": "varchar(100)",
+          "typname": "varchar(100)",
+          "isPrimaryKey": false,
+          "isUnique": false,
+          "isPostgresIdentity": false,
+          "propertyKey": "label_key",
           "isNullable": false
         }
       },
@@ -3304,8 +3304,8 @@
         "revive_every": {
           "name": "revive_every",
           "ordinalPosition": 19,
-          "dataType": "varchar(30)",
-          "typname": "varchar(30)",
+          "dataType": "varchar(40)",
+          "typname": "varchar(40)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,
@@ -3315,8 +3315,8 @@
         "revive_grace": {
           "name": "revive_grace",
           "ordinalPosition": 20,
-          "dataType": "varchar(30)",
-          "typname": "varchar(30)",
+          "dataType": "varchar(40)",
+          "typname": "varchar(40)",
           "isPrimaryKey": false,
           "isUnique": false,
           "isPostgresIdentity": false,

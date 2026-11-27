@@ -1,94 +1,14 @@
 ---
-title: Company Dimensions
+title: Company Dimensions List
 description: List, search and manage all company dimensions.
 entity: company_dimension
 ---
 
 List, search and manage all company dimensions.
 
-Each row shows the Code, the Label translation, the Min size, the Max size, the Sort.
-
 The page is visible with the `access.crm.company_dimensions` grant.
-
-## Pages routes
-
-- `/crm/company_dimensions` — List, search and manage all company dimensions. *(this page)*
-- `/crm/company_dimensions/create` — Create a new company dimension.
-
-## What you can do here
-
-### How to create a new company dimension
-1. Click **New** in the toolbar.
-2. Fill in the form — required: **12**, **0**, **1**, **2**, **3**, **4**.
-3. Click **Save** — the new company dimension is created.
-
-### How to delete a company dimension
-1. Open the row actions menu on the company dimension and click **Delete**.
-2. Confirm the deletion in the dialog — the company dimension is soft-deleted and can be restored.
-
-### How to restore a deleted company dimension
-1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
-2. Open the row actions menu on the company dimension and click **Restore**.
-3. Confirm in the dialog — the company dimension is active again.
-
-### How to view the change history of a company dimension
-1. Open the row actions menu on the company dimension and click **Audit history**.
-2. The version history of the company dimension will appear on the right sheet panel.
-
-## Columns
-
-| Column | Visible | Sortable | Filterable | Notes |
-|--------|---------|----------|------------|-------|
-| **Code** | yes | yes | yes | The row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation. |
-| **Label translation** | yes | yes | yes |  |
-| **Min size** | yes | yes | yes |  |
-| **Max size** | yes | yes | yes |  |
-| **Sort** | yes | yes | yes |  |
-| **UUID** | no | yes | yes |  |
-
-- The Code column is shown by default and can be sorted and filtered — the row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation.
-- The Label translation column is shown by default and can be sorted and filtered.
-- The Min size column is shown by default and can be sorted and filtered.
-- The Max size column is shown by default and can be sorted and filtered.
-- The Sort column is shown by default and can be sorted and filtered.
-- The UUID column is hidden by default and can be sorted and filtered.
-
-## Actions
-
-### Row actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **create** | ENABLED | `crm.company_dimension.create.single` | Creates a new company dimension | no |
-| **update** | DISABLED | `crm.company_dimension.update.single` | Opens the company dimension for editing | no |
-| **delete** | ENABLED | `crm.company_dimension.delete.single` | Marks the company dimension as deleted but keeps it so it can be restored | no |
-| **restore** | ENABLED | `crm.company_dimension.restore.single` | Brings a soft-deleted company dimension back | no |
-| **purge** | DISABLED | — | Removes the company dimension forever | no |
-| **audit history** | ENABLED | `crm.company_dimension.read.audit` | Shows the change history of the company dimension | no |
-
-- Creating a new company dimension is available on this page — the create action opens the create form in the same tab and it requires the `crm.company_dimension.create.single` permission.
-- Editing a company dimension is not available on this page — if enabled, it would require the `crm.company_dimension.update.single` permission.
-- Soft-deleting a company dimension is available on this page — marks the company dimension as deleted but keeps it so it can be restored and it requires the `crm.company_dimension.delete.single` permission.
-- Restoring a soft-deleted company dimension is available on this page — brings a soft-deleted company dimension back and it requires the `crm.company_dimension.restore.single` permission.
-- Permanently deleting a company dimension is not available on this page — no permission is declared for it on company dimensions.
-- Viewing the change history of a company dimension is available on this page — every company dimension keeps a full version history and it requires the `crm.company_dimension.read.audit` permission.
-
-### Bulk actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **delete** | ENABLED | `crm.company_dimension.delete.bulk` | Marks the selected company dimensions as deleted | no |
-| **restore** | ENABLED | `crm.company_dimension.restore.bulk` | Restores the selected company dimensions | no |
-| **duplicate** | DISABLED | — | Duplicates the selected company dimensions | no |
-| **export** | DISABLED | — | Exports the list | no |
-
-- Soft-deleting the selected company dimensions is available on this page — marks the selected company dimensions as deleted and it requires the `crm.company_dimension.delete.bulk` permission.
-- Restoring the selected company dimensions is available on this page — restores the selected company dimensions and it requires the `crm.company_dimension.restore.bulk` permission.
-- Duplicating the selected company dimensions is not available on this page — no permission is declared for it on company dimensions.
-- Exporting the list is not available on this page — no permission is declared for it on company dimensions.
 
 ## Doc references
 
-- [Company Dimensions Create](/docs/user-guide/generated/company_dimensions-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

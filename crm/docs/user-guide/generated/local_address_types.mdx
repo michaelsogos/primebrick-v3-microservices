@@ -1,90 +1,14 @@
 ---
-title: Address Types
+title: Address Types List
 description: List, search and manage all address types.
 entity: local_address_type
 ---
 
 List, search and manage all address types.
 
-Each row shows the Code, the Label translation, the Sort.
-
 The page is visible with the `access.crm.local_address_types` grant.
-
-## Pages routes
-
-- `/crm/local_address_types` — List, search and manage all address types. *(this page)*
-- `/crm/local_address_types/create` — Create a new local address type.
-
-## What you can do here
-
-### How to create a new address type
-1. Click **New** in the toolbar.
-2. Fill in the form — required: **10**, **0**, **1**, **2**.
-3. Click **Save** — the new address type is created.
-
-### How to delete an address type
-1. Open the row actions menu on the address type and click **Delete**.
-2. Confirm the deletion in the dialog — the address type is soft-deleted and can be restored.
-
-### How to restore a deleted address type
-1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
-2. Open the row actions menu on the address type and click **Restore**.
-3. Confirm in the dialog — the address type is active again.
-
-### How to view the change history of an address type
-1. Open the row actions menu on the address type and click **Audit history**.
-2. The version history of the address type will appear on the right sheet panel.
-
-## Columns
-
-| Column | Visible | Sortable | Filterable | Notes |
-|--------|---------|----------|------------|-------|
-| **Code** | yes | yes | yes | The row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation. |
-| **Label translation** | yes | yes | yes |  |
-| **Sort** | yes | yes | yes |  |
-| **UUID** | no | yes | yes |  |
-
-- The Code column is shown by default and can be sorted and filtered — the row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation.
-- The Label translation column is shown by default and can be sorted and filtered.
-- The Sort column is shown by default and can be sorted and filtered.
-- The UUID column is hidden by default and can be sorted and filtered.
-
-## Actions
-
-### Row actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **create** | ENABLED | `crm.local_address_type.create.single` | Creates a new address type | no |
-| **update** | DISABLED | `crm.local_address_type.update.single` | Opens the address type for editing | no |
-| **delete** | ENABLED | `crm.local_address_type.delete.single` | Marks the address type as deleted but keeps it so it can be restored | no |
-| **restore** | ENABLED | `crm.local_address_type.restore.single` | Brings a soft-deleted address type back | no |
-| **purge** | DISABLED | — | Removes the address type forever | no |
-| **audit history** | ENABLED | `crm.local_address_type.read.audit` | Shows the change history of the address type | no |
-
-- Creating a new address type is available on this page — the create action opens the create form in the same tab and it requires the `crm.local_address_type.create.single` permission.
-- Editing an address type is not available on this page — if enabled, it would require the `crm.local_address_type.update.single` permission.
-- Soft-deleting an address type is available on this page — marks the address type as deleted but keeps it so it can be restored and it requires the `crm.local_address_type.delete.single` permission.
-- Restoring a soft-deleted address type is available on this page — brings a soft-deleted address type back and it requires the `crm.local_address_type.restore.single` permission.
-- Permanently deleting an address type is not available on this page — no permission is declared for it on address types.
-- Viewing the change history of an address type is available on this page — every address type keeps a full version history and it requires the `crm.local_address_type.read.audit` permission.
-
-### Bulk actions
-
-| Action | Status | Permission | What it does | Require Step-Up Auth |
-|--------|--------|------------|--------------|----------------------|
-| **delete** | ENABLED | `crm.local_address_type.delete.bulk` | Marks the selected address types as deleted | no |
-| **restore** | ENABLED | `crm.local_address_type.restore.bulk` | Restores the selected address types | no |
-| **duplicate** | DISABLED | — | Duplicates the selected address types | no |
-| **export** | DISABLED | — | Exports the list | no |
-
-- Soft-deleting the selected address types is available on this page — marks the selected address types as deleted and it requires the `crm.local_address_type.delete.bulk` permission.
-- Restoring the selected address types is available on this page — restores the selected address types and it requires the `crm.local_address_type.restore.bulk` permission.
-- Duplicating the selected address types is not available on this page — no permission is declared for it on address types.
-- Exporting the list is not available on this page — no permission is declared for it on address types.
 
 ## Doc references
 
-- [Local Address Types Create](/docs/user-guide/generated/local_address_types-create)
 - [Entities Crud](/docs/dev-guide/entities-crud)
 

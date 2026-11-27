@@ -1,15 +1,10 @@
 import {
   Column,
   Entity,
-  Key,
   Unique,
   UniqueIndex,
   Index,
-  AuditTrail,
-  EntityBase,
-  Auditable,
-  Deletable,
-  type UUID,
+  DictEntityBase,
 } from "@primebrick/dal-pg";
 import { Cached } from "@primebrick/sdk";
 
@@ -17,19 +12,9 @@ import { Cached } from "@primebrick/sdk";
  *  `code` = `<country>_<elf_code>` (e.g. `it_srl`); no label_key: legal-form
  *  names are authority data, not translated. */
 @Entity("legal_forms")
-@AuditTrail()
 @UniqueIndex({ name: "legal_forms_country_elf_uidx" })
 @Cached(300_000)
-export class LegalFormEntity
-  extends Deletable(Auditable(EntityBase)) {
-  @Key()
-  @Column({ pgType: "uuid" })
-  uuid!: UUID;
-
-  @Unique()
-  @Column({ length: 50, nullable: false })
-  code!: string;
-
+export class LegalFormEntity extends DictEntityBase {
   /** ISO 3166-1 alpha-2 jurisdiction — pivot of the country→legal_form cascade. */
   @Unique("legal_forms_country_elf_uidx", 0)
   @Index({ where: "deleted_at IS NULL" })
@@ -56,6 +41,4 @@ export class LegalFormEntity
   @Column({ length: 10, nullable: false })
   status!: string;
 
-  @Column({ pgType: "int4", nullable: false })
-  sort!: number;
 }
