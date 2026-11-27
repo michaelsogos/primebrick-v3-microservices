@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "key_id": "dev-micha-3",
-  "issued_at": "2026-11-26T16:29:48.916Z",
+  "key_id": "devin-agent",
+  "issued_at": "2026-11-27T19:25:02.471Z",
   "patches": {
     "0001_crm_schema": "0bb8274fe1964b41393c3025b91f8a2add1f9f19b30570388b6ad14977bd955e",
     "0002_seed_config": "d6b8c2fccb80d686e38648920428be561a1d96fd57d8651c6996bf7eddcd4994",
@@ -26,6 +26,7 @@
     "20261124170003_noop": "69ac01f05d13132d7563e4615bd60e7961e369972d1077a0e8ee1a4464b79115",
     "20261124180400_rename_translations_canonical": "cd56f2f1ad280869f19f45d282fcde5ed7dc3c18bee1a3e1319e0ab00a190f94",
     "20261124190638_defaults_crm_config_entries_crm_customers_crm_customer_types_crm_company": "81409e15784cf0af0396d58c66ebd1a0629099cbd6dd87806924d50ce6c292c0",
+    "20261127200000_nav_create_labels": "22b9d72fe25d1c46553f71fdc8468e4f71a06cfebe7e86e82495b2e77f85f2f1",
     "20261208000000_i18n_segregation_config_keys": "bc597c2cfa58a9f6776822facb55616e7bec8b6faa814a2a1a822195d6746732",
     "20261221130000_events_fields_labels_i18n": "eae7dccd4d86a3f924e3cd6cb575e59c238c61facf42fab3b94df3b42d4b49f9",
     "20261225150000_i18n_customer_link_type_rename_it": "0182e70585608b2fc72bfc822827e8bb8cccdaee8d35300d8286f9c228a8a62a",
@@ -49,5 +50,5 @@
     "20270101120000_shield_config_cleanup": "f3c62870937a1afff03cb4e7ad483f1dca08deddf3deb3725f11aeb9ce531528",
     "20270101160000_sequence_revive_action_labels": "8fb6b7ad0be3f2966ad0fdbddccbf58cfbfcb137b87bb3790e2a37f619e31805"
   },
-  "signature": "8U4b2CFkNxDPpZFwtLRNTl3nHtBhYVNIpD9vas0DSpqYeSvwraDUrLZTidq8T02B5U1oDzoeUarrimibqv/MDw=="
+  "signature": "WWzJQAop02WOVDZCuLpyKG54CqUSKdXxQOPiC64I+EGR/FFYtXhiR2qNtCEUfv4Guwgis2e4DgvkpSS959xxBA=="
 }
