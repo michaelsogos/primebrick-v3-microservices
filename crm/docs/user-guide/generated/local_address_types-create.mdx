@@ -1,0 +1,51 @@
+---
+title: Create Address Type
+description: Create a new address type.
+entity: local_address_type
+---
+
+Create a new address type.
+
+The page is visible with the `access.crm.create` grant.
+
+## Pages routes
+
+- `/crm/local_address_types` — List, search and manage all address types.
+- `/crm/local_address_types/create` — Create a new local address type. *(this page)*
+
+## What you can do here
+
+### How to create a new address type
+1. On the **Local Address Types** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **10**, **0**, **1**, **2**.
+3. Click **Save** — the new address type is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **10** | required | — |
+| **0** | required | — |
+| **1** | required | — |
+| **2** | required | — |
+
+- The **10** field is a required field.
+- The **0** field is a required field.
+- The **1** field is a required field.
+- The **2** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `crm.local_address_type.create.single` | Validates the form and creates the address type | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the address type and it requires the `crm.local_address_type.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Local Address Types](/docs/user-guide/generated/local_address_types)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

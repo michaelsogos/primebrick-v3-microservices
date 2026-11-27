@@ -1,0 +1,90 @@
+---
+title: Account Types
+description: List, search and manage all account types.
+entity: account_kind
+---
+
+List, search and manage all account types.
+
+Each row shows the Code, the Label translation, the Sort.
+
+The page is visible with the `access.crm.account_kinds` grant.
+
+## Pages routes
+
+- `/crm/account_kinds` — List, search and manage all account types. *(this page)*
+- `/crm/account_kinds/create` — Create a new account kind.
+
+## What you can do here
+
+### How to create a new account type
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **10**, **0**, **1**, **2**.
+3. Click **Save** — the new account type is created.
+
+### How to delete an account type
+1. Open the row actions menu on the account type and click **Delete**.
+2. Confirm the deletion in the dialog — the account type is soft-deleted and can be restored.
+
+### How to restore a deleted account type
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the account type and click **Restore**.
+3. Confirm in the dialog — the account type is active again.
+
+### How to view the change history of an account type
+1. Open the row actions menu on the account type and click **Audit history**.
+2. The version history of the account type will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Code** | yes | yes | yes | The row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation. |
+| **Label translation** | yes | yes | yes |  |
+| **Sort** | yes | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Code column is shown by default and can be sorted and filtered — the row's permanent identifier — lowercase letters, digits and underscores. It cannot be changed after creation.
+- The Label translation column is shown by default and can be sorted and filtered.
+- The Sort column is shown by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `crm.account_kind.create.single` | Creates a new account type | no |
+| **update** | DISABLED | `crm.account_kind.update.single` | Opens the account type for editing | no |
+| **delete** | ENABLED | `crm.account_kind.delete.single` | Marks the account type as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `crm.account_kind.restore.single` | Brings a soft-deleted account type back | no |
+| **purge** | DISABLED | — | Removes the account type forever | no |
+| **audit history** | ENABLED | `crm.account_kind.read.audit` | Shows the change history of the account type | no |
+
+- Creating a new account type is available on this page — the create action opens the create form in the same tab and it requires the `crm.account_kind.create.single` permission.
+- Editing an account type is not available on this page — if enabled, it would require the `crm.account_kind.update.single` permission.
+- Soft-deleting an account type is available on this page — marks the account type as deleted but keeps it so it can be restored and it requires the `crm.account_kind.delete.single` permission.
+- Restoring a soft-deleted account type is available on this page — brings a soft-deleted account type back and it requires the `crm.account_kind.restore.single` permission.
+- Permanently deleting an account type is not available on this page — no permission is declared for it on account types.
+- Viewing the change history of an account type is available on this page — every account type keeps a full version history and it requires the `crm.account_kind.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `crm.account_kind.delete.bulk` | Marks the selected account types as deleted | no |
+| **restore** | ENABLED | `crm.account_kind.restore.bulk` | Restores the selected account types | no |
+| **duplicate** | DISABLED | — | Duplicates the selected account types | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected account types is available on this page — marks the selected account types as deleted and it requires the `crm.account_kind.delete.bulk` permission.
+- Restoring the selected account types is available on this page — restores the selected account types and it requires the `crm.account_kind.restore.bulk` permission.
+- Duplicating the selected account types is not available on this page — no permission is declared for it on account types.
+- Exporting the list is not available on this page — no permission is declared for it on account types.
+
+## Doc references
+
+- [Account Kinds Create](/docs/user-guide/generated/account_kinds-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

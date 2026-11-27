@@ -1,0 +1,67 @@
+---
+title: Create Address
+description: Create a new address.
+entity: local_address
+---
+
+Create a new address.
+
+The page is visible with the `access.crm.create` grant.
+
+## Pages routes
+
+- `/crm/local_addresses` — List, search and manage all addresses.
+- `/crm/local_addresses/create` — Create a new local addres. *(this page)*
+
+## What you can do here
+
+### How to create a new address
+1. On the **Local Addresses** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **21**, **0**, **1**, **2**, **3**, **4**, **5**, **6**, **7**, **8**, **9**, **10**.
+3. Click **Save** — the new address is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **21** | required | — |
+| **0** | required | — |
+| **1** | required | — |
+| **2** | required | — |
+| **3** | required | — |
+| **4** | required | — |
+| **5** | required | — |
+| **6** | required | — |
+| **7** | required | — |
+| **8** | required | — |
+| **9** | required | — |
+| **10** | required | — |
+
+- The **21** field is a required field.
+- The **0** field is a required field.
+- The **1** field is a required field.
+- The **2** field is a required field.
+- The **3** field is a required field.
+- The **4** field is a required field.
+- The **5** field is a required field.
+- The **6** field is a required field.
+- The **7** field is a required field.
+- The **8** field is a required field.
+- The **9** field is a required field.
+- The **10** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `crm.local_address.create.single` | Validates the form and creates the address | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the address and it requires the `crm.local_address.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Local Addresses](/docs/user-guide/generated/local_addresses)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

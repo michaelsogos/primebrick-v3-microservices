@@ -6,7 +6,7 @@ entity: sequence
 
 List, search and manage all sequences.
 
-Each row shows the Name, the Sezionale, the Sezionale 2, the Sezionale 3, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence, the Time zone, the Renew Every.
+Each row shows the Name, the Sezionale, the Sezionale 2, the Sezionale 3, the Increment, the Start, the Current, the Next, the Pattern, the Current Sequence, the Next Sequence.
 
 The page is visible with the `access.crm.sequences` grant.
 
@@ -40,8 +40,8 @@ The page is visible with the `access.crm.sequences` grant.
 | **Pattern** | yes | yes | yes |  |
 | **Current Sequence** | yes | no | no |  |
 | **Next Sequence** | yes | no | no |  |
-| **Time zone** | yes | yes | yes |  |
-| **Renew Every** | yes | yes | yes | How often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation. |
+| **Time zone** | no | yes | yes |  |
+| **Renew Every** | no | yes | yes | How often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation. |
 | **Starts from** | no | yes | yes | When this generation starts being used. Available only when "Renew every" is set. |
 | **Revive slot** | no | yes | yes | Which code section advances at each renewal (e.g. the year). Available only when "Renew every" is set. |
 | **Activation** | no | yes | yes | When the next generation becomes active: an offset after the renewal moment or an exact date. Until then the previous generation keeps working. |
@@ -59,8 +59,8 @@ The page is visible with the `access.crm.sequences` grant.
 - The Pattern column is shown by default and can be sorted and filtered.
 - The Current Sequence column is shown by default and cannot be sorted or filtered.
 - The Next Sequence column is shown by default and cannot be sorted or filtered.
-- The Time zone column is shown by default and can be sorted and filtered.
-- The Renew Every column is shown by default and can be sorted and filtered — how often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation.
+- The Time zone column is hidden by default and can be sorted and filtered.
+- The Renew Every column is hidden by default and can be sorted and filtered — how often the numbering renews: an interval (e.g. 1 year) or an exact date. Each renewal starts a new generation.
 - The Starts from column is hidden by default and can be sorted and filtered — when this generation starts being used. Available only when "Renew every" is set.
 - The Revive slot column is hidden by default and can be sorted and filtered — which code section advances at each renewal (e.g. the year). Available only when "Renew every" is set.
 - The Activation column is hidden by default and can be sorted and filtered — when the next generation becomes active: an offset after the renewal moment or an exact date. Until then the previous generation keeps working.

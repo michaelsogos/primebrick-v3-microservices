@@ -1,0 +1,61 @@
+---
+title: Create Customer Account
+description: Create a new customer account.
+entity: customer_account
+---
+
+Create a new customer account.
+
+The page is visible with the `access.crm.create` grant.
+
+## Pages routes
+
+- `/crm/customer_accounts` — List, search and manage all customer accounts.
+- `/crm/customer_accounts/create` — Create a new customer account. *(this page)*
+
+## What you can do here
+
+### How to create a new customer account
+1. On the **Customer Accounts** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **18**, **0**, **1**, **2**, **3**, **4**, **5**, **6**, **7**.
+3. Click **Save** — the new customer account is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **18** | required | — |
+| **0** | required | — |
+| **1** | required | — |
+| **2** | required | — |
+| **3** | required | — |
+| **4** | required | — |
+| **5** | required | — |
+| **6** | required | — |
+| **7** | required | — |
+
+- The **18** field is a required field.
+- The **0** field is a required field.
+- The **1** field is a required field.
+- The **2** field is a required field.
+- The **3** field is a required field.
+- The **4** field is a required field.
+- The **5** field is a required field.
+- The **6** field is a required field.
+- The **7** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `crm.customer_account.create.single` | Validates the form and creates the customer account | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the customer account and it requires the `crm.customer_account.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Customer Accounts](/docs/user-guide/generated/customer_accounts)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

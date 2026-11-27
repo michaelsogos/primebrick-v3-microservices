@@ -24,28 +24,16 @@ import { entityPaths, type ModuleNavDeclaration } from "@primebrick/sdk";
 const customersPaths = entityPaths("/crm", "customers");
 
 /**
- * Dict surfaces — enum/lookup entities rendered by the `dict` archetype
- * (rows edit inline under the "Impostazioni" sibling node). The route
- * leaf is the entity's TABLE name (already plural — R1); `entity` is the
- * wire name served by the entity-router. Adding a dict = one entry here.
+ * Entity nav is DERIVED, never hand-written — `deriveEntityNav` (sdk,
+ * wired inside `createMicroservice`) reads the SAME entity declarations
+ * that serve the routes and emits: `dict` leaves under the settings
+ * sibling for `@Dict` vocabularies, list+create leaves at this root for
+ * standard entities (create only when the permission exists), nothing
+ * for `@Relation` bridges. This file declares only the surfaces the
+ * derivation can never guess: customers (custom icon + module default +
+ * remote create page) and the pipeline remote page. Authoring a route
+ * for an entity here suppresses its derivation — the author owns it.
  */
-const DICT_PREFIX = "/crm/settings";
-const dictDecl = (table: string, entity: string) => ({
-  nav: {
-    id: table,
-    label_key: `crm.settings.nav.${table}`,
-    href: `${DICT_PREFIX}/${table}`,
-  },
-  route: {
-    route: `${DICT_PREFIX}/${table}`,
-    kind: "dict" as const,
-    entity,
-    label_key: `crm.settings.nav.${table}`,
-  },
-});
-const customerTypesDict = dictDecl("customer_types", "customer_type");
-const customerLinkTypesDict = dictDecl("customer_link_types", "customer_link_type");
-
 export const CRM_NAV: ModuleNavDeclaration = {
   route_prefixes: ["/crm", "/system/crm"],
   access: "access.crm",
@@ -73,21 +61,6 @@ export const CRM_NAV: ModuleNavDeclaration = {
       kind: "page",
       component_url: "/svc/crm/api/v1/module-assets/crm-pages.js",
       component_format: "esm-mount",
-    },
-  ],
-  // "Impostazioni" — a SIBLING module node next to CRM under the same
-  // root (never a group inside the module). Discovery emits it as the
-  // `crm-settings` module; its routes live under the `/crm/settings`
-  // prefix (nested under `/crm`), access keys derive as
-  // `access.crm.settings.<leaf>`.
-  siblings: [
-    {
-      id: "settings",
-      label_key: "crm.settings.nav.label",
-      icon: "settings",
-      route_prefixes: [DICT_PREFIX],
-      nav: [{ ...customerTypesDict.nav, default: true }, customerLinkTypesDict.nav],
-      routes: [customerTypesDict.route, customerLinkTypesDict.route],
     },
   ],
 };

@@ -1,0 +1,94 @@
+---
+title: Contacts
+description: List, search and manage all contacts.
+entity: customer_contact
+---
+
+List, search and manage all contacts.
+
+Each row shows the Type, the Value, the Label, plus the status flags Default.
+
+The page is visible with the `access.crm.customer_contacts` grant.
+
+## Pages routes
+
+- `/crm/customer_contacts` — List, search and manage all contacts. *(this page)*
+- `/crm/customer_contacts/create` — Create a new customer contact.
+
+## What you can do here
+
+### How to create a new contact
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **15**, **0**, **1**, **2**, **3**, **4**.
+3. Click **Save** — the new contact is created.
+
+### How to delete a contact
+1. Open the row actions menu on the contact and click **Delete**.
+2. Confirm the deletion in the dialog — the contact is soft-deleted and can be restored.
+
+### How to restore a deleted contact
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the contact and click **Restore**.
+3. Confirm in the dialog — the contact is active again.
+
+### How to view the change history of a contact
+1. Open the row actions menu on the contact and click **Audit history**.
+2. The version history of the contact will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Customer** | no | yes | yes |  |
+| **Type** | yes | yes | yes |  |
+| **Value** | yes | yes | yes |  |
+| **Default** | yes | yes | yes |  |
+| **Label** | yes | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Customer column is hidden by default and can be sorted and filtered.
+- The Type column is shown by default and can be sorted and filtered.
+- The Value column is shown by default and can be sorted and filtered.
+- The Default column is shown by default and can be sorted and filtered.
+- The Label column is shown by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `crm.customer_contact.create.single` | Creates a new contact | no |
+| **update** | DISABLED | `crm.customer_contact.update.single` | Opens the contact for editing | no |
+| **delete** | ENABLED | `crm.customer_contact.delete.single` | Marks the contact as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `crm.customer_contact.restore.single` | Brings a soft-deleted contact back | no |
+| **purge** | DISABLED | — | Removes the contact forever | no |
+| **audit history** | ENABLED | `crm.customer_contact.read.audit` | Shows the change history of the contact | no |
+
+- Creating a new contact is available on this page — the create action opens the create form in the same tab and it requires the `crm.customer_contact.create.single` permission.
+- Editing a contact is not available on this page — if enabled, it would require the `crm.customer_contact.update.single` permission.
+- Soft-deleting a contact is available on this page — marks the contact as deleted but keeps it so it can be restored and it requires the `crm.customer_contact.delete.single` permission.
+- Restoring a soft-deleted contact is available on this page — brings a soft-deleted contact back and it requires the `crm.customer_contact.restore.single` permission.
+- Permanently deleting a contact is not available on this page — no permission is declared for it on contacts.
+- Viewing the change history of a contact is available on this page — every contact keeps a full version history and it requires the `crm.customer_contact.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `crm.customer_contact.delete.bulk` | Marks the selected contacts as deleted | no |
+| **restore** | ENABLED | `crm.customer_contact.restore.bulk` | Restores the selected contacts | no |
+| **duplicate** | ENABLED | `crm.customer_contact.duplicate.bulk` | Duplicates the selected contacts | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected contacts is available on this page — marks the selected contacts as deleted and it requires the `crm.customer_contact.delete.bulk` permission.
+- Restoring the selected contacts is available on this page — restores the selected contacts and it requires the `crm.customer_contact.restore.bulk` permission.
+- Duplicating the selected contacts is available on this page — duplicates the selected contacts and it requires the `crm.customer_contact.duplicate.bulk` permission.
+- Exporting the list is not available on this page — no permission is declared for it on contacts.
+
+## Doc references
+
+- [Customer Contacts Create](/docs/user-guide/generated/customer_contacts-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

@@ -1,0 +1,51 @@
+---
+title: Create Qualification
+description: Create a new qualification.
+entity: qualification
+---
+
+Create a new qualification.
+
+The page is visible with the `access.crm.create` grant.
+
+## Pages routes
+
+- `/crm/qualifications` — List, search and manage all qualifications.
+- `/crm/qualifications/create` — Create a new qualification. *(this page)*
+
+## What you can do here
+
+### How to create a new qualification
+1. On the **Qualifications** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **10**, **0**, **1**, **2**.
+3. Click **Save** — the new qualification is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **10** | required | — |
+| **0** | required | — |
+| **1** | required | — |
+| **2** | required | — |
+
+- The **10** field is a required field.
+- The **0** field is a required field.
+- The **1** field is a required field.
+- The **2** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `crm.qualification.create.single` | Validates the form and creates the qualification | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the qualification and it requires the `crm.qualification.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Qualifications](/docs/user-guide/generated/qualifications)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

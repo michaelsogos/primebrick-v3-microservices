@@ -1,0 +1,100 @@
+---
+title: Customer Accounts
+description: List, search and manage all customer accounts.
+entity: customer_account
+---
+
+List, search and manage all customer accounts.
+
+Each row shows the Type, the Company name, the Legal form, the Country, plus the status flags Default.
+
+The page is visible with the `access.crm.customer_accounts` grant.
+
+## Pages routes
+
+- `/crm/customer_accounts` — List, search and manage all customer accounts. *(this page)*
+- `/crm/customer_accounts/create` — Create a new customer account.
+
+## What you can do here
+
+### How to create a new customer account
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **18**, **0**, **1**, **2**, **3**, **4**, **5**, **6**, **7**.
+3. Click **Save** — the new customer account is created.
+
+### How to delete a customer account
+1. Open the row actions menu on the customer account and click **Delete**.
+2. Confirm the deletion in the dialog — the customer account is soft-deleted and can be restored.
+
+### How to restore a deleted customer account
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the customer account and click **Restore**.
+3. Confirm in the dialog — the customer account is active again.
+
+### How to view the change history of a customer account
+1. Open the row actions menu on the customer account and click **Audit history**.
+2. The version history of the customer account will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Customer** | no | yes | yes |  |
+| **Type** | yes | yes | yes |  |
+| **Company name** | yes | yes | yes |  |
+| **Legal form** | yes | yes | yes |  |
+| **Country** | yes | yes | yes |  |
+| **Address** | no | yes | yes |  |
+| **Contact** | no | yes | yes |  |
+| **Default** | yes | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Customer column is hidden by default and can be sorted and filtered.
+- The Type column is shown by default and can be sorted and filtered.
+- The Company name column is shown by default and can be sorted and filtered.
+- The Legal form column is shown by default and can be sorted and filtered.
+- The Country column is shown by default and can be sorted and filtered.
+- The Address column is hidden by default and can be sorted and filtered.
+- The Contact column is hidden by default and can be sorted and filtered.
+- The Default column is shown by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `crm.customer_account.create.single` | Creates a new customer account | no |
+| **update** | DISABLED | `crm.customer_account.update.single` | Opens the customer account for editing | no |
+| **delete** | ENABLED | `crm.customer_account.delete.single` | Marks the customer account as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `crm.customer_account.restore.single` | Brings a soft-deleted customer account back | no |
+| **purge** | DISABLED | — | Removes the customer account forever | no |
+| **audit history** | ENABLED | `crm.customer_account.read.audit` | Shows the change history of the customer account | no |
+
+- Creating a new customer account is available on this page — the create action opens the create form in the same tab and it requires the `crm.customer_account.create.single` permission.
+- Editing a customer account is not available on this page — if enabled, it would require the `crm.customer_account.update.single` permission.
+- Soft-deleting a customer account is available on this page — marks the customer account as deleted but keeps it so it can be restored and it requires the `crm.customer_account.delete.single` permission.
+- Restoring a soft-deleted customer account is available on this page — brings a soft-deleted customer account back and it requires the `crm.customer_account.restore.single` permission.
+- Permanently deleting a customer account is not available on this page — no permission is declared for it on customer accounts.
+- Viewing the change history of a customer account is available on this page — every customer account keeps a full version history and it requires the `crm.customer_account.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `crm.customer_account.delete.bulk` | Marks the selected customer accounts as deleted | no |
+| **restore** | ENABLED | `crm.customer_account.restore.bulk` | Restores the selected customer accounts | no |
+| **duplicate** | ENABLED | `crm.customer_account.duplicate.bulk` | Duplicates the selected customer accounts | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected customer accounts is available on this page — marks the selected customer accounts as deleted and it requires the `crm.customer_account.delete.bulk` permission.
+- Restoring the selected customer accounts is available on this page — restores the selected customer accounts and it requires the `crm.customer_account.restore.bulk` permission.
+- Duplicating the selected customer accounts is available on this page — duplicates the selected customer accounts and it requires the `crm.customer_account.duplicate.bulk` permission.
+- Exporting the list is not available on this page — no permission is declared for it on customer accounts.
+
+## Doc references
+
+- [Customer Accounts Create](/docs/user-guide/generated/customer_accounts-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

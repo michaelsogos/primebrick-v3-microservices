@@ -1,0 +1,82 @@
+---
+title: Consents
+description: List, search and manage all consents.
+entity: customer_consent
+---
+
+List, search and manage all consents.
+
+Each row shows the Type, the Doc version, the Granted at, the Revoked at.
+
+The page is visible with the `access.crm.customer_consents` grant.
+
+## What you can do here
+
+### How to view the change history of a consent
+1. Open the row actions menu on the consent and click **Audit history**.
+2. The version history of the consent will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Customer** | no | yes | yes |  |
+| **Type** | yes | yes | yes |  |
+| **Doc version** | yes | yes | yes |  |
+| **Granted at** | yes | yes | yes |  |
+| **Revoked at** | yes | yes | yes |  |
+| **Channel** | no | yes | yes |  |
+| **IP** | no | yes | yes |  |
+| **User agent** | no | yes | yes |  |
+| **Seal** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Customer column is hidden by default and can be sorted and filtered.
+- The Type column is shown by default and can be sorted and filtered.
+- The Doc version column is shown by default and can be sorted and filtered.
+- The Granted at column is shown by default and can be sorted and filtered.
+- The Revoked at column is shown by default and can be sorted and filtered.
+- The Channel column is hidden by default and can be sorted and filtered.
+- The IP column is hidden by default and can be sorted and filtered.
+- The User agent column is hidden by default and can be sorted and filtered.
+- The Seal column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | DISABLED | — | Creates a new consent | no |
+| **update** | DISABLED | — | Opens the consent for editing | no |
+| **delete** | DISABLED | — | Marks the consent as deleted but keeps it so it can be restored | no |
+| **restore** | DISABLED | — | Brings a soft-deleted consent back | no |
+| **purge** | DISABLED | — | Removes the consent forever | no |
+| **audit history** | ENABLED | `crm.customer_consent.read.audit` | Shows the change history of the consent | no |
+
+- Creating a new consent is not available on this page — no permission is declared for it on consents.
+- Editing a consent is not available on this page — no permission is declared for it on consents.
+- Soft-deleting a consent is not available on this page — no permission is declared for it on consents.
+- Restoring a soft-deleted consent is not available on this page — no permission is declared for it on consents.
+- Permanently deleting a consent is not available on this page — no permission is declared for it on consents.
+- Viewing the change history of a consent is available on this page — every consent keeps a full version history and it requires the `crm.customer_consent.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | DISABLED | — | Marks the selected consents as deleted | no |
+| **restore** | DISABLED | — | Restores the selected consents | no |
+| **duplicate** | DISABLED | — | Duplicates the selected consents | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected consents is not available on this page — no permission is declared for it on consents.
+- Restoring the selected consents is not available on this page — no permission is declared for it on consents.
+- Duplicating the selected consents is not available on this page — no permission is declared for it on consents.
+- Exporting the list is not available on this page — no permission is declared for it on consents.
+
+## Doc references
+
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

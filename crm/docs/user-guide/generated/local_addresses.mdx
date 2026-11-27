@@ -1,0 +1,106 @@
+---
+title: Addresses
+description: List, search and manage all addresses.
+entity: local_address
+---
+
+List, search and manage all addresses.
+
+Each row shows the Type, the Street, the Postal code, the City, the Province, the Country.
+
+The page is visible with the `access.crm.local_addresses` grant.
+
+## Pages routes
+
+- `/crm/local_addresses` — List, search and manage all addresses. *(this page)*
+- `/crm/local_addresses/create` — Create a new local addres.
+
+## What you can do here
+
+### How to create a new address
+1. Click **New** in the toolbar.
+2. Fill in the form — required: **21**, **0**, **1**, **2**, **3**, **4**, **5**, **6**, **7**, **8**, **9**, **10**.
+3. Click **Save** — the new address is created.
+
+### How to delete an address
+1. Open the row actions menu on the address and click **Delete**.
+2. Confirm the deletion in the dialog — the address is soft-deleted and can be restored.
+
+### How to restore a deleted address
+1. Set the deleted-records filter to **Deleted only** or **All records** to show recoverable records.
+2. Open the row actions menu on the address and click **Restore**.
+3. Confirm in the dialog — the address is active again.
+
+### How to view the change history of an address
+1. Open the row actions menu on the address and click **Audit history**.
+2. The version history of the address will appear on the right sheet panel.
+
+## Columns
+
+| Column | Visible | Sortable | Filterable | Notes |
+|--------|---------|----------|------------|-------|
+| **Customer** | no | yes | yes |  |
+| **Type** | yes | yes | yes |  |
+| **Street** | yes | yes | yes |  |
+| **Street (line 2)** | no | yes | yes |  |
+| **Postal code** | yes | yes | yes |  |
+| **City** | yes | yes | yes |  |
+| **Province** | yes | yes | yes |  |
+| **Country** | yes | yes | yes |  |
+| **Latitude** | no | yes | yes |  |
+| **Longitude** | no | yes | yes |  |
+| **POI name** | no | yes | yes |  |
+| **UUID** | no | yes | yes |  |
+
+- The Customer column is hidden by default and can be sorted and filtered.
+- The Type column is shown by default and can be sorted and filtered.
+- The Street column is shown by default and can be sorted and filtered.
+- The Street (line 2) column is hidden by default and can be sorted and filtered.
+- The Postal code column is shown by default and can be sorted and filtered.
+- The City column is shown by default and can be sorted and filtered.
+- The Province column is shown by default and can be sorted and filtered.
+- The Country column is shown by default and can be sorted and filtered.
+- The Latitude column is hidden by default and can be sorted and filtered.
+- The Longitude column is hidden by default and can be sorted and filtered.
+- The POI name column is hidden by default and can be sorted and filtered.
+- The UUID column is hidden by default and can be sorted and filtered.
+
+## Actions
+
+### Row actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **create** | ENABLED | `crm.local_address.create.single` | Creates a new address | no |
+| **update** | DISABLED | `crm.local_address.update.single` | Opens the address for editing | no |
+| **delete** | ENABLED | `crm.local_address.delete.single` | Marks the address as deleted but keeps it so it can be restored | no |
+| **restore** | ENABLED | `crm.local_address.restore.single` | Brings a soft-deleted address back | no |
+| **purge** | DISABLED | — | Removes the address forever | no |
+| **audit history** | ENABLED | `crm.local_address.read.audit` | Shows the change history of the address | no |
+
+- Creating a new address is available on this page — the create action opens the create form in the same tab and it requires the `crm.local_address.create.single` permission.
+- Editing an address is not available on this page — if enabled, it would require the `crm.local_address.update.single` permission.
+- Soft-deleting an address is available on this page — marks the address as deleted but keeps it so it can be restored and it requires the `crm.local_address.delete.single` permission.
+- Restoring a soft-deleted address is available on this page — brings a soft-deleted address back and it requires the `crm.local_address.restore.single` permission.
+- Permanently deleting an address is not available on this page — no permission is declared for it on addresses.
+- Viewing the change history of an address is available on this page — every address keeps a full version history and it requires the `crm.local_address.read.audit` permission.
+
+### Bulk actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **delete** | ENABLED | `crm.local_address.delete.bulk` | Marks the selected addresses as deleted | no |
+| **restore** | ENABLED | `crm.local_address.restore.bulk` | Restores the selected addresses | no |
+| **duplicate** | ENABLED | `crm.local_address.duplicate.bulk` | Duplicates the selected addresses | no |
+| **export** | DISABLED | — | Exports the list | no |
+
+- Soft-deleting the selected addresses is available on this page — marks the selected addresses as deleted and it requires the `crm.local_address.delete.bulk` permission.
+- Restoring the selected addresses is available on this page — restores the selected addresses and it requires the `crm.local_address.restore.bulk` permission.
+- Duplicating the selected addresses is available on this page — duplicates the selected addresses and it requires the `crm.local_address.duplicate.bulk` permission.
+- Exporting the list is not available on this page — no permission is declared for it on addresses.
+
+## Doc references
+
+- [Local Addresses Create](/docs/user-guide/generated/local_addresses-create)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+

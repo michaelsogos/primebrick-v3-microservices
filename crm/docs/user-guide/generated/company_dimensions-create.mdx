@@ -1,0 +1,55 @@
+---
+title: Create Company Dimension
+description: Create a new company dimension.
+entity: company_dimension
+---
+
+Create a new company dimension.
+
+The page is visible with the `access.crm.create` grant.
+
+## Pages routes
+
+- `/crm/company_dimensions` — List, search and manage all company dimensions.
+- `/crm/company_dimensions/create` — Create a new company dimension. *(this page)*
+
+## What you can do here
+
+### How to create a new company dimension
+1. On the **Company Dimensions** list page, click **New** in the toolbar.
+2. Fill in the fields below — required: **12**, **0**, **1**, **2**, **3**, **4**.
+3. Click **Save** — the new company dimension is created.
+
+## Fields
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **12** | required | — |
+| **0** | required | — |
+| **1** | required | — |
+| **2** | required | — |
+| **3** | required | — |
+| **4** | required | — |
+
+- The **12** field is a required field.
+- The **0** field is a required field.
+- The **1** field is a required field.
+- The **2** field is a required field.
+- The **3** field is a required field.
+- The **4** field is a required field.
+
+## Actions
+
+| Action | Status | Permission | What it does | Require Step-Up Auth |
+|--------|--------|------------|--------------|----------------------|
+| **Save** | ENABLED | `crm.company_dimension.create.single` | Validates the form and creates the company dimension | no |
+| **Cancel** | ENABLED | — | Discards changes and returns to the previous page | no |
+
+- The **Save** action is available on this page — validates the form and creates the company dimension and it requires the `crm.company_dimension.create.single` permission.
+- The **Cancel** action is available on this page — discards changes and returns to the previous page.
+
+## Doc references
+
+- [Company Dimensions](/docs/user-guide/generated/company_dimensions)
+- [Entities Crud](/docs/dev-guide/entities-crud)
+
