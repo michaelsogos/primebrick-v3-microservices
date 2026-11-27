@@ -11,16 +11,16 @@
     "node": "24"
   },
   "scripts": {
-    "predev": "pnpm check:standards && pnpm check:types",
+    "predev": "pnpm check:standards && pnpm check:vendor-drift && pnpm check:types",
     "version:auto": "node ../scripts/version-sync.mjs",
-    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs && pnpm fe:build",
+    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm check:vendor-drift && pnpm db:check && pnpm generate:docs && pnpm fe:build",
     "dev": "node ../scripts/dev-hot.mjs",
     "db:migrate": "bun scripts/database-patch-apply.ts",
     "db:seed:customers": "bun scripts/seed-customers.ts",
     "build": "tsc",
     "prestart": "pnpm run build",
     "start": "bun dist/index.js",
-    "test": "pnpm check:standards && pnpm docs:check && vitest run --passWithNoTests",
+    "test": "pnpm check:standards && pnpm check:vendor-drift && pnpm docs:check && vitest run --passWithNoTests",
     "test:watch": "vitest --passWithNoTests",
     "check:standards": "bun ../../primebrick-v3-sdk/tools/check-standards.ts src",
     "check:types": "tsc --noEmit",
@@ -30,7 +30,8 @@
     "fe:check": "cd fe && svelte-check",
     "db:check": "bun scripts/database-patch-check.ts",
     "deploy": "node ../scripts/deploy-service.mjs crm",
-    "db:meta:compare": "bun scripts/database-patch-compare.ts"
+    "db:meta:compare": "bun scripts/database-patch-compare.ts",
+    "check:vendor-drift": "bun ../../primebrick-v3-sdk/tools/check-vendor-drift.ts"
   },
   "dependencies": {
     "@primebrick/dal-pg": "workspace:*",

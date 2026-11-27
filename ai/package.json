@@ -13,9 +13,9 @@
     "node": "24"
   },
   "scripts": {
-    "predev": "pnpm check:standards && pnpm check:types",
+    "predev": "pnpm check:standards && pnpm check:vendor-drift && pnpm check:types",
     "version:auto": "node ../scripts/version-sync.mjs",
-    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm db:check && pnpm generate:docs && pnpm fe:build",
+    "prebuild": "node ../scripts/version-sync.mjs && pnpm check:standards && pnpm check:vendor-drift && pnpm db:check && pnpm generate:docs && pnpm fe:build",
     "dev": "node ../scripts/dev-hot.mjs",
     "build": "tsc",
     "fe:build": "vite build fe",
@@ -24,7 +24,7 @@
     "start": "bun dist/index.js",
     "db:migrate": "bun scripts/database-patch-apply.ts",
     "index-docs": "bun scripts/index-docs.ts",
-    "test": "pnpm check:standards && pnpm docs:check && vitest run",
+    "test": "pnpm check:standards && pnpm check:vendor-drift && pnpm docs:check && vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
@@ -36,7 +36,8 @@
     "check:types": "tsc --noEmit",
     "db:check": "bun scripts/database-patch-check.ts",
     "deploy": "node ../scripts/deploy-service.mjs ai",
-    "db:meta:compare": "bun scripts/database-patch-compare.ts"
+    "db:meta:compare": "bun scripts/database-patch-compare.ts",
+    "check:vendor-drift": "bun ../../primebrick-v3-sdk/tools/check-vendor-drift.ts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "3.0.72",
